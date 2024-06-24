@@ -854,9 +854,9 @@ export class ConsultantsService {
                 this.commonService.throwNotFoundError();
             }
 
-            consultant.country_id = country?.id ? Number(country.id) : null;
+            // consultant.country_id = country?.id ? Number(country.id) : null;
             // consultant.country_code = country.country_code;
-            consultant.country_name = country.name;
+            // consultant.country_name = country.name;
         }
 
         const results = await Promise.all(promises);
@@ -1478,10 +1478,10 @@ export class ConsultantsService {
         }
     }
 
-    // public async getCompany() {
-    //     const companies = await this.companies.getCompanies();
-    //     return companies;
-    // }
+    public async getCompany() {
+        const companies = await this.companies.getCompanies();
+        return companies;
+    }
 
     public async getCompanyDetails(data: ConsultantCompanyDetailsDto) {
         console.log('data: ', data);
