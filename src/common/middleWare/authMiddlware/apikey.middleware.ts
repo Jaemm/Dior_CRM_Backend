@@ -1,0 +1,55 @@
+import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
+import { Request, Response, NextFunction } from 'express';
+import { ErrorStatus } from '../../constants/error-status';
+import { ResponseMessages } from '../../constants/response-messages';
+
+@Injectable()
+export class ApiKeyMiddleware implements NestMiddleware {
+    private readonly secretKey = process.env.API_KEY;
+
+    use(req: Request, res: Response, next: NextFunction) {
+        try {
+            const token = req.headers.authorization?.split(' ')[1];
+            if (this.secretKey !== token) {
+                // Token not provided, handle accordingly (e.g., return unauthorized response)
+                throw new UnauthorizedException({
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: ResponseMessages.Unauthorized,
+                });
+            }
+            // return decoded;
+            // Do further verification or processing if needed
+            next();
+        } catch (err) {
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).send({
+                    status: 10000,
+                    type: 'TokenExpiredError',
+                    message: {
+                        en: 'Your token is expired',
+                    },
+                });
+            } else if (err.name === 'JsonWebTokenError') {
+                return res.status(401).send({
+                    status: 10001,
+                    type: 'JsonWebTokenError',
+                    message: {
+                        en: 'Invalid access token',
+                    },
+                });
+            } else if (err.name === 'NotBeforeError') {
+                return res.status(401).send({
+                    status: 10003,
+                    type: 'JsonWebTokenError',
+                    message: {
+                        en: err.message,
+                    },
+                });
+            }
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.UNAUTHORIZED,
+                error: ResponseMessages.Unauthorized,
+            });
+        }
+    }
+}

@@ -1,0 +1,36 @@
+server {
+
+        server_name geo-test.chowis.cloud;
+
+        root /var/www/html;
+
+        # Add index.php to the list if you are using PHP
+        index index.html index.htm index.nginx-debian.html;
+
+        location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to displaying a 404.
+                proxy_set_header   X-Forwarded-For $remote_addr;
+                proxy_set_header   Host $http_host;
+                proxy_pass         "http://127.0.0.1/";
+                proxy_redirect     http:// https://;
+        }
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/geo-test.chowis.cloud/fullchain.pem; # managed by Cer>
+    ssl_certificate_key /etc/letsencrypt/live/geo-test.chowis.cloud/privkey.pem; # managed by C>
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+server {
+    if ($host = geo-test.chowis.cloud) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+    server_name geo-test.chowis.cloud;
+    
+    listen 80;
+    return 404; # managed by Certbot
+}

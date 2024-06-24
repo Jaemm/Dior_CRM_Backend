@@ -1,0 +1,110 @@
+{
+  "en": {
+    "confirm_email_subject": "Chowis - Email Confirmation",
+    "password_reset_subject": "Chowis - Password Reset Success",
+    "password_recovery_subject": "Chowis - Password Recovery",
+    "device_activation_subject": "Chowis - Device Activation"
+  },
+  "el": {
+    "confirm_email_subject": "Chowis - Επιβεβαίωση μέσω email",
+    "password_reset_subject": "Chowis - Επιτυχία επαναφοράς κωδικού πρόσβασης",
+    "password_recovery_subject": "Chowis - Ανάκτηση κωδικού πρόσβασης",
+    "device_activation_subject": "Chowis - Ενεργοποίηση συσκευής"
+  },
+  "es": {
+    "confirm_email_subject": "Chowis - Confirmación por correo electrónico",
+    "password_reset_subject": "Chowis - Restablecimiento de contraseña exitoso",
+    "password_recovery_subject": "Chowis - Recuperación de contraseña",
+    "device_activation_subject": "Chowis - Activación del dispositivo"
+  },
+  "fr": {
+    "confirm_email_subject": "Chowis - Confirmation par e-mail",
+    "password_reset_subject": "Chowis - Réussite de la réinitialisation du mot de passe",
+    "password_recovery_subject": "Chowis - Récupération de mot de passe",
+    "device_activation_subject": "Chowis - Activation de l'appareil"
+  },
+  "hu": {
+    "confirm_email_subject": "Chowis – E-mail megerősítés",
+    "password_reset_subject": "Chowis – Sikeres jelszó-visszaállítás",
+    "password_recovery_subject": "Chowis – Jelszó-helyreállítás",
+    "device_activation_subject": "Chowis – Eszköz aktiválása"
+  },
+  "it": {
+    "confirm_email_subject": "Chowis - Conferma via e-mail",
+    "password_reset_subject": "Chowis: reimpostazione della password riuscita",
+    "password_recovery_subject": "Chowis - Recupero password",
+    "device_activation_subject": "Chowis - Attivazione del dispositivo"
+  },
+  "ja": {
+    "confirm_email_subject": "Chowis - メール確認",
+    "password_reset_subject": "Chowis - パスワードのリセットに成功しました",
+    "password_recovery_subject": "Chowis - パスワードの回復",
+    "device_activation_subject": "Chowis - デバイスのアクティベーション"
+  },
+  "ko": {
+    "confirm_email_subject": "초위스 - 이메일 확인",
+    "password_reset_subject": "초위스 - 비밀번호 재설정 성공",
+    "password_recovery_subject": "초위스 - 비밀번호 복구",
+    "device_activation_subject": "초위스 - 기기 활성화"
+  },
+  "nb": {
+    "confirm_email_subject": "Chowis - E-postbekreftelse",
+    "password_reset_subject": "Chowis - Suksess for tilbakestilling av passord",
+    "password_recovery_subject": "Chowis - Gjenoppretting av passord",
+    "device_activation_subject": "Chowis - enhetsaktivering"
+  },
+  "nl": {
+    "confirm_email_subject": "Chowis - E-mailbevestiging",
+    "password_reset_subject": "Chowis - Wachtwoord opnieuw instellen gelukt",
+    "password_recovery_subject": "Chowis - Wachtwoordherstel",
+    "device_activation_subject": "Chowis - Apparaatactivering"
+  },
+  "pl": {
+    "confirm_email_subject": "Chowis – potwierdzenie e-mailem",
+    "password_reset_subject": "Chowis — pomyślne zresetowanie hasła",
+    "password_recovery_subject": "Chowis - Odzyskiwanie hasła",
+    "device_activation_subject": "Chowis - Aktywacja urządzenia"
+  },
+  "ru": {
+    "confirm_email_subject": "Човис – подтверждение по электронной почте",
+    "password_reset_subject": "Chowis – успешный сброс пароля",
+    "password_recovery_subject": "Човис - Восстановление пароля",
+    "device_activation_subject": "Човис — Активация устройства"
+  },
+  "th": {
+    "confirm_email_subject": "Chowis - การยืนยันอีเมล",
+    "password_reset_subject": "Chowis - การรีเซ็ตรหัสผ่านสำเร็จ",
+    "password_recovery_subject": "Chowis - การกู้คืนรหัสผ่าน",
+    "device_activation_subject": "Chowis - การเปิดใช้งานอุปกรณ์"
+  },
+  "vi": {
+    "confirm_email_subject": "Chowis - Xác nhận email",
+    "password_reset_subject": "Chowis - Đặt lại mật khẩu thành công",
+    "password_recovery_subject": "Chowis - Khôi phục mật khẩu",
+    "device_activation_subject": "Chowis - Kích hoạt thiết bị"
+  },
+  "zh-CN": {
+    "confirm_email_subject": "Need to ask",
+    "password_reset_subject": "Chowis - 密码重置成功",
+    "password_recovery_subject": "Chowis - 密码恢复",
+    "device_activation_subject": "Chowis - 设备激活"
+  },
+  "zh-Hans": {
+    "confirm_email_subject": "Chowis - 电子邮件确认",
+    "password_reset_subject": "Chowis - 密码重置成功",
+    "password_recovery_subject": "Chowis - 密码恢复",
+    "device_activation_subject": "Chowis - 设备激活"
+  },
+  "zh-Hant": {
+    "confirm_email_subject": "Chowis - 電子郵件確認",
+    "password_reset_subject": "Chowis - 密碼重設成功",
+    "password_recovery_subject": "Chowis - 密碼恢復",
+    "device_activation_subject": "Chowis - 設備激活"
+  },
+  "zh-TW": {
+    "confirm_email_subject": "Need to ask",
+    "password_reset_subject": "Chowis - Password Reset Success",
+    "password_recovery_subject": "Chowis - Password Recovery",
+    "device_activation_subject": "Chowis - Device Activation"
+  }
+}
