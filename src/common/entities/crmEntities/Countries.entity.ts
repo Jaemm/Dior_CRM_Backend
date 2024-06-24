@@ -30,9 +30,6 @@ export class Countries {
     @OneToMany(() => ConsultantBranches, (consultantBranches) => consultantBranches.consultantCountry)
     consultantBranches: ConsultantBranches[];
 
-    @OneToMany(() => ConsultantShops, (consultantShops) => consultantShops.country)
-    consultantShops: ConsultantShops[];
-
     @OneToMany(() => Consultants, (consultants) => consultants.country_details)
     consultants: Consultants[];
 

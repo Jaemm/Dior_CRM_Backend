@@ -35,29 +35,62 @@ export class ConsultantCompanies {
     @Column('date', { name: 'registeration_date', nullable: true })
     registeration_date: string | null;
 
+    @Column('character varying', { name: 'primary_color_code', nullable: true })
+    primary_color_code: string | null;
+
+    @Column('character varying', { name: 'secondary_color_code', nullable: true })
+    secondary_color_code: string | null;
+
+    @Column('character varying', { name: 'font', nullable: true })
+    font: string | null;
+
+    @Column('character varying', { name: 'program_color_code', nullable: true })
+    program_color_code: string | null;
+
+    @Column('character varying', { name: 'top_color_code', nullable: true })
+    top_color_code: string | null;
+
+    @Column('character varying', { name: 'text_icon_color_code', nullable: true })
+    text_icon_color_code: string | null;
+
+    @Column('character varying', { name: 'pie_chart_color_1', nullable: true })
+    pie_chart_color_1: string | null;
+
+    @Column('character varying', { name: 'pie_chart_color_2', nullable: true })
+    pie_chart_color_2: string | null;
+
+    @Column('character varying', { name: 'pie_chart_color_3', nullable: true })
+    pie_chart_color_3: string | null;
+
+    @Column('character varying', { name: 'pie_chart_color_4', nullable: true })
+    pie_chart_color_4: string | null;
+
+    @Column('character varying', { name: 'pie_chart_color_5', nullable: true })
+    pie_chart_color_5: string | null;
+
+    @Column('character varying', { name: 'pie_chart_points_color', nullable: true })
+    pie_chart_points_color: string | null;
+
+    @Column('boolean', { name: 'active', nullable: true, default: () => 'true' })
+    active: boolean | null;
+
     @Column('character varying', { name: 'font_color_1', nullable: true })
     font_color_1: string | null;
 
     @Column('character varying', { name: 'font_color_2', nullable: true })
     font_color_2: string | null;
 
+    @Column('character varying', { name: 'data_exchange_url', nullable: true })
+    data_exchange_url: string | null;
+
     @Column('boolean', { name: 'pmx', nullable: true, default: () => 'false' })
     pmx: boolean | null;
-
-    @Column('boolean', { name: 'active', nullable: true, default: () => 'true' })
-    active: boolean | null;
-
-    @Column('character varying', { name: 'pmx_callback_url', nullable: true })
-    pmx_callback_url: string | null;
 
     @OneToMany(() => ConsultantBranches, (consultantBranches) => consultantBranches.consultantCompany)
     consultantBranches: ConsultantBranches[];
 
     @OneToMany(() => ConsultantCustomzations, (consultantCustomzations) => consultantCustomzations.consultantCompany)
     consultantCustomzations: ConsultantCustomzations[];
-
-    @OneToMany(() => ConsultantShops, (consultantShops) => consultantShops.consultantCompany)
-    consultantShops: ConsultantShops[];
 
     @OneToMany(() => DoWrite, (doWrite) => doWrite.customer)
     doWrites: DoWrite[];
