@@ -88,7 +88,7 @@ export class ConsultantsController {
         @Body() body: ConsultantDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
-        const consultant = await this.consultants.signUp(body, locale);
+        const consultant = await this.consultants.signUpRuby(body, locale);
         return res.status(200).send(consultant);
     }
 
