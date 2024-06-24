@@ -8,7 +8,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Repository } from 'typeorm';
+import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Or, Equal, Repository } from 'typeorm';
 import { TokenTypeEnum } from 'src/jwt/enums/auth-token.enum';
 
 import { Consultants } from '@/src/common/entities/crmEntities/Consultants.entity';
@@ -376,11 +376,10 @@ export class ConsultantsService {
 
     async findConsultant(app_id: number, email: string) {
         const consultant = await this.ConsultantsRepository.findOne({
-            where: { app_id: app_id, email },
+            where: { app_id: Or(Equal(app_id), null), email },
             relations: [
                 'consultant_shop',
                 'country_details',
-                'gender',
                 'consultant_company',
                 'consultant_position',
                 'products',
@@ -445,7 +444,6 @@ export class ConsultantsService {
             attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
         });
 
-        console.log('onsultant.consultant_company.id', consultant.consultant_company.id);
         if (consultant?.consultant_company) {
             consultant.consultant_company = await this.getCompanyDetails({
                 consultant_company_id: consultant.consultant_company.id,
@@ -571,6 +569,8 @@ export class ConsultantsService {
         const consultant = await this.validateUser(email, Number(app_id), password);
         const checkToken = this.authService.isTokenExpired(consultant.token);
 
+        console.log(consultant);
+
         if (!consultant.email_confirmed) {
             if (!checkToken) {
                 const confirmationToken = await this.jwtService.generateToken(
@@ -656,6 +656,75 @@ export class ConsultantsService {
             consultant_company: consultant.consultant_company,
             consultant_position: consultant.consultant_position,
         };
+    }
+
+    async loginRuby(data: ConsultantDto, locale: string = 'en') {
+        try {
+            const { app_id, password, email } = data;
+            const consultant: Consultants = await this.validateUser(email, Number(app_id), password);
+
+            // ONLY APP_ID IS NULL
+            if (!consultant.app_id) {
+                consultant.app_id = Number(data.app_id);
+
+                await this.ConsultantsRepository.save(consultant);
+            }
+
+            if (!consultant.email_confirmed) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
+                    error: ResponseMessages.EmailNotConfirmed,
+                });
+            }
+
+            const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
+                { id: consultant.id, email: consultant.email, role: Role.Consultant },
+                '',
+            );
+
+            consultant.token = accessToken;
+            await this.ConsultantsRepository.save(consultant);
+
+            return {
+                id: consultant.id,
+                email: consultant.email,
+                name: consultant.name,
+                surname: consultant.surname,
+                gender: consultant.gender,
+                os: consultant.os,
+                language: consultant.language,
+                phone: consultant.phone,
+                address: consultant.address,
+                city: consultant.city,
+                country: consultant.country,
+                zip_code: consultant.zip_code,
+                state: consultant.state,
+                birthdate: consultant.birthdate,
+                note: consultant.note,
+                push_token: consultant.push_token,
+                memo: consultant.memo,
+                app_id: consultant.app_id,
+                company_name: consultant.company_name,
+                company_address: consultant.company_address,
+                branch: consultant.branch,
+                position: consultant.position,
+                skin_color_group_id: consultant.skin_color_group_id,
+                ethnicity_id: consultant.ethnicity_id,
+                callback_url: consultant.callback_url,
+                code: consultant.code,
+                token: accessToken,
+                refresh_token: refreshToken,
+                social: consultant.social,
+                country_code: consultant.country_details?.code || null,
+                store: consultant.consultant_shop,
+                optic_number: consultant.products[0]?.device.optic_number || ([] as any[]),
+                password_update_needed: consultant.password_update_needed,
+                products: consultant.products,
+                consultant_position: consultant?.consultant_position || null,
+            };
+        } catch (e) {
+            throw e;
+        }
     }
 
     async logout(id: number): Promise<IMessage> {
