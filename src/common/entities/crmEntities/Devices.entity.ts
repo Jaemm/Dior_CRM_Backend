@@ -13,7 +13,6 @@ import { DeviceConfigurations } from './DeviceConfigurations.entity';
 import { Products } from './Products.entity';
 import { ConsultantCompanies } from './ConsultantCompanies.entity';
 
-@Index('index_devices_on_consultant_shop_id', ['consultant_shop_id'], {})
 @Index('devices_pkey', ['id'], { unique: true })
 @Index('on_uni', ['optic_number'], { unique: true })
 @Entity('devices', { schema: 'public' })
@@ -53,9 +52,6 @@ export class Devices {
         default: () => "'VER_'",
     })
     app_version: string | null;
-
-    @Column('boolean', { name: 'offline_qo', default: true })
-    offline_qo: boolean;
 
     @Column('character varying', {
         name: 'app_update_date',
@@ -155,15 +151,8 @@ export class Devices {
     @Column('character varying', { name: 'short_number', nullable: true })
     short_number: string | null;
 
-    @Column('bigint', { name: 'consultant_shop_id', nullable: true })
-    consultant_shop_id: string | null;
-
-    @Column('character varying', {
-        name: 'fw_version',
-        nullable: true,
-        length: 50,
-    })
-    fw_version: string | null;
+    @Column('character varying', { name: 'pwd_digest', nullable: true })
+    pwd_digest: string | null;
 
     @OneToOne(() => DeviceConfigurations, (deviceConfigurations) => deviceConfigurations.opticNumber2)
     deviceConfigurations: DeviceConfigurations;

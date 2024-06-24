@@ -254,13 +254,6 @@ export class Customers {
         }
     }
 
-    get getContryCode(): string | null {
-        if (this.country) {
-            return this.country.country_code;
-        }
-        return null;
-    }
-
     get getContryId(): number | null {
         if (this.country) {
             return this.country.id;

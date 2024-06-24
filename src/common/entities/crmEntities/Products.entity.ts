@@ -122,11 +122,4 @@ export class Products {
     afterLoad() {
         this.id = Number(this.id);
     }
-
-    @Column('boolean', {
-        name: 'products_multi_connect',
-        nullable: true,
-        default: () => 'false',
-    })
-    products_multi_connect: boolean | null;
 }

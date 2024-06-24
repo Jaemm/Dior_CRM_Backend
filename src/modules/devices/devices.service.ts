@@ -36,7 +36,6 @@ export class DeviceService {
                     use_yn: true,
                     lat: true,
                     lng: true,
-                    fw_version: true,
                     consultant_company_id: true,
                 },
                 application: {

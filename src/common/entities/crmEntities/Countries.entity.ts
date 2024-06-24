@@ -12,8 +12,11 @@ export class Countries {
     @PrimaryGeneratedColumn({ type: 'bigint', name: 'id' })
     id: number;
 
+    @Column('int', { name: 'consultant_company_id', nullable: true })
+    consultant_company_id: number | null;
+
     @Column('character varying', { name: 'name' })
-    name: string;
+    name: string | null;
 
     @Column('timestamp without time zone', { name: 'created_at' })
     createdAt: Date;
@@ -21,29 +24,11 @@ export class Countries {
     @Column('timestamp without time zone', { name: 'updated_at' })
     updatedAt: Date;
 
-    @Column('character varying', { name: 'phone_code', length: 9 })
-    phone_code: string;
+    @Column('character varying', { name: 'code', nullable: true })
+    default_recommendation: string | null;
 
-    @Column('character varying', { name: 'country_code', length: 5 })
-    country_code: string;
-
-    @OneToMany(() => ConsultantBranches, (consultantBranches) => consultantBranches.consultantCountry)
-    consultantBranches: ConsultantBranches[];
-
-    @OneToMany(() => Consultants, (consultants) => consultants.country_details)
-    consultants: Consultants[];
-
-    @OneToMany(() => Customers, (customers) => customers.country)
-    customers: Customers[];
-
-    @OneToMany(() => DoWrite, (doWrite) => doWrite.deliveryCountry)
-    doWrites: DoWrite[];
-
-    @OneToMany(() => UserInformation, (userInformation) => userInformation.companyLocatedCountry)
-    userInformations: UserInformation[];
-
-    @OneToMany(() => UserInformation, (userInformation) => userInformation.country)
-    userInformations2: UserInformation[];
+    @OneToMany(() => Customers, (customer: Customers) => customer.country)
+    customers: Customers;
 
     @AfterLoad()
     afterLoad() {

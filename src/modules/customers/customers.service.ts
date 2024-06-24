@@ -809,7 +809,7 @@ export class CustomersService {
             }
 
             customer.country_id = country?.id ? Number(country.id) : null;
-            customer.country_code = country.country_code;
+            // customer.country_code = country.code;
             customer.country_name = country.name;
             // customer.phone_country_code = country.phone_country_code;
         }

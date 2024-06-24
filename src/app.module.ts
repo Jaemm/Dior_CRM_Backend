@@ -265,6 +265,4 @@ export class AppModule {
         );
         consumer.apply(LoggingMiddleware).forRoutes('*');
     }
-
-
 }

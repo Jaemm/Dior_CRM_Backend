@@ -17,6 +17,7 @@ import { ConsultantCompanies } from './ConsultantCompanies.entity';
 import { Position } from 'aws-sdk/clients/codecommit';
 import { ConsultantPositions } from './ConsultantPositions.entity';
 import { Products } from './Products.entity';
+import { ConsultantCountries } from './ConsultantCountries.entity';
 
 @Index('index_consultants_on_email_and_app_id', ['app_id', 'email'], {
     unique: true,
@@ -219,12 +220,12 @@ export class Consultants {
     @JoinColumn([{ name: 'consultant_shop_id', referencedColumnName: 'id' }])
     'consultant_shop': ConsultantShops;
 
-    @ManyToOne(() => Countries, (countries: Countries) => countries.consultants, {
+    @ManyToOne(() => ConsultantCountries, (countries: ConsultantCountries) => countries.consultants, {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
     })
     @JoinColumn([{ name: 'consultant_country_id', referencedColumnName: 'id' }])
-    'country_details': Countries;
+    'country_details': ConsultantCountries;
 
     @OneToMany(() => Customers, (customers: Customers) => customers.conslutant)
     'customers': Customers[];
@@ -246,13 +247,6 @@ export class Consultants {
             return this.products.map((product) => product.device.optic_number);
         }
         return [];
-    }
-
-    get 'getContryCode'(): string | null {
-        if (this.country_details) {
-            return this.country_details.country_code;
-        }
-        return null;
     }
 
     get 'getContryName'(): string | null {
