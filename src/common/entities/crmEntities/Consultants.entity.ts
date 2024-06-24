@@ -100,7 +100,7 @@ export class Consultants {
     @Column('character varying', { name: 'surname', nullable: true })
     'surname': string | null;
 
-    @Column('character varying', { name: 'surname', nullable: true })
+    @Column('character varying', { name: 'gender', nullable: true })
     'gender': string | null;
 
     @Column('character varying', { name: 'birthdate', nullable: true })
