@@ -2,11 +2,7 @@ import { Body, Controller, Delete, Get, Headers, Inject, Post, Put, Query, Req, 
 import { Response, Request } from 'express';
 import { CustomersService } from './customers.service';
 
-<<<<<<< HEAD
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-=======
 import { ApiBearerAuth, ApiHeader, ApiQuery, ApiTags } from '@nestjs/swagger';
->>>>>>> 822c3150c3c70eb7b10d09d0d0b97f415d973247
 import {
     ChangePasswordCustomerDto,
     CustomersDto,

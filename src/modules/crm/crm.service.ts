@@ -66,26 +66,7 @@ export class CRMService {
             register_date: true,
             country_code: true,
         };
-<<<<<<< HEAD
-        const consultant = await this.consultantsService.getConsultant({ id: id }, selection, [
-            'customers',
-            'customers.gender',
-            'customers.country',
-        ]);
-
-        if (!consultant) {
-            this.commonService.throwNotFoundError();
-        }
-
-        let customers = consultant.customers;
-
-        customers = customers.map((c: any) => {
-            return { ...c, country_code: c.getContryCode, gender: c.getGenderId, country: null };
-        });
-
-=======
         let condition: any = { consultant_id: id };
->>>>>>> 822c3150c3c70eb7b10d09d0d0b97f415d973247
         if (email) {
             condition = { consultant_id: id, email: email };
         }

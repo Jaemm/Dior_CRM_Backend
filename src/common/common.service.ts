@@ -32,11 +32,7 @@ export class CommonService {
             service: process.env.SMTP_SERVICE,
             host: process.env.EMAIL_HOST,
             port: Number(process.env.SMTP_PORT),
-<<<<<<< HEAD
-            // secure: true,
-=======
             // secure: false,
->>>>>>> 822c3150c3c70eb7b10d09d0d0b97f415d973247
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASSWORD,

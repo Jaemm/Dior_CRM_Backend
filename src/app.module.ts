@@ -43,11 +43,8 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { join } from 'path';
 import { AllExceptionsFilter } from './common/middleWare/exceptions/exceptionHandling/allException.filter';
 import { LoggingMiddleware } from './common/middleWare/logMiddleWare/logging.middleware';
-<<<<<<< HEAD
-=======
 import { ChowisServiceModule } from './modules/chowis-service/chowis-service.module';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
->>>>>>> 822c3150c3c70eb7b10d09d0d0b97f415d973247
 
 @Module({
     imports: [
@@ -266,13 +263,7 @@ export class AppModule {
                 method: RequestMethod.POST,
             },
         );
-<<<<<<< HEAD
-        consumer
-          .apply(LoggingMiddleware)
-          .forRoutes('*');
-=======
         consumer.apply(LoggingMiddleware).forRoutes('*');
->>>>>>> 822c3150c3c70eb7b10d09d0d0b97f415d973247
     }
 
 
