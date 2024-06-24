@@ -306,6 +306,45 @@ export class ConsultantsService {
         return consultantData;
     }
 
+    public async signUpRuby(newUser: ConsultantDto, locale: string = 'en') {
+        try {
+            const existUser = await this.findConsultant(Number(newUser.app_id), newUser.email);
+
+            if (existUser) {
+                throw new ConflictException({
+                    result_code: ErrorStatus.BAD_REQUEST,
+                    error: ResponseMessages.EmailAlreadyExist,
+                });
+            }
+
+            const consultantData: any = newUser;
+
+            if (newUser.email.includes('@chowistest.com')) {
+                consultantData['email_confirmed'] = true;
+            }
+
+            const consultant: Consultants = await this.createConsultant(consultantData);
+
+            const [confirmationToken, token] = await Promise.all([
+                this.jwtService.generateToken(
+                    { id: consultant.id, email: consultant.email, role: Role.Consultant },
+                    TokenTypeEnum.CONFIRMATION,
+                    null,
+                ),
+                this.authService.generateAuthTokens(
+                    { id: consultant.id, email: consultant.email, role: Role.Consultant },
+                    '',
+                ),
+            ]);
+
+            this.sendAccountConfimationEmail(confirmationToken, consultant.email, locale);
+
+            return {};
+        } catch (e) {
+            throw e;
+        }
+    }
+
     async checkConsultantPosition(id: number) {
         const position = await this.position.findOne({
             where: {
@@ -376,7 +415,16 @@ export class ConsultantsService {
 
     async findConsultant(app_id: number, email: string) {
         const consultant = await this.ConsultantsRepository.findOne({
-            where: { app_id: Or(Equal(app_id), null), email },
+            where: [
+                {
+                    app_id: app_id,
+                    email: email,
+                },
+                {
+                    app_id: null,
+                    email: email,
+                },
+            ],
             relations: [
                 'consultant_shop',
                 'country_details',
@@ -664,7 +712,7 @@ export class ConsultantsService {
             const consultant: Consultants = await this.validateUser(email, Number(app_id), password);
 
             // ONLY APP_ID IS NULL
-            if (!consultant.app_id) {
+            if (consultant.app_id === null) {
                 consultant.app_id = Number(data.app_id);
 
                 await this.ConsultantsRepository.save(consultant);
