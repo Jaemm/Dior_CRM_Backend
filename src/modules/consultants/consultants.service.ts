@@ -337,9 +337,58 @@ export class ConsultantsService {
                 ),
             ]);
 
-            this.sendAccountConfimationEmail(confirmationToken, consultant.email, locale);
+            const [accessToken, refreshToken] = token;
 
-            return {};
+            await Promise.all([
+                this.sendAccountConfimationEmail(confirmationToken, consultant.email, locale),
+                this.updateConsultant(consultant.id, {
+                    confirm_token: confirmationToken,
+                    token: refreshToken,
+                }),
+            ]);
+
+            const consultantResponseData = await this.ConsultantsRepository.findOne({
+                where: {
+                    id: consultant.id,
+                },
+                relations: ['country_details', 'products', 'products.device'],
+            });
+
+            return {
+                id: consultantResponseData.id,
+                email: consultantResponseData.email,
+                name: consultantResponseData.name,
+                surname: consultantResponseData.surname,
+                gender: consultantResponseData.gender,
+                os: consultantResponseData.os,
+                language: consultantResponseData.language,
+                phone: consultantResponseData.phone,
+                address: consultantResponseData.address,
+                city: consultantResponseData.city,
+                country: consultantResponseData.country,
+                zip_code: consultantResponseData.zip_code,
+                state: consultantResponseData.state,
+                birthdate: consultantResponseData.birthdate,
+                note: consultantResponseData.note,
+                push_token: consultantResponseData.push_token,
+                memo: consultantResponseData.memo,
+                app_id: consultantResponseData.app_id,
+                company_name: consultantResponseData.company_name,
+                company_address: consultantResponseData.company_address,
+                branch: consultantResponseData.branch,
+                position: consultantResponseData.position,
+                skin_color_group_id: consultantResponseData.skin_color_group_id,
+                ethnicity_id: consultantResponseData.ethnicity_id,
+                callback_url: consultantResponseData.callback_url,
+                code: consultantResponseData.code,
+                token: accessToken,
+                refresh_token: refreshToken,
+                social: consultantResponseData.social,
+                country_code: consultantResponseData.country_details?.code,
+                store: consultantResponseData.consultant_shop,
+                optic_number: consultantResponseData.products[0]?.device.optic_number,
+                password_update_needed: consultantResponseData.password_update_needed,
+            };
         } catch (e) {
             throw e;
         }
