@@ -78,6 +78,7 @@ import { ErrorStatus } from '@/src/common/constants/error-status';
 import { TargetType } from '@/src/common/enums/target-type.enum';
 import { Notifications } from '@/src/common/entities/crmEntities/Notifications.entity';
 import { Products } from '@/src/common/entities/crmEntities/Products.entity';
+import { Request } from 'express';
 
 @Injectable()
 export class ConsultantsService {
@@ -829,6 +830,63 @@ export class ConsultantsService {
             token: null,
         });
         return this.commonService.generateMessage('success');
+    }
+
+    async getCurConsultantInfo(req: Request) {
+        try {
+            const { user } = req;
+
+            if (!user) return;
+
+            const currentUserID = (user as { id: number }).id;
+
+            const consultants = await this.ConsultantsRepository.findOne({
+                where: {
+                    id: currentUserID,
+                },
+                relations: ['products', 'products.device', 'country_details', 'consultant_position'],
+            });
+
+            return {
+                id: consultants.id,
+                email: consultants.email,
+                name: consultants.name,
+                surname: consultants.surname,
+                gender: consultants.gender,
+                os: consultants.os,
+                language: consultants.language,
+                phone: consultants.phone,
+                address: consultants.address,
+                city: consultants.city,
+                country: consultants.country,
+                zip_code: consultants.zip_code,
+                state: consultants.state,
+                birthdate: consultants.birthdate,
+                note: consultants.note,
+                push_token: consultants.push_token,
+                memo: consultants.memo,
+                app_id: consultants.app_id,
+                company_name: consultants.company_name,
+                company_address: consultants.company_address,
+                branch: consultants.branch,
+                position: consultants.position,
+                skin_color_group_id: consultants.skin_color_group_id,
+                ethnicity_id: consultants.ethnicity_id,
+                callback_url: consultants.callback_url,
+                code: consultants.code,
+                token: consultants.token,
+                refresh_token: null as null,
+                social: consultants.social,
+                country_code: consultants.country_details?.code,
+                store: consultants.consultant_shop,
+                optic_number: consultants.products[0]?.device.optic_number || ([] as any[]),
+                password_update_needed: consultants.password_update_needed,
+                products: consultants.products,
+                consultant_position: consultants.consultant_position,
+            };
+        } catch (e) {
+            throw e;
+        }
     }
 
     public async findOneConsultant(id: number) {

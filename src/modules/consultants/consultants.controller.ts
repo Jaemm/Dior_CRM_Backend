@@ -64,6 +64,12 @@ export class ConsultantsController {
         private readonly crmService: CRMService,
     ) {}
 
+    @Get('me')
+    @ApiBearerAuth()
+    async getCurConsultantInfo(@Req() req: Request) {
+        return this.consultants.getCurConsultantInfo(req);
+    }
+
     @Post('login')
     async login(
         @Res() res: Response,
