@@ -15,7 +15,7 @@ import {
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { ConsultantsService } from './consultants.service';
-import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
     LoginSocialDto,
     ResendConfirmationDto,
@@ -65,6 +65,7 @@ export class ConsultantsController {
     ) {}
 
     @Get('me')
+    @Roles(Role.Consultant)
     @ApiBearerAuth()
     async getCurConsultantInfo(@Req() req: Request) {
         return this.consultants.getCurConsultantInfo(req);
@@ -80,15 +81,8 @@ export class ConsultantsController {
         return res.status(200).send({ ...loginResult });
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get()
-    async getConsultants(@Res() res: Response, @Query() query: GetConsultantDto): Promise<any> {
-        const consultants = await this.consultants.getConsultants(query);
-        return res.status(200).send(consultants);
-    }
-
     @Post()
+    @ApiOperation({ summary: 'signup consultant' })
     async createConsultant(
         @Res() res: Response,
         @Body() body: ConsultantDto,
@@ -96,6 +90,20 @@ export class ConsultantsController {
     ): Promise<any> {
         const consultant = await this.consultants.signUpRuby(body, locale);
         return res.status(200).send(consultant);
+    }
+
+    /**
+     *
+     * Existing codes
+     *
+     * */
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get()
+    async getConsultants(@Res() res: Response, @Query() query: GetConsultantDto): Promise<any> {
+        const consultants = await this.consultants.getConsultants(query);
+        return res.status(200).send(consultants);
     }
 
     @Post('register')
@@ -122,20 +130,20 @@ export class ConsultantsController {
     //     }
     // }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Put('update')
-    async updateConsultant(
-        @Req() req: Request,
-        @Res() res: Response,
-        @Body() body: UpdateConsultantDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ): Promise<any> {
-        const userId = Number((<{ id: string }>req['user']).id);
+    // @ApiBearerAuth()
+    // @Roles(Role.Consultant)
+    // @Put('update')
+    // async updateConsultant(
+    //     @Req() req: Request,
+    //     @Res() res: Response,
+    //     @Body() body: UpdateConsultantDto,
+    //     @Headers('X-CHOWIS-LOCALE') locale: string,
+    // ): Promise<any> {
+    //     const userId = Number((<{ id: string }>req['user']).id);
 
-        const consultant = await this.consultants.modifyConsultant(userId, body, locale);
-        return res.status(200).send(consultant);
-    }
+    //     const consultant = await this.consultants.modifyConsultant(userId, body, locale);
+    //     return res.status(200).send(consultant);
+    // }
 
     @Post('resend-confirmation')
     async resendConfirmation(
@@ -174,14 +182,14 @@ export class ConsultantsController {
         return res.status(200).send(template);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get('me')
-    async getMe(@Req() req: Request, @Res() res: Response): Promise<any> {
-        const userId = Number((<{ id: string }>req['user']).id);
-        const consultant = await this.consultants.getMe(userId);
-        return res.status(200).send(consultant);
-    }
+    // @ApiBearerAuth()
+    // @Roles(Role.Consultant)
+    // @Get('me')
+    // async getMe(@Req() req: Request, @Res() res: Response): Promise<any> {
+    //     const userId = Number((<{ id: string }>req['user']).id);
+    //     const consultant = await this.consultants.getMe(userId);
+    //     return res.status(200).send(consultant);
+    // }
 
     @Post('password')
     async password(
