@@ -80,6 +80,7 @@ import { TargetType } from '@/src/common/enums/target-type.enum';
 import { Notifications } from '@/src/common/entities/crmEntities/Notifications.entity';
 import { Products } from '@/src/common/entities/crmEntities/Products.entity';
 import { Request } from 'express';
+import { PasswordEmailDetails } from '@/src/common/entities/crmEntities/PasswordEmailDetails.entity';
 
 @Injectable()
 export class ConsultantsService {
@@ -98,6 +99,8 @@ export class ConsultantsService {
         private readonly deviceRepository: Repository<Devices>,
         @InjectRepository(Products)
         private readonly productsRepository: Repository<Products>,
+        // @InjectRepository(PasswordEmailDetails)
+        // private readonly passwordDetailRepository: Repository<PasswordEmailDetails>,
 
         private readonly configService: ConfigService,
         private readonly licenceService: LicenceService,
@@ -1527,8 +1530,10 @@ export class ConsultantsService {
         let consultant = await this.findConsultant(Number(app_id), email);
 
         if (!consultant) {
-            this.commonService.throwNotFoundError();
+            throw new NotFoundException('Please enter a valid email address.');
         }
+
+        const MAXIMUM_REQUEST_PASSWORD_RESET = 5;
 
         const password = this.commonService.generateRandomPassword(12);
         const hashedPassword = await argon2.hash(password);

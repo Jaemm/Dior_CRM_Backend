@@ -115,6 +115,17 @@ export class ConsultantsController {
         return await this.consultants.enterProducts(req, body, locale);
     }
 
+    @Post('password')
+    async password(
+        @Req() req: Request,
+        @Res() res: Response,
+        @Body() body: PasswordDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ): Promise<any> {
+        const consultant = await this.consultants.password(body, locale);
+        return res.status(200).send(consultant);
+    }
+
     /**
      *
      * Existing codes
@@ -213,17 +224,6 @@ export class ConsultantsController {
     //     const consultant = await this.consultants.getMe(userId);
     //     return res.status(200).send(consultant);
     // }
-
-    @Post('password')
-    async password(
-        @Req() req: Request,
-        @Res() res: Response,
-        @Body() body: PasswordDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ): Promise<any> {
-        const consultant = await this.consultants.password(body, locale);
-        return res.status(200).send(consultant);
-    }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)

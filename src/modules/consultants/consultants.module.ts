@@ -80,6 +80,7 @@ import { CustomersModule } from '../customers/customers.module';
 import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
 import { CRMModule } from '../crm/crm.module';
 import { Notifications } from '@/src/common/entities/crmEntities/Notifications.entity';
+import { PasswordEmailDetails } from '@/src/common/entities/crmEntities/PasswordEmailDetails.entity';
 
 @Module({
     imports: [
@@ -89,6 +90,7 @@ import { Notifications } from '@/src/common/entities/crmEntities/Notifications.e
             ConsultantBranches,
             ConsultantCompanies,
             ConsultantCustomzations,
+            PasswordEmailDetails,
             DoWrite,
             Devices,
             AdminUsers,
