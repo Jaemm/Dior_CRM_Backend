@@ -241,12 +241,26 @@ export class Consultants {
     @JoinColumn([{ name: 'consultant_company_id', referencedColumnName: 'id' }])
     'consultant_company': ConsultantCompanies;
 
+    get 'getProducts'(): object {
+        if (this.products) {
+            return this.products;
+        }
+        return null;
+    }
+
     get 'getOpticNumbers'(): string[] | null {
         if (this.products && this.products.length > 0) {
             // Map each product's optic_number to an array
             return this.products.map((product) => product.device.optic_number);
         }
         return [];
+    }
+
+    get 'getContryCode'(): string | null {
+        if (this.country_details) {
+            return this.country_details.code;
+        }
+        return null;
     }
 
     get 'getContryName'(): string | null {
@@ -267,6 +281,16 @@ export class Consultants {
     get 'getStoreName'(): string | null {
         if (this.consultant_shop) {
             return this.consultant_shop.name;
+        }
+        return null;
+    }
+
+    get 'getPosition'(): object | null {
+        if (this.consultant_position) {
+            return {
+                id: this.consultant_position.id,
+                name: this.consultant_position.name,
+            };
         }
         return null;
     }

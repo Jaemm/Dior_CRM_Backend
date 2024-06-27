@@ -40,6 +40,7 @@ import {
     EnterProductDto,
     GetNotificationsDto,
     UpdatePasswordDto,
+    UpdateConsultantRubyDto,
 } from '@/src/modules/consultants/consultants.dto';
 import { JwtService } from '@/src/jwt/jwt.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -90,6 +91,17 @@ export class ConsultantsController {
     ): Promise<any> {
         const consultant = await this.consultants.signUpRuby(body, locale);
         return res.status(200).send(consultant);
+    }
+
+    @Put('/update')
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'update consultant information' })
+    async updateConsultant(
+        @Req() req: Request,
+        @Body() body: UpdateConsultantRubyDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ) {
+        return this.consultants.updateConsultantRuby(req, body, locale);
     }
 
     /**

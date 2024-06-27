@@ -41,6 +41,7 @@ import {
     EnterProductDto,
     GetNotificationsDto,
     UpdatePasswordDto,
+    UpdateConsultantRubyDto,
 } from '@/src/modules/consultants/consultants.dto';
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { DeviceService } from '../devices/devices.service';
@@ -389,6 +390,73 @@ export class ConsultantsService {
                 store: consultantResponseData.consultant_shop,
                 optic_number: consultantResponseData.products[0]?.device.optic_number,
                 password_update_needed: consultantResponseData.password_update_needed,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    public async updateConsultantRuby(req: Request, body: UpdateConsultantRubyDto, locale: string = 'en') {
+        try {
+            const userId = (<{ id: string }>req['user']).id;
+
+            const currentConsultant = await this.ConsultantsRepository.findOne({
+                where: {
+                    id: Number(userId),
+                },
+            });
+
+            if (!currentConsultant) {
+                throw new BadRequestException('Cannot found consultant');
+            }
+
+            Object.assign(currentConsultant, body);
+
+            await this.ConsultantsRepository.save(currentConsultant);
+
+            const updatedConsultant = await this.ConsultantsRepository.findOne({
+                where: {
+                    id: currentConsultant.id,
+                },
+                relations: ['products', 'country_details', 'consultant_position'],
+            });
+
+            return {
+                id: updatedConsultant.id,
+                email: updatedConsultant.email,
+                name: updatedConsultant.name,
+                surname: updatedConsultant.surname,
+                gender: updatedConsultant.gender,
+                os: updatedConsultant.os,
+                language: updatedConsultant.language,
+                phone: updatedConsultant.phone,
+                address: updatedConsultant.address,
+                city: updatedConsultant.city,
+                country: updatedConsultant.country,
+                zip_code: updatedConsultant.zip_code,
+                state: updatedConsultant.state,
+                birthdate: updatedConsultant.birthdate,
+                note: updatedConsultant.note,
+                push_token: updatedConsultant.push_token,
+                memo: updatedConsultant.memo,
+                app_id: updatedConsultant.app_id,
+                company_name: updatedConsultant.company_name,
+                company_address: updatedConsultant.company_address,
+                branch: updatedConsultant.branch,
+                position: updatedConsultant.position,
+                skin_color_group_id: updatedConsultant.skin_color_group_id,
+                ethnicity_id: updatedConsultant.ethnicity_id,
+                callback_url: updatedConsultant.callback_url,
+                code: updatedConsultant.code,
+                token: updatedConsultant.token,
+                refresh_token: null as null,
+                social: updatedConsultant.social,
+                country_code: updatedConsultant.getContryCode,
+                store: updatedConsultant.getStoreName,
+                optic_number: updatedConsultant.getOpticNumbers,
+                password_update_needed: updatedConsultant.password_update_needed,
+                products: updatedConsultant.getProducts,
+                consultant_position: updatedConsultant.getPosition,
             };
         } catch (e) {
             throw e;

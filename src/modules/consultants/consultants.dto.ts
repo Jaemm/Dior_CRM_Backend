@@ -23,6 +23,67 @@ export class ConsultantDto {
     // @IsString()
     confirmPassword: string;
 }
+export class UpdateConsultantRubyDto {
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    email: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    password: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    phone: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    name: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    surname: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    phone_country_code: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    language: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    os: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    address: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    country_code: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    app_id: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    consultant_shop_id: string;
+}
 
 export class UpdateConsultantDto {
     @ApiProperty()
