@@ -89,12 +89,6 @@ export class Applications {
     })
     is_frequently_used: boolean | null;
 
-    @Column('character varying', { name: 'old_ios_version', nullable: true })
-    old_ios_version: string | null;
-
-    @Column('character varying', { name: 'old_android_version', nullable: true })
-    old_android_version: string | null;
-
     @OneToMany(() => AppVersionChecks, (appVersionChecks) => appVersionChecks.app)
     appVersionChecks: AppVersionChecks[];
 

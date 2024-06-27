@@ -104,6 +104,17 @@ export class ConsultantsController {
         return this.consultants.updateConsultantRuby(req, body, locale);
     }
 
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('products/enter')
+    async enterProducts(
+        @Req() req: Request,
+        @Body() body: EnterProductDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ) {
+        return await this.consultants.enterProducts(req, body, locale);
+    }
+
     /**
      *
      * Existing codes
@@ -392,27 +403,6 @@ export class ConsultantsController {
     @Post('tokens/refresh')
     async refreshToken(@Req() req: Request, @Res() res: Response, @Body() body: TokenRefreshDto): Promise<any> {
         const consultant = await this.consultants.refreshToken(body);
-        return res.status(200).send(consultant);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Post('products/enter')
-    async enterProducts(
-        @Req() req: Request,
-        @Res() res: Response,
-        @Body() body: EnterProductDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ): Promise<any> {
-        const userId = Number((<{ id: string }>req['user']).id);
-        console.log('userId', userId);
-        if (!body.optic_number || !body.password || !body.application_id) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.PRODUCT_CREDS_REQUIRED,
-                error: ResponseMessages.ProductCredsRequired,
-            });
-        }
-        const consultant = await this.consultants.enterProducts(userId, body, locale);
         return res.status(200).send(consultant);
     }
 

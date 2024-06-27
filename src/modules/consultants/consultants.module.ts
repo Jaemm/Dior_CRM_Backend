@@ -90,6 +90,7 @@ import { Notifications } from '@/src/common/entities/crmEntities/Notifications.e
             ConsultantCompanies,
             ConsultantCustomzations,
             DoWrite,
+            Devices,
             AdminUsers,
             UserInformation,
             ConsultantCountrys,

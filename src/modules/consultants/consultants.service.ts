@@ -94,7 +94,8 @@ export class ConsultantsService {
         private readonly versionsRepository: Repository<Versions>,
         @InjectRepository(Notifications)
         private readonly notificationRepository: Repository<Notifications>,
-
+        @InjectRepository(Devices)
+        private readonly deviceRepository: Repository<Devices>,
         @InjectRepository(Products)
         private readonly productsRepository: Repository<Products>,
 
@@ -960,7 +961,7 @@ export class ConsultantsService {
     public async findOneConsultant(id: number) {
         const consultant = await this.ConsultantsRepository.findOne({
             where: { id },
-            relations: ['consultant_company', 'country_details', 'gender', 'consultant_position'],
+            relations: ['consultant_company', 'country_details', 'consultant_position'],
         });
 
         return consultant;
@@ -2182,183 +2183,179 @@ export class ConsultantsService {
         };
     }
 
-    public async enterProducts(consultantId: number, data: EnterProductDto, locale: string = 'en') {
-        const { password, application_id, mac_address, lat, lng } = data;
+    public async enterProducts(req: Request, data: EnterProductDto, locale: string = 'en') {
+        try {
+            const consultantId = Number((<{ id: string }>req.user).id);
 
-        const macAddress = mac_address ?? null;
-        const latt = lat ?? null;
-        const long = lng ?? null;
-        const isFirstUseDate = data.first_use_date === 'n';
-        const optic_number = data.optic_number.toUpperCase();
-
-        // const latt = lat ?? null;
-        // const long = lng ?? null;
-        // const macAddress = mac_address ?? '';
-
-        let useDate = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // Format: YYYYMMDD
-        let useTime = new Date().toISOString().slice(11, 16).replace(/:/g, ''); // Format: HHMM
-
-        const consultant = await this.findOneConsultant(consultantId);
-
-        if (!consultant) {
-            this.commonService.throwNotFoundError();
-        }
-
-        const device = await this.devices.findOneDevices({ optic_number, pwd: password });
-
-        if (!device) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.PRODUCT_NOT_FOUND,
-                error: ResponseMessages.ProductNotFound,
-            });
-        }
-
-        // if (device.use_yn !== 'Y') {
-        //     throw new BadRequestException({
-        //         result_code: ErrorStatus.DEVICE_ALREADY_IN_USE,
-        //         error: ResponseMessages.DeviceAlreadyInUse,
-        //     });
-        // }
-
-        const device_id = device.id;
-        console.log('application_id ---------======>', device_id);
-        const product = await this.productsService.findOneProduct(
-            { device_id, application_id },
-            [],
-            ['license', 'application', 'consultant'],
-        );
-
-        if (!product || (product && !product.license)) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.LICENSE_NOT_FOUND,
-                error: ResponseMessages.LicenseNotFound,
-            });
-        }
-
-        // if (product.consultant && product.consultant_id != consultant.id) {
-        //     throw new ConflictException({
-        //         result_code: ErrorStatus.DEVICE_ALREADY_REGISTERED,
-        //         error: ResponseMessages.DeviceAlreadyRegistered,
-        //     });
-        // }
-
-        const beforeUseDate = product.use_date;
-
-        const updateProductResponse = await this.productsService.updateProduct(product.id, {
-            consultant_id: consultant.id,
-            use_date: useDate,
-            use_time: useTime,
-            mac_address: macAddress,
-            app_use_yn: 'Y',
-        });
-
-        if (!updateProductResponse.affected) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.LICENSE_NOT_UPDATED,
-                error: ResponseMessages.LicenseNotUpdated,
-            });
-        }
-
-        let updatedProduct: any = await this.productsService.findOneProduct(
-            { id: product.id },
-            [],
-            ['device', 'license', 'application'],
-        );
-
-        const versionData = {
-            itemId: product.id,
-            itemType: VersionItemType.Product,
-            event: VersionEvent.Update,
-            object: JSON.stringify(product),
-            objectChanges: JSON.stringify(updatedProduct),
-            comments: 'done by api, triggered by user',
-            whodunnit: consultant.id,
-            createdAt: new Date(),
-        };
-
-        await this.versionsRepository.save(versionData);
-
-        if (device.consultant_company_id) {
-            await this.updateConsultant(consultant.id, { consultant_company_id: device.consultant_company_id });
-        }
-
-        if (beforeUseDate == null || (beforeUseDate == '' && product.use_date)) {
-            if (!isFirstUseDate) {
-                await this.productsService.updateProduct(product.id, {
-                    consultant_id: consultant.id,
-                    first_use_date: product.use_date?.toString().replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
-                });
-
-                updatedProduct = await this.productsService.findOneProduct(
-                    { id: product.id },
-                    [],
-                    ['device', 'license', 'application'],
-                );
-
-                const versionData = {
-                    itemId: product.id,
-                    itemType: VersionItemType.Product,
-                    event: VersionEvent.Update,
-                    object: JSON.stringify(product),
-                    objectChanges: JSON.stringify(updatedProduct),
-                    comments: 'done by api, triggered by user',
-                    whodunnit: consultant.id,
-                    createdAt: new Date(),
-                };
-
-                await this.versionsRepository.save(versionData);
-
-                if (consultant.email) {
-                    const subject = await this.commonService.translate('device_activation_subject', locale);
-
-                    await this.commonService.sendEmail({
-                        to: consultant.email,
-                        subject: subject,
-                        templateName: 'device-activation',
-                        templateContext: {
-                            deviceNumber: device.optic_number,
-                            email: consultant.email,
-                        },
-                    });
-                }
+            if (!data.optic_number || !data.password || !data.application_id) {
+                throw new BadRequestException('1:필수값 누락');
             }
-        }
 
-        await this.devices.updateDevice(device.id, { lat: latt, lng: long });
+            const { password, application_id, mac_address, lat, lng } = data;
 
-        if (device.consultant_company_id) {
-            updatedProduct.device.consultant_company = await this.getCompanyDetails({
-                consultant_company_id: device.consultant_company_id,
+            const macAddress = mac_address ?? null;
+            const latt = lat ?? null;
+            const long = lng ?? null;
+            const isFirstUseDate = data.first_use_date === 'n';
+            const optic_number = data.optic_number.toUpperCase();
+
+            let useDate = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // Format: YYYYMMDD
+            let useTime = new Date().toISOString().slice(11, 16).replace(/:/g, ''); // Format: HHMM
+
+            const consultant = await this.findOneConsultant(consultantId);
+
+            if (!consultant) {
+                this.commonService.throwNotFoundError();
+            }
+
+            const device = await this.deviceRepository.findOne({
+                where: {
+                    optic_number: optic_number,
+                    pwd: password,
+                },
+                relations: ['consultant_company'],
             });
+
+            if (!device) {
+                throw new BadRequestException('2:존재하지 않는 정보');
+            }
+
+            if (device.use_yn !== 'Y') {
+                throw new BadRequestException('3:존재하지 않는 정보');
+            }
+
+            const device_id = device.id;
+
+            const product = await this.productsService.findOneProduct(
+                { device_id, application_id },
+                [],
+                ['license', 'application', 'consultant'],
+            );
+
+            if (!product || (product && !product.license)) {
+                throw new BadRequestException('5:존재하지 않는 정보');
+            }
+
+            if (product.consultant && product.consultant_id != consultant.id) {
+                throw new ConflictException('7:Device already registered by another consultant.');
+            }
+
+            const beforeUseDate = product.use_date;
+
+            product.consultant_id = consultant.id;
+            product.use_date = useDate;
+            product.use_time = useTime;
+            product.mac_address = macAddress;
+            product.app_use_yn = 'Y';
+            // comments
+
+            try {
+                await this.productsRepository.save(product);
+            } catch (e) {
+                throw new Error('6:사용등록오류');
+            }
+
+            const consultantCompanyId = device.consultant_company_id;
+            if (consultantCompanyId) {
+                const currentConsultant = await this.ConsultantsRepository.findOne({ where: { id: consultant.id } });
+                currentConsultant.consultant_company_id = consultantCompanyId;
+                await this.ConsultantsRepository.save(currentConsultant);
+            }
+
+            if (!beforeUseDate && product.use_date && !isFirstUseDate) {
+                product.first_use_date = product.use_date;
+                await this.productsRepository.save(product);
+            }
+
+            device.lng = long;
+            device.lat = latt;
+
+            await this.deviceRepository.save(device);
+
+            return {
+                result_code: '0',
+                product: {
+                    id: product.id,
+                    first_use_date: product.first_use_date,
+                    use_date: product.use_date,
+                    use_time: product.use_time,
+                    mac_address: product.mac_address,
+                    app_use_yn: product.app_use_yn,
+                    license_period: product.license_period,
+                    created_at: product.created_at,
+                    is_expired: product.getIsExpired,
+                    device: {
+                        id: device.id,
+                        optic_number: device.optic_number,
+                        serial_number: device.serial_number,
+                        docking_number: device.docking_number,
+                        wb: device.wb,
+                        cal: device.cal,
+                        refresh_date: device.refresh_date,
+                        app_version: device.app_version,
+                        app_update_date: device.app_update_date,
+                        division: device.division,
+                        use_yn: device.use_yn,
+                        lat: device.lat,
+                        lng: device.lng,
+                        consultant_company: {
+                            id: device.consultant_company.id,
+                            name: device.consultant_company.name,
+                            address: device.consultant_company.address,
+                            email: device.consultant_company.email,
+                            phone: device.consultant_company.phone,
+                            font: device.consultant_company.font,
+                            primary_color_code: device.consultant_company.primary_color_code,
+                            secondary_color_code: device.consultant_company.secondary_color_code,
+                            program_color_code: device.consultant_company.program_color_code,
+                            top_color_code: device.consultant_company.top_color_code,
+                            text_icon_color_code: device.consultant_company.text_icon_color_code,
+                            pie_chart_color_1: device.consultant_company.pie_chart_color_1,
+                            pie_chart_color_2: device.consultant_company.pie_chart_color_2,
+                            pie_chart_color_3: device.consultant_company.pie_chart_color_3,
+                            pie_chart_color_4: device.consultant_company.pie_chart_color_4,
+                            pie_chart_color_5: device.consultant_company.pie_chart_color_5,
+                            pie_chart_points_color: device.consultant_company.pie_chart_points_color,
+                            logo_url: null as null,
+                            app_icon_url: null as null,
+                            background_image_url: null as null,
+                            progressbar_image_1_url: null as null,
+                            progressbar_image_2_url: null as null,
+                            progressbar_image_3_url: null as null,
+                            created_at: device.consultant_company.created_at,
+                        },
+                    },
+                    license: {
+                        id: product.license.id,
+                        name: product.license.name,
+                    },
+                    application: {
+                        id: product.application.id,
+                        name: product.application.name,
+                        apk_url: product.application.apk_url,
+                        version: product.application.version,
+                        group_name: product.application.group_name,
+                        regist_date: product.application.regist_date,
+                        description: product.application.description,
+                        ios_version: product.application.ios_version,
+                        android_version: product.application.android_version,
+                        android_app_url: product.application.android_app_url,
+                        ios_app_url: product.application.ios_app_url,
+                        is_old: product.application.is_old,
+                        app_icon: null as null,
+                    },
+                },
+            };
+        } catch (e) {
+            const splitMessage = e.message.split(':');
+            if (splitMessage.length > 1) {
+                return {
+                    result_code: splitMessage[0],
+                    error: splitMessage[1],
+                };
+            }
+            throw e;
         }
-
-        const expiredDate = this.expiredDate(product.first_use_date, product.license_period);
-        let formattedDate;
-
-        if (expiredDate) {
-            const month = (expiredDate.getMonth() + 1).toString().padStart(2, '0');
-            const date = expiredDate.getDate().toString().padStart(2, '0');
-            const year = expiredDate.getFullYear();
-            formattedDate = `${year}-${month}-${date}`;
-        }
-        updatedProduct.expired_date = formattedDate ?? null;
-        updatedProduct.is_expired = updatedProduct.expired_date ? new Date() > updatedProduct.expired_date : false;
-
-        const files = await this.companies.getCompaniesFiles(String(updatedProduct.application.id));
-        const attachmentObject: any = {};
-        files.forEach((attachment) => {
-            const { name, blob } = attachment;
-            const { key } = blob;
-            attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
-        });
-        updatedProduct.application.apk_url = attachmentObject.apk;
-        updatedProduct.application.old_apk_url = attachmentObject.old_apk;
-        updatedProduct.application.app_icon = attachmentObject.icon;
-
-        return {
-            result_code: '0',
-            product: updatedProduct,
-        };
     }
 
     async getNotifications(id: number, data: GetNotificationsDto) {

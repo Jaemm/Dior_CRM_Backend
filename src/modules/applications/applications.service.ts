@@ -41,8 +41,7 @@ export class ApplicationsService {
     }
 
     async applicationVersionCheck(appData: ApplicationsVersionCheckDto) {
-
-        console.log()
+        console.log();
         const { app_id, operating_system } = appData;
 
         const applications = await this.findApplications(
@@ -66,28 +65,28 @@ export class ApplicationsService {
                 });
             }
 
-            if (application.ios_version <= application.old_ios_version) {
-                throw new BadRequestException({
-                    result_code: ErrorStatus.BAD_REQUEST,
-                    error: ResponseMessages.VersionNotUpdated,
-                });
-            }
-        }
+            //     if (application.ios_version <= application.old_ios_version) {
+            //         throw new BadRequestException({
+            //             result_code: ErrorStatus.BAD_REQUEST,
+            //             error: ResponseMessages.VersionNotUpdated,
+            //         });
+            //     }
+            // }
 
-        if (operating_system === 'aos') {
-            if (application.android_version === null || application.old_android_version === '') {
-                throw new BadRequestException({
-                    result_code: ErrorStatus.BAD_REQUEST,
-                    error: ResponseMessages.VersionNotUpdated,
-                });
-            }
+            // if (operating_system === 'aos') {
+            //     if (application.android_version === null || application.old_android_version === '') {
+            //         throw new BadRequestException({
+            //             result_code: ErrorStatus.BAD_REQUEST,
+            //             error: ResponseMessages.VersionNotUpdated,
+            //         });
+            //     }
 
-            if (application.android_version <= application.old_android_version) {
-                throw new BadRequestException({
-                    result_code: ErrorStatus.BAD_REQUEST,
-                    error: ResponseMessages.VersionNotUpdated,
-                });
-            }
+            //     if (application.android_version <= application.old_android_version) {
+            //         throw new BadRequestException({
+            //             result_code: ErrorStatus.BAD_REQUEST,
+            //             error: ResponseMessages.VersionNotUpdated,
+            //         });
+            //     }
         }
 
         return {
@@ -95,8 +94,8 @@ export class ApplicationsService {
             app_id,
             app_version: operating_system === 'aos' ? application.android_version : application.ios_version,
             operating_system,
-            old_ios_version: application.old_ios_version,
-            old_android_version: application.old_android_version,
+            // old_ios_version: application.old_ios_version,
+            // old_android_version: application.old_android_version,
         };
     }
 }
