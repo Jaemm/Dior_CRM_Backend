@@ -99,8 +99,8 @@ export class ConsultantsService {
         private readonly deviceRepository: Repository<Devices>,
         @InjectRepository(Products)
         private readonly productsRepository: Repository<Products>,
-        // @InjectRepository(PasswordEmailDetails)
-        // private readonly passwordDetailRepository: Repository<PasswordEmailDetails>,
+        @InjectRepository(PasswordEmailDetails)
+        private readonly passwordDetailRepository: Repository<PasswordEmailDetails>,
 
         private readonly configService: ConfigService,
         private readonly licenceService: LicenceService,
@@ -1527,13 +1527,27 @@ export class ConsultantsService {
     public async password(data: PasswordDto, locale: string = 'en') {
         const { email, app_id } = data;
 
-        let consultant = await this.findConsultant(Number(app_id), email);
+        const consultant = await this.findConsultant(Number(app_id), email);
 
         if (!consultant) {
             throw new NotFoundException('Please enter a valid email address.');
         }
 
         const MAXIMUM_REQUEST_PASSWORD_RESET = 5;
+
+        const oneHourAgo = new Date(Date.now() - 3600000);
+
+        const oneHourCount = await this.passwordDetailRepository
+            .createQueryBuilder('pwdetail')
+            .where('LOWER(pwdetail.email) = LOWER(:email)', { email })
+            .andWhere('pwdetail.created_at >= :oneHourAgo', { oneHourAgo })
+            .getCount();
+
+        if (oneHourCount >= MAXIMUM_REQUEST_PASSWORD_RESET) {
+            throw new BadRequestException('You have reached maximum limit of reset password request!');
+        }
+
+        await this.passwordDetailRepository.save({ email: email, createdAt: new Date(), updatedAt: new Date() });
 
         const password = this.commonService.generateRandomPassword(12);
         const hashedPassword = await argon2.hash(password);

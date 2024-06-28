@@ -83,6 +83,7 @@ import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
 import { CustomerLog } from '@/src/common/entities/crmEntities/CustomerLog.entity';
 import { CustomerConsentsModule } from '../customerConsents/customerConsents.module';
 import { Notifications } from '@/src/common/entities/crmEntities/Notifications.entity';
+import { PasswordEmailDetails } from '@/src/common/entities/crmEntities/PasswordEmailDetails.entity';
 
 @Module({
     imports: [
@@ -92,6 +93,7 @@ import { Notifications } from '@/src/common/entities/crmEntities/Notifications.e
             ConsultantBranches,
             ConsultantCompanies,
             ConsultantCustomzations,
+            PasswordEmailDetails,
             DoWrite,
             AdminUsers,
             UserInformation,
