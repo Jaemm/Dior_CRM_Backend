@@ -79,6 +79,7 @@ import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
 import { Role } from '@/src/common/enums/role.enum';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { TargetType } from '@/src/common/enums/target-type.enum';
+import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
 
 @Injectable()
 export class ConsultantsService {
@@ -1791,93 +1792,98 @@ export class ConsultantsService {
         return this.commonService.generateMessage('Password updated successfully.');
     }
 
-    public async requestCallbackUrl(data: RequestCallBackUrlDto, token: string) {
-        const batchIds = data.batch_ids;
-        let urlMissing = false;
+    public async requestCallbackUrl(data: RequestCallBackUrlDto, req: Request) {
+        try {
+            const batchIds = data.batch_ids;
+            let urlMissing = false;
 
-        const analysisTypes = batchIds.map((b) => b.analysis_type);
-        const results: any = [];
+            const token = this.jwtService.getTokenFromRequest(req);
 
-        for (let analysisType of analysisTypes || []) {
-            let batchId = this.findBatchIdByAnalysis(batchIds, analysisType);
-
-            if (batchId) {
-                const result: any[] = await new Promise(async (resolve) => {
-                    const result = await this.getWebResultAnalysisByBatchId(batchId, analysisType, token);
-                    resolve(result);
+            if (!token) {
+                // Token not provided, handle accordingly (e.g., return unauthorized response)
+                throw new UnauthorizedException({
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: ResponseMessages.Unauthorized,
                 });
-
-                results.push(
-                    ...result.map((h: any) => ({
-                        measurement: h.measurement,
-                        value: h.value,
-                        date: h.date,
-                        avg_value: h.avg_value,
-                    })),
-                );
             }
-        }
 
-        const customer = await this.customerService.getCustomer(
-            { id: data.customer_id },
-            ['id', 'birth', 'age', 'skin_color_group_id', 'ethnicity_id', 'email', 'phone'],
-            ['gender'],
-        );
+            const analysisTypes = batchIds.map((b) => b.analysis_type);
+            const results: any = [];
 
-        if (!customer) {
-            throw new NotFoundException({
-                result_code: ErrorStatus.CUSTOMER_NOT_FOUND,
-                error: ResponseMessages.CustomerNotFound,
+            for (let analysisType of analysisTypes || []) {
+                let batchId = this.findBatchIdByAnalysis(batchIds, analysisType);
+
+                if (batchId) {
+                    const result: any[] = await new Promise(async (resolve) => {
+                        const result = await this.getWebResultAnalysisByBatchId(batchId, analysisType, token);
+                        resolve(result);
+                    });
+
+                    results.push(
+                        ...result.map((h: any) => ({
+                            measurement: h.measurement,
+                            value: h.value,
+                            date: h.date,
+                            avg_value: h.avg_value,
+                        })),
+                    );
+                }
+            }
+
+            const userId = (<{ id: string }>req.user).id;
+            const currentConsultant = await this.ConsultantsRepository.findOne({
+                where: {
+                    id: Number(userId),
+                },
+                relations: ['consultant_branch', 'products', 'consultant_company'],
             });
-        }
-        customer['customer_id'] = customer.id;
-        delete customer.id;
 
-        const consultant = await this.getConsultant(
-            { id: data.consultant_id },
-            ['id', 'name', 'email'],
-            ['consultant_company.consultantCustomzations'],
-        );
-
-        if (!consultant) {
-            this.commonService.throwNotFoundError();
-        }
-        consultant['consultant_id'] = consultant.id;
-        delete consultant.id;
-
-        const details: any = {
-            consultant: consultant,
-            customer: customer,
-            bc_name: consultant.name,
-            branch_name: null,
-            device_code: consultant.getSerialNumbers.length ? consultant.getSerialNumbers : null,
-            analysis: results,
-        };
-
-        let message = '';
-        const url = consultant.consultant_company?.consultantCustomzations[0]?.data_exchange_url;
-
-        if (url) {
-            const response = await axios
-                .post(url, details, { headers: { 'Content-Type': 'application/json' } })
-                .catch(() => {
-                    message = 'Something went wrong while sending data!';
+            if (!currentConsultant) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.BAD_REQUEST,
+                    error: 'Cannot found consultant',
                 });
-            if (!response) {
-                message = 'Something went wrong while sending data!';
-            } else {
-                message = 'Success send data to URL';
             }
-        } else {
-            message = 'Data exchange url is missing for company';
-            urlMissing = true;
-        }
 
-        if (urlMissing) {
-            return { status: ErrorStatus.BAD_REQUEST, message: message };
-        } else {
-            delete consultant.consultant_company;
-            return { status: HttpStatus.OK, body: details, message: message };
+            const information = {
+                email: currentConsultant?.email,
+                name: currentConsultant?.name,
+                phone: currentConsultant?.phone,
+                bc_name: currentConsultant?.name,
+                branch_name: currentConsultant?.consultant_branch?.name,
+                device_code: currentConsultant?.getSerialNumbers,
+                analysis: results,
+            };
+
+            const url = currentConsultant.consultant_company?.data_exchange_url;
+
+            let returnMessage: string;
+            if (url) {
+                try {
+                    await axios.post(url, information, { headers: { 'Content-Type': 'application/json' } });
+                    returnMessage = 'Success send data to URL';
+                } catch {
+                    returnMessage = 'Something went wrong while sending data!';
+                }
+            } else {
+                returnMessage = 'Data exchange url is missing for company';
+                urlMissing = true;
+            }
+
+            if (urlMissing) {
+                throw new BadRequestException({
+                    status: 400,
+                    message: returnMessage,
+                });
+            } else {
+                return {
+                    status: 200,
+                    body: information,
+                    message: returnMessage,
+                };
+            }
+        } catch (e) {
+            return e.response;
         }
     }
 

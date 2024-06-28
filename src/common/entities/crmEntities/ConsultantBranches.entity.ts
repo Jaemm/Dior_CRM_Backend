@@ -2,6 +2,7 @@ import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGenerat
 import { ConsultantCompanies } from './ConsultantCompanies.entity';
 import { Countries } from './Countries.entity';
 import { ConsultantShops } from './ConsultantShops.entity';
+import { Consultants } from './Consultants.entity';
 
 @Index('index_consultant_branches_on_consultant_company_id', ['consultantCompanyId'], {})
 @Index('consultant_branches_pkey', ['id'], { unique: true })
@@ -31,10 +32,10 @@ export class ConsultantBranches {
     @Column('character varying', { name: 'password', nullable: true })
     password: string | null;
 
-    @Column('character varying', { name: 'country_name', nullable: true })
-    countryName: string | null;
+    @Column('character varying', { name: 'country', nullable: true })
+    country: string | null;
 
-    @Column('integer', { name: 'country_id', nullable: true })
+    @Column('integer', { name: 'consultant_country_id', nullable: true })
     countryId: number | null;
 
     @ManyToOne(() => ConsultantCompanies, (consultantCompanies) => consultantCompanies.consultantBranches, {
@@ -46,4 +47,7 @@ export class ConsultantBranches {
 
     @OneToMany(() => ConsultantShops, (consultantShops) => consultantShops.consultantBranch)
     consultantShops: ConsultantShops[];
+
+    @OneToMany(() => Consultants, (consultant) => consultant.consultant_branch)
+    consultants: ConsultantShops[];
 }

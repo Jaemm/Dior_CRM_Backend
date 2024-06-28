@@ -161,22 +161,8 @@ export class ConsultantsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('request_callback_url')
-    async requestCallbackUrl(
-        @Req() req: Request,
-        @Res() res: Response,
-        @Body() body: RequestCallBackUrlDto,
-    ): Promise<any> {
-        const token = this.jwtService.getTokenFromRequest(req);
-
-        if (!token) {
-            // Token not provided, handle accordingly (e.g., return unauthorized response)
-            throw new UnauthorizedException({
-                result_code: ErrorStatus.UNAUTHORIZED,
-                error: ResponseMessages.Unauthorized,
-            });
-        }
-        const consultant = await this.consultants.requestCallbackUrl(body, token);
-        return res.status(200).send(consultant);
+    async requestCallbackUrl(@Req() req: Request, @Body() body: RequestCallBackUrlDto) {
+        return await this.consultants.requestCallbackUrl(body, req);
     }
 
     /**

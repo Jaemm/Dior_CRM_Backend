@@ -2,6 +2,7 @@ export { AdminUsers } from './AdminUsers.entity';
 export { Applications } from './Applications.entity';
 export { Consultants } from './Consultants.entity';
 export { Brands } from './Brand.entity';
+export { ConsultantBranches } from './ConsultantBranches.entity';
 export { ConsultantCompanies } from './ConsultantCompanies.entity';
 export { Countries } from './Countries.entity';
 export { ConsultantShops } from './ConsultantShops.entity';

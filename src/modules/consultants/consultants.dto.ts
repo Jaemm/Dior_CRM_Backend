@@ -443,14 +443,6 @@ export class RequestCallBackUrlDto {
     })
     @IsArray()
     batch_ids: BatchDto[];
-
-    @ApiProperty()
-    @Validate(IsNumberOrString)
-    customer_id: string;
-
-    @ApiProperty()
-    @Validate(IsNumberOrString)
-    consultant_id: string;
 }
 
 export class AllLicenseDto {

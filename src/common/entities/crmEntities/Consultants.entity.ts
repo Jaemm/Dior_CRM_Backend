@@ -18,6 +18,7 @@ import { Position } from 'aws-sdk/clients/codecommit';
 import { ConsultantPositions } from './ConsultantPositions.entity';
 import { Products } from './Products.entity';
 import { ConsultantCountries } from './ConsultantCountries.entity';
+import { ConsultantBranches } from './ConsultantBranches.entity';
 
 @Index('index_consultants_on_email_and_app_id', ['app_id', 'email'], {
     unique: true,
@@ -219,6 +220,13 @@ export class Consultants {
     })
     @JoinColumn([{ name: 'consultant_shop_id', referencedColumnName: 'id' }])
     'consultant_shop': ConsultantShops;
+
+    @ManyToOne(() => ConsultantBranches, (branches: ConsultantBranches) => branches.consultants, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+    })
+    @JoinColumn([{ name: 'consultant_branch_id', referencedColumnName: 'id' }])
+    'consultant_branch': ConsultantBranches;
 
     @ManyToOne(() => ConsultantCountries, (countries: ConsultantCountries) => countries.consultants, {
         onDelete: 'CASCADE',
