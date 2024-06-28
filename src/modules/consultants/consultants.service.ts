@@ -897,11 +897,106 @@ export class ConsultantsService {
         }
     }
 
-    async logout(id: number): Promise<IMessage> {
-        await this.updateConsultant(id, {
-            token: null,
-        });
-        return this.commonService.generateMessage('success');
+    async logout(id: number) {
+        try {
+            const currentConsultant = await this.ConsultantsRepository.findOneBy({ id });
+
+            if (!currentConsultant) {
+                throw new BadRequestException('Cannot found current consultant');
+            }
+
+            currentConsultant.token = null;
+            const logoutConsultant = await this.ConsultantsRepository.save(currentConsultant);
+
+            if (currentConsultant.email.includes('chowistest') || currentConsultant.email.includes('@chowisas.com')) {
+                const product = await this.productsRepository.find({
+                    where: {
+                        consultant_id: currentConsultant.id,
+                    },
+                });
+
+                let chowisTestResetList: object[];
+
+                // ruby code says FULL - RESET
+                if (currentConsultant.email.includes('chowistest')) {
+                    chowisTestResetList = product.map((p) => {
+                        const prod = p;
+                        Object.assign(prod, {
+                            consultant_id: null,
+                            customer_id: null,
+                            use_date: null,
+                            use_time: null,
+                            mac_address: null,
+                            app_use_yn: 'N',
+                            first_use_date: null,
+                        });
+
+                        return this.productsRepository.save(prod);
+                    });
+                }
+
+                // ruby code says RESET
+                if (currentConsultant.email.includes('@chowisas.com')) {
+                    chowisTestResetList = product.map((p) => {
+                        const prod = p;
+                        Object.assign(prod, {
+                            use_date: null,
+                            use_time: null,
+                            mac_address: null,
+                            app_use_yn: 'N',
+                        });
+
+                        return this.productsRepository.save(prod);
+                    });
+                }
+                await Promise.all(chowisTestResetList);
+            }
+
+            logoutConsultant;
+
+            return {
+                id: logoutConsultant.id,
+                email: logoutConsultant.email,
+                name: logoutConsultant.name,
+                surname: logoutConsultant.surname,
+                gender: logoutConsultant.gender,
+                os: logoutConsultant.os,
+                language: logoutConsultant.language,
+                phone: logoutConsultant.phone,
+                address: logoutConsultant.address,
+                city: logoutConsultant.city,
+                country: logoutConsultant.country,
+                zip_code: logoutConsultant.zip_code,
+                state: logoutConsultant.state,
+                birthdate: logoutConsultant.birthdate,
+                note: logoutConsultant.note,
+                push_token: logoutConsultant.push_token,
+                memo: logoutConsultant.memo,
+                app_id: logoutConsultant.app_id,
+                company_name: logoutConsultant.company_name,
+                company_address: logoutConsultant.company_address,
+                branch: logoutConsultant.branch,
+                position: logoutConsultant.position,
+                skin_color_group_id: logoutConsultant.skin_color_group_id,
+                ethnicity_id: logoutConsultant.ethnicity_id,
+                callback_url: logoutConsultant.callback_url,
+                code: logoutConsultant.code,
+                token: logoutConsultant.token,
+                refresh_token: null as null,
+                social: logoutConsultant.social,
+                // country_code: logoutConsultant.country_code,
+                // store: logoutConsultant.store,
+                // optic_number: [],
+                password_update_needed: logoutConsultant.password_update_needed,
+                // products: [],
+                // consultant_position: {
+                //     id: 4,
+                //     name: 'Brand Manager',
+                // },
+            };
+        } catch (e) {
+            throw e;
+        }
     }
 
     async getCurConsultantInfo(req: Request) {
@@ -1525,47 +1620,51 @@ export class ConsultantsService {
     }
 
     public async password(data: PasswordDto, locale: string = 'en') {
-        const { email, app_id } = data;
+        try {
+            const { email, app_id } = data;
 
-        const consultant = await this.findConsultant(Number(app_id), email);
+            const consultant = await this.findConsultant(Number(app_id), email);
 
-        if (!consultant) {
-            throw new NotFoundException('Please enter a valid email address.');
+            if (!consultant) {
+                throw new NotFoundException('Please enter a valid email address.');
+            }
+
+            const MAXIMUM_REQUEST_PASSWORD_RESET = 5;
+
+            const oneHourAgo = new Date(Date.now() - 3600000);
+
+            const oneHourCount = await this.passwordDetailRepository
+                .createQueryBuilder('pwdetail')
+                .where('LOWER(pwdetail.email) = LOWER(:email)', { email })
+                .andWhere('pwdetail.created_at >= :oneHourAgo', { oneHourAgo })
+                .getCount();
+
+            if (oneHourCount >= MAXIMUM_REQUEST_PASSWORD_RESET) {
+                throw new BadRequestException('You have reached maximum limit of reset password request!');
+            }
+
+            await this.passwordDetailRepository.save({ email: email, createdAt: new Date(), updatedAt: new Date() });
+
+            const password = this.commonService.generateRandomPassword(12);
+            const hashedPassword = await argon2.hash(password);
+
+            await this.updateConsultant(consultant.id, { password_digest: hashedPassword });
+
+            const subject = await this.commonService.translate('password_recovery_subject', locale);
+
+            await this.commonService.sendEmail({
+                to: consultant.email,
+                subject: subject,
+                templateName: 'password-recovery',
+                templateContext: {
+                    password: password,
+                },
+            });
+
+            return this.commonService.generateMessage('Success!');
+        } catch (e) {
+            throw e;
         }
-
-        const MAXIMUM_REQUEST_PASSWORD_RESET = 5;
-
-        const oneHourAgo = new Date(Date.now() - 3600000);
-
-        const oneHourCount = await this.passwordDetailRepository
-            .createQueryBuilder('pwdetail')
-            .where('LOWER(pwdetail.email) = LOWER(:email)', { email })
-            .andWhere('pwdetail.created_at >= :oneHourAgo', { oneHourAgo })
-            .getCount();
-
-        if (oneHourCount >= MAXIMUM_REQUEST_PASSWORD_RESET) {
-            throw new BadRequestException('You have reached maximum limit of reset password request!');
-        }
-
-        await this.passwordDetailRepository.save({ email: email, createdAt: new Date(), updatedAt: new Date() });
-
-        const password = this.commonService.generateRandomPassword(12);
-        const hashedPassword = await argon2.hash(password);
-
-        await this.updateConsultant(consultant.id, { password_digest: hashedPassword });
-
-        const subject = await this.commonService.translate('password_recovery_subject', locale);
-
-        await this.commonService.sendEmail({
-            to: consultant.email,
-            subject: subject,
-            templateName: 'password-recovery',
-            templateContext: {
-                password: password,
-            },
-        });
-
-        return this.commonService.generateMessage('Success!');
     }
 
     public async passwordChange(consultantId: number, data: PasswrodChangeDto, locale = 'en') {

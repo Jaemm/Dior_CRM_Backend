@@ -118,11 +118,31 @@ export class ConsultantsController {
     @Post('password')
     async password(
         @Req() req: Request,
-        @Res() res: Response,
         @Body() body: PasswordDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
-        const consultant = await this.consultants.password(body, locale);
+        return await this.consultants.password(body, locale);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('logout')
+    async logout(@Req() req: Request): Promise<any> {
+        const userId = Number((<{ id: string }>req['user']).id);
+        return await this.consultants.logout(userId);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('password_change')
+    async passwordChange(
+        @Req() req: Request,
+        @Res() res: Response,
+        @Body() body: PasswrodChangeDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ): Promise<any> {
+        const userId = Number((<{ id: string }>req['user']).id);
+        const consultant = await this.consultants.passwordChange(userId, body, locale);
         return res.status(200).send(consultant);
     }
 
@@ -225,20 +245,6 @@ export class ConsultantsController {
     //     return res.status(200).send(consultant);
     // }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Post('password_change')
-    async passwordChange(
-        @Req() req: Request,
-        @Res() res: Response,
-        @Body() body: PasswrodChangeDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ): Promise<any> {
-        const userId = Number((<{ id: string }>req['user']).id);
-        const consultant = await this.consultants.passwordChange(userId, body, locale);
-        return res.status(200).send(consultant);
-    }
-
     @Get('password-change')
     async passwordChangeNew(@Req() req: Request, @Res() res: Response, @Query('token') token: string): Promise<any> {
         const consultant = await this.consultants.passwordChangeNew(token);
@@ -259,17 +265,6 @@ export class ConsultantsController {
     @Post('update-password')
     async updatePassword(@Req() req: Request, @Res() res: Response, @Body() data: UpdatePasswordDto): Promise<any> {
         const consultant = await this.consultants.updatePassword(data);
-        return res.status(200).send(consultant);
-    }
-
-    // @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Post('logout')
-    async logout(@Req() req: Request, @Res() res: Response): Promise<any> {
-        const userId = Number((<{ id: string }>req['user']).id);
-
-        console.log('loggingngngngn');
-        const consultant = await this.consultants.logout(userId);
         return res.status(200).send(consultant);
     }
 
