@@ -147,16 +147,9 @@ export class ConsultantsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Delete('delete_account')
-    async deleteAccount(@Req() req: Request): Promise<any> {
+    async deleteAccount(@Req() req: Request, @Query('reason') reason?: string): Promise<any> {
         const userId = Number((<{ id: string }>req['user']).id);
-        return await this.consultants.deleteAccount(userId);
-    }
-
-    @ApiBearerAuth()
-    @Get('notifications')
-    async notifications(@Req() req: Request, @Query() query: GetNotificationsDto): Promise<any> {
-        const consultantId = Number((<{ id: string }>req['user']).id);
-        return await this.consultants.getNotifications(consultantId, query);
+        return await this.consultants.deleteAccount(userId, reason);
     }
 
     @ApiBearerAuth()
@@ -418,5 +411,12 @@ export class ConsultantsController {
         const consultantId = Number((<{ id: string }>req['user']).id);
         const customer = await this.crmService.getCustomerById(consultantId, Number(customerId));
         return res.status(200).send(customer);
+    }
+
+    @ApiBearerAuth()
+    @Get('notifications')
+    async notifications(@Req() req: Request, @Query() query: GetNotificationsDto): Promise<any> {
+        const consultantId = Number((<{ id: string }>req['user']).id);
+        return await this.consultants.getNotifications(consultantId, query);
     }
 }

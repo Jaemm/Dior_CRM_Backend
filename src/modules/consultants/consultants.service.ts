@@ -1,3 +1,7 @@
+import * as path from 'path';
+import { createWriteStream, existsSync } from 'fs';
+import * as csv from 'csv';
+
 import {
     BadRequestException,
     ConflictException,
@@ -1938,7 +1942,7 @@ export class ConsultantsService {
         return company;
     }
 
-    public async deleteAccount(userId: number) {
+    public async deleteAccount(userId: number, reason: string = '') {
         const consultant = await this.ConsultantsRepository.findOne({
             where: { id: userId },
         });
@@ -1948,6 +1952,11 @@ export class ConsultantsService {
         }
 
         await this.ConsultantsRepository.delete(userId);
+
+        const FILE_NAME = 'deleted_consultant_b2b.csv';
+
+        await this.writeSCVFile(consultant, reason, FILE_NAME);
+
         return this.commonService.generateMessage(ResponseMessages.AccountDeleted);
     }
 
@@ -2520,88 +2529,42 @@ export class ConsultantsService {
         return this.commonService.generateMessage(ResponseMessages.NotificationDelete);
     }
 
-    // async resetPassword(token: string, resetData: ResetPasswordDto) {
-    //     const data = await this.userService.findByPasswordToken(token);
-    //     const currentDate = new Date();
-    //     if (!data) {
-    //         throw new UnauthorizedException('Please verify you have a valid token');
-    //     }
-    //     const errors = [];
-    //     // Verify that the reset token is valid and hasn't expired
-    //     const timestamp1: any = new Date(data.resetPasswordSentAt);
-    //     const timestamp2: any = new Date(currentDate);
+    async writeSCVFile(entity: Consultants, reason: string, fileName: string) {
+        const folderPath = process.env?.CSV_FILE_PATH || path.join(__dirname, '/csv_files');
 
-    //     // Calculate the time difference in milliseconds
-    //     const timeDifference = timestamp1 - timestamp2;
+        const filePath = path.join(folderPath, fileName);
 
-    //     // Define the maximum allowed difference in milliseconds (10 minutes)
-    //     const maxDifference = 10 * 60 * 1000; // 10 minutes in milliseconds
+        if (!existsSync(folderPath)) {
+            fs.mkdir(folderPath);
+        }
 
-    //     if (timeDifference < maxDifference) {
-    //         //Time difference is greater than 10 minutes
-    //         if (resetData.password.length < 6) {
-    //             errors.push('Password should contain more than 6 letters');
-    //         }
+        const record = [
+            new Date().toISOString().replace('T', ' ').substring(0, 16), // 'YYYY-MM-DD HH:mm'
+            entity.id,
+            entity.email,
+            entity.app_id,
+            reason,
+        ];
 
-    //         if (!resetData?.confirmPassword) {
-    //             errors.push('You need to confirm your password');
-    //         }
-    //         if (resetData.password !== resetData.confirmPassword) {
-    //             errors.push('password does not match');
-    //         }
+        const writeStream = await createWriteStream(filePath, { flags: 'a' });
 
-    //         if (errors.length > 0) {
-    //             console.log(errors);
-    //             throw new BadRequestException(errors.join('\n'));
-    //         }
-
-    //         const encyptedPwd = await argon2.hash(resetData.password);
-    //         data.argonPassword = encyptedPwd;
-    //         data.resetPasswordSentAt = null;
-    //         data.resetPasswordToken = null;
-
-    //         return this.userService.updateUserPassword(data.id, data);
-    //     } else {
-    //         throw new UnauthorizedException('Time already expired'); // Time difference is not greater than 10 minutes
-    //     }
-
-    //     // Retrieve the user's email associated with the token
-    //     // Update the user's password in your database with the new password
-    //     // Invalidate the reset token
-    //     // Return a success message or appropriate response
-    // }
-
-    // async confirmAccount(token: string) {
-    //     const data = await this.userService.findByAdminToken(token);
-    //     const currentDate = new Date();
-    //     if (!data) {
-    //         throw new UnauthorizedException('Please verify you have a valid token');
-    //     }
-    //     const errors = [];
-    //     const checkToken = this.authService.isTokenExpired(data.adminToken);
-    //     // Verify that the reset token is valid and hasn't expired
-    //     // const timestamp1: any = new Date(data.adminTokenCreatedAt);
-    //     // const timestamp2: any = new Date(currentDate);
-
-    //     // Calculate the time difference in milliseconds
-    //     // const timeDifference = timestamp1 - timestamp2;
-
-    //     // // Define the maximum allowed difference in milliseconds (10 minutes)
-    //     // const maxDifference = 12 * 60 * 60 * 1000; // 12 houes  in milliseconds
-
-    //     if (checkToken === true) {
-    //         //Time difference is greater than 12 hours
-    //         data.userConfirm = true;
-    //         return this.userService.confirmUser(data);
-    //     } else {
-    //         throw new UnauthorizedException('Token Time already expired, Please request another conirmation'); // Time difference is not greater than 10 minutes
-    //     }
-
-    //     // Retrieve the user's email associated with the token
-    //     // Update the user's password in your database with the new password
-    //     // Invalidate the reset token
-    //     // Return a success message or appropriate response
-    // }
+        return new Promise((resolve, reject) => {
+            csv.stringify([record], (err, output) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                writeStream.write(output, (err) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(true);
+                        console.log('Success delete consultant');
+                    }
+                });
+            });
+        });
+    }
 
     daysLeftFromExpired(licensePeriod: number, firstUseDate: string) {
         let periodLeft = 0;
