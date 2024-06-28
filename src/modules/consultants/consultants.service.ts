@@ -1724,27 +1724,6 @@ export class ConsultantsService {
         return this.commonService.generateMessage('Success!');
     }
 
-    public async passwordChangeNew(token: string) {
-        const templatePath = `${process.env.PUBLIC_FILE}/email-templates/password-recovery-form.hbs`;
-        const [template, consultant] = await Promise.all([
-            fs.readFile(templatePath, 'utf8'),
-            this.getConsultant({ recovery_password_digest: token }),
-        ]);
-        const compiledTemplate = handlebars.compile(template);
-
-        if (!consultant) {
-            this.commonService.throwNotFoundError();
-        }
-
-        const htmlFile = compiledTemplate({
-            link: `${process.env.BASE_URL}/consultants/update-password`,
-            email: consultant.email,
-            app_id: consultant.app_id,
-            recoverPasswordToken: token,
-        });
-        return htmlFile;
-    }
-
     public async passwordRecovery(data: PasswordDto, locale = 'en') {
         const { email, app_id } = data;
 

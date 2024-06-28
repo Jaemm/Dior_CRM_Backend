@@ -158,6 +158,27 @@ export class ConsultantsController {
         return await this.consultants.deleteNotification(Number(id));
     }
 
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('request_callback_url')
+    async requestCallbackUrl(
+        @Req() req: Request,
+        @Res() res: Response,
+        @Body() body: RequestCallBackUrlDto,
+    ): Promise<any> {
+        const token = this.jwtService.getTokenFromRequest(req);
+
+        if (!token) {
+            // Token not provided, handle accordingly (e.g., return unauthorized response)
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.UNAUTHORIZED,
+                error: ResponseMessages.Unauthorized,
+            });
+        }
+        const consultant = await this.consultants.requestCallbackUrl(body, token);
+        return res.status(200).send(consultant);
+    }
+
     /**
      *
      * Existing codes
@@ -248,21 +269,6 @@ export class ConsultantsController {
         return res.status(200).send(template);
     }
 
-    // @ApiBearerAuth()
-    // @Roles(Role.Consultant)
-    // @Get('me')
-    // async getMe(@Req() req: Request, @Res() res: Response): Promise<any> {
-    //     const userId = Number((<{ id: string }>req['user']).id);
-    //     const consultant = await this.consultants.getMe(userId);
-    //     return res.status(200).send(consultant);
-    // }
-
-    @Get('password-change')
-    async passwordChangeNew(@Req() req: Request, @Res() res: Response, @Query('token') token: string): Promise<any> {
-        const consultant = await this.consultants.passwordChangeNew(token);
-        return res.status(200).send(consultant);
-    }
-
     @Post('password-recovery')
     async passwordRecovery(
         @Req() req: Request,
@@ -277,27 +283,6 @@ export class ConsultantsController {
     @Post('update-password')
     async updatePassword(@Req() req: Request, @Res() res: Response, @Body() data: UpdatePasswordDto): Promise<any> {
         const consultant = await this.consultants.updatePassword(data);
-        return res.status(200).send(consultant);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Post('request_callback_url')
-    async requestCallbackUrl(
-        @Req() req: Request,
-        @Res() res: Response,
-        @Body() body: RequestCallBackUrlDto,
-    ): Promise<any> {
-        const token = this.jwtService.getTokenFromRequest(req);
-
-        if (!token) {
-            // Token not provided, handle accordingly (e.g., return unauthorized response)
-            throw new UnauthorizedException({
-                result_code: ErrorStatus.UNAUTHORIZED,
-                error: ResponseMessages.Unauthorized,
-            });
-        }
-        const consultant = await this.consultants.requestCallbackUrl(body, token);
         return res.status(200).send(consultant);
     }
 
