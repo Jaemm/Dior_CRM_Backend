@@ -1670,18 +1670,33 @@ export class ConsultantsService {
     public async passwordChange(consultantId: number, data: PasswrodChangeDto, locale = 'en') {
         const { new_password, password } = data;
 
-        const consultant = await this.getConsultant({ id: consultantId }, ['id', 'email', 'password_digest']);
+        const consultant = await this.ConsultantsRepository.findOne({
+            select: ['id', 'email', 'password_digest'],
+            where: {
+                id: consultantId,
+            },
+        });
 
         if (!consultant) {
-            this.commonService.throwNotFoundError();
+            throw new BadRequestException({
+                result_code: ErrorStatus.PASSWORD_CHANGE_FAILED,
+                error: ResponseMessages.PasswordChangeFailed,
+            });
+        }
+
+        if (!consultant.email || !consultant.password_digest) {
+            throw new BadRequestException({
+                result_code: ErrorStatus.PASSWORD_CHANGE_FAILED,
+                error: ResponseMessages.PasswordChangeFailed,
+            });
         }
 
         const confirmPwd = await this.verifyPassword(password, consultant.password_digest ?? null);
 
         if (!confirmPwd) {
-            throw new UnauthorizedException({
-                result_code: ErrorStatus.UNAUTHORIZED,
-                error: ResponseMessages.InvalidPassword,
+            throw new BadRequestException({
+                result_code: ErrorStatus.PASSWORD_CHANGE_FAILED,
+                error: ResponseMessages.PasswordChangeFailed,
             });
         }
 
@@ -1697,16 +1712,16 @@ export class ConsultantsService {
                 error: ResponseMessages.PasswordChangeFailed,
             });
         }
-        const subject = await this.commonService.translate('password_reset_subject', locale);
+        // const subject = await this.commonService.translate('password_reset_subject', locale);
 
-        if (consultant.email) {
-            this.commonService.sendEmail({
-                to: consultant.email,
-                subject: subject,
-                templateName: 'password-reset-success',
-                templateContext: {},
-            });
-        }
+        // if (consultant.email) {
+        //     this.commonService.sendEmail({
+        //         to: consultant.email,
+        //         subject: subject,
+        //         templateName: 'password-reset-success',
+        //         templateContext: {},
+        //     });
+        // }
 
         return this.commonService.generateMessage('Success!');
     }
@@ -2490,9 +2505,18 @@ export class ConsultantsService {
     }
 
     async deleteNotification(id: number) {
-        const notifications = await this.notificationRepository.delete(id);
+        const existNotification = await this.notificationRepository.findOneBy({ id: String(id) });
 
-        if (!notifications.affected) {
+        if (!existNotification) {
+            throw new BadRequestException({
+                result_code: ErrorStatus.RECORD_NOT_FOUND,
+                error: ResponseMessages.RecordNotFound,
+            });
+        }
+
+        const deleteResult = await this.notificationRepository.delete(id);
+
+        if (!deleteResult.affected) {
             throw new BadRequestException({
                 result_code: ErrorStatus.BAD_REQUEST,
                 error: ResponseMessages.NotificationNotDeleted,

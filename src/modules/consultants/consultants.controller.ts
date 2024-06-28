@@ -137,13 +137,32 @@ export class ConsultantsController {
     @Post('password_change')
     async passwordChange(
         @Req() req: Request,
-        @Res() res: Response,
         @Body() body: PasswrodChangeDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
         const userId = Number((<{ id: string }>req['user']).id);
-        const consultant = await this.consultants.passwordChange(userId, body, locale);
-        return res.status(200).send(consultant);
+        return await this.consultants.passwordChange(userId, body, locale);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Delete('delete_account')
+    async deleteAccount(@Req() req: Request): Promise<any> {
+        const userId = Number((<{ id: string }>req['user']).id);
+        return await this.consultants.deleteAccount(userId);
+    }
+
+    @ApiBearerAuth()
+    @Get('notifications')
+    async notifications(@Req() req: Request, @Query() query: GetNotificationsDto): Promise<any> {
+        const consultantId = Number((<{ id: string }>req['user']).id);
+        return await this.consultants.getNotifications(consultantId, query);
+    }
+
+    @ApiBearerAuth()
+    @Delete('notifications/:id')
+    async deleteNotificaion(@Req() req: Request, @Param('id') id: string) {
+        return await this.consultants.deleteNotification(Number(id));
     }
 
     /**
@@ -307,15 +326,6 @@ export class ConsultantsController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Delete('delete_account')
-    async deleteAccount(@Req() req: Request, @Res() res: Response): Promise<any> {
-        const userId = Number((<{ id: string }>req['user']).id);
-        const consultant = await this.consultants.deleteAccount(userId);
-        return res.status(200).send(consultant);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get('all-license')
     async getAllLicense(@Req() req: Request, @Res() res: Response, @Query() query: AllLicenseDto): Promise<any> {
         const consultant = await this.consultants.getAllLicense(query);
@@ -399,21 +409,6 @@ export class ConsultantsController {
     async refreshToken(@Req() req: Request, @Res() res: Response, @Body() body: TokenRefreshDto): Promise<any> {
         const consultant = await this.consultants.refreshToken(body);
         return res.status(200).send(consultant);
-    }
-
-    @ApiBearerAuth()
-    @Get('notifications')
-    async notifications(@Req() req: Request, @Res() res: Response, @Query() query: GetNotificationsDto): Promise<any> {
-        const consultantId = Number((<{ id: string }>req['user']).id);
-        const notifications = await this.consultants.getNotifications(consultantId, query);
-        return res.status(200).send({ notifications });
-    }
-
-    @ApiBearerAuth()
-    @Delete('notifications/:id')
-    async deleteNotificaion(@Req() req: Request, @Res() res: Response, @Param('id') id: string): Promise<any> {
-        const response = await this.consultants.deleteNotification(Number(id));
-        return res.status(200).send(response);
     }
 
     @ApiTags('CRM')

@@ -37,11 +37,4 @@ export class Notifications {
 
     @Column('timestamp without time zone', { name: 'updated_at' })
     updated_at: Date;
-
-    @Column('boolean', {
-        name: 'fcm_sent',
-        nullable: true,
-        default: () => 'false',
-    })
-    fcmSent: boolean | null;
 }
