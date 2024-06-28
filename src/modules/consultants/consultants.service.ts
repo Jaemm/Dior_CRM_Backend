@@ -15,7 +15,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Or, Equal, Repository } from 'typeorm';
 import { TokenTypeEnum } from 'src/jwt/enums/auth-token.enum';
 
-import { Consultants } from '@/src/common/entities/crmEntities/Consultants.entity';
 import { AuthService } from '../auth/auth.service';
 import { JwtService } from 'src/jwt/jwt.service';
 import * as bcrypt from 'bcrypt';
@@ -50,7 +49,14 @@ import {
     UpdateConsultantRubyDto,
 } from '@/src/modules/consultants/consultants.dto';
 
-import { Notifications, PasswordEmailDetails, Devices, Products } from '@/src/common/entities/crmEntities';
+import {
+    Consultants,
+    Notifications,
+    PasswordEmailDetails,
+    Devices,
+    Products,
+    ProductRecommendations,
+} from '@/src/common/entities/crmEntities';
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { DeviceService } from '../devices/devices.service';
 import { CommonService } from 'src/common/common.service';
@@ -100,6 +106,8 @@ export class ConsultantsService {
         private readonly productsRepository: Repository<Products>,
         @InjectRepository(PasswordEmailDetails)
         private readonly passwordDetailRepository: Repository<PasswordEmailDetails>,
+        @InjectRepository(ProductRecommendations)
+        private readonly productRecommendationsRepository: Repository<ProductRecommendations>,
 
         private readonly configService: ConfigService,
         private readonly licenceService: LicenceService,
@@ -2261,7 +2269,36 @@ export class ConsultantsService {
         return customers;
     }
 
-    public async getProductRecommendations(data: ProductRecommendationsDto) {}
+    public async getProductRecommendations(req: Request, data: ProductRecommendationsDto) {
+        try {
+            const userId = (<{ id: string }>req.user).id;
+            const currentConsultant = await this.ConsultantsRepository.findOne({
+                where: {
+                    id: Number(userId),
+                },
+            });
+
+            if (!currentConsultant)
+                throw new NotFoundException({ result_code: ErrorStatus.NOT_FOUND, error: ErrorMessages.NOT_FOUND });
+
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+
+            const [productRecommendations, total] = await this.productRecommendationsRepository.findAndCount({
+                where: { consultantId: currentConsultant.id },
+                take: limit,
+                skip: (page - 1) * limit,
+            });
+
+            return {
+                data: productRecommendations,
+                currentPage: page,
+                totalPages: Math.ceil(total / limit),
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
 
     public async refreshToken(data: TokenRefreshDto) {
         const { refresh_token, token } = data;

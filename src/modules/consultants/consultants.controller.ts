@@ -165,6 +165,13 @@ export class ConsultantsController {
         return await this.consultants.requestCallbackUrl(body, req);
     }
 
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('product_recommendations')
+    async getProductRecommendations(@Req() req: Request, @Query() query: ProductRecommendationsDto) {
+        return await this.consultants.getProductRecommendations(req, query);
+    }
+
     /**
      *
      * Existing codes
@@ -354,18 +361,6 @@ export class ConsultantsController {
     async loginPhone(@Req() req: Request, @Res() res: Response, @Body() body: LoginPhoneDto): Promise<any> {
         const userId = Number((<{ id: string }>req['user']).id);
         const consultant = await this.consultants.loginPhone(body, userId);
-        return res.status(200).send(consultant);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get('product_recommendations')
-    async getProductRecommendations(
-        @Req() req: Request,
-        @Res() res: Response,
-        @Query() query: ProductRecommendationsDto,
-    ): Promise<any> {
-        const consultant = await this.consultants.getProductRecommendations(query);
         return res.status(200).send(consultant);
     }
 
