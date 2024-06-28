@@ -17,6 +17,8 @@ import { JwtService } from 'src/jwt/jwt.service';
 import * as bcrypt from 'bcrypt';
 import * as argon2 from 'argon2';
 import * as jwt from 'jsonwebtoken';
+import axios from 'axios';
+import { Request } from 'express';
 import {
     ResendConfirmationDto,
     AllLicenseDto,
@@ -43,14 +45,13 @@ import {
     UpdatePasswordDto,
     UpdateConsultantRubyDto,
 } from '@/src/modules/consultants/consultants.dto';
+
+import { Notifications, PasswordEmailDetails, Devices, Products } from '@/src/common/entities/crmEntities';
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { DeviceService } from '../devices/devices.service';
-import { IMessage } from 'src/common/interfaces/message.interface';
 import { CommonService } from 'src/common/common.service';
 import { ConsultantPositions } from '@/src/common/entities/crmEntities/ConsultantPositions.entity';
 import { CrmDataReplicationService } from '../dataReplication/consultantDataReplication/consultantDataReplication.service';
-import { createTransport } from 'nodemailer';
-import Mail from 'nodemailer/lib/mailer';
 import * as fs from 'fs/promises';
 import * as handlebars from 'handlebars';
 import { ConsultantPositionsService } from '../consultantPositions/consultantPositions.service';
@@ -67,20 +68,13 @@ import { ConfigService } from '@nestjs/config';
 import { ProductsService } from '../products/products.service';
 import { LicenceService } from '../licence/licence.service';
 import { LicenseType } from '@/src/common/enums/license-type.enum';
-import { Devices } from '@/src/common/entities/crmEntities/Devices.entity';
+
 import { ResponseMessages } from '@/src/common/constants/response-messages';
-import axios from 'axios';
 import { CustomersService } from '../customers/customers.service';
-import { VersionItemType } from '@/src/common/enums/version-item-type.enum';
-import { VersionEvent } from '@/src/common/enums/version-event.enum';
 import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
 import { Role } from '@/src/common/enums/role.enum';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { TargetType } from '@/src/common/enums/target-type.enum';
-import { Notifications } from '@/src/common/entities/crmEntities/Notifications.entity';
-import { Products } from '@/src/common/entities/crmEntities/Products.entity';
-import { Request } from 'express';
-import { PasswordEmailDetails } from '@/src/common/entities/crmEntities/PasswordEmailDetails.entity';
 
 @Injectable()
 export class ConsultantsService {

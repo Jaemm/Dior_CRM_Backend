@@ -1,29 +1,35 @@
 import { MiddlewareConsumer, Module, RequestMethod, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import {
+    AdminUsers,
+    Applications,
+    Consultants,
+    Notifications,
+    PasswordEmailDetails,
+    Devices,
+    Products,
+    ConsultantCompanies,
+    Countries,
+    Customers,
+    ConsultantShops,
+    ConsultantPositions,
+} from '@/src/common/entities/crmEntities';
+
 import { ConsultantsController } from './consultants.controller';
 import { ConsultantsService } from './consultants.service';
-import { Consultants } from '@/src/common/entities/crmEntities/Consultants.entity';
 import { AuthModule } from '../auth/auth.module';
 import { AuthService } from '../auth/auth.service';
 import { JwtService } from 'src/jwt/jwt.service';
-import { ConsultantShops } from '@/src/common/entities/crmEntities/ConsultantShops.entity';
 import { ConsultantBranches } from '@/src/common/entities/crmEntities/ConsultantBranches.entity';
-import { ConsultantCompanies } from '@/src/common/entities/crmEntities/ConsultantCompanies.entity';
 import { ConsultantCustomzations } from '@/src/common/entities/crmEntities/ConsultantCustomzations.entity';
 import { DoWrite } from '@/src/common/entities/crmEntities/DoWrite.entity';
-import { AdminUsers } from '@/src/common/entities/crmEntities/AdminUsers.entity';
 import { UserInformation } from '@/src/common/entities/crmEntities/UserInformation.entity';
 import { ConsultantCountrys } from '@/src/common/entities/crmEntities/ConsultantCountrys.entity';
-import { Countries } from '@/src/common/entities/crmEntities/Countries.entity';
-import { Customers } from '@/src/common/entities/crmEntities/Customers.entity';
 import { ChowisCustomerConsents } from '@/src/common/entities/crmEntities/ChowisCustomerConsents.entity';
 import { CustomerApplications } from '@/src/common/entities/crmEntities/CustomerApplications.entity';
-import { Applications } from '@/src/common/entities/crmEntities/Applications.entity';
 import { AppVersionChecks } from '@/src/common/entities/crmEntities/AppVersionChecks.entity';
 import { ConsultantApplications } from '@/src/common/entities/crmEntities/ConsultantApplications.entity';
-import { Products } from '@/src/common/entities/crmEntities/Products.entity';
-import { Devices } from '@/src/common/entities/crmEntities/Devices.entity';
 import { DeviceConfigurations } from '@/src/common/entities/crmEntities/DeviceConfigurations.entity';
 import { Licenses } from '@/src/common/entities/crmEntities/Licenses.entity';
 import { LicenseHistories } from '@/src/common/entities/crmEntities/LicenseHistories.entity';
@@ -54,7 +60,6 @@ import { DoProductType } from '@/src/common/entities/crmEntities/DoProductType.e
 import { AdminGroups } from '@/src/common/entities/crmEntities/AdminGroups.entity';
 import { DoPackages } from '@/src/common/entities/crmEntities/DoPackages.entity';
 import { Genders } from '@/src/common/entities/crmEntities/Genders.entity';
-import { ConsultantPositions } from '@/src/common/entities/crmEntities/ConsultantPositions.entity';
 import { PackageRelation } from '@/src/common/entities/crmEntities/PackageRelation.entity';
 import { ConsultantStores } from '@/src/common/entities/crmEntities/ConsultantStores.entity';
 import { ConsultantCountries } from '@/src/common/entities/crmEntities/ConsultantCountries.entity';
@@ -79,8 +84,6 @@ import { ProductsModule } from '../products/products.module';
 import { CustomersModule } from '../customers/customers.module';
 import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
 import { CRMModule } from '../crm/crm.module';
-import { Notifications } from '@/src/common/entities/crmEntities/Notifications.entity';
-import { PasswordEmailDetails } from '@/src/common/entities/crmEntities/PasswordEmailDetails.entity';
 
 @Module({
     imports: [
