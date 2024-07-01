@@ -19,6 +19,7 @@ import { ConsultantPositions } from './ConsultantPositions.entity';
 import { Products } from './Products.entity';
 import { ConsultantCountries } from './ConsultantCountries.entity';
 import { ConsultantBranches } from './ConsultantBranches.entity';
+import { Identities } from './Identities.entity';
 
 @Index('index_consultants_on_email_and_app_id', ['app_id', 'email'], {
     unique: true,
@@ -237,6 +238,9 @@ export class Consultants {
 
     @OneToMany(() => Customers, (customers: Customers) => customers.conslutant)
     'customers': Customers[];
+
+    @OneToMany(() => Identities, (identity) => identity.consultants)
+    'identities': Identities[];
 
     @OneToMany(() => Products, (products: Products) => products.consultant)
     'products': Products[];

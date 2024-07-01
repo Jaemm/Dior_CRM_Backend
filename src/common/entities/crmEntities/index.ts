@@ -15,3 +15,4 @@ export { PasswordEmailDetails } from './PasswordEmailDetails.entity';
 export { Products } from './Products.entity';
 export { ProductRecommendations } from './ProductRecommendations.entity';
 export { HealthTips } from './HealthTips.entity';
+export { Identities } from './Identities.entity';

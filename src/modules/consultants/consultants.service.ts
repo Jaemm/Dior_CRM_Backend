@@ -2,7 +2,7 @@ import * as path from 'path';
 import { createWriteStream, existsSync } from 'fs';
 import * as csv from 'csv';
 
-import admin from 'firebase-admin';
+import admin, { app } from 'firebase-admin';
 
 import {
     BadRequestException,
@@ -62,6 +62,7 @@ import {
     Products,
     ProductRecommendations,
     ConsultantCompanies,
+    Identities,
 } from '@/src/common/entities/crmEntities';
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { DeviceService } from '../devices/devices.service';
@@ -119,6 +120,8 @@ export class ConsultantsService {
         private readonly productRecommendationsRepository: Repository<ProductRecommendations>,
         @InjectRepository(HealthTips)
         private readonly healthTipsRespository: Repository<HealthTips>,
+        @InjectRepository(Identities)
+        private readonly identityRepository: Repository<Identities>,
 
         private readonly configService: ConfigService,
         private readonly licenceService: LicenceService,
@@ -512,7 +515,7 @@ export class ConsultantsService {
                 relations: ['consultant_company', 'consultant_company.healthTips'],
             });
 
-            let healthTips = currentConsultant.consultant_company.healthTips;
+            let healthTips = currentConsultant.consultant_company.healthTips ?? [];
             let totalCount;
 
             if (appId) {
@@ -526,7 +529,7 @@ export class ConsultantsService {
             }
 
             return {
-                healthTips,
+                data: healthTips,
             };
         } catch (e) {
             throw e;
@@ -543,9 +546,10 @@ export class ConsultantsService {
                 where: {
                     id: Number(companyId),
                 },
+                relations: ['healthTips'],
             });
 
-            let healthTips = foundCompany.healthTips;
+            let healthTips = foundCompany?.healthTips ?? [];
             let totalCount;
 
             if (appId) {
@@ -559,7 +563,7 @@ export class ConsultantsService {
             }
 
             return {
-                healthTips,
+                data: healthTips,
             };
         } catch (e) {
             throw e;
@@ -2236,94 +2240,137 @@ export class ConsultantsService {
     public async renewDevices(data: RenewDevicesDto) {}
 
     public async loginSocial(data: LoginSocialDto, locale = 'en') {
-        const { app_id, social_id, email } = data;
-        const consultant = await this.validateUserSocial(email, Number(app_id), social_id);
-        const checkToken = this.authService.isTokenExpired(consultant.token);
+        try {
+            const { app_id, social_id, email, social_provider, name } = data;
 
-        if (!consultant.email_confirmed) {
-            if (!checkToken) {
-                const confirmationToken = await this.jwtService.generateToken(
-                    { id: consultant.id, email: consultant.email, role: Role.Consultant },
-                    TokenTypeEnum.CONFIRMATION,
-                    '',
-                );
-                await this.updateConsultant(consultant.id, {
-                    confirm_token: confirmationToken,
+            let consultant: Consultants;
+            let identity: Identities;
+
+            if (social_provider === 'apple') {
+                if (email && app_id) {
+                    consultant = await this.consultantsRepository.findOne({
+                        where: { app_id: Number(app_id), email: email },
+                    });
+                    identity = await this.identityRepository.findOne({
+                        where: {
+                            metaType: 'Consultant',
+                            socialId: social_id,
+                            socialProvider: social_provider,
+                        },
+                    });
+                } else {
+                    identity = await this.identityRepository.findOne({
+                        where: {
+                            metaType: 'Consultant',
+                            socialId: social_id,
+                            socialProvider: social_provider,
+                        },
+                    });
+                    consultant = identity?.consultants;
+                }
+            } else {
+                consultant = await this.consultantsRepository.findOne({
+                    where: { app_id: Number(app_id), email: email },
+                    relations: ['identities'],
                 });
 
-                await this.sendAccountConfimationEmail(confirmationToken, consultant.email, locale);
+                identity = consultant?.identities.find(
+                    (consulatntsIdentity) =>
+                        consulatntsIdentity.socialId === social_id &&
+                        consulatntsIdentity.socialProvider === social_provider,
+                );
             }
 
-            throw new BadRequestException({
-                result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
-                error: ResponseMessages.EmailNotConfirmed,
-            });
-        }
-        const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
-            { id: consultant.id, email: consultant.email, role: Role.Consultant },
-            '',
-        );
-        delete consultant.password_digest;
-        delete consultant.recovery_password_digest;
-        delete consultant.email_confirmed;
-        if (consultant?.consultant_company?.applications) {
-            consultant.consultant_company.applications = [];
-        }
-
-        consultant.products.forEach((product: any) => {
-            if (product.device && product.device.consultant_company) {
-                product.device.consultant_company.applications = [];
+            if (consultant && identity) {
+            } else if (consultant && !identity) {
+                identity = this.identityRepository.create({
+                    socialId: social_id,
+                    socialProvider: social_provider,
+                    metaId: consultant.id,
+                    metaType: 'Consultant',
+                });
+                await this.identityRepository.save(identity);
+            } else {
+                if (email && app_id) {
+                    const newConsultant = this.consultantsRepository.create({
+                        name: name,
+                        app_id: Number(app_id),
+                        email: email,
+                    });
+                    consultant = await this.consultantsRepository.save(newConsultant);
+                    const newIdentity = this.identityRepository.create({
+                        socialId: social_id,
+                        socialProvider: social_provider,
+                        metaId: consultant.id,
+                        metaType: 'consultant',
+                    });
+                    identity = await this.identityRepository.save(newIdentity);
+                } else {
+                    throw new BadRequestException({
+                        result_code: ErrorStatus.BAD_REQUEST,
+                        error: 'Please provide email and app id',
+                    });
+                }
             }
-        });
 
-        consultant.token = accessToken;
-        consultant.refresh_token = refreshToken;
+            if (!identity) {
+                throw new InternalServerErrorException({
+                    result_code: ErrorStatus.SERVER_ERROR,
+                    error: 'Please provide email and app id',
+                });
+            }
 
-        await this.updateConsultant(consultant.id, {
-            token: refreshToken,
-            confirm_token: consultant.confirm_token,
-        });
+            const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
+                { id: consultant.id, email: consultant.email, role: Role.Consultant },
+                '',
+            );
 
-        return {
-            id: consultant.id,
-            email: consultant.email,
-            token: accessToken,
-            refresh_token: refreshToken,
-            name: consultant.name,
-            surname: consultant.surname,
-            phone_country_code: consultant.phone_country_code,
-            os: consultant.os,
-            language: consultant.language,
-            phone: consultant.phone,
-            address: consultant.address,
-            city: consultant.city,
-            zip_code: consultant.zip_code,
-            state: consultant.state,
-            note: consultant.note,
-            push_token: consultant.push_token,
-            memo: consultant.memo,
-            app_id: consultant.app_id,
-            company_name: consultant.company_name,
-            company_address: consultant.company_address,
-            branch: consultant.branch,
-            position: consultant.position,
-            skin_color_group_id: consultant.skin_color_group_id,
-            ethnicity_id: consultant.ethnicity_id,
-            callback_url: consultant.callback_url,
-            code: consultant.code,
-            country_id: consultant?.country_id ? Number(consultant?.country_id) : null,
-            country: consultant.country_details?.name ?? null,
-            gender: consultant.gender,
-            social: consultant.social,
-            country_code: consultant.getContryCode,
-            store: consultant.consultant_shop?.name ?? null,
-            consultant_shop: consultant.consultant_shop,
-            country_details: consultant.country_details,
-            optic_number: consultant.getOpticNumbers,
-            products: consultant.products,
-            consultant_company: consultant.consultant_company,
-            consultant_position: consultant.consultant_position,
-        };
+            consultant.token = accessToken;
+            await this.consultantsRepository.save(consultant);
+
+            return {
+                id: consultant.id,
+                email: consultant.email,
+                token: accessToken,
+                refresh_token: refreshToken,
+                name: consultant.name,
+                surname: consultant.surname,
+                // phone_country_code: consultant.phone_country_code,
+                os: consultant.os,
+                language: consultant.language,
+                phone: consultant.phone,
+                address: consultant.address,
+                city: consultant.city,
+                zip_code: consultant.zip_code,
+                state: consultant.state,
+                note: consultant.note,
+                push_token: consultant.push_token,
+                memo: consultant.memo,
+                app_id: consultant.app_id,
+                company_name: consultant.company_name,
+                company_address: consultant.company_address,
+                branch: consultant.branch,
+                position: consultant.position,
+                skin_color_group_id: consultant.skin_color_group_id,
+                ethnicity_id: consultant.ethnicity_id,
+                callback_url: consultant.callback_url,
+                code: consultant.code,
+                // country_id: consultant?.country_id ? Number(consultant?.country_id) : null,
+                country: consultant.country_details?.name ?? null,
+                gender: consultant.gender,
+                social: consultant.social,
+                country_code: consultant.getContryCode,
+                store: consultant.consultant_shop?.name ?? null,
+                consultant_shop: consultant.consultant_shop,
+                country_details: consultant.country_details,
+                optic_number: consultant.getOpticNumbers,
+                products: consultant.products,
+                consultant_company: consultant.consultant_company,
+                consultant_position: consultant.consultant_position,
+            };
+        } catch (e) {
+            throw e;
+        }
     }
 
     public async loginPhone(data: LoginPhoneDto, consultantId: number) {

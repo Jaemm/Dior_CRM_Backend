@@ -16,6 +16,7 @@ import {
     ConsultantPositions,
     ProductRecommendations,
     HealthTips,
+    Identities,
 } from '@/src/common/entities/crmEntities';
 
 import { ConsultantsController } from './consultants.controller';
@@ -95,6 +96,7 @@ import { CRMModule } from '../crm/crm.module';
             ConsultantBranches,
             ConsultantCompanies,
             ConsultantCustomzations,
+            Identities,
             PasswordEmailDetails,
             ProductRecommendations,
             HealthTips,
@@ -260,6 +262,14 @@ export class ConsultantsModule {
             {
                 path: 'consultants/notifications/:id',
                 method: RequestMethod.DELETE,
+            },
+            {
+                path: 'consultants/health_tips',
+                method: RequestMethod.GET,
+            },
+            {
+                path: 'consultants/health_tips/by_company',
+                method: RequestMethod.GET,
             },
         );
     }

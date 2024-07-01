@@ -573,6 +573,11 @@ export class LoginSocialDto {
     @ApiProperty()
     @IsString()
     email: string;
+
+    @ApiProperty()
+    @IsOptional()
+    @IsString()
+    name: string;
 }
 
 export class LoginPhoneDto {
@@ -612,7 +617,7 @@ export class HealthTipsDto {
 
 export class HealthTipsByCompanyDto {
     @ApiPropertyOptional()
-    @IsOptional()
+    @IsNotEmpty()
     @IsString()
     company_id: string;
 

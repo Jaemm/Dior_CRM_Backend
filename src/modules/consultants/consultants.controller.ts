@@ -50,16 +50,8 @@ import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { Public } from '@/src/common/decorators/public-route.decorator';
 import { CRMService } from '../crm/crm.service';
-import { ErrorStatus } from '@/src/common/constants/error-status';
-import { ResponseMessages } from '@/src/common/constants/response-messages';
-// import { AuthService } from 'src/modules/signUpAuth/auth/auth.service';
 
 @ApiTags('Consultants')
-// @ApiHeader({
-//     name: 'X-CHOWIS-CONSULTANT-TOKEN',
-//     description: 'Custom header x-chowis',
-//     required: true,
-// })
 @Controller('consultants')
 export class ConsultantsController {
     constructor(
@@ -73,6 +65,11 @@ export class ConsultantsController {
     @ApiBearerAuth()
     async getCurConsultantInfo(@Req() req: Request) {
         return this.consultants.getCurConsultantInfo(req);
+    }
+
+    @Post('login/social')
+    async loginSocial(@Req() req: Request, @Body() body: LoginSocialDto) {
+        return await this.consultants.loginSocial(body);
     }
 
     @Post('login')
@@ -156,6 +153,7 @@ export class ConsultantsController {
     }
 
     @ApiBearerAuth()
+    @Roles(Role.Consultant)
     @Delete('notifications/:id')
     async deleteNotificaion(@Req() req: Request, @Param('id') id: string) {
         return await this.consultants.deleteNotification(Number(id));
@@ -189,12 +187,6 @@ export class ConsultantsController {
         return await this.consultants.getHelthTips(req, query);
     }
 
-    @Post('login/social')
-    async loginSocial(@Req() req: Request, @Res() res: Response, @Body() body: LoginSocialDto) {
-        const consultant = await this.consultants.loginSocial(body);
-        return res.status(200).send(consultant);
-    }
-
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('login/phone')
@@ -226,35 +218,6 @@ export class ConsultantsController {
         const consultant = await this.consultants.signUp(body, locale);
         return res.status(200).send(consultant);
     }
-
-    // @Get('confirmation')
-    // async confirmation(@Res() res: Response, @Query() param: { token: string }): Promise<any> {
-    //     try {
-    //         console.log('token    -----> ')
-    //         const { token } = param;
-    //         const confirmationResult = await this.consultants.confirmation(token);
-
-    //         return res.status(200).send(confirmationResult);
-    //     } catch (error) {
-    //         console.log(error);
-    //         return res.status(error['status'] || 500).send(error['response']);
-    //     }
-    // }
-
-    // @ApiBearerAuth()
-    // @Roles(Role.Consultant)
-    // @Put('update')
-    // async updateConsultant(
-    //     @Req() req: Request,
-    //     @Res() res: Response,
-    //     @Body() body: UpdateConsultantDto,
-    //     @Headers('X-CHOWIS-LOCALE') locale: string,
-    // ): Promise<any> {
-    //     const userId = Number((<{ id: string }>req['user']).id);
-
-    //     const consultant = await this.consultants.modifyConsultant(userId, body, locale);
-    //     return res.status(200).send(consultant);
-    // }
 
     @Post('resend-confirmation')
     async resendConfirmation(
