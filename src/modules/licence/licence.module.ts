@@ -5,7 +5,6 @@ import { Consultants } from '@/src/common/entities/crmEntities/Consultants.entit
 import { ConsultantShops } from '@/src/common/entities/crmEntities/ConsultantShops.entity';
 import { ConsultantBranches } from '@/src/common/entities/crmEntities/ConsultantBranches.entity';
 import { ConsultantCompanies } from '@/src/common/entities/crmEntities/ConsultantCompanies.entity';
-import { ConsultantCustomzations } from '@/src/common/entities/crmEntities/ConsultantCustomzations.entity';
 import { DoWrite } from '@/src/common/entities/crmEntities/DoWrite.entity';
 import { AdminUsers } from '@/src/common/entities/crmEntities/AdminUsers.entity';
 import { UserInformation } from '@/src/common/entities/crmEntities/UserInformation.entity';
@@ -66,7 +65,6 @@ import { ApplicationLicenses } from '@/src/common/entities/crmEntities/Applicati
             ConsultantShops,
             ConsultantBranches,
             ConsultantCompanies,
-            ConsultantCustomzations,
             DoWrite,
             AdminUsers,
             UserInformation,

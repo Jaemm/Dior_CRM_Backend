@@ -10,7 +10,7 @@ import { JwtService } from 'src/jwt/jwt.service';
 import { ConsultantShops } from '@/src/common/entities/crmEntities/ConsultantShops.entity';
 import { ConsultantBranches } from '@/src/common/entities/crmEntities/ConsultantBranches.entity';
 import { ConsultantCompanies } from '@/src/common/entities/crmEntities/ConsultantCompanies.entity';
-import { ConsultantCustomzations } from '@/src/common/entities/crmEntities/ConsultantCustomzations.entity';
+
 import { DoWrite } from '@/src/common/entities/crmEntities/DoWrite.entity';
 import { AdminUsers } from '@/src/common/entities/crmEntities/AdminUsers.entity';
 import { UserInformation } from '@/src/common/entities/crmEntities/UserInformation.entity';
@@ -64,78 +64,77 @@ import { ActiveStorageBlobs } from '@/src/common/entities/crmEntities/ActiveStor
 import { AuthMiddleware } from 'src/common/middleWare/authMiddlware/auth.middleware';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      Consultants,
-      ConsultantShops,
-      ConsultantBranches,
-      ConsultantCompanies,
-      ConsultantCustomzations,
-      DoWrite,
-      AdminUsers,
-      UserInformation,
-      ConsultantCountrys,
-      Countries,
-      Customers,
-      ChowisCustomerConsents,
-      CustomerApplications,
-      Applications,
-      AppVersionChecks,
-      ConsultantApplications,
-      Products,
-      Devices,
-      DeviceConfigurations,
-      Licenses,
-      LicenseHistories,
-      LicenseSummaries,
-      ConsultantLicenses,
-      CustomerLicenses,
-      Ethnicities,
-      SkinColorGroups,
-      AgentCustomizations,
-      DoComment,
-      DoRemark,
-      DoCustomerType,
-      DoSaleChannel,
-      DoShippingTerm,
-      DoStatus,
-      DoUsage,
-      AdminUsers,
-      DoProductPortfolio,
-      DoPickupCase,
-      DoPackingSpec,
-      DoCountries,
-      SalesConn,
-      DoBusinessTeam,
-      DoSales,
-      DoRent,
-      DoAs,
-      DoProductSort,
-      DoProductType,
-      AdminGroups,
-      DoPackages,
-      Genders,
-      ConsultantPositions,
-      PackageRelation,
-      ConsultantStores,
-      ConsultantCountries,
-      Faq,
-      ActiveStorageAttachments,
-      ActiveStorageBlobs
-    ]),
-    AuthModule
-  ],
-  controllers: [DeviceController],
-  providers: [DeviceService, AuthService, JwtService],
-  exports: [DeviceService]
-})
+    imports: [
+        TypeOrmModule.forFeature([
+            Consultants,
+            ConsultantShops,
+            ConsultantBranches,
+            ConsultantCompanies,
 
+            DoWrite,
+            AdminUsers,
+            UserInformation,
+            ConsultantCountrys,
+            Countries,
+            Customers,
+            ChowisCustomerConsents,
+            CustomerApplications,
+            Applications,
+            AppVersionChecks,
+            ConsultantApplications,
+            Products,
+            Devices,
+            DeviceConfigurations,
+            Licenses,
+            LicenseHistories,
+            LicenseSummaries,
+            ConsultantLicenses,
+            CustomerLicenses,
+            Ethnicities,
+            SkinColorGroups,
+            AgentCustomizations,
+            DoComment,
+            DoRemark,
+            DoCustomerType,
+            DoSaleChannel,
+            DoShippingTerm,
+            DoStatus,
+            DoUsage,
+            AdminUsers,
+            DoProductPortfolio,
+            DoPickupCase,
+            DoPackingSpec,
+            DoCountries,
+            SalesConn,
+            DoBusinessTeam,
+            DoSales,
+            DoRent,
+            DoAs,
+            DoProductSort,
+            DoProductType,
+            AdminGroups,
+            DoPackages,
+            Genders,
+            ConsultantPositions,
+            PackageRelation,
+            ConsultantStores,
+            ConsultantCountries,
+            Faq,
+            ActiveStorageAttachments,
+            ActiveStorageBlobs,
+        ]),
+        AuthModule,
+    ],
+    controllers: [DeviceController],
+    providers: [DeviceService, AuthService, JwtService],
+    exports: [DeviceService],
+})
 export class DeviceModule {
-  // Auth Middleware
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(AuthMiddleware)
-      // .exclude({ path: 'analysis', method: RequestMethod.POST })
-      .forRoutes('device');
-  }
+    // Auth Middleware
+    configure(consumer: MiddlewareConsumer) {
+        consumer
+            .apply(AuthMiddleware)
+            // .exclude({ path: 'analysis', method: RequestMethod.POST })
+            .forRoutes('device');
+    }
 }

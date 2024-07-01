@@ -25,7 +25,7 @@ import { AuthModule } from '../auth/auth.module';
 import { AuthService } from '../auth/auth.service';
 import { JwtService } from 'src/jwt/jwt.service';
 import { ConsultantBranches } from '@/src/common/entities/crmEntities/ConsultantBranches.entity';
-import { ConsultantCustomzations } from '@/src/common/entities/crmEntities/ConsultantCustomzations.entity';
+
 import { DoWrite } from '@/src/common/entities/crmEntities/DoWrite.entity';
 import { UserInformation } from '@/src/common/entities/crmEntities/UserInformation.entity';
 import { ConsultantCountrys } from '@/src/common/entities/crmEntities/ConsultantCountrys.entity';
@@ -95,7 +95,7 @@ import { CRMModule } from '../crm/crm.module';
             ConsultantShops,
             ConsultantBranches,
             ConsultantCompanies,
-            ConsultantCustomzations,
+
             Identities,
             PasswordEmailDetails,
             ProductRecommendations,
