@@ -1,24 +1,30 @@
 import { MiddlewareConsumer, Module, RequestMethod, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { Consultants } from '@/src/common/entities/crmEntities/Consultants.entity';
-import { ConsultantShops } from '@/src/common/entities/crmEntities/ConsultantShops.entity';
-import { ConsultantBranches } from '@/src/common/entities/crmEntities/ConsultantBranches.entity';
-import { ConsultantCompanies } from '@/src/common/entities/crmEntities/ConsultantCompanies.entity';
+import {
+    Applications,
+    //
+    Consultants,
+    ConsultantShops,
+    ConsultantBranches,
+    ConsultantCompanies,
+    //
+    Customers,
+    Countries,
+    //
+    Devices,
+    //
+    Products,
+} from '@/src/common/entities/crmEntities';
 
 import { DoWrite } from '@/src/common/entities/crmEntities/DoWrite.entity';
 import { AdminUsers } from '@/src/common/entities/crmEntities/AdminUsers.entity';
 import { UserInformation } from '@/src/common/entities/crmEntities/UserInformation.entity';
 import { ConsultantCountrys } from '@/src/common/entities/crmEntities/ConsultantCountrys.entity';
-import { Countries } from '@/src/common/entities/crmEntities/Countries.entity';
-import { Customers } from '@/src/common/entities/crmEntities/Customers.entity';
 import { ChowisCustomerConsents } from '@/src/common/entities/crmEntities/ChowisCustomerConsents.entity';
 import { CustomerApplications } from '@/src/common/entities/crmEntities/CustomerApplications.entity';
-import { Applications } from '@/src/common/entities/crmEntities/Applications.entity';
 import { AppVersionChecks } from '@/src/common/entities/crmEntities/AppVersionChecks.entity';
 import { ConsultantApplications } from '@/src/common/entities/crmEntities/ConsultantApplications.entity';
-import { Products } from '@/src/common/entities/crmEntities/Products.entity';
-import { Devices } from '@/src/common/entities/crmEntities/Devices.entity';
 import { DeviceConfigurations } from '@/src/common/entities/crmEntities/DeviceConfigurations.entity';
 import { Licenses } from '@/src/common/entities/crmEntities/Licenses.entity';
 import { LicenseHistories } from '@/src/common/entities/crmEntities/LicenseHistories.entity';
