@@ -85,7 +85,7 @@ import { CustomerConsentsModule } from '../customerConsents/customerConsents.mod
 import { Notifications } from '@/src/common/entities/crmEntities/Notifications.entity';
 import { PasswordEmailDetails } from '@/src/common/entities/crmEntities/PasswordEmailDetails.entity';
 
-import { ProductRecommendations } from '@/src/common/entities/crmEntities';
+import { ProductRecommendations, HealthTips } from '@/src/common/entities/crmEntities';
 
 @Module({
     imports: [
@@ -97,6 +97,7 @@ import { ProductRecommendations } from '@/src/common/entities/crmEntities';
             ConsultantCustomzations,
             PasswordEmailDetails,
             ProductRecommendations,
+            HealthTips,
             DoWrite,
             AdminUsers,
             UserInformation,

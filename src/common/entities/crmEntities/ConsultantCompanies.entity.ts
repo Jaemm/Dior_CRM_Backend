@@ -7,6 +7,7 @@ import { UserInformation } from './UserInformation.entity';
 import { Devices } from './Devices.entity';
 import { Applications } from './Applications.entity';
 import { Consultants } from './Consultants.entity';
+import { HealthTips } from './HealthTips.entity';
 
 @Index('consultant_companies_pkey', ['id'], { unique: true })
 @Entity('consultant_companies', { schema: 'public' })
@@ -103,6 +104,9 @@ export class ConsultantCompanies {
 
     @OneToOne(() => Consultants, (consultants) => consultants.consultant_company)
     consultant: Consultants;
+
+    @OneToOne(() => HealthTips, (healthTips) => healthTips.consultantCompany)
+    healthTips: HealthTips[];
 
     @OneToMany(() => Applications, (applications) => applications.consultantCompany)
     applications: Applications[];

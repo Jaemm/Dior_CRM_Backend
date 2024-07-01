@@ -2,6 +2,8 @@ import * as path from 'path';
 import { createWriteStream, existsSync } from 'fs';
 import * as csv from 'csv';
 
+import admin from 'firebase-admin';
+
 import {
     BadRequestException,
     ConflictException,
@@ -47,6 +49,9 @@ import {
     GetNotificationsDto,
     UpdatePasswordDto,
     UpdateConsultantRubyDto,
+    HealthTipsDto,
+    HealthTipsByCompanyDto,
+    NotificationTestDto,
 } from '@/src/modules/consultants/consultants.dto';
 
 import {
@@ -56,6 +61,7 @@ import {
     Devices,
     Products,
     ProductRecommendations,
+    ConsultantCompanies,
 } from '@/src/common/entities/crmEntities';
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { DeviceService } from '../devices/devices.service';
@@ -86,6 +92,7 @@ import { Role } from '@/src/common/enums/role.enum';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { TargetType } from '@/src/common/enums/target-type.enum';
 import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
+import { HealthTips } from '@/src/common/entities/crmEntities/HealthTips.entity';
 
 @Injectable()
 export class ConsultantsService {
@@ -93,7 +100,9 @@ export class ConsultantsService {
 
     constructor(
         @InjectRepository(Consultants)
-        private readonly ConsultantsRepository: Repository<Consultants>,
+        private readonly consultantsRepository: Repository<Consultants>,
+        @InjectRepository(ConsultantCompanies)
+        private readonly consultantCompanyRepository: Repository<ConsultantCompanies>,
         @InjectRepository(ConsultantPositions)
         private readonly position: Repository<ConsultantPositions>,
         @InjectRepository(Versions)
@@ -108,6 +117,8 @@ export class ConsultantsService {
         private readonly passwordDetailRepository: Repository<PasswordEmailDetails>,
         @InjectRepository(ProductRecommendations)
         private readonly productRecommendationsRepository: Repository<ProductRecommendations>,
+        @InjectRepository(HealthTips)
+        private readonly healthTipsRespository: Repository<HealthTips>,
 
         private readonly configService: ConfigService,
         private readonly licenceService: LicenceService,
@@ -194,13 +205,13 @@ export class ConsultantsService {
     }
 
     async insertConsultant(newConsultant: Consultants) {
-        const newCustomer = this.ConsultantsRepository.create(newConsultant);
-        const result = await this.ConsultantsRepository.save(newCustomer);
+        const newCustomer = this.consultantsRepository.create(newConsultant);
+        const result = await this.consultantsRepository.save(newCustomer);
         return result;
     }
 
     async updateConsultant(id: number, consultantInput: any) {
-        const result = await this.ConsultantsRepository.update(id, consultantInput);
+        const result = await this.consultantsRepository.update(id, consultantInput);
         return result;
     }
 
@@ -360,7 +371,7 @@ export class ConsultantsService {
                 }),
             ]);
 
-            const consultantResponseData = await this.ConsultantsRepository.findOne({
+            const consultantResponseData = await this.consultantsRepository.findOne({
                 where: {
                     id: consultant.id,
                 },
@@ -411,7 +422,7 @@ export class ConsultantsService {
         try {
             const userId = (<{ id: string }>req['user']).id;
 
-            const currentConsultant = await this.ConsultantsRepository.findOne({
+            const currentConsultant = await this.consultantsRepository.findOne({
                 where: {
                     id: Number(userId),
                 },
@@ -423,9 +434,9 @@ export class ConsultantsService {
 
             Object.assign(currentConsultant, body);
 
-            await this.ConsultantsRepository.save(currentConsultant);
+            await this.consultantsRepository.save(currentConsultant);
 
-            const updatedConsultant = await this.ConsultantsRepository.findOne({
+            const updatedConsultant = await this.consultantsRepository.findOne({
                 where: {
                     id: currentConsultant.id,
                 },
@@ -487,8 +498,76 @@ export class ConsultantsService {
         return position;
     }
 
+    async getHelthTips(req: Request, query: HealthTipsDto) {
+        try {
+            const userId = (<{ id: string }>req.user).id;
+            const appId = query.app_id ? parseInt(query.app_id as string) : undefined;
+            const page = query.page ? parseInt(query.page as string) : 1;
+            const limit = query.limit ? parseInt(query.limit as string) : 10;
+
+            const currentConsultant = await this.consultantsRepository.findOne({
+                where: {
+                    id: Number(userId),
+                },
+                relations: ['consultant_company', 'consultant_company.healthTips'],
+            });
+
+            let healthTips = currentConsultant.consultant_company.healthTips;
+            let totalCount;
+
+            if (appId) {
+                const queryBuilder = this.healthTipsRespository.createQueryBuilder('healthTip');
+                queryBuilder.where(`healthTip.appId = :appId`, { appId });
+
+                [healthTips, totalCount] = await queryBuilder
+                    .take(limit)
+                    .skip((page - 1) * limit)
+                    .getManyAndCount();
+            }
+
+            return {
+                healthTips,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getHelthTipsByCompany(req: Request, query: HealthTipsByCompanyDto) {
+        const companyId = query.company_id;
+        const appId = query.app_id ? parseInt(query.app_id) : undefined;
+        const page = req.query.page ? parseInt(query.page) : 1;
+        const limit = req.query.limit ? parseInt(query.limit as string) : 10;
+        try {
+            const foundCompany = await this.consultantCompanyRepository.findOne({
+                where: {
+                    id: Number(companyId),
+                },
+            });
+
+            let healthTips = foundCompany.healthTips;
+            let totalCount;
+
+            if (appId) {
+                const queryBuilder = this.healthTipsRespository.createQueryBuilder('healthTip');
+                queryBuilder.where(`healthTip.appId = :appId`, { appId });
+
+                [healthTips, totalCount] = await queryBuilder
+                    .take(limit)
+                    .skip((page - 1) * limit)
+                    .getManyAndCount();
+            }
+
+            return {
+                healthTips,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
     async getConsultant(conditions: any, selections?: any, includes?: string[]) {
-        const consultant: any = await this.ConsultantsRepository.findOne({
+        const consultant: any = await this.consultantsRepository.findOne({
             where: conditions,
             select: selections
                 ? Array.isArray(selections)
@@ -504,7 +583,7 @@ export class ConsultantsService {
                 conditions.app_id,
             );
 
-            const consultant = await this.ConsultantsRepository.findOne({
+            const consultant = await this.consultantsRepository.findOne({
                 where: { id: newConsultant['id'] },
                 select: selections
                     ? (selections as FindOptionsSelectByString<Consultants>)
@@ -518,7 +597,7 @@ export class ConsultantsService {
     }
 
     async fetchConsultants(conditions?: any, selections?: string[], includes?: string[], addFields?: string[]) {
-        const consultants: any[] = await this.ConsultantsRepository.find({
+        const consultants: any[] = await this.consultantsRepository.find({
             where: conditions ? conditions : {},
             select: selections
                 ? (selections as FindOptionsSelectByString<Consultants>)
@@ -543,7 +622,7 @@ export class ConsultantsService {
     }
 
     async findConsultant(app_id: number, email: string) {
-        const consultant = await this.ConsultantsRepository.findOne({
+        const consultant = await this.consultantsRepository.findOne({
             where: [
                 {
                     app_id: app_id,
@@ -725,7 +804,7 @@ export class ConsultantsService {
         //     created_at: new Date(),
         // };
 
-        const confirmUser = await this.ConsultantsRepository.findOne({
+        const confirmUser = await this.consultantsRepository.findOne({
             where: {
                 social_id,
             },
@@ -844,7 +923,7 @@ export class ConsultantsService {
             if (consultant.app_id === null) {
                 consultant.app_id = Number(data.app_id);
 
-                await this.ConsultantsRepository.save(consultant);
+                await this.consultantsRepository.save(consultant);
             }
 
             if (!consultant.email_confirmed) {
@@ -860,7 +939,7 @@ export class ConsultantsService {
             );
 
             consultant.token = accessToken;
-            await this.ConsultantsRepository.save(consultant);
+            await this.consultantsRepository.save(consultant);
 
             return {
                 id: consultant.id,
@@ -906,14 +985,14 @@ export class ConsultantsService {
 
     async logout(id: number) {
         try {
-            const currentConsultant = await this.ConsultantsRepository.findOneBy({ id });
+            const currentConsultant = await this.consultantsRepository.findOneBy({ id });
 
             if (!currentConsultant) {
                 throw new BadRequestException('Cannot found current consultant');
             }
 
             currentConsultant.token = null;
-            const logoutConsultant = await this.ConsultantsRepository.save(currentConsultant);
+            const logoutConsultant = await this.consultantsRepository.save(currentConsultant);
 
             if (currentConsultant.email.includes('chowistest') || currentConsultant.email.includes('@chowisas.com')) {
                 const product = await this.productsRepository.find({
@@ -1014,7 +1093,7 @@ export class ConsultantsService {
 
             const currentUserID = (user as { id: number }).id;
 
-            const consultants = await this.ConsultantsRepository.findOne({
+            const consultants = await this.consultantsRepository.findOne({
                 where: {
                     id: currentUserID,
                 },
@@ -1064,7 +1143,7 @@ export class ConsultantsService {
     }
 
     public async findOneConsultant(id: number) {
-        const consultant = await this.ConsultantsRepository.findOne({
+        const consultant = await this.consultantsRepository.findOne({
             where: { id },
             relations: ['consultant_company', 'country_details', 'consultant_position'],
         });
@@ -1156,7 +1235,7 @@ export class ConsultantsService {
     public async modifyConsultant(userId: number, data: UpdateConsultantDto, locale: string = 'en') {
         // Commented code in this function can be use in future
 
-        const consultant = await this.ConsultantsRepository.findOne({
+        const consultant = await this.consultantsRepository.findOne({
             where: { id: userId },
             relations: [
                 'gender',
@@ -1276,7 +1355,7 @@ export class ConsultantsService {
 
         const products = consultant?.products;
         delete consultant?.products;
-        const updatedConsultant: any = await this.ConsultantsRepository.save(consultant);
+        const updatedConsultant: any = await this.consultantsRepository.save(consultant);
         updatedConsultant.products = products;
 
         delete updatedConsultant.password_digest;
@@ -1677,7 +1756,7 @@ export class ConsultantsService {
     public async passwordChange(consultantId: number, data: PasswrodChangeDto, locale = 'en') {
         const { new_password, password } = data;
 
-        const consultant = await this.ConsultantsRepository.findOne({
+        const consultant = await this.consultantsRepository.findOne({
             select: ['id', 'email', 'password_digest'],
             where: {
                 id: consultantId,
@@ -1839,7 +1918,7 @@ export class ConsultantsService {
             }
 
             const userId = (<{ id: string }>req.user).id;
-            const currentConsultant = await this.ConsultantsRepository.findOne({
+            const currentConsultant = await this.consultantsRepository.findOne({
                 where: {
                     id: Number(userId),
                 },
@@ -1936,7 +2015,7 @@ export class ConsultantsService {
     }
 
     public async deleteAccount(userId: number, reason: string = '') {
-        const consultant = await this.ConsultantsRepository.findOne({
+        const consultant = await this.consultantsRepository.findOne({
             where: { id: userId },
         });
 
@@ -1944,7 +2023,7 @@ export class ConsultantsService {
             this.commonService.throwNotFoundError();
         }
 
-        await this.ConsultantsRepository.delete(userId);
+        await this.consultantsRepository.delete(userId);
 
         const FILE_NAME = 'deleted_consultant_b2b.csv';
 
@@ -2272,7 +2351,7 @@ export class ConsultantsService {
     public async getProductRecommendations(req: Request, data: ProductRecommendationsDto) {
         try {
             const userId = (<{ id: string }>req.user).id;
-            const currentConsultant = await this.ConsultantsRepository.findOne({
+            const currentConsultant = await this.consultantsRepository.findOne({
                 where: {
                     id: Number(userId),
                 },
@@ -2415,9 +2494,9 @@ export class ConsultantsService {
 
             const consultantCompanyId = device.consultant_company_id;
             if (consultantCompanyId) {
-                const currentConsultant = await this.ConsultantsRepository.findOne({ where: { id: consultant.id } });
+                const currentConsultant = await this.consultantsRepository.findOne({ where: { id: consultant.id } });
                 currentConsultant.consultant_company_id = consultantCompanyId;
-                await this.ConsultantsRepository.save(currentConsultant);
+                await this.consultantsRepository.save(currentConsultant);
             }
 
             if (!beforeUseDate && product.use_date && !isFirstUseDate) {

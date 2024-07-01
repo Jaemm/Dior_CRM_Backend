@@ -13,7 +13,7 @@ import {
     Res,
     UnauthorizedException,
 } from '@nestjs/common';
-import { Response, Request } from 'express';
+import { Response, Request, query } from 'express';
 import { ConsultantsService } from './consultants.service';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
@@ -41,6 +41,9 @@ import {
     GetNotificationsDto,
     UpdatePasswordDto,
     UpdateConsultantRubyDto,
+    HealthTipsDto,
+    HealthTipsByCompanyDto,
+    NotificationTestDto,
 } from '@/src/modules/consultants/consultants.dto';
 import { JwtService } from '@/src/jwt/jwt.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -170,6 +173,20 @@ export class ConsultantsController {
     @Get('product_recommendations')
     async getProductRecommendations(@Req() req: Request, @Query() query: ProductRecommendationsDto) {
         return await this.consultants.getProductRecommendations(req, query);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('health_tips/by_company')
+    async getHelthTipsByCompany(@Req() req: Request, @Query() query: HealthTipsByCompanyDto) {
+        return await this.consultants.getHelthTipsByCompany(req, query);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('health_tips')
+    async getHelthTips(@Req() req: Request, @Query() query: HealthTipsDto) {
+        return await this.consultants.getHelthTips(req, query);
     }
 
     /**

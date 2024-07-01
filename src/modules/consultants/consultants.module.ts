@@ -15,6 +15,7 @@ import {
     ConsultantShops,
     ConsultantPositions,
     ProductRecommendations,
+    HealthTips,
 } from '@/src/common/entities/crmEntities';
 
 import { ConsultantsController } from './consultants.controller';
@@ -96,6 +97,7 @@ import { CRMModule } from '../crm/crm.module';
             ConsultantCustomzations,
             PasswordEmailDetails,
             ProductRecommendations,
+            HealthTips,
             DoWrite,
             Devices,
             AdminUsers,

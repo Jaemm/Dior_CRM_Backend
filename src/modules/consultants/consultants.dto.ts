@@ -1,7 +1,7 @@
 import { IsNumberOrString } from '@/src/common/validators/number-or-string.validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsArray, IsOptional, IsString, Matches, Validate } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, Matches, Validate } from 'class-validator';
 
 export class ConsultantDto {
     @ApiProperty()
@@ -593,6 +593,45 @@ export class ProductRecommendationsDto {
     limit: string;
 }
 
+export class HealthTipsDto {
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    app_id: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    page: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    limit: string;
+}
+
+export class HealthTipsByCompanyDto {
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    company_id: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    app_id: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    page: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    limit: string;
+}
+
 export class TokenRefreshDto {
     @ApiProperty()
     @IsString()
@@ -601,6 +640,18 @@ export class TokenRefreshDto {
     @ApiProperty()
     @IsString()
     token: string;
+}
+
+export class NotificationTestDto {
+    @IsNotEmpty()
+    @ApiProperty()
+    @IsString()
+    title: string;
+
+    @IsNotEmpty()
+    @ApiProperty()
+    @IsString()
+    content: string;
 }
 
 export class EnterProductDto {
