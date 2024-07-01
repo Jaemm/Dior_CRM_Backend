@@ -189,6 +189,20 @@ export class ConsultantsController {
         return await this.consultants.getHelthTips(req, query);
     }
 
+    @Post('login/social')
+    async loginSocial(@Req() req: Request, @Res() res: Response, @Body() body: LoginSocialDto) {
+        const consultant = await this.consultants.loginSocial(body);
+        return res.status(200).send(consultant);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('login/phone')
+    async loginPhone(@Req() req: Request, @Body() body: LoginPhoneDto) {
+        const userId = Number((<{ id: string }>req['user']).id);
+        return await this.consultants.loginPhone(body, userId);
+    }
+
     /**
      *
      * Existing codes
@@ -363,21 +377,6 @@ export class ConsultantsController {
     @Post('renew-devices')
     async renewDevices(@Res() res: Response, @Body() body: RenewDevicesDto): Promise<any> {
         const consultant = await this.consultants.renewDevices(body);
-        return res.status(200).send(consultant);
-    }
-
-    @Post('login/social')
-    async loginSocial(@Req() req: Request, @Res() res: Response, @Body() body: LoginSocialDto): Promise<any> {
-        const consultant = await this.consultants.loginSocial(body);
-        return res.status(200).send(consultant);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Post('login/phone')
-    async loginPhone(@Req() req: Request, @Res() res: Response, @Body() body: LoginPhoneDto): Promise<any> {
-        const userId = Number((<{ id: string }>req['user']).id);
-        const consultant = await this.consultants.loginPhone(body, userId);
         return res.status(200).send(consultant);
     }
 

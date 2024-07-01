@@ -20,7 +20,6 @@ import { Genders } from './Genders.entity';
 import { Consultants } from './Consultants.entity';
 
 @Index('index_customers_on_email', ['email'], {})
-@Index('index_customers_on_gender_id', ['gender_id'], {})
 @Index('customers_pkey', ['id'], { unique: true })
 @Index('index_customers_on_token', ['token'], {})
 @Entity('customers', { schema: 'public' })
@@ -91,6 +90,9 @@ export class Customers {
     @Column('character varying', { name: 'surname', nullable: true })
     surname: string | null;
 
+    @Column('character varying', { name: 'gender', nullable: true })
+    gender: string | null;
+
     @Column('integer', { name: 'age', nullable: true })
     age: number | null;
 
@@ -100,6 +102,18 @@ export class Customers {
     @Column('integer', { name: 'skin_condition', nullable: true })
     skin_condition: number | null;
 
+    @Column('integer', {
+        name: 'skin_color_group_id',
+        nullable: true,
+    })
+    skin_color_group_id: number | null;
+
+    @Column('integer', {
+        name: 'ethnicity_id',
+        nullable: true,
+    })
+    ethnicity_id: number | null;
+
     @Column('character varying', { name: 'city', nullable: true })
     city: string | null;
 
@@ -108,6 +122,9 @@ export class Customers {
 
     @Column('character varying', { name: 'zip_code', nullable: true })
     zip_code: string | null;
+
+    @Column('character varying', { name: 'country', nullable: true })
+    country: string | null;
 
     @Column('text', { name: 'notes', nullable: true })
     notes: string | null;
@@ -155,47 +172,6 @@ export class Customers {
     @Column('character varying', { name: 'country_code', nullable: true })
     country_code: string | null;
 
-    @Column('character varying', { name: 'country_name', nullable: true })
-    country_name: string | null;
-
-    @Column('bigint', { name: 'gender_id', nullable: true })
-    gender_id: number | null;
-
-    @Column('boolean', {
-        name: 'register_for_crm',
-        nullable: true,
-        default: () => 'false',
-    })
-    register_for_crm: boolean | null;
-
-    @Column('integer', { name: 'consultant_shop_id', nullable: true })
-    consultant_shop_id: number | null;
-
-    @Column('boolean', {
-        name: 'email_subscription',
-        nullable: true,
-        default: () => 'true',
-    })
-    email_subscription: boolean | null;
-
-    @Column('integer', {
-        name: 'ethnicity_id',
-        nullable: true,
-    })
-    ethnicity_id: number | null;
-
-    @Column('integer', {
-        name: 'skin_color_group_id',
-        nullable: true,
-    })
-    skin_color_group_id: number | null;
-
-    @Column('integer', {
-        name: 'country_id',
-        nullable: true,
-    })
-    country_id: number | null;
-
     @OneToMany(() => ChowisCustomerConsents, (chowisCustomerConsents) => chowisCustomerConsents.customer)
     chowisCustomerConsents: ChowisCustomerConsents[];
 
@@ -204,13 +180,6 @@ export class Customers {
 
     @OneToMany(() => CustomerLicenses, (customerLicenses) => customerLicenses.customer)
     customerLicenses: CustomerLicenses[];
-
-    @ManyToOne(() => Countries, (countries) => countries.customers, {
-        onDelete: 'SET NULL',
-        onUpdate: 'CASCADE',
-    })
-    @JoinColumn([{ name: 'country_id', referencedColumnName: 'id' }])
-    country: Countries;
 
     @ManyToOne(() => Ethnicities, (ethnicities) => ethnicities.customers, {
         onDelete: 'SET NULL',
@@ -225,10 +194,6 @@ export class Customers {
     })
     @JoinColumn([{ name: 'skin_color_group_id', referencedColumnName: 'id' }])
     skinColorGroup: SkinColorGroups;
-
-    @OneToOne(() => Genders, (genders) => genders.customers)
-    @JoinColumn([{ name: 'gender_id', referencedColumnName: 'id' }])
-    gender: Genders;
 
     @ManyToOne(() => Consultants, (consultants) => consultants.customers)
     @JoinColumn([{ name: 'consultant_id', referencedColumnName: 'id' }])
@@ -254,23 +219,8 @@ export class Customers {
         }
     }
 
-    get getContryId(): number | null {
-        if (this.country) {
-            return this.country.id;
-        }
-        return null;
-    }
-
-    get getGenderId(): string | null {
-        if (this.gender) {
-            return this.gender.id;
-        }
-        return null;
-    }
-
     @AfterLoad()
     afterLoad() {
         this.id = Number(this.id);
-        if (this.gender_id) this.gender_id = Number(this.gender_id);
     }
 }

@@ -840,9 +840,9 @@ export class CustomersService {
             ? Number(customer.skin_color_group_id)
             : customerData.skin_color_group_id;
 
-        customerData.consultant_shop_id = customer?.consultant_shop_id
-            ? Number(customer.consultant_shop_id)
-            : customerData.consultant_shop_id;
+        // customerData.consultant_shop_id = customer?.consultant_shop_id
+        //     ? Number(customer.consultant_shop_id)
+        //     : customerData.consultant_shop_id;
 
         customerData.age = customer?.age ? Number(customer.age) : customerData.age;
 
@@ -852,7 +852,7 @@ export class CustomersService {
 
         customerData.app_id = customer?.app_id ? Number(customerData.app_id) : customerData.app_id;
 
-        customerData.consultant_shop_id = customer?.consultant_shop_id ? Number(customerData.consultant_shop_id) : null;
+        // customerData.consultant_shop_id = customer?.consultant_shop_id ? Number(customerData.consultant_shop_id) : null;
 
         const updatedCustomer: any = await this.CustomersRepository.save(customerData);
 
