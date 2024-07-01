@@ -21,7 +21,7 @@ import axios from 'axios';
 import * as fs from 'fs';
 import * as FormData from 'form-data';
 import { ErrorStatus } from '@/src/common/constants/error-status';
-import { Customers } from '@/src/common/entities/crmEntities';
+import { Customers, Consultants } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class CRMService {
@@ -30,6 +30,8 @@ export class CRMService {
         private readonly chowisCustomerConsentRepository: Repository<ChowisCustomerConsents>,
         @InjectRepository(Customers)
         private readonly customersRepository: Repository<Customers>,
+        @InjectRepository(Consultants)
+        private readonly consultantRepository: Repository<Consultants>,
 
         private readonly customerService: CustomersService,
         private consultantsService: ConsultantsService,
@@ -111,11 +113,7 @@ export class CRMService {
                 country_code: true,
             },
         };
-        const consultant = await this.consultantsService.getConsultant({ id: consultantId }, selection, [
-            'customers',
-            'customers.gender',
-            'customers.country',
-        ]);
+        const consultant = await this.consultantsService.getConsultant({ id: consultantId }, selection, ['customers']);
 
         if (!consultant) {
             this.commonService.throwNotFoundError();
@@ -129,10 +127,6 @@ export class CRMService {
                 error: ResponseMessages.CrmCustomerNotFound,
             });
         }
-
-        customer.country_code = customer.getContryCode;
-        customer.gender = customer.getGenderId;
-        customer.country_id = customer.getContryId;
 
         return customer;
     }
@@ -210,7 +204,7 @@ export class CRMService {
 
     async register(id: number, data: UpdateCrmCustomersDto) {
         const { email, phone, app_id, country_code } = data;
-        let country_id = data.country_id;
+        // let country_id = data.country_id;
 
         if (!email && !phone) {
             throw new BadRequestException({
@@ -255,14 +249,14 @@ export class CRMService {
         if (country_code) {
             const country = await this.countriesService.findOneCountry({ country_code: country_code }, ['id']);
             if (country) {
-                country_id = Number(country.id);
+                // country_id = Number(country.id);
             }
         }
 
         const customerData = {
             ...data,
             consultant_id: consultant.id,
-            country_id: country_id,
+            // country_id: country_id,
             register_date: new Date(),
             register_for_crm: true,
             created_at: new Date(),
@@ -319,7 +313,7 @@ export class CRMService {
     }
 
     async update(consultantId: number, customerId: number, data: UpdateCrmCustomersDto) {
-        let country_id = data.country_id;
+        // let country_id = data.country_id;
         const consultant = await this.consultantsService.getConsultant({ id: consultantId }, [], ['customers']);
 
         if (!consultant) {
@@ -338,7 +332,7 @@ export class CRMService {
         if (data.country_code) {
             const country = await this.countriesService.findOneCountry({ country_code: data.country_code }, ['id']);
             if (country) {
-                country_id = Number(country.id);
+                // country_id = Number(country.id);
             }
         }
 
@@ -352,98 +346,77 @@ export class CRMService {
         return { ...updatedCustomer, consultant_name: consultant.name, optic_number: updatedCustomer.getOpticNumbers };
     }
 
-    async createCustomer(id: number, data: UpdateCrmCustomersDto) {
+    async createCustomer(consultantId: number, data: UpdateCrmCustomersDto) {
         // TODO: Use locale from headers for translation
 
-        const { email, phone, app_id, country_code } = data;
-        let country_id = data.country_id;
+        try {
+            const consultant = this.consultantRepository.findOneBy({ id: consultantId });
 
-        if (!email && !phone) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.BAD_REQUEST,
-                error: ResponseMessages.EmailOrPhoneRequired,
-            });
-        }
-
-        if (!app_id) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.BAD_REQUEST,
-                error: ResponseMessages.AppIdRequired,
-            });
-        }
-
-        const consultant = await this.consultantsService.getConsultant({ id: id }, [], ['customers']);
-
-        if (!consultant) {
-            this.commonService.throwNotFoundError();
-        }
-
-        let customers = consultant.customers;
-        if (email) {
-            customers = customers.filter((customer: any) => customer.email === email && customer.app_id == app_id);
-        }
-
-        if (phone) {
-            customers = customers.filter((customer: any) => customer.phone === phone && customer.app_id == app_id);
-        }
-
-        if (customers.length) {
-            throw new ConflictException({
-                result_code: ErrorStatus.DATA_ALREADY_EXIST,
-                error: ResponseMessages.DataAlreadyExist,
-            });
-        }
-
-        if (country_code) {
-            const country = await this.countriesService.findOneCountry({ country_code: country_code }, ['id']);
-            if (country) {
-                country_id = Number(country.id);
+            if (!consultant) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.NOT_FOUND,
+                    error: 'Cannot found consultant',
+                });
             }
+
+            const newCustomer = this.customersRepository.create({
+                email: data?.email,
+                name: data?.name,
+                surname: data?.surname,
+                gender: data?.gender,
+                birth: data?.birth,
+                skin_color_group_id: data?.skin_color_group_id,
+                ethnicity_id: data?.ethnicity_id,
+                os: data?.os,
+                language: data?.language,
+                phone_country_code: data?.phone_country_code,
+                notes: data?.notes,
+                age: data?.age,
+                app_id: data?.app_id,
+                phone: data?.phone,
+                address: data?.address,
+                city: data?.city,
+                zip_code: data?.zip_code,
+                state: data?.state,
+                country: data?.country,
+                country_code: data?.country_code,
+                image_url: data?.image_url,
+            });
+
+            const createdCustomer = await this.customersRepository.save(newCustomer);
+
+            return {
+                id: createdCustomer.id,
+                email: createdCustomer.email,
+                name: createdCustomer.name,
+                surname: createdCustomer.surname,
+                os: createdCustomer.os,
+                language: createdCustomer.language,
+                phone_country_code: createdCustomer.phone_country_code,
+                phone: createdCustomer.phone,
+                address: createdCustomer.address,
+                city: createdCustomer.city,
+                state: createdCustomer.state,
+                zip_code: createdCustomer.zip_code,
+                notes: createdCustomer.notes,
+                push_token: createdCustomer.push_token,
+                app_id: createdCustomer.app_id,
+                company_id: createdCustomer.company_id,
+                consultant_id: createdCustomer.consultant_id,
+                skin_color_group_id: createdCustomer.skin_color_group_id,
+                ethnicity_id: createdCustomer.ethnicity_id,
+                age: createdCustomer.age,
+                birth: createdCustomer.birth,
+                country: createdCustomer.country,
+                register_date: createdCustomer.register_date,
+                country_code: createdCustomer.country_code,
+            };
+        } catch (e) {
+            throw e;
         }
-
-        const customer = {
-            ...data,
-            consultant_id: consultant.id,
-            country_id: country_id,
-            register_date: new Date(),
-            register_for_crm: true,
-            created_at: new Date(),
-            updated_at: new Date(),
-        };
-
-        const createdCustomer = await this.customerService.createCrmCustomer(customer);
-
-        return {
-            id: createdCustomer.id,
-            email: createdCustomer.email,
-            name: createdCustomer.name,
-            surname: createdCustomer.surname,
-            os: createdCustomer.os,
-            language: createdCustomer.language,
-            phone_country_code: createdCustomer.phone_country_code,
-            phone: createdCustomer.phone,
-            address: createdCustomer.address,
-            city: createdCustomer.city,
-            state: createdCustomer.state,
-            zip_code: createdCustomer.zip_code,
-            notes: createdCustomer.notes,
-            push_token: createdCustomer.push_token,
-            app_id: createdCustomer.app_id,
-            company_id: createdCustomer.company_id,
-            consultant_id: createdCustomer.consultant_id,
-            skin_color_group_id: createdCustomer.skin_color_group_id,
-            ethnicity_id: createdCustomer.ethnicity_id,
-            age: createdCustomer.age,
-            country_id: createdCustomer.country_id,
-            birth: createdCustomer.birth,
-            country: createdCustomer.country,
-            register_date: createdCustomer.register_date,
-            country_code: createdCustomer.country_code,
-            gender: createdCustomer.gender_id,
-        };
     }
 
-    async getByEmail(id: number, data: GetByEmailDto) {
+    async getByEmail(consultantId: number, data: GetByEmailDto) {
         const selection = {
             customers: {
                 id: true,
@@ -471,11 +444,7 @@ export class CRMService {
                 country_code: true,
             },
         };
-        const consultant = await this.consultantsService.getConsultant({ id: id }, selection, [
-            'customers',
-            'customers.gender',
-            'customers.country',
-        ]);
+        const consultant = await this.consultantsService.getConsultant({ id: consultantId }, selection, ['customers']);
 
         if (!consultant) {
             this.commonService.throwNotFoundError();
@@ -489,10 +458,6 @@ export class CRMService {
                 error: ResponseMessages.CrmCustomerNotFound,
             });
         }
-
-        customer.country_code = customer.getContryCode;
-        customer.gender = customer.getGenderId;
-        customer.country_id = customer.getContryId;
 
         return customer;
     }

@@ -752,9 +752,9 @@ export class CustomersService {
     async update(userId: number, customer: UpdateCustomersDto | UpdateCrmCustomersDto) {
         // Commented code in this function can be use in future
 
-        if (String(customer?.consultant_shop_id)?.length === 0) {
-            customer.consultant_shop_id = null;
-        }
+        // if (String(customer?.consultant_shop_id)?.length === 0) {
+        //     customer.consultant_shop_id = null;
+        // }
         const customerData = await this.CustomersRepository.findOne({
             where: { id: userId },
         });
@@ -781,13 +781,13 @@ export class CustomersService {
         //     promises.push(this.consultant.findOneConsultant(customer.consultant_id));
         // }
 
-        if (customer.consultant_shop_id) {
-            promises.push(this.consultantShops.findOneConsultantShops(Number(customer.consultant_shop_id)));
-        }
+        // if (customer.consultant_shop_id) {
+        //     promises.push(this.consultantShops.findOneConsultantShops(Number(customer.consultant_shop_id)));
+        // }
 
-        if (customer.gender_id) {
-            promises.push(this.genders.findOneGender(String(customer.gender_id)));
-        }
+        // if (customer.gender_id) {
+        //     promises.push(this.genders.findOneGender(String(customer.gender_id)));
+        // }
 
         if (customer.app_id) {
             promises.push(this.applications.findOneApplication(customer.app_id));
@@ -808,7 +808,7 @@ export class CustomersService {
                 });
             }
 
-            customer.country_id = country?.id ? Number(country.id) : null;
+            // customer.country_id = country?.id ? Number(country.id) : null;
             // customer.country_code = country.code;
             customer.country_name = country.name;
             // customer.phone_country_code = country.phone_country_code;

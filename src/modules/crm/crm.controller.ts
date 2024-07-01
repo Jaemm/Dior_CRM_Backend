@@ -34,7 +34,9 @@ import { ErrorStatus } from '@/src/common/constants/error-status';
 export class CRMController {
     constructor(private readonly crmService: CRMService, private readonly jwtService: JwtService) {}
 
-    // For Consultant
+    /**
+     * For Consultant
+     */
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('customers')
@@ -42,6 +44,30 @@ export class CRMController {
         const userId = Number((<{ id: string }>req['user']).id);
 
         return await this.crmService.getCustomer(userId, query);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('customers/get_by_email')
+    async getCustomerByEmail(@Req() req: Request, @Query() query: GetByEmailDto): Promise<any> {
+        const userId = Number((<{ id: string }>req['user']).id);
+        return await this.crmService.getByEmail(userId, query);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('customers')
+    async createCustomer(@Req() req: Request, @Body() body: UpdateCrmCustomersDto) {
+        const userId = Number((<{ id: string }>req['user']).id);
+        return await this.crmService.createCustomer(userId, body);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('customers/:id')
+    async getCustomerById(@Req() req: Request, @Param('id') customerId: string): Promise<any> {
+        const consultantId = Number((<{ id: string }>req['user']).id);
+        return await this.crmService.getCustomerById(consultantId, Number(customerId));
     }
 
     @ApiTags('Consultants')
@@ -76,49 +102,6 @@ export class CRMController {
             const consultantId = Number((<{ id: string }>req['user']).id);
             const result = await this.crmService.update(consultantId, Number(customerId), body);
             return res.status(200).send(result);
-        } catch (error) {
-            return res.status(error['status'] || 500).send(error['response'] || ResponseMessages.InternalServerError);
-        }
-    }
-
-    // For Consultant
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Post('customers')
-    async createCustomer(@Req() req: Request, @Res() res: Response, @Body() body: UpdateCrmCustomersDto): Promise<any> {
-        try {
-            const userId = Number((<{ id: string }>req['user']).id);
-            const result = await this.crmService.createCustomer(userId, body);
-
-            return res.status(200).send(result);
-        } catch (error) {
-            return res.status(error['status'] || 500).send(error['response'] || ResponseMessages.InternalServerError);
-        }
-    }
-
-    // For Consultant
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get('customers/get_by_email')
-    async getCustomerByEmail(@Req() req: Request, @Res() res: Response, @Query() query: GetByEmailDto): Promise<any> {
-        try {
-            const userId = Number((<{ id: string }>req['user']).id);
-            const result = await this.crmService.getByEmail(userId, query);
-            return res.status(200).send(result);
-        } catch (error) {
-            return res.status(error['status'] || 500).send(error['response'] || ResponseMessages.InternalServerError);
-        }
-    }
-
-    // For Consultant
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get('customers/:id')
-    async getCustomerById(@Req() req: Request, @Res() res: Response, @Param('id') customerId: string): Promise<any> {
-        try {
-            const consultantId = Number((<{ id: string }>req['user']).id);
-            const customer = await this.crmService.getCustomerById(consultantId, Number(customerId));
-            return res.status(200).send(customer);
         } catch (error) {
             return res.status(error['status'] || 500).send(error['response'] || ResponseMessages.InternalServerError);
         }

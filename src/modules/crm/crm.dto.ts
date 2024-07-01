@@ -1,6 +1,6 @@
 import { IsNumberOrString } from '@/src/common/validators/number-or-string.validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsOptional, IsString, Validate } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, Validate } from 'class-validator';
 
 export class CRMDto {
     @ApiProperty()
@@ -118,11 +118,11 @@ export class GetCustomerDto {
 
 export class UpdateCrmCustomersDto {
     @ApiProperty()
-    @IsOptional()
+    @IsNotEmpty()
     email: string;
 
     @ApiProperty()
-    @IsOptional()
+    @IsNotEmpty()
     phone: string;
 
     @ApiProperty()
@@ -144,6 +144,14 @@ export class UpdateCrmCustomersDto {
     @ApiProperty()
     @IsOptional()
     birth: string;
+
+    @ApiProperty()
+    @IsOptional()
+    gender: string;
+
+    @ApiProperty()
+    @IsOptional()
+    image_url: string;
 
     @ApiProperty()
     @IsOptional()
@@ -183,43 +191,23 @@ export class UpdateCrmCustomersDto {
     @ApiProperty()
     // @Validate(IsNumberOrString)
     @IsOptional()
-    phone_country_code: any ;
+    phone_country_code: any;
+
+    @ApiProperty()
+    @IsOptional()
+    country: string;
 
     @ApiProperty()
     @IsOptional()
     country_code: string;
 
     @ApiProperty()
-    @Validate(IsNumberOrString)
     @IsOptional()
-    gender_id: string;
-
-    @ApiProperty()
-    // @Validate(IsNumberOrString)
-    @IsOptional()
-    consultant_shop_id: number | string;
-
-    @ApiProperty()
-    @Validate(IsNumberOrString)
-    @IsOptional()
-    social_id: string;
-
-    @ApiProperty()
-    @IsOptional()
-    social: string;
-
-    @ApiProperty()
-    @IsOptional()
-    note: string;
+    notes: string;
 
     @ApiProperty()
     @IsOptional()
     country_name: string;
-
-    @ApiProperty()
-    @Validate(IsNumberOrString)
-    @IsOptional()
-    country_id: number;
 
     @ApiProperty()
     @Validate(IsNumberOrString)
@@ -243,26 +231,6 @@ export class UpdateCrmCustomersDto {
     @ApiProperty()
     @IsOptional()
     confirm_token: string;
-
-    @ApiProperty()
-    @IsOptional()
-    memo: string;
-
-    @ApiProperty()
-    @IsOptional()
-    company_name: string;
-
-    @ApiProperty()
-    @IsOptional()
-    company_address: string;
-
-    @ApiProperty()
-    @IsOptional()
-    position: string;
-
-    @ApiProperty()
-    @IsOptional()
-    branch: string;
 
     @ApiProperty()
     @IsOptional()

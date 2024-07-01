@@ -7,6 +7,8 @@ import {
     ManyToOne,
     OneToMany,
     OneToOne,
+    BeforeInsert,
+    BeforeUpdate,
     PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ChowisCustomerConsents } from './ChowisCustomerConsents.entity';
@@ -201,6 +203,17 @@ export class Customers {
 
     @OneToMany(() => Products, (products) => products.customer)
     products: Products[];
+
+    @BeforeInsert()
+    insertCreated() {
+        this.created_at = new Date();
+        this.updated_at = new Date();
+    }
+
+    @BeforeUpdate()
+    insertUpdated() {
+        this.updated_at = new Date();
+    }
 
     get getOpticNumbers(): string[] | [] {
         if (this.products && this.products.length > 0) {
