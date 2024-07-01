@@ -21,100 +21,66 @@ import axios from 'axios';
 import * as fs from 'fs';
 import * as FormData from 'form-data';
 import { ErrorStatus } from '@/src/common/constants/error-status';
+import { Customers } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class CRMService {
     constructor(
         @InjectRepository(ChowisCustomerConsents)
         private readonly chowisCustomerConsentRepository: Repository<ChowisCustomerConsents>,
+        @InjectRepository(Customers)
+        private readonly customersRepository: Repository<Customers>,
 
         private readonly customerService: CustomersService,
         private consultantsService: ConsultantsService,
         private countriesService: CountriesService,
         private productService: ProductsService,
         private commonService: CommonService,
-        private customerConsentsService: CustomerConsentsService,
     ) {}
 
     async getCustomer(id: number, data: GetCustomerDto) {
         const { email, name, surname, search } = data;
         const page = data.page ? Number(data.page) : 1;
         const perPage = data.per ? Number(data.per) : 20;
-        const selection = {
-            id: true,
-            email: true,
-            external_id: true,
-            name: true,
-            surname: true,
-            os: true,
-            language: true,
-            phone_country_code: true,
-            phone: true,
-            address: true,
-            city: true,
-            state: true,
-            zip_code: true,
-            notes: true,
-            push_token: true,
-            app_id: true,
-            company_id: true,
-            consultant_id: true,
-            skin_color_group_id: true,
-            ethnicity_id: true,
-            age: true,
-            birth: true,
-            register_date: true,
-            country_code: true,
-        };
-        let condition: any = { consultant_id: id };
-        if (email) {
-            condition = { consultant_id: id, email: email };
+
+        try {
+            const customerQuery = this.customersRepository.createQueryBuilder('customers');
+
+            if (email) {
+                customerQuery.andWhere('customers.email LIKE :email', { email: `%${email}%` });
+            }
+
+            if (name) {
+                customerQuery.andWhere('customers.name LIKE :name', { name: `%${name}%` });
+            }
+
+            if (surname) {
+                customerQuery.andWhere('customers.surname LIKE :surname', { surname: `%${surname}%` });
+            }
+
+            if (search) {
+                const searchLower = search.toLowerCase();
+                customerQuery.andWhere(
+                    '(LOWER(customers.email) LIKE :search OR LOWER(customers.name) LIKE :search OR LOWER(customers.surname) LIKE :search)',
+                    { search: `%${searchLower}%` },
+                );
+            }
+
+            const [customers, totalCount] = await customerQuery
+                .take(perPage)
+                .skip((page - 1) * perPage)
+                .getManyAndCount();
+
+            return {
+                data: customers,
+                total_size: totalCount,
+                current_page_size: customers.length,
+                current_page: page,
+                total_pages: Math.ceil(totalCount / perPage),
+            };
+        } catch (e) {
+            throw e;
         }
-
-        if (name) {
-            condition = { consultant_id: id, name: name };
-        }
-
-        if (surname) {
-            condition = { consultant_id: id, surname: surname };
-        }
-        // const consultant = await this.consultantsService.getConsultant({ id: id }, selection, [
-        //     'customers',
-        //     'customers.gender',
-        //     'customers.country',
-        // ]);
-
-        if (!id) {
-            this.commonService.throwNotFoundError();
-        }
-
-        let customers = await this.customerService.getCustomersByConsultant(
-            condition,
-            selection,
-            search,
-            page,
-            perPage,
-        );
-
-        // const customersData = customers.data.map((c: any) => {
-        //     return { ...c, country_code: c.getContryCode, gender: c.getGenderId, country: null };
-        // });
-
-        // if (page && perPage) {
-        //     console.log(page, perPage,"--->", (page && perPage))
-        //     const startIndex = (page - 1) * perPage;
-        //     const endIndex = page * perPage;
-        //     customers = customers.slice(startIndex, endIndex);
-        // }
-
-        // customersData.forEach((item: any) => {
-        //     if(item?.gender){
-        //         item.gender = Number(item.gender);
-        //     }
-        // });
-
-        delete customers.perPage;
-        return customers;
     }
 
     async getCustomerById(consultantId: number, customerId: number) {

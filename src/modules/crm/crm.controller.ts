@@ -34,6 +34,16 @@ import { ErrorStatus } from '@/src/common/constants/error-status';
 export class CRMController {
     constructor(private readonly crmService: CRMService, private readonly jwtService: JwtService) {}
 
+    // For Consultant
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('customers')
+    async getCustomers(@Req() req: Request, @Query() query: GetCustomerDto) {
+        const userId = Number((<{ id: string }>req['user']).id);
+
+        return await this.crmService.getCustomer(userId, query);
+    }
+
     @ApiTags('Consultants')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
@@ -66,22 +76,6 @@ export class CRMController {
             const consultantId = Number((<{ id: string }>req['user']).id);
             const result = await this.crmService.update(consultantId, Number(customerId), body);
             return res.status(200).send(result);
-        } catch (error) {
-            return res.status(error['status'] || 500).send(error['response'] || ResponseMessages.InternalServerError);
-        }
-    }
-
-    // For Consultant
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get('customers')
-    async getCustomers(@Req() req: Request, @Res() res: Response, @Query() query: GetCustomerDto): Promise<any> {
-        try {
-            const userId = Number((<{ id: string }>req['user']).id);
-
-            const customers = await this.crmService.getCustomer(userId, query);
-
-            return res.status(200).send(customers);
         } catch (error) {
             return res.status(error['status'] || 500).send(error['response'] || ResponseMessages.InternalServerError);
         }
