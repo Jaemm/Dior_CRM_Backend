@@ -33,6 +33,11 @@ import { ConfirmHtmlDto } from '../consultants/consultants.dto';
 export class CustomersController {
     constructor(@Inject(forwardRef(() => CustomersService)) private readonly customers: CustomersService) {}
 
+    @Post('generate_token')
+    async generateToken(@Req() req: Request): Promise<any> {
+        return await this.customers.generateToken();
+    }
+
     @Post('login')
     async login(
         @Res() res: Response,
@@ -95,12 +100,6 @@ export class CustomersController {
         const id = (<{ id: string }>req['user']).id;
         const changedPasswordResult = await this.customers.passwordChange(id, body, locale);
         return res.status(200).send(changedPasswordResult);
-    }
-
-    @Post('generate_token')
-    async generateToken(@Req() req: Request, @Res() res: Response): Promise<any> {
-        const token = await this.customers.generateToken();
-        return res.status(200).send(token);
     }
 
     @Get('presign_upload')

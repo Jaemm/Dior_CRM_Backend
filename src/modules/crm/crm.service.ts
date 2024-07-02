@@ -350,6 +350,15 @@ export class CRMService {
         // TODO: Use locale from headers for translation
 
         try {
+            const { email, phone } = data;
+
+            if (!email || !phone) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.INVALID_REQUEST,
+                    error: 'Missing email and phone number',
+                });
+            }
+
             const consultant = this.consultantRepository.findOneBy({ id: consultantId });
 
             if (!consultant) {

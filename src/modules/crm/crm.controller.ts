@@ -70,6 +70,17 @@ export class CRMController {
         return await this.crmService.getCustomerById(consultantId, Number(customerId));
     }
 
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Put('customers/:id')
+    async updateCustomer(
+        @Req() req: Request,
+        @Body() body: UpdateCrmCustomersDto,
+        @Param('id') customerId: string,
+    ): Promise<any> {
+        return await this.crmService.updateCustomer(Number(customerId), body);
+    }
+
     @ApiTags('Consultants')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
@@ -101,23 +112,6 @@ export class CRMController {
         try {
             const consultantId = Number((<{ id: string }>req['user']).id);
             const result = await this.crmService.update(consultantId, Number(customerId), body);
-            return res.status(200).send(result);
-        } catch (error) {
-            return res.status(error['status'] || 500).send(error['response'] || ResponseMessages.InternalServerError);
-        }
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Put('customers/:id')
-    async updateCustomer(
-        @Req() req: Request,
-        @Res() res: Response,
-        @Body() body: UpdateCrmCustomersDto,
-        @Param('id') customerId: string,
-    ): Promise<any> {
-        try {
-            const result = await this.crmService.updateCustomer(Number(customerId), body);
             return res.status(200).send(result);
         } catch (error) {
             return res.status(error['status'] || 500).send(error['response'] || ResponseMessages.InternalServerError);

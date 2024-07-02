@@ -118,11 +118,11 @@ export class GetCustomerDto {
 
 export class UpdateCrmCustomersDto {
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     email: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     phone: string;
 
     @ApiProperty()
