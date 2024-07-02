@@ -22,7 +22,7 @@ import axios from 'axios';
 import * as fs from 'fs';
 import * as FormData from 'form-data';
 import { ErrorStatus } from '@/src/common/constants/error-status';
-import { Customers, Consultants, DiorCustomerConsents } from '@/src/common/entities/crmEntities';
+import { Customers, Consultants, DiorCustomerConsents, Countries } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class CRMService {
@@ -33,6 +33,8 @@ export class CRMService {
         private readonly consultantRepository: Repository<Consultants>,
         @InjectRepository(DiorCustomerConsents)
         private readonly diorCustomerConsentsRepository: Repository<DiorCustomerConsents>,
+        @InjectRepository(Countries)
+        private readonly countryRepository: Repository<Countries>,
 
         private readonly customerService: CustomersService,
         private consultantsService: ConsultantsService,
@@ -266,24 +268,15 @@ export class CRMService {
         };
     }
 
-    async updateCustomer(customerId: number, data: UpdateCrmCustomersDto) {
-        // TODO: Use locale from headers for translation
-
-        const customer = await this.customerService.getCustomer({ id: customerId });
-        if (!customer) {
-            throw new NotFoundException({
-                result_code: ErrorStatus.CUSTOMER_NOT_FOUND,
-                error: ResponseMessages.CustomerNotFound,
-            });
-        }
-
-        const customerData = await this.customerService.update(customerId, data);
-        return customerData;
-    }
-
-    async update(consultantId: number, customerId: number, data: UpdateCrmCustomersDto) {
+    async updateCustomer(consultantId: number, customerId: number, data: UpdateCrmCustomersDto) {
         // let country_id = data.country_id;
-        const consultant = await this.consultantsService.getConsultant({ id: consultantId }, [], ['customers']);
+
+        const consultant = await this.consultantRepository.findOne({
+            where: {
+                id: consultantId,
+            },
+            relations: ['customers'],
+        });
 
         if (!consultant) {
             this.commonService.throwNotFoundError();

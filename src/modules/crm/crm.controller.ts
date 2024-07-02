@@ -100,13 +100,14 @@ export class CRMController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Put('customers/:id')
-    async updateCustomer(
+    @Post('customers/:id')
+    async updateConsultantCustomer(
         @Req() req: Request,
-        @Body() body: UpdateCrmCustomersDto,
         @Param('id') customerId: string,
+        @Body() body: UpdateCrmCustomersDto,
     ): Promise<any> {
-        return await this.crmService.updateCustomer(Number(customerId), body);
+        const consultantId = Number((<{ id: string }>req['user']).id);
+        return await this.crmService.updateCustomer(consultantId, Number(customerId), body);
     }
 
     @ApiBearerAuth()
@@ -116,43 +117,5 @@ export class CRMController {
         const consultantId = Number((<{ id: string }>req['user']).id);
         return await this.crmService.deleteCustomer(consultantId, Number(customerId));
     }
-
     /** END */
-
-    @ApiTags('Consultants')
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Post('customers/register')
-    async registerConsultantCustomer(
-        @Req() req: Request,
-        @Res() res: Response,
-        @Body() body: UpdateCrmCustomersDto,
-    ): Promise<any> {
-        try {
-            const userId = Number((<{ id: string }>req['user']).id);
-            const result = await this.crmService.register(userId, body);
-            return res.status(200).send(result);
-        } catch (error) {
-            return res.status(error['status'] || 500).send(error['response'] || ResponseMessages.InternalServerError);
-        }
-    }
-
-    @ApiTags('Consultants')
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Post('customers/update/:id')
-    async updateConsultantCustomer(
-        @Req() req: Request,
-        @Res() res: Response,
-        @Param('id') customerId: string,
-        @Body() body: UpdateCrmCustomersDto,
-    ): Promise<any> {
-        try {
-            const consultantId = Number((<{ id: string }>req['user']).id);
-            const result = await this.crmService.update(consultantId, Number(customerId), body);
-            return res.status(200).send(result);
-        } catch (error) {
-            return res.status(error['status'] || 500).send(error['response'] || ResponseMessages.InternalServerError);
-        }
-    }
 }
