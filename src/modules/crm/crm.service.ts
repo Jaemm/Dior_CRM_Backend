@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+
 import { ConsultantsService } from '../consultants/consultants.service';
 import {
     CustomerSyncDto,
@@ -528,7 +529,23 @@ export class CRMService {
         };
     }
 
-    async presignedUpload(data: PresignedUploadDto) {}
+    async presignedUpload(data: PresignedUploadDto) {
+        try {
+            const { file_name, consent_type, customer_id } = data;
+
+            if (!['ipos_consent', 'without_ipos_consent'].includes(consent_type)) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.CUSTOM_ERROR,
+                    error: ResponseMessages.InvalidConsentType,
+                });
+            }
+
+            const prefix = `uploads/images/customers/consents/${consent_type}/${customer_id}`;
+            const key = `${prefix}/${file_name}`;
+        } catch (e) {
+            throw e;
+        }
+    }
 
     async updateConsentForm(data: UpdateConsentForm) {
         // TODO: Use locale from headers for translation

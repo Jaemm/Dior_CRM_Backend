@@ -5,6 +5,8 @@ import { v4 as uuid } from 'uuid';
 import { GetObjectOutput, ManagedUpload } from 'aws-sdk/clients/s3';
 import * as path from 'path';
 import { NotFoundException } from '@nestjs/common/exceptions';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
 // let COS = require('cos-nodejs-sdk-v5');
 
 @Injectable()

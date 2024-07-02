@@ -48,14 +48,6 @@ export class CRMController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('customers/get_by_email')
-    async getCustomerByEmail(@Req() req: Request, @Query() query: GetByEmailDto): Promise<any> {
-        const userId = Number((<{ id: string }>req['user']).id);
-        return await this.crmService.getByEmail(userId, query);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Post('customers')
     async createCustomer(@Req() req: Request, @Body() body: UpdateCrmCustomersDto) {
         const userId = Number((<{ id: string }>req['user']).id);
@@ -64,16 +56,47 @@ export class CRMController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('customers/:id')
-    async getCustomerById(@Req() req: Request, @Param('id') customerId: string): Promise<any> {
-        const consultantId = Number((<{ id: string }>req['user']).id);
-        return await this.crmService.getCustomerById(consultantId, Number(customerId));
+    @Get('customers/get_by_email')
+    async getCustomerByEmail(@Req() req: Request, @Query() query: GetByEmailDto): Promise<any> {
+        const userId = Number((<{ id: string }>req['user']).id);
+        return await this.crmService.getByEmail(userId, query);
+    }
+
+    @Roles(Role.Consultant)
+    @Post('customers/presign_upload_consent_form')
+    async presignUploadConsentForm(@Body() body: PresignedUploadDto): Promise<any> {
+        return await this.crmService.presignedUpload(body);
     }
 
     @Roles(Role.Consultant)
     @Put('customers/update_consent_form')
     async updateConsentForm(@Body() body: UpdateConsentForm): Promise<any> {
         return await this.crmService.updateConsentForm(body);
+    }
+
+    @ApiBearerAuth()
+    @Post('customers/sync')
+    @Roles(Role.Consultant)
+    async syncCustomers(@Req() req: Request, @Res() res: Response, @Body() body: CustomerSyncDto): Promise<any> {
+        const token = this.jwtService.getTokenFromRequest(req);
+
+        if (!token) {
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.UNAUTHORIZED,
+                error: ResponseMessages.Unauthorized,
+            });
+        }
+        const consultantId = Number((<{ id: string }>req['user']).id);
+        const result = await this.crmService.syncCustomer(consultantId, token, body);
+        return res.status(200).send(result);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('customers/:id')
+    async getCustomerById(@Req() req: Request, @Param('id') customerId: string): Promise<any> {
+        const consultantId = Number((<{ id: string }>req['user']).id);
+        return await this.crmService.getCustomerById(consultantId, Number(customerId));
     }
 
     @ApiBearerAuth()
@@ -132,29 +155,5 @@ export class CRMController {
         } catch (error) {
             return res.status(error['status'] || 500).send(error['response'] || ResponseMessages.InternalServerError);
         }
-    }
-
-    @ApiBearerAuth()
-    @Post('customers/sync')
-    @Roles(Role.Consultant)
-    async syncCustomers(@Req() req: Request, @Res() res: Response, @Body() body: CustomerSyncDto): Promise<any> {
-        const token = this.jwtService.getTokenFromRequest(req);
-
-        if (!token) {
-            throw new UnauthorizedException({
-                result_code: ErrorStatus.UNAUTHORIZED,
-                error: ResponseMessages.Unauthorized,
-            });
-        }
-        const consultantId = Number((<{ id: string }>req['user']).id);
-        const result = await this.crmService.syncCustomer(consultantId, token, body);
-        return res.status(200).send(result);
-    }
-
-    @Roles(Role.Consultant)
-    @Post('customers/presign_upload_consent_form')
-    async presignUploadConsentForm(@Res() res: Response, @Body() body: PresignedUploadDto): Promise<any> {
-        const result = await this.crmService.presignedUpload(body);
-        return res.status(200).send(result);
     }
 }
