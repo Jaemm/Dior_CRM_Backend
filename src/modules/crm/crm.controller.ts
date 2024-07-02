@@ -81,6 +81,16 @@ export class CRMController {
         return await this.crmService.updateCustomer(Number(customerId), body);
     }
 
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Delete('customers/:id')
+    async deleteCustomer(@Req() req: Request, @Param('id') customerId: string): Promise<any> {
+        const consultantId = Number((<{ id: string }>req['user']).id);
+        return await this.crmService.deleteCustomer(consultantId, Number(customerId));
+    }
+
+    /** END */
+
     @ApiTags('Consultants')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
@@ -113,20 +123,6 @@ export class CRMController {
             const consultantId = Number((<{ id: string }>req['user']).id);
             const result = await this.crmService.update(consultantId, Number(customerId), body);
             return res.status(200).send(result);
-        } catch (error) {
-            return res.status(error['status'] || 500).send(error['response'] || ResponseMessages.InternalServerError);
-        }
-    }
-
-    // For Consultant
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Delete('customers/:id')
-    async deleteCustomer(@Req() req: Request, @Res() res: Response, @Param('id') customerId: string): Promise<any> {
-        try {
-            const consultantId = Number((<{ id: string }>req['user']).id);
-            const customer = await this.crmService.deleteCustomer(consultantId, Number(customerId));
-            return res.status(200).send(customer);
         } catch (error) {
             return res.status(error['status'] || 500).send(error['response'] || ResponseMessages.InternalServerError);
         }

@@ -132,38 +132,12 @@ export class CRMService {
     }
 
     async deleteCustomer(consultantId: number, customerId: number) {
-        const selection = {
-            customers: {
-                id: true,
-                email: true,
-                name: true,
-                surname: true,
-                os: true,
-                language: true,
-                phone_country_code: true,
-                phone: true,
-                address: true,
-                city: true,
-                state: true,
-                zip_code: true,
-                notes: true,
-                push_token: true,
-                app_id: true,
-                company_id: true,
-                consultant_id: true,
-                skin_color_group_id: true,
-                ethnicity_id: true,
-                age: true,
-                birth: true,
-                register_date: true,
-                country_code: true,
+        const consultant = await this.consultantRepository.findOne({
+            where: {
+                id: consultantId,
             },
-        };
-        const consultant = await this.consultantsService.getConsultant({ id: consultantId }, selection, [
-            'customers',
-            'customers.products',
-            'customers.chowisCustomerConsents',
-        ]);
+            relations: ['customers', 'customers.products', 'customers.chowisCustomerConsents'],
+        });
 
         if (!consultant) {
             this.commonService.throwNotFoundError();
@@ -190,9 +164,9 @@ export class CRMService {
             await this.chowisCustomerConsentRepository.update({ id: In(consentIds) }, { customer_id: null });
         }
 
-        const deletedCustomer = await this.customerService.deleteCustomer(customer.id);
+        const deletedCustomer = await this.customersRepository.delete(customer.id);
 
-        if (!deletedCustomer) {
+        if (deletedCustomer.affected === 0) {
             throw new BadRequestException({
                 result_code: ErrorStatus.CUSTOM_ERROR,
                 error: ResponseMessages.CustomerNotDeleted,
