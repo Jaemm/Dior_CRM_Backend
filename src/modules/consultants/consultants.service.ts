@@ -2096,99 +2096,91 @@ export class ConsultantsService {
     public async notifySalesChangeLicense(data: NotifySalesChangeLicenseDto) {}
 
     public async calculatePrice(consultantId: number, data: CalculatePriceDto) {
-        const { duration, license_id, optic_number, selection_type, time_type } = data;
-        let cost = 0;
-
-        let deviceIds = await this.devices.findDevices({ optic_number: In(optic_number.split(',')) }, ['id']);
-        deviceIds = deviceIds.map((d: { id: string }) => Number(d.id));
-
-        const products = await this.productsService.findProduct({
-            device_id: In(deviceIds),
-            consultant_id: consultantId,
-        });
-        if (!products.length) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                error: ResponseMessages.DeviceNotBelong,
-            });
-        }
-
-        switch (selection_type) {
-            case 'change':
-                for (const product of products) {
-                    // Check if already expired
-                    const remaining = this.daysLeftFromExpired(Number(product.license_period), product.first_use_date);
-                    if (remaining < 1) {
-                        throw new BadRequestException({
-                            result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                            error: `Sorry! Product #${product.id} is already expired!`,
-                        });
-                    }
-
-                    // Calculate cost
-                    cost += await new Promise<number>(async (resolve, reject) => {
-                        await this.newChangeLicenseCost(
-                            license_id,
-                            product.license_id,
-                            Number(product.application_id),
-                            product.first_use_date,
-                            Number(product.id),
-                            product.license_period,
-                            product.license_remaining_days,
-                        )
-                            .then((newCost) => resolve(newCost))
-                            .catch((error) => {
-                                reject(
-                                    new BadRequestException({
-                                        result_code:
-                                            error?.response?.result_code || ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                                        error: error?.response?.error || ResponseMessages.InternalServerError,
-                                    }),
-                                );
-                            });
-                    });
-                }
-
-                break;
-            case 'extend':
-                if (!duration || !time_type) {
-                    throw new BadRequestException({
-                        result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                        error: ResponseMessages.DurationAndTimeTypeRequired,
-                    });
-                }
-                for (const product of products) {
-                    const licenseId = product.license_id;
-                    cost += await new Promise<number>(async (resolve, reject) => {
-                        await this.extendLicenseCost(
-                            Number(licenseId),
-                            Number(duration),
-                            time_type,
-                            Number(product.application_id),
-                        )
-                            .then((newCost) => resolve(newCost))
-                            .catch((error) => {
-                                reject(
-                                    new BadRequestException({
-                                        result_code:
-                                            error?.response?.result_code || ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                                        error: error?.response?.error || ResponseMessages.InternalServerError,
-                                    }),
-                                );
-                            });
-                    });
-                }
-
-                break;
-
-            default:
-                throw new BadRequestException({
-                    result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                    error: ResponseMessages.InvalidSelectionTyoe,
-                });
-        }
-
-        return { message: 'Success', total_cost: cost.toFixed(2) };
+        // const { duration, license_id, optic_number, selection_type, time_type } = data;
+        // let cost = 0;
+        // let deviceIds = await this.devices.findDevices({ optic_number: In(optic_number.split(',')) }, ['id']);
+        // deviceIds = deviceIds.map((d: { id: string }) => Number(d.id));
+        // const products = await this.productsService.findProduct({
+        //     device_id: In(deviceIds),
+        //     consultant_id: consultantId,
+        // });
+        // if (!products.length) {
+        //     throw new BadRequestException({
+        //         result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //         error: ResponseMessages.DeviceNotBelong,
+        //     });
+        // }
+        // switch (selection_type) {
+        //     case 'change':
+        //         for (const product of products) {
+        //             // Check if already expired
+        //             const remaining = this.daysLeftFromExpired(Number(product.license_period), product.first_use_date);
+        //             if (remaining < 1) {
+        //                 throw new BadRequestException({
+        //                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //                     error: `Sorry! Product #${product.id} is already expired!`,
+        //                 });
+        //             }
+        //             // Calculate cost
+        //             cost += await new Promise<number>(async (resolve, reject) => {
+        //                 await this.newChangeLicenseCost(
+        //                     license_id,
+        //                     product.license_id,
+        //                     Number(product.application_id),
+        //                     product.first_use_date,
+        //                     Number(product.id),
+        //                     product.license_period,
+        //                     product.license_remaining_days,
+        //                 )
+        //                     .then((newCost) => resolve(newCost))
+        //                     .catch((error) => {
+        //                         reject(
+        //                             new BadRequestException({
+        //                                 result_code:
+        //                                     error?.response?.result_code || ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //                                 error: error?.response?.error || ResponseMessages.InternalServerError,
+        //                             }),
+        //                         );
+        //                     });
+        //             });
+        //         }
+        //         break;
+        //     case 'extend':
+        //         if (!duration || !time_type) {
+        //             throw new BadRequestException({
+        //                 result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //                 error: ResponseMessages.DurationAndTimeTypeRequired,
+        //             });
+        //         }
+        //         for (const product of products) {
+        //             const licenseId = product.license_id;
+        //             cost += await new Promise<number>(async (resolve, reject) => {
+        //                 await this.extendLicenseCost(
+        //                     Number(licenseId),
+        //                     Number(duration),
+        //                     time_type,
+        //                     Number(product.application_id),
+        //                 )
+        //                     .then((newCost) => resolve(newCost))
+        //                     .catch((error) => {
+        //                         reject(
+        //                             new BadRequestException({
+        //                                 result_code:
+        //                                     error?.response?.result_code || ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //                                 error: error?.response?.error || ResponseMessages.InternalServerError,
+        //                             }),
+        //                         );
+        //                     });
+        //             });
+        //         }
+        //         break;
+        //     default:
+        //         throw new BadRequestException({
+        //             result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //             error: ResponseMessages.InvalidSelectionTyoe,
+        //         });
+        // }
+        // return { message: 'Success', total_cost: cost.toFixed(2) };
     }
 
     public async updateLicense(data: UpdateLicenseDto) {
@@ -2736,283 +2728,267 @@ export class ConsultantsService {
         productId: number,
         licensePeriod: number,
         remainingDays: number,
-    ): Promise<number> {
-        let cost = 0;
-        const applicationLicense = await this.licenceService.findApplicationLicence({
-            applicationId: applicationId,
-            licenseId: newLicenseId,
-        });
-        const oldApplicationLicense = await this.licenceService.findApplicationLicence({
-            applicationId: applicationId,
-            licenseId: oldLicenseId,
-        });
-
-        if (!applicationLicense || !oldApplicationLicense) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                error: `License cost is not defined by admin for this application (application_id = ${
-                    applicationId ? applicationId : ''
-                })`,
-            });
-        }
-
-        // check if device is used or not
-        const licenseHistories = await this.licenceService.findLicenceHistories(
-            { licensableId: productId, licensableType: LicenseType.Product },
-            { createdAt: { direction: 'DESC' } },
-        );
-        const licenseHistory = licenseHistories[licenseHistories.length - 1];
-
-        if (firstUseDate) {
-            // Check for license history
-            if (licenseHistory) {
-                const extendedDays = this.expectedDaysIncrease(
-                    licenseHistory.extended,
-                    licenseHistory.extendType,
-                    firstUseDate,
-                    licensePeriod,
-                );
-                if (licenseHistories.length > 1) {
-                    let initialCost, newCost, extendedPrice, newExtendedPrice;
-                    let initialDays = this.getInitialDaysSumFromHistory(licenseHistories, firstUseDate, licensePeriod);
-                    initialDays = this.getInitialDays(initialDays, licensePeriod);
-
-                    switch (initialDays) {
-                        case 1095:
-                            initialCost = oldApplicationLicense.licenseChangeThreeYearPrice;
-                            newCost = applicationLicense.licenseChangeThreeYearPrice;
-                            extendedPrice = oldApplicationLicense.licenseExtendThreeYearPrice;
-                            newExtendedPrice = applicationLicense.licenseExtendThreeYearPrice;
-                            break;
-                        case 730:
-                            initialCost = oldApplicationLicense.licenseChangeTwoYearPrice;
-                            newCost = applicationLicense.licenseChangeTwoYearPrice;
-                            extendedPrice = oldApplicationLicense.licenseExtendTwoYearPrice;
-                            newExtendedPrice = applicationLicense.licenseExtendTwoYearPrice;
-                            break;
-                        case 365:
-                            initialCost = oldApplicationLicense.licenseChangeOneYearPrice;
-                            newCost = applicationLicense.licenseChangeOneYearPrice;
-                            extendedPrice = oldApplicationLicense.licenseExtendOneYearPrice;
-                            newExtendedPrice = applicationLicense.licenseExtendOneYearPrice;
-                            break;
-                        case 30:
-                            initialCost = oldApplicationLicense.licenseChangeOneMonthPrice;
-                            newCost = applicationLicense.licenseChangeOneMonthPrice;
-                            extendedPrice = oldApplicationLicense.licenseExtendOneMonthPrice;
-                            newExtendedPrice = applicationLicense.licenseExtendOneMonthPrice;
-                            break;
-                        default:
-                            throw new BadRequestException({
-                                result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                                error: ResponseMessages.InvalidInitialDays,
-                            });
-                    }
-
-                    if (remainingDays === extendedDays) {
-                        cost = newCost - extendedPrice;
-                    } else if (remainingDays < extendedDays) {
-                        let extensionUsedDays = extendedDays - remainingDays;
-                        let totalDays = extendedDays - extensionUsedDays;
-                        cost = totalDays * (newCost / extendedDays) - totalDays * (extendedPrice / extendedDays);
-                    } else if (remainingDays >= extendedDays) {
-                        let upgradeCosts = this.getUpgradeCosts(applicationLicense);
-                        cost = await this.calculateUpgradeCost(
-                            upgradeCosts,
-                            initialCost,
-                            productId,
-                            firstUseDate,
-                            licensePeriod,
-                        );
-                    }
-                } else {
-                    let initialCost, newCost, extendedPrice, newExtendedPrice;
-                    const initialDays = this.getInitialDays(extendedDays, licensePeriod);
-
-                    switch (initialDays) {
-                        case 1095:
-                            initialCost = oldApplicationLicense.licenseChangeThreeYearPrice;
-                            newCost = applicationLicense.licenseChangeThreeYearPrice;
-                            extendedPrice = oldApplicationLicense.licenseExtendThreeYearPrice;
-                            newExtendedPrice = applicationLicense.licenseExtendThreeYearPrice;
-                            break;
-                        case 730:
-                            initialCost = oldApplicationLicense.licenseChangeTwoYearPrice;
-                            newCost = applicationLicense.licenseChangeTwoYearPrice;
-                            extendedPrice = oldApplicationLicense.licenseExtendTwoYearPrice;
-                            newExtendedPrice = applicationLicense.licenseExtendTwoYearPrice;
-                            break;
-                        case 365:
-                            initialCost = oldApplicationLicense.licenseChangeOneYearPrice;
-                            newCost = applicationLicense.licenseChangeOneYearPrice;
-                            extendedPrice = oldApplicationLicense.licenseExtendOneYearPrice;
-                            newExtendedPrice = applicationLicense.licenseExtendOneYearPrice;
-                            break;
-                        case 30:
-                            initialCost = oldApplicationLicense.licenseChangeOneMonthPrice;
-                            newCost = applicationLicense.licenseChangeOneMonthPrice;
-                            extendedPrice = oldApplicationLicense.licenseExtendOneMonthPrice;
-                            newExtendedPrice = applicationLicense.licenseExtendOneMonthPrice;
-                            break;
-                        default:
-                            throw new BadRequestException({
-                                result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                                error: ResponseMessages.InvalidInitialDays,
-                            });
-                    }
-
-                    if (remainingDays === extendedDays) {
-                        cost = newCost - extendedPrice;
-                    } else if (remainingDays < extendedDays) {
-                        let totalDays = remainingDays;
-                        cost = totalDays * (newCost / extendedDays) - totalDays * (extendedPrice / extendedDays);
-                    } else if (remainingDays >= extendedDays) {
-                        const pendingDays = remainingDays - extendedDays;
-                        const perDayCost = pendingDays * (initialCost / initialDays);
-                        cost = newCost - initialCost * perDayCost;
-                    }
-                }
-            } else {
-                const initialDays = this.getInitialDays(0, licensePeriod);
-                let initialCost, newCost;
-                switch (initialDays) {
-                    case 1095:
-                        initialCost = oldApplicationLicense.licenseChangeThreeYearPrice;
-                        newCost = applicationLicense.licenseChangeThreeYearPrice;
-                        break;
-                    case 730:
-                        initialCost = oldApplicationLicense.licenseChangeTwoYearPrice;
-                        newCost = applicationLicense.licenseChangeTwoYearPrice;
-                        break;
-                    case 365:
-                        initialCost = oldApplicationLicense.licenseChangeOneYearPrice;
-                        newCost = applicationLicense.licenseChangeOneYearPrice;
-                        break;
-                    case 30:
-                        initialCost = oldApplicationLicense.licenseChangeOneMonthPrice;
-                        newCost = applicationLicense.licenseChangeOneMonthPrice;
-                        break;
-
-                    default:
-                        throw new BadRequestException({
-                            result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                            error: ResponseMessages.InvalidInitialDays,
-                        });
-                }
-                cost = newCost - remainingDays * (initialCost / initialDays);
-            }
-        } else {
-            // Check for license history
-            if (licenseHistory) {
-                const daysIncreased = this.expectedDaysIncrease(
-                    licenseHistory.extended,
-                    licenseHistory.extendType,
-                    firstUseDate,
-                    licensePeriod,
-                );
-                let extendedPrice, newExtendedPrice;
-
-                switch (licenseHistory.extendType.toLowerCase()) {
-                    case 'years':
-                        if (licenseHistory.extended === 1) {
-                            extendedPrice = oldApplicationLicense.licenseExtendOneYearPrice;
-                            newExtendedPrice = applicationLicense.licenseExtendOneYearPrice;
-                        } else if (licenseHistory.extended === 2) {
-                            extendedPrice = oldApplicationLicense.licenseExtendTwoYearPrice;
-                            newExtendedPrice = applicationLicense.licenseExtendTwoYearPrice;
-                        } else if (licenseHistory.extended === 3) {
-                            extendedPrice = oldApplicationLicense.licenseExtendThreeYearPrice;
-                            newExtendedPrice = applicationLicense.licenseExtendThreeYearPrice;
-                        } else {
-                            extendedPrice = oldApplicationLicense.licenseExtendOneYearPrice * licenseHistory.extended;
-                            newExtendedPrice = applicationLicense.licenseExtendOneYearPrice * licenseHistory.extended;
-                        }
-                        break;
-
-                    case 'months':
-                        extendedPrice = oldApplicationLicense.licenseExtendOneMonthPrice * licenseHistory.extended;
-                        newExtendedPrice = applicationLicense.licenseExtendOneMonthPrice * licenseHistory.extended;
-                        break;
-
-                    case 'days':
-                        extendedPrice =
-                            Number((oldApplicationLicense.licenseExtendOneMonthPrice / 30).toFixed(2)) *
-                            licenseHistory.extended;
-                        newExtendedPrice =
-                            Number((applicationLicense.licenseExtendOneMonthPrice / 30).toFixed(2)) *
-                            licenseHistory.extended;
-                        break;
-
-                    default:
-                        throw new BadRequestException({
-                            result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                            error: ResponseMessages.InvalidExtendedType,
-                        });
-                }
-
-                const initialDays = this.getInitialDays(daysIncreased, licensePeriod);
-                switch (initialDays) {
-                    case 1095:
-                        cost =
-                            applicationLicense.licenseChangeThreeYearPrice +
-                            newExtendedPrice -
-                            (oldApplicationLicense.licenseChangeThreeYearPrice + extendedPrice);
-                        break;
-                    case 730:
-                        cost =
-                            applicationLicense.licenseChangeTwoYearPrice +
-                            newExtendedPrice -
-                            (oldApplicationLicense.licenseChangeTwoYearPrice + extendedPrice);
-                        break;
-                    case 365:
-                        cost =
-                            applicationLicense.licenseChangeOneYearPrice +
-                            newExtendedPrice -
-                            (oldApplicationLicense.licenseChangeOneYearPrice + extendedPrice);
-                        break;
-                    case 30:
-                        cost =
-                            applicationLicense.licenseChangeOneMonthPrice +
-                            newExtendedPrice -
-                            (oldApplicationLicense.licenseChangeOneMonthPrice + extendedPrice);
-                        break;
-
-                    default:
-                        throw new BadRequestException({
-                            result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                            error: ResponseMessages.InvalidInitialDays,
-                        });
-                }
-            } else {
-                // No license history
-                switch (licensePeriod) {
-                    case 1095:
-                        cost = Number(oldApplicationLicense.licenseChangeThreeYearPrice.toFixed(2));
-                        cost = applicationLicense.licenseChangeThreeYearPrice - remainingDays * (cost / 1095);
-                        break;
-                    case 730:
-                        cost = Number(oldApplicationLicense.licenseChangeTwoYearPrice.toFixed(2));
-                        cost = applicationLicense.licenseChangeTwoYearPrice - remainingDays * (cost / 730);
-                        break;
-                    case 365:
-                        cost = Number(oldApplicationLicense.licenseChangeOneYearPrice.toFixed(2));
-                        cost = applicationLicense.licenseChangeOneYearPrice - remainingDays * (cost / 365);
-                        break;
-                    case 30:
-                        cost = Number(oldApplicationLicense.licenseChangeOneMonthPrice.toFixed(2));
-                        cost = applicationLicense.licenseChangeOneMonthPrice - remainingDays * (cost / 30);
-                        break;
-
-                    default:
-                        throw new BadRequestException({
-                            result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                            error: ResponseMessages.InvalidLicensePeriod,
-                        });
-                }
-            }
-        }
-
-        return cost;
+    ) {
+        // let cost = 0;
+        // const applicationLicense = await this.licenceService.findApplicationLicence({
+        //     applicationId: applicationId,
+        //     licenseId: newLicenseId,
+        // });
+        // const oldApplicationLicense = await this.licenceService.findApplicationLicence({
+        //     applicationId: applicationId,
+        //     licenseId: oldLicenseId,
+        // });
+        // if (!applicationLicense || !oldApplicationLicense) {
+        //     throw new BadRequestException({
+        //         result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //         error: `License cost is not defined by admin for this application (application_id = ${
+        //             applicationId ? applicationId : ''
+        //         })`,
+        //     });
+        // }
+        // // check if device is used or not
+        // const licenseHistories = await this.licenceService.findLicenceHistories(
+        //     { licensableId: productId, licensableType: LicenseType.Product },
+        //     { createdAt: { direction: 'DESC' } },
+        // );
+        // const licenseHistory = licenseHistories[licenseHistories.length - 1];
+        // if (firstUseDate) {
+        //     // Check for license history
+        //     if (licenseHistory) {
+        //         const extendedDays = this.expectedDaysIncrease(
+        //             licenseHistory.extended,
+        //             licenseHistory.extendType,
+        //             firstUseDate,
+        //             licensePeriod,
+        //         );
+        //         if (licenseHistories.length > 1) {
+        //             let initialCost, newCost, extendedPrice, newExtendedPrice;
+        //             let initialDays = this.getInitialDaysSumFromHistory(licenseHistories, firstUseDate, licensePeriod);
+        //             initialDays = this.getInitialDays(initialDays, licensePeriod);
+        //             switch (initialDays) {
+        //                 case 1095:
+        //                     initialCost = oldApplicationLicense.licenseChangeThreeYearPrice;
+        //                     newCost = applicationLicense.licenseChangeThreeYearPrice;
+        //                     extendedPrice = oldApplicationLicense.licenseExtendThreeYearPrice;
+        //                     newExtendedPrice = applicationLicense.licenseExtendThreeYearPrice;
+        //                     break;
+        //                 case 730:
+        //                     initialCost = oldApplicationLicense.licenseChangeTwoYearPrice;
+        //                     newCost = applicationLicense.licenseChangeTwoYearPrice;
+        //                     extendedPrice = oldApplicationLicense.licenseExtendTwoYearPrice;
+        //                     newExtendedPrice = applicationLicense.licenseExtendTwoYearPrice;
+        //                     break;
+        //                 case 365:
+        //                     initialCost = oldApplicationLicense.licenseChangeOneYearPrice;
+        //                     newCost = applicationLicense.licenseChangeOneYearPrice;
+        //                     extendedPrice = oldApplicationLicense.licenseExtendOneYearPrice;
+        //                     newExtendedPrice = applicationLicense.licenseExtendOneYearPrice;
+        //                     break;
+        //                 case 30:
+        //                     initialCost = oldApplicationLicense.licenseChangeOneMonthPrice;
+        //                     newCost = applicationLicense.licenseChangeOneMonthPrice;
+        //                     extendedPrice = oldApplicationLicense.licenseExtendOneMonthPrice;
+        //                     newExtendedPrice = applicationLicense.licenseExtendOneMonthPrice;
+        //                     break;
+        //                 default:
+        //                     throw new BadRequestException({
+        //                         result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //                         error: ResponseMessages.InvalidInitialDays,
+        //                     });
+        //             }
+        //             if (remainingDays === extendedDays) {
+        //                 cost = newCost - extendedPrice;
+        //             } else if (remainingDays < extendedDays) {
+        //                 let extensionUsedDays = extendedDays - remainingDays;
+        //                 let totalDays = extendedDays - extensionUsedDays;
+        //                 cost = totalDays * (newCost / extendedDays) - totalDays * (extendedPrice / extendedDays);
+        //             } else if (remainingDays >= extendedDays) {
+        //                 let upgradeCosts = this.getUpgradeCosts(applicationLicense);
+        //                 cost = await this.calculateUpgradeCost(
+        //                     upgradeCosts,
+        //                     initialCost,
+        //                     productId,
+        //                     firstUseDate,
+        //                     licensePeriod,
+        //                 );
+        //             }
+        //         } else {
+        //             let initialCost, newCost, extendedPrice, newExtendedPrice;
+        //             const initialDays = this.getInitialDays(extendedDays, licensePeriod);
+        //             switch (initialDays) {
+        //                 case 1095:
+        //                     initialCost = oldApplicationLicense.licenseChangeThreeYearPrice;
+        //                     newCost = applicationLicense.licenseChangeThreeYearPrice;
+        //                     extendedPrice = oldApplicationLicense.licenseExtendThreeYearPrice;
+        //                     newExtendedPrice = applicationLicense.licenseExtendThreeYearPrice;
+        //                     break;
+        //                 case 730:
+        //                     initialCost = oldApplicationLicense.licenseChangeTwoYearPrice;
+        //                     newCost = applicationLicense.licenseChangeTwoYearPrice;
+        //                     extendedPrice = oldApplicationLicense.licenseExtendTwoYearPrice;
+        //                     newExtendedPrice = applicationLicense.licenseExtendTwoYearPrice;
+        //                     break;
+        //                 case 365:
+        //                     initialCost = oldApplicationLicense.licenseChangeOneYearPrice;
+        //                     newCost = applicationLicense.licenseChangeOneYearPrice;
+        //                     extendedPrice = oldApplicationLicense.licenseExtendOneYearPrice;
+        //                     newExtendedPrice = applicationLicense.licenseExtendOneYearPrice;
+        //                     break;
+        //                 case 30:
+        //                     initialCost = oldApplicationLicense.licenseChangeOneMonthPrice;
+        //                     newCost = applicationLicense.licenseChangeOneMonthPrice;
+        //                     extendedPrice = oldApplicationLicense.licenseExtendOneMonthPrice;
+        //                     newExtendedPrice = applicationLicense.licenseExtendOneMonthPrice;
+        //                     break;
+        //                 default:
+        //                     throw new BadRequestException({
+        //                         result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //                         error: ResponseMessages.InvalidInitialDays,
+        //                     });
+        //             }
+        //             if (remainingDays === extendedDays) {
+        //                 cost = newCost - extendedPrice;
+        //             } else if (remainingDays < extendedDays) {
+        //                 let totalDays = remainingDays;
+        //                 cost = totalDays * (newCost / extendedDays) - totalDays * (extendedPrice / extendedDays);
+        //             } else if (remainingDays >= extendedDays) {
+        //                 const pendingDays = remainingDays - extendedDays;
+        //                 const perDayCost = pendingDays * (initialCost / initialDays);
+        //                 cost = newCost - initialCost * perDayCost;
+        //             }
+        //         }
+        //     } else {
+        //         const initialDays = this.getInitialDays(0, licensePeriod);
+        //         let initialCost, newCost;
+        //         switch (initialDays) {
+        //             case 1095:
+        //                 initialCost = oldApplicationLicense.licenseChangeThreeYearPrice;
+        //                 newCost = applicationLicense.licenseChangeThreeYearPrice;
+        //                 break;
+        //             case 730:
+        //                 initialCost = oldApplicationLicense.licenseChangeTwoYearPrice;
+        //                 newCost = applicationLicense.licenseChangeTwoYearPrice;
+        //                 break;
+        //             case 365:
+        //                 initialCost = oldApplicationLicense.licenseChangeOneYearPrice;
+        //                 newCost = applicationLicense.licenseChangeOneYearPrice;
+        //                 break;
+        //             case 30:
+        //                 initialCost = oldApplicationLicense.licenseChangeOneMonthPrice;
+        //                 newCost = applicationLicense.licenseChangeOneMonthPrice;
+        //                 break;
+        //             default:
+        //                 throw new BadRequestException({
+        //                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //                     error: ResponseMessages.InvalidInitialDays,
+        //                 });
+        //         }
+        //         cost = newCost - remainingDays * (initialCost / initialDays);
+        //     }
+        // } else {
+        //     // Check for license history
+        //     if (licenseHistory) {
+        //         const daysIncreased = this.expectedDaysIncrease(
+        //             licenseHistory.extended,
+        //             licenseHistory.extendType,
+        //             firstUseDate,
+        //             licensePeriod,
+        //         );
+        //         let extendedPrice, newExtendedPrice;
+        //         switch (licenseHistory.extendType.toLowerCase()) {
+        //             case 'years':
+        //                 if (licenseHistory.extended === 1) {
+        //                     extendedPrice = oldApplicationLicense.licenseExtendOneYearPrice;
+        //                     newExtendedPrice = applicationLicense.licenseExtendOneYearPrice;
+        //                 } else if (licenseHistory.extended === 2) {
+        //                     extendedPrice = oldApplicationLicense.licenseExtendTwoYearPrice;
+        //                     newExtendedPrice = applicationLicense.licenseExtendTwoYearPrice;
+        //                 } else if (licenseHistory.extended === 3) {
+        //                     extendedPrice = oldApplicationLicense.licenseExtendThreeYearPrice;
+        //                     newExtendedPrice = applicationLicense.licenseExtendThreeYearPrice;
+        //                 } else {
+        //                     extendedPrice = oldApplicationLicense.licenseExtendOneYearPrice * licenseHistory.extended;
+        //                     newExtendedPrice = applicationLicense.licenseExtendOneYearPrice * licenseHistory.extended;
+        //                 }
+        //                 break;
+        //             case 'months':
+        //                 extendedPrice = oldApplicationLicense.licenseExtendOneMonthPrice * licenseHistory.extended;
+        //                 newExtendedPrice = applicationLicense.licenseExtendOneMonthPrice * licenseHistory.extended;
+        //                 break;
+        //             case 'days':
+        //                 extendedPrice =
+        //                     Number((oldApplicationLicense.licenseExtendOneMonthPrice / 30).toFixed(2)) *
+        //                     licenseHistory.extended;
+        //                 newExtendedPrice =
+        //                     Number((applicationLicense.licenseExtendOneMonthPrice / 30).toFixed(2)) *
+        //                     licenseHistory.extended;
+        //                 break;
+        //             default:
+        //                 throw new BadRequestException({
+        //                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //                     error: ResponseMessages.InvalidExtendedType,
+        //                 });
+        //         }
+        //         const initialDays = this.getInitialDays(daysIncreased, licensePeriod);
+        //         switch (initialDays) {
+        //             case 1095:
+        //                 cost =
+        //                     applicationLicense.licenseChangeThreeYearPrice +
+        //                     newExtendedPrice -
+        //                     (oldApplicationLicense.licenseChangeThreeYearPrice + extendedPrice);
+        //                 break;
+        //             case 730:
+        //                 cost =
+        //                     applicationLicense.licenseChangeTwoYearPrice +
+        //                     newExtendedPrice -
+        //                     (oldApplicationLicense.licenseChangeTwoYearPrice + extendedPrice);
+        //                 break;
+        //             case 365:
+        //                 cost =
+        //                     applicationLicense.licenseChangeOneYearPrice +
+        //                     newExtendedPrice -
+        //                     (oldApplicationLicense.licenseChangeOneYearPrice + extendedPrice);
+        //                 break;
+        //             case 30:
+        //                 cost =
+        //                     applicationLicense.licenseChangeOneMonthPrice +
+        //                     newExtendedPrice -
+        //                     (oldApplicationLicense.licenseChangeOneMonthPrice + extendedPrice);
+        //                 break;
+        //             default:
+        //                 throw new BadRequestException({
+        //                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //                     error: ResponseMessages.InvalidInitialDays,
+        //                 });
+        //         }
+        //     } else {
+        //         // No license history
+        //         switch (licensePeriod) {
+        //             case 1095:
+        //                 cost = Number(oldApplicationLicense.licenseChangeThreeYearPrice.toFixed(2));
+        //                 cost = applicationLicense.licenseChangeThreeYearPrice - remainingDays * (cost / 1095);
+        //                 break;
+        //             case 730:
+        //                 cost = Number(oldApplicationLicense.licenseChangeTwoYearPrice.toFixed(2));
+        //                 cost = applicationLicense.licenseChangeTwoYearPrice - remainingDays * (cost / 730);
+        //                 break;
+        //             case 365:
+        //                 cost = Number(oldApplicationLicense.licenseChangeOneYearPrice.toFixed(2));
+        //                 cost = applicationLicense.licenseChangeOneYearPrice - remainingDays * (cost / 365);
+        //                 break;
+        //             case 30:
+        //                 cost = Number(oldApplicationLicense.licenseChangeOneMonthPrice.toFixed(2));
+        //                 cost = applicationLicense.licenseChangeOneMonthPrice - remainingDays * (cost / 30);
+        //                 break;
+        //             default:
+        //                 throw new BadRequestException({
+        //                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //                     error: ResponseMessages.InvalidLicensePeriod,
+        //                 });
+        //         }
+        //     }
+        // }
+        // return cost;
     }
 
     expiredDate(firstUseDate: string, licensePeriod: number) {
@@ -3172,53 +3148,47 @@ export class ConsultantsService {
     }
 
     async extendLicenseCost(licenseId: number, duration: number, type: string, applicationId: number) {
-        const al = await this.licenceService.findApplicationLicence({
-            applicationId: applicationId,
-            licenseId: licenseId,
-        });
-
-        if (!al) {
-            this.commonService.throwNotFoundError();
-        }
-
-        let cost;
-        switch (type.toLowerCase()) {
-            case 'months':
-                cost = al.licenseExtendOneMonthPrice * duration;
-                break;
-
-            case 'years':
-                switch (duration) {
-                    case 3:
-                        cost = al.licenseExtendThreeYearPrice;
-                        break;
-                    case 2:
-                        cost = al.licenseExtendTwoYearPrice;
-                        break;
-                    case 1:
-                        cost = al.licenseExtendOneYearPrice;
-                        break;
-
-                    default:
-                        throw new BadRequestException({
-                            result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                            error: ResponseMessages.LicenseCanNotExtend,
-                        });
-                }
-                break;
-
-            case 'days':
-                const cal = Number((al.licenseExtendOneMonthPrice / 30).toFixed(3));
-                cost = cal * duration;
-                break;
-            default:
-                throw new BadRequestException({
-                    result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-                    error: ResponseMessages.InvalidTimeType,
-                });
-        }
-
-        return cost;
+        // const al = await this.licenceService.findApplicationLicence({
+        //     applicationId: applicationId,
+        //     licenseId: licenseId,
+        // });
+        // if (!al) {
+        //     this.commonService.throwNotFoundError();
+        // }
+        // let cost;
+        // switch (type.toLowerCase()) {
+        //     case 'months':
+        //         cost = al.licenseExtendOneMonthPrice * duration;
+        //         break;
+        //     case 'years':
+        //         switch (duration) {
+        //             case 3:
+        //                 cost = al.licenseExtendThreeYearPrice;
+        //                 break;
+        //             case 2:
+        //                 cost = al.licenseExtendTwoYearPrice;
+        //                 break;
+        //             case 1:
+        //                 cost = al.licenseExtendOneYearPrice;
+        //                 break;
+        //             default:
+        //                 throw new BadRequestException({
+        //                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //                     error: ResponseMessages.LicenseCanNotExtend,
+        //                 });
+        //         }
+        //         break;
+        //     case 'days':
+        //         const cal = Number((al.licenseExtendOneMonthPrice / 30).toFixed(3));
+        //         cost = cal * duration;
+        //         break;
+        //     default:
+        //         throw new BadRequestException({
+        //             result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
+        //             error: ResponseMessages.InvalidTimeType,
+        //         });
+        // }
+        // return cost;
     }
 
     findBatchIdByAnalysis(batchIds: { analysis_type: string; batch_id: string }[], analysisType: string) {

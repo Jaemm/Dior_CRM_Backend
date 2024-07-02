@@ -1,9 +1,8 @@
 import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { AgentCustomizations } from './AgentCustomizations.entity';
-import { DoComment } from './DoComment.entity';
-import { DoRemark } from './DoRemark.entity';
-import { DoWrite } from './DoWrite.entity';
-import { UserInformation } from './UserInformation.entity';
+// import { DoComment } from './DoComment.entity';
+// import { DoRemark } from './DoRemark.entity';
+// import { DoWrite } from './DoWrite.entity';
+// import { UserInformation } from './UserInformation.entity';
 
 @Index('index_admin_users_on_email', ['email'], { unique: true })
 @Index('admin_users_pkey', ['id'], { unique: true })
@@ -101,18 +100,15 @@ export class AdminUsers {
     @Column('integer', { name: 'user_agent_id', nullable: true })
     userAgentId: number | null;
 
-    @OneToMany(() => AgentCustomizations, (agentCustomizations) => agentCustomizations.agent)
-    agentCustomizations: AgentCustomizations[];
+    // @OneToMany(() => DoComment, (doComment) => doComment.writer)
+    // doComments: DoComment[];
 
-    @OneToMany(() => DoComment, (doComment) => doComment.writer)
-    doComments: DoComment[];
+    // @OneToMany(() => DoRemark, (doRemark) => doRemark.writer)
+    // doRemarks: DoRemark[];
 
-    @OneToMany(() => DoRemark, (doRemark) => doRemark.writer)
-    doRemarks: DoRemark[];
+    // @OneToMany(() => DoWrite, (doWrite) => doWrite.agent)
+    // doWrites: DoWrite[];
 
-    @OneToMany(() => DoWrite, (doWrite) => doWrite.agent)
-    doWrites: DoWrite[];
-
-    @OneToMany(() => UserInformation, (userInformation) => userInformation.user)
-    userInformations: UserInformation[];
+    // @OneToMany(() => UserInformation, (userInformation) => userInformation.user)
+    // userInformations: UserInformation[];
 }

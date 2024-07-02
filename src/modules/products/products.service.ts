@@ -21,7 +21,7 @@ import { VersionItemType } from '@/src/common/enums/version-item-type.enum';
 import { VersionEvent } from '@/src/common/enums/version-event.enum';
 import { EmailSubject } from '@/src/common/constants/email-subjects';
 import { ErrorStatus } from '@/src/common/constants/error-status';
-import { ProductsMultiConnect } from '@/src/common/entities/crmEntities/ProductsMultiConnect.entity';
+
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 
 @Injectable()
@@ -31,9 +31,6 @@ export class ProductsService {
         private readonly productsRepository: Repository<Products>,
         @InjectRepository(Versions)
         private readonly versionsRepository: Repository<Versions>,
-
-        @InjectRepository(ProductsMultiConnect)
-        private readonly productsMultiConnectRepository: Repository<ProductsMultiConnect>,
 
         private readonly devices: DeviceService,
         private readonly applications: ApplicationsService,
@@ -82,38 +79,33 @@ export class ProductsService {
     }
 
     async proctConnectMulti(product: Products, customer: any) {
-        const countProduct = await this.productsMultiConnectRepository.count({ where: { product_id: product.id } });
-
-        if (countProduct > 5) {
-            throw new ConflictException({
-                result_code: ErrorStatus.DEVICE_ALREADY_REGISTERED,
-                error: ResponseMessages.DeviceReachedMaximumRegistration,
-            });
-        }
-
-        try {
-            const insertProduct = this.productsMultiConnectRepository.create({
-                consultant_id: null,
-                customer_id: customer.id,
-                product_id: product.id,
-                created_at: new Date(),
-                updated_at: new Date(),
-            });
-
-            await this.productsMultiConnectRepository.save(insertProduct).catch((e) => {});
-        } catch (error) {
-            if (error.code === '23505' && error.detail.includes('Key (customer_id, product_id)')) {
-            } else {
-                throw new Error();
-            }
-        }
-
-        const updatedProduct = await this.updateProduct(product.id, {
-            app_use_yn: 'Y',
-            products_multi_connect: true,
-        });
-
-        return updatedProduct;
+        // const countProduct = await this.productsMultiConnectRepository.count({ where: { product_id: product.id } });
+        // if (countProduct > 5) {
+        //     throw new ConflictException({
+        //         result_code: ErrorStatus.DEVICE_ALREADY_REGISTERED,
+        //         error: ResponseMessages.DeviceReachedMaximumRegistration,
+        //     });
+        // }
+        // try {
+        //     const insertProduct = this.productsMultiConnectRepository.create({
+        //         consultant_id: null,
+        //         customer_id: customer.id,
+        //         product_id: product.id,
+        //         created_at: new Date(),
+        //         updated_at: new Date(),
+        //     });
+        //     await this.productsMultiConnectRepository.save(insertProduct).catch((e) => {});
+        // } catch (error) {
+        //     if (error.code === '23505' && error.detail.includes('Key (customer_id, product_id)')) {
+        //     } else {
+        //         throw new Error();
+        //     }
+        // }
+        // const updatedProduct = await this.updateProduct(product.id, {
+        //     app_use_yn: 'Y',
+        //     products_multi_connect: true,
+        // });
+        // return updatedProduct;
     }
 
     async enterProduct(customerId: string, query: ProductsEnterDto, locale: string = 'en') {
@@ -325,16 +317,15 @@ export class ProductsService {
     }
 
     async getCustomerMultiProduct(customer_id: number) {
-        const productsList = await this.productsMultiConnectRepository.find({
-            where: {
-                customer_id,
-            },
-            select: {
-                product_id: true,
-            },
-        });
-
-        return productsList;
+        // const productsList = await this.productsMultiConnectRepository.find({
+        //     where: {
+        //         customer_id,
+        //     },
+        //     select: {
+        //         product_id: true,
+        //     },
+        // });
+        // return productsList;
     }
 
     async getProducts(customer_id: any) {

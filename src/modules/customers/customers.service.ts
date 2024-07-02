@@ -41,10 +41,8 @@ import { EthinicitiesService } from '../ethinicities/ethinicities.service';
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
 import { CustomerDataReplicationService } from '../dataReplication/customerDataReplication/customerDataReplication.service';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
-import { CustomerLog } from '@/src/common/entities/crmEntities/CustomerLog.entity';
 import { ProductsService } from '../products/products.service';
-import { CustomerConsentsService } from '../customerConsents/customerConsents.service';
-import { ChowisCustomerConsents } from '@/src/common/entities/crmEntities/ChowisCustomerConsents.entity';
+
 import { Role } from '@/src/common/enums/role.enum';
 import { EmailSubject } from '@/src/common/constants/email-subjects';
 import { UpdateCrmCustomersDto } from '../crm/crm.dto';
@@ -58,10 +56,7 @@ export class CustomersService {
     constructor(
         @InjectRepository(Customers)
         private readonly CustomersRepository: Repository<Customers>,
-        @InjectRepository(CustomerLog)
-        private readonly customerLogRepository: Repository<CustomerLog>,
-        @InjectRepository(ChowisCustomerConsents)
-        private readonly chowisCustomerConsentRepository: Repository<ChowisCustomerConsents>,
+
         private readonly authService: AuthService,
         private readonly jwtService: JwtService,
         private readonly devices: DeviceService,
@@ -1131,20 +1126,20 @@ export class CustomersService {
             await this.productService.updateProducts({ id: In(productIds) }, { customer_id: null });
         }
 
-        const consentIds = customer.chowisCustomerConsents.map((c: any) => c.id);
+        // const consentIds = customer.chowisCustomerConsents.map((c: any) => c.id);
 
-        if (consentIds && consentIds.length) {
-            await this.chowisCustomerConsentRepository.update({ id: In(consentIds) }, { customer_id: null });
-        }
+        // if (consentIds && consentIds.length) {
+        //     await this.chowisCustomerConsentRepository.update({ id: In(consentIds) }, { customer_id: null });
+        // }
 
-        await this.customerLogRepository.save({
-            customer_id: customer.id,
-            app_id: customer.app_id,
-            email: customer.email,
-            reason: data.reason,
-            created_at: new Date(),
-            updated_at: new Date(),
-        });
+        // await this.customerLogRepository.save({
+        //     customer_id: customer.id,
+        //     app_id: customer.app_id,
+        //     email: customer.email,
+        //     reason: data.reason,
+        //     created_at: new Date(),
+        //     updated_at: new Date(),
+        // });
 
         const deletedCustomer = await this.deleteCustomer(id);
 

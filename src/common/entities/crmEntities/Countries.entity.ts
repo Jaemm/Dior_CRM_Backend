@@ -3,8 +3,8 @@ import { ConsultantBranches } from './ConsultantBranches.entity';
 import { ConsultantShops } from './ConsultantShops.entity';
 import { Consultants } from './Consultants.entity';
 import { Customers } from './Customers.entity';
-import { DoWrite } from './DoWrite.entity';
-import { UserInformation } from './UserInformation.entity';
+// import { DoWrite } from './DoWrite.entity';
+// import { UserInformation } from './UserInformation.entity';
 
 @Index('countries_pkey', ['id'], { unique: true })
 @Entity('countries', { schema: 'public' })

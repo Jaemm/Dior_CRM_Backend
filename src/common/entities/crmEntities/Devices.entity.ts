@@ -9,7 +9,7 @@ import {
     OneToOne,
     PrimaryGeneratedColumn,
 } from 'typeorm';
-import { DeviceConfigurations } from './DeviceConfigurations.entity';
+
 import { Products } from './Products.entity';
 import { ConsultantCompanies } from './ConsultantCompanies.entity';
 
@@ -153,9 +153,6 @@ export class Devices {
 
     @Column('character varying', { name: 'pwd_digest', nullable: true })
     pwd_digest: string | null;
-
-    @OneToOne(() => DeviceConfigurations, (deviceConfigurations) => deviceConfigurations.opticNumber2)
-    deviceConfigurations: DeviceConfigurations;
 
     @OneToMany(() => Products, (products) => products.device)
     products: Products[];

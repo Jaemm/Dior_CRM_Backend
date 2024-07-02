@@ -1,5 +1,4 @@
 import { AfterLoad, Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { AppVersionChecks } from './AppVersionChecks.entity';
 import { ConsultantApplications } from './ConsultantApplications.entity';
 import { CustomerApplications } from './CustomerApplications.entity';
 import { Products } from './Products.entity';
@@ -88,9 +87,6 @@ export class Applications {
         default: () => 'false',
     })
     is_frequently_used: boolean | null;
-
-    @OneToMany(() => AppVersionChecks, (appVersionChecks) => appVersionChecks.app)
-    appVersionChecks: AppVersionChecks[];
 
     @OneToMany(() => ConsultantApplications, (consultantApplications) => consultantApplications.applications)
     consultantApplications: ConsultantApplications[];

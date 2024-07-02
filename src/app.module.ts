@@ -32,7 +32,7 @@ import { ConsultantPositionsModule } from './modules/consultantPositions/consult
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthMiddleware } from './common/middleWare/authMiddlware/auth.middleware';
-import { CustomerConsentsModule } from './modules/customerConsents/customerConsents.module';
+
 import { StoreModule } from './modules/stores/stores.module';
 import { ProductsModule } from './modules/products/products.module';
 import { HealthModule } from './modules/apiHealthCheck/apiHealth.module';
@@ -43,7 +43,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { join } from 'path';
 import { AllExceptionsFilter } from './common/middleWare/exceptions/exceptionHandling/allException.filter';
 import { LoggingMiddleware } from './common/middleWare/logMiddleWare/logging.middleware';
-import { ChowisServiceModule } from './modules/chowis-service/chowis-service.module';
+
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 
 @Module({
@@ -217,10 +217,9 @@ import { DevtoolsModule } from '@nestjs/devtools-integration';
         EthinicitiesModule,
         SkinColorGroupsModule,
         ConsultantPositionsModule,
-        CustomerConsentsModule,
+
         ProductsModule,
         CRMModule,
-        ChowisServiceModule,
     ],
     controllers: [AppController],
     providers: [

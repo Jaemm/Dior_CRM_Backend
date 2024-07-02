@@ -11,7 +11,7 @@ import {
     BeforeUpdate,
     PrimaryGeneratedColumn,
 } from 'typeorm';
-import { ChowisCustomerConsents } from './ChowisCustomerConsents.entity';
+
 import { CustomerApplications } from './CustomerApplications.entity';
 import { CustomerLicenses } from './CustomerLicenses.entity';
 import { Countries } from './Countries.entity';
@@ -173,9 +173,6 @@ export class Customers {
 
     @Column('character varying', { name: 'country_code', nullable: true })
     country_code: string | null;
-
-    @OneToMany(() => ChowisCustomerConsents, (chowisCustomerConsents) => chowisCustomerConsents.customer)
-    chowisCustomerConsents: ChowisCustomerConsents[];
 
     @OneToMany(() => CustomerApplications, (customerApplications) => customerApplications.customer)
     customerApplications: CustomerApplications[];

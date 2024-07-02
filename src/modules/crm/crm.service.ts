@@ -14,9 +14,9 @@ import { CustomersService } from '../customers/customers.service';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 import { CountriesService } from '../countries/countries.service';
 import { ProductsService } from '../products/products.service';
-import { ChowisCustomerConsents } from '@/src/common/entities/crmEntities/ChowisCustomerConsents.entity';
+
 import { CommonService } from '@/src/common/common.service';
-import { CustomerConsentsService } from '../customerConsents/customerConsents.service';
+
 import axios from 'axios';
 import * as fs from 'fs';
 import * as FormData from 'form-data';
@@ -26,8 +26,6 @@ import { Customers, Consultants } from '@/src/common/entities/crmEntities';
 @Injectable()
 export class CRMService {
     constructor(
-        @InjectRepository(ChowisCustomerConsents)
-        private readonly chowisCustomerConsentRepository: Repository<ChowisCustomerConsents>,
         @InjectRepository(Customers)
         private readonly customersRepository: Repository<Customers>,
         @InjectRepository(Consultants)
@@ -158,11 +156,11 @@ export class CRMService {
             await this.productService.updateProducts({ id: In(productIds) }, { customer_id: null });
         }
 
-        const consentIds = customer.chowisCustomerConsents.map((c: any) => c.id);
+        // const consentIds = customer.chowisCustomerConsents.map((c: any) => c.id);
 
-        if (consentIds && consentIds.length) {
-            await this.chowisCustomerConsentRepository.update({ id: In(consentIds) }, { customer_id: null });
-        }
+        // if (consentIds && consentIds.length) {
+        // await this.chowisCustomerConsentRepository.update({ id: In(consentIds) }, { customer_id: null });
+        // }
 
         const deletedCustomer = await this.customersRepository.delete(customer.id);
 
