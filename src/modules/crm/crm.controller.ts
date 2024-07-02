@@ -70,6 +70,12 @@ export class CRMController {
         return await this.crmService.getCustomerById(consultantId, Number(customerId));
     }
 
+    @Roles(Role.Consultant)
+    @Put('customers/update_consent_form')
+    async updateConsentForm(@Body() body: UpdateConsentForm): Promise<any> {
+        return await this.crmService.updateConsentForm(body);
+    }
+
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Put('customers/:id')
@@ -149,13 +155,6 @@ export class CRMController {
     @Post('customers/presign_upload_consent_form')
     async presignUploadConsentForm(@Res() res: Response, @Body() body: PresignedUploadDto): Promise<any> {
         const result = await this.crmService.presignedUpload(body);
-        return res.status(200).send(result);
-    }
-
-    @Roles(Role.Consultant)
-    @Put('customers/update_consent_form')
-    async updateConsentForm(@Res() res: Response, @Body() body: UpdateConsentForm): Promise<any> {
-        const result = await this.crmService.updateConsentForm(body);
         return res.status(200).send(result);
     }
 }

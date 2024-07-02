@@ -10,18 +10,22 @@ export class CRMDto {
 
 export class UpdateConsentForm {
     @ApiProperty()
+    @IsOptional()
     @IsString()
     consent_form_answers: string;
 
     @ApiProperty()
+    @IsNotEmpty()
     @Validate(IsNumberOrString)
     customer_id: number;
 
     @ApiProperty()
+    @IsNotEmpty()
     @IsString()
     consent_type: string;
 
     @ApiProperty()
+    @IsOptional()
     @Validate(IsNumberOrString)
     batch_id: string;
 

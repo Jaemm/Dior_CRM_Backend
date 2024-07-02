@@ -21,7 +21,7 @@ import axios from 'axios';
 import * as fs from 'fs';
 import * as FormData from 'form-data';
 import { ErrorStatus } from '@/src/common/constants/error-status';
-import { Customers, Consultants } from '@/src/common/entities/crmEntities';
+import { Customers, Consultants, DiorCustomerConsents } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class CRMService {
@@ -30,6 +30,8 @@ export class CRMService {
         private readonly customersRepository: Repository<Customers>,
         @InjectRepository(Consultants)
         private readonly consultantRepository: Repository<Consultants>,
+        @InjectRepository(DiorCustomerConsents)
+        private readonly diorCustomerConsentsRepository: Repository<DiorCustomerConsents>,
 
         private readonly customerService: CustomersService,
         private consultantsService: ConsultantsService,
@@ -155,12 +157,6 @@ export class CRMService {
         if (productIds && productIds.length) {
             await this.productService.updateProducts({ id: In(productIds) }, { customer_id: null });
         }
-
-        // const consentIds = customer.chowisCustomerConsents.map((c: any) => c.id);
-
-        // if (consentIds && consentIds.length) {
-        // await this.chowisCustomerConsentRepository.update({ id: In(consentIds) }, { customer_id: null });
-        // }
 
         const deletedCustomer = await this.customersRepository.delete(customer.id);
 
@@ -537,14 +533,16 @@ export class CRMService {
     async updateConsentForm(data: UpdateConsentForm) {
         // TODO: Use locale from headers for translation
 
-        if (!['ipos_consent', 'without_ipos_consent'].includes(data.consent_type)) {
+        const { customer_id, consent_type, consent_form_answers, batch_id, url } = data;
+
+        if (!['ipos_consent', 'without_ipos_consent'].includes(consent_type)) {
             throw new BadRequestException({
                 result_code: ErrorStatus.CUSTOM_ERROR,
                 error: ResponseMessages.InvalidConsentType,
             });
         }
 
-        const customer = await this.customerService.getCustomer({ id: data.customer_id });
+        const customer = await this.customersRepository.findOneBy({ id: customer_id });
 
         if (!customer) {
             throw new NotFoundException({
@@ -553,20 +551,22 @@ export class CRMService {
             });
         }
 
-        // const consent = await this.customerConsentsService.createDiorCustomerConsent({
-        //     customerId: customer.id,
-        //     consentType: data.consent_type,
-        //     consentFormAnswers: [data.consent_form_answers],
-        //     batchId: Number(data.batch_id),
-        //     withIposUrl: data.consent_type === 'ipos_consent' ? data.url : null,
-        //     withoutIposUrl: data.consent_type === 'without_ipos_consent' ? data.url : null,
-        //     createdAt: new Date(),
-        //     updatedAt: new Date(),
-        // });
+        const newConsent = await this.diorCustomerConsentsRepository.create({
+            customerId: customer.id,
+            consentType: consent_type,
+            consentFormAnswers: consent_form_answers ? [consent_form_answers] : null,
+            batchId: batch_id ? Number(batch_id) : null,
+            withIposUrl: consent_type === 'ipos_consent' ? url : null,
+            withoutIposUrl: consent_type === 'without_ipos_consent' ? url : null,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        });
 
-        // if (!consent) {
-        //     throw new BadRequestException('Error in creating consent');
-        // }
+        const consent = await this.diorCustomerConsentsRepository.save(newConsent);
+
+        if (!consent) {
+            throw new BadRequestException('Error in creating consent');
+        }
 
         return this.commonService.generateMessage('Success update consent form url');
     }

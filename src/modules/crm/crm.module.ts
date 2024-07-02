@@ -13,6 +13,7 @@ import {
     Countries,
     //
     Devices,
+    DiorCustomerConsents,
     //
     Products,
 } from '@/src/common/entities/crmEntities';
@@ -51,7 +52,6 @@ import { ConsultantsModule } from '../consultants/consultants.module';
 import { CountriesModule } from '../countries/countries.module';
 import { ProductsModule } from '../products/products.module';
 
-import { DiorCustomerConsents } from '@/src/common/entities/crmEntities/DiorCustomerConsents.entity';
 import { JwtService } from '@/src/jwt/jwt.service';
 
 @Module({
