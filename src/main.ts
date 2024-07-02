@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { json } from 'body-parser';
 
 async function bootstrap() {
     const SSL = process.env.SSL;
@@ -46,6 +47,8 @@ async function bootstrap() {
     }
 
     app.use(cookieParser());
+
+    app.use(json({ limit: '50mb' }));
 
     app.useGlobalPipes(
         new ValidationPipe({

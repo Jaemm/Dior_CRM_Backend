@@ -77,7 +77,7 @@ export class CRMController {
     @ApiBearerAuth()
     @Post('customers/sync')
     @Roles(Role.Consultant)
-    async syncCustomers(@Req() req: Request, @Res() res: Response, @Body() body: CustomerSyncDto): Promise<any> {
+    async syncCustomers(@Req() req: Request, @Body() body: CustomerSyncDto): Promise<any> {
         const token = this.jwtService.getTokenFromRequest(req);
 
         if (!token) {
@@ -87,8 +87,7 @@ export class CRMController {
             });
         }
         const consultantId = Number((<{ id: string }>req['user']).id);
-        const result = await this.crmService.syncCustomer(consultantId, token, body);
-        return res.status(200).send(result);
+        return await this.crmService.syncCustomer(consultantId, token, body);
     }
 
     @ApiBearerAuth()

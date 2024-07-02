@@ -444,14 +444,7 @@ export class CRMService {
         const localCustomerId = data.customer_id;
         const { name, email, phone_number, diagnosis_info } = data;
 
-        // TODO: Need validation email in future
-        // const customerExist = await this.customerService.getCustomer({ email: email });
-
-        // if (customerExist) {
-        //     throw new ConflictException(ResponseMessages.EmailExist);
-        // }
-
-        const customer = await this.customerService.createCrmCustomer({
+        const newCustomer = await this.customersRepository.create({
             consultant_id: consultantId,
             name: name,
             email: email,
@@ -459,6 +452,8 @@ export class CRMService {
             created_at: new Date(),
             updated_at: new Date(),
         });
+
+        const customer = await this.customersRepository.save(newCustomer);
 
         if (!customer) {
             throw new BadRequestException({
@@ -506,7 +501,7 @@ export class CRMService {
                 formData.append('analyzedImage', file2);
                 formData.append('multipart', 'true');
 
-                const analysisResponse = await axios
+                await axios
                     .post(analysisUrl, formData, {
                         headers: {
                             Authorization: `Bearer ${authToken}`,
