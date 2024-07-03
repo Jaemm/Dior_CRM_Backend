@@ -16,6 +16,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { ConsultantsModule } from './modules/consultants/consultants.module';
+import { DiorModule } from './modules/dior/dior.module';
 import { AwsS3Module } from './common/awsS3/awsS3.module';
 import { ImageModule } from './modules/image/image.module';
 import config from './config/config.schema';
@@ -202,6 +203,7 @@ import { DevtoolsModule } from '@nestjs/devtools-integration';
         // }),
         ConsultantsModule,
         CustomersModule,
+        DiorModule,
         StoreModule,
         AuthModule,
         CommonModule,
