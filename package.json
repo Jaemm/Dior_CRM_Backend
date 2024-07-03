@@ -24,7 +24,6 @@
         "migration:revert": "npm run typeorm -- -d ./src/config/typeOrm.config.ts migration:revert"
     },
     "dependencies": {
-        "@aws-sdk/s3-request-presigner": "^3.608.0",
         "@hapi/joi": "^17.1.1",
         "@nestjs/common": "^9.0.0",
         "@nestjs/config": "^2.2.0",

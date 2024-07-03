@@ -5,13 +5,60 @@ import { v4 as uuid } from 'uuid';
 import { GetObjectOutput, ManagedUpload } from 'aws-sdk/clients/s3';
 import * as path from 'path';
 import { NotFoundException } from '@nestjs/common/exceptions';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // let COS = require('cos-nodejs-sdk-v5');
 
 @Injectable()
 export class AwsS3Service {
     constructor(private readonly configService: ConfigService) {}
+
+    async getPresignedUpload({
+        fileName,
+        consentType,
+        customerId,
+        file,
+    }: {
+        fileName: string;
+        consentType: string;
+        customerId: string;
+        file?: any;
+    }) {
+        if (this.configService.get('REGION') === 'CHINA') {
+            // return await this.uploadImageTencent(fileContent, fileName);
+        }
+
+        const s3 = new S3();
+
+        const prefix = `uploads/images/customers/consents/${consentType}/${customerId}`;
+        const key = `${prefix}/${fileName}`;
+
+        const params: {
+            Bucket: string;
+            Key: string;
+            Expires: number;
+            ACL: string;
+            ContentLength?: number;
+        } = {
+            Bucket: this.configService.get('AWS_BUCKET_NAME'),
+            Key: key,
+            Expires: 60 * 5,
+            ACL: 'public-read',
+        };
+
+        let result;
+        if (file) {
+            params.ContentLength = file.size;
+            result = await s3.getSignedUrlPromise('putObject', params);
+            if (file.size > 8 * 1024 * 1024) {
+                // 8 MB in bytes
+                throw new Error('File size exceeds 8 MB limit');
+            }
+        } else {
+            result = await s3.getSignedUrlPromise('putObject', params);
+        }
+
+        return result;
+    }
 
     async uploadFile(fileContent: Buffer, fileName: string) {
         if (this.configService.get('REGION') === 'CHINA') {

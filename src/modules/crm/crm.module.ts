@@ -53,6 +53,7 @@ import { CountriesModule } from '../countries/countries.module';
 import { ProductsModule } from '../products/products.module';
 
 import { JwtService } from '@/src/jwt/jwt.service';
+import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 
 @Module({
     imports: [
@@ -104,7 +105,7 @@ import { JwtService } from '@/src/jwt/jwt.service';
         ProductsModule,
     ],
     controllers: [CRMController],
-    providers: [CRMService, JwtService],
+    providers: [CRMService, JwtService, AwsS3Service],
     exports: [CRMService],
 })
 export class CRMModule {

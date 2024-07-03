@@ -23,6 +23,7 @@ import * as fs from 'fs';
 import * as FormData from 'form-data';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { Customers, Consultants, DiorCustomerConsents, Countries } from '@/src/common/entities/crmEntities';
+import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 
 @Injectable()
 export class CRMService {
@@ -36,6 +37,7 @@ export class CRMService {
         @InjectRepository(Countries)
         private readonly countryRepository: Repository<Countries>,
 
+        private awsS3Service: AwsS3Service,
         private readonly customerService: CustomersService,
         private consultantsService: ConsultantsService,
         private countriesService: CountriesService,
@@ -514,7 +516,7 @@ export class CRMService {
 
     async presignedUpload(data: PresignedUploadDto) {
         try {
-            const { file_name, consent_type, customer_id } = data;
+            const { file_name, consent_type, customer_id, file } = data;
 
             if (!['ipos_consent', 'without_ipos_consent'].includes(consent_type)) {
                 throw new BadRequestException({
@@ -523,8 +525,14 @@ export class CRMService {
                 });
             }
 
-            const prefix = `uploads/images/customers/consents/${consent_type}/${customer_id}`;
-            const key = `${prefix}/${file_name}`;
+            const result = await this.awsS3Service.getPresignedUpload({
+                fileName: file_name,
+                consentType: consent_type,
+                customerId: customer_id,
+                file: file,
+            });
+
+            return { result };
         } catch (e) {
             throw e;
         }
