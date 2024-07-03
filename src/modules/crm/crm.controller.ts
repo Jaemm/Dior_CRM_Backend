@@ -100,13 +100,14 @@ export class CRMController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Post('customers/:id')
+    @Put('customers/:id')
     async updateConsultantCustomer(
         @Req() req: Request,
         @Param('id') customerId: string,
         @Body() body: UpdateCrmCustomersDto,
     ): Promise<any> {
         const consultantId = Number((<{ id: string }>req['user']).id);
+        console.log(consultantId);
         return await this.crmService.updateCustomer(consultantId, Number(customerId), body);
     }
 

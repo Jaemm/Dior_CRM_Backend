@@ -132,6 +132,10 @@ export class CRMModule {
             },
             {
                 path: 'crm/customers/:id',
+                method: RequestMethod.PUT,
+            },
+            {
+                path: 'crm/customers/:id',
                 method: RequestMethod.DELETE,
             },
             {

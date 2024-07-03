@@ -130,15 +130,15 @@ export class UpdateCrmCustomersDto {
 
     @ApiProperty()
     @IsOptional()
-    phone: string;
+    social: string;
+
+    @ApiProperty()
+    @IsOptional()
+    social_id: string;
 
     @ApiProperty()
     @IsOptional()
     name: string;
-
-    @ApiProperty()
-    @IsOptional()
-    surname: string;
 
     @ApiProperty()
     @IsOptional()
@@ -150,7 +150,38 @@ export class UpdateCrmCustomersDto {
 
     @ApiProperty()
     @IsOptional()
+    phone: string;
+
+    @ApiProperty()
+    @IsOptional()
     birth: string;
+
+    @ApiProperty()
+    @IsOptional()
+    address: string;
+
+    @ApiProperty()
+    @IsOptional()
+    note: string;
+
+    @ApiProperty()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    app_id: number;
+
+    @ApiProperty()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    company_id: number;
+
+    @ApiProperty()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    consultant_id: number;
+
+    @ApiProperty()
+    @IsOptional()
+    surname: string;
 
     @ApiProperty()
     @IsOptional()
@@ -158,29 +189,22 @@ export class UpdateCrmCustomersDto {
 
     @ApiProperty()
     @IsOptional()
-    image_url: string;
-
-    @ApiProperty()
-    @IsOptional()
-    address: string;
-
-    @ApiProperty()
     @Validate(IsNumberOrString)
-    @IsOptional()
-    app_id: number;
-
-    @ApiProperty()
-    @IsOptional()
     age: number;
 
     @ApiProperty()
-    @Validate(IsNumberOrString)
     @IsOptional()
+    @Validate(IsNumberOrString)
+    skin_condition: number;
+
+    @ApiProperty()
+    @IsOptional()
+    @Validate(IsNumberOrString)
     skin_color_group_id: number;
 
     @ApiProperty()
-    @Validate(IsNumberOrString)
     @IsOptional()
+    @Validate(IsNumberOrString)
     ethnicity_id: number;
 
     @ApiProperty()
@@ -196,17 +220,8 @@ export class UpdateCrmCustomersDto {
     zip_code: string;
 
     @ApiProperty()
-    // @Validate(IsNumberOrString)
-    @IsOptional()
-    phone_country_code: any;
-
-    @ApiProperty()
     @IsOptional()
     country: string;
-
-    @ApiProperty()
-    @IsOptional()
-    country_code: string;
 
     @ApiProperty()
     @IsOptional()
@@ -214,80 +229,35 @@ export class UpdateCrmCustomersDto {
 
     @ApiProperty()
     @IsOptional()
-    country_name: string;
+    @Validate(IsNumberOrString)
+    is_active: number;
 
     @ApiProperty()
-    @Validate(IsNumberOrString)
     @IsOptional()
-    company_id: number;
+    image_url: string;
 
     @ApiProperty()
-    @Validate(IsNumberOrString)
     @IsOptional()
-    consultant_id: number;
+    @Validate(IsNumberOrString)
+    status: number;
 
     @ApiProperty()
-    @Validate(IsNumberOrString)
+    @IsOptional()
+    phone_country_code: string;
+
+    @ApiProperty()
+    @IsOptional()
+    ipos_consent_url: string;
+
+    @ApiProperty()
+    @IsOptional()
+    without_ipos_consent_url: string;
+
+    @ApiProperty()
     @IsOptional()
     external_id: string;
 
     @ApiProperty()
     @IsOptional()
-    email_confirmed: boolean;
-
-    @ApiProperty()
-    @IsOptional()
-    confirm_token: string;
-
-    @ApiProperty()
-    @IsOptional()
-    status: number;
-
-    @ApiProperty()
-    @IsOptional()
-    callback_url: string;
-
-    @ApiProperty()
-    @IsOptional()
-    is_active: number;
-
-    @ApiProperty()
-    @IsOptional()
-    code: string;
-
-    @ApiProperty()
-    @IsOptional()
-    otp_token: string;
-
-    @ApiProperty()
-    @IsOptional()
-    otp_valid_til: string;
-
-    @ApiProperty()
-    @IsOptional()
-    countries: string;
-
-    @ApiProperty()
-    @IsOptional()
-    confirmation_sent_at: Date;
-
-    @ApiProperty()
-    @IsOptional()
-    confirmed_at: string;
-
-    @ApiProperty()
-    @IsOptional()
-    unconfirmed_email: string;
-
-    @ApiProperty()
-    @IsOptional()
-    register_for_crm: boolean;
-
-    @ApiProperty()
-    @IsOptional()
-    email_subscription: boolean;
-
-    @ApiProperty()
-    @IsOptional()
-    password: string;
+    country_code: string;
 }

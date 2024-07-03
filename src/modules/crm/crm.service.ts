@@ -291,19 +291,14 @@ export class CRMService {
             });
         }
 
-        if (data.country_code) {
-            const country = await this.countriesService.findOneCountry({ country_code: data.country_code }, ['id']);
-            if (country) {
-                // country_id = Number(country.id);
-            }
-        }
+        const mergeData = await this.customersRepository.merge(customer, data);
+        await this.customersRepository.save(mergeData);
 
-        await this.customerService.update(customerId, data);
-        const updatedCustomer = await this.customerService.getCustomer(
-            { id: customerId },
-            [],
-            ['country', 'gender', 'products'],
-        );
+        const updatedCustomer = await this.customersRepository.findOne({
+            where: { id: customerId },
+
+            relations: ['products'],
+        });
 
         return { ...updatedCustomer, consultant_name: consultant.name, optic_number: updatedCustomer.getOpticNumbers };
     }
