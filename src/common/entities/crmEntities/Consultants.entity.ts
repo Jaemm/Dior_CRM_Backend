@@ -10,11 +10,8 @@ import {
     PrimaryGeneratedColumn,
 } from 'typeorm';
 import { ConsultantShops } from './ConsultantShops.entity';
-import { Countries } from './Countries.entity';
-import { Genders } from './Genders.entity';
 import { Customers } from './Customers.entity';
 import { ConsultantCompanies } from './ConsultantCompanies.entity';
-import { Position } from 'aws-sdk/clients/codecommit';
 import { ConsultantPositions } from './ConsultantPositions.entity';
 import { Products } from './Products.entity';
 import { ConsultantCountries } from './ConsultantCountries.entity';
@@ -160,6 +157,9 @@ export class Consultants {
 
     @Column('character varying', { name: 'branch', nullable: true })
     'branch': string | null;
+
+    @Column('text', { name: 'countries', nullable: true })
+    'countries': string[] | null;
 
     @Column('character varying', { name: 'zip_code', nullable: true })
     'zip_code': string | null;
