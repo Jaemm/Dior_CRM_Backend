@@ -627,16 +627,7 @@ export class ConsultantsService {
 
     async findConsultant(app_id: number, email: string) {
         const consultant = await this.consultantsRepository.findOne({
-            where: [
-                {
-                    app_id: app_id,
-                    email: email,
-                },
-                {
-                    app_id: null,
-                    email: email,
-                },
-            ],
+            where: { app_id: Or(Equal(app_id), null), email },
             relations: [
                 'consultant_shop',
                 'country_details',
