@@ -40,7 +40,7 @@ export class ConsultantsRepository extends Repository<Consultants> {
 
     async getDiorConsultant() {
         const diorConsultant = await this.findOne({
-            select: ['consultant_company_id'],
+            select: ['id', 'consultant_company_id'],
             where: {
                 email: 'dior@chowis.com',
             },

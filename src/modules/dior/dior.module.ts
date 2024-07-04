@@ -9,6 +9,9 @@ import {
     ConsultantCountries,
     Consultants,
     Customers,
+    ProductAttributes,
+    ProductAttributeTranslations,
+    ProductRecommendations,
     ProductRecommendationGroups,
 } from '@/src/common/entities/crmEntities';
 import {
@@ -16,11 +19,23 @@ import {
     ConsultantCountriesRepository,
     ConsultnatBranchesRepository,
     CustomersRepository,
+    ProductAttributesRepository,
+    ProductAttributeTranslationsRepository,
+    ProductRecommendationRepository,
     ProductRecommendationGroupsRepository,
 } from '@/src/common/repositories';
 
 @Module({
-    imports: [Consultants, ConsultantCountries, ConsultantBranches, Customers, ProductRecommendationGroups],
+    imports: [
+        Consultants,
+        ConsultantCountries,
+        ConsultantBranches,
+        Customers,
+        ProductAttributes,
+        ProductAttributeTranslations,
+        ProductRecommendations,
+        ProductRecommendationGroups,
+    ],
     controllers: [DiorController],
     providers: [
         DiorService,
@@ -30,6 +45,9 @@ import {
         ConsultantCountriesRepository,
         ConsultnatBranchesRepository,
         CustomersRepository,
+        ProductAttributesRepository,
+        ProductAttributeTranslationsRepository,
+        ProductRecommendationRepository,
         ProductRecommendationGroupsRepository,
     ],
 })

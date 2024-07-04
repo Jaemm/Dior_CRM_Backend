@@ -7,14 +7,23 @@ import {
     ConsultantCountriesRepository,
     ConsultnatBranchesRepository,
     CustomersRepository,
+    ProductAttributesRepository,
+    ProductAttributeTranslationsRepository,
+    ProductRecommendationRepository,
     ProductRecommendationGroupsRepository,
 } from '@/src/common/repositories';
 
 import { Request } from 'express';
 
-import { CustomerByConsultantIdDto, SearchBranchesDto, SearchProductRecommendationGroups } from './dior.dto';
+import {
+    CustomerByConsultantIdDto,
+    SearchBranchesDto,
+    SearchProductRecommendationDto,
+    SearchProductRecommendationGroupsDto,
+} from './dior.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
+import { ProductTranslations } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class DiorService {
@@ -23,6 +32,9 @@ export class DiorService {
         private consultantCountriesRepository: ConsultantCountriesRepository,
         private consultnatBranchesRepository: ConsultnatBranchesRepository,
         private customersRepository: CustomersRepository,
+        private productAttributesRepository: ProductAttributesRepository,
+        private productAttributeTranslationsRepository: ProductAttributeTranslationsRepository,
+        private productRecommendationRepository: ProductRecommendationRepository,
         private prGroupsRepository: ProductRecommendationGroupsRepository,
     ) {}
 
@@ -196,7 +208,7 @@ export class DiorService {
             if (!foundConsultant) {
                 throw new NotFoundException({
                     result_code: ErrorStatus.NOT_FOUND,
-                    error: `Cannot Found consultant userId: ${consultantId}`,
+                    error: `Cannot found consultant userId: ${consultantId}`,
                 });
             }
 
@@ -218,7 +230,7 @@ export class DiorService {
         }
     }
 
-    async getProductRecommendationGroups(query: SearchProductRecommendationGroups) {
+    async getProductRecommendationGroups(query: SearchProductRecommendationGroupsDto) {
         try {
             const { search, page, per } = query;
 
@@ -282,6 +294,215 @@ export class DiorService {
                 current_page_size: prGroups.length,
                 current_page: searchPage,
                 total_pages: Math.ceil(totalCount / searchPer),
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getProductRecommendation(req: Request, query: SearchProductRecommendationDto) {
+        try {
+            const {
+                request_origin,
+                filter_by,
+                filter_by_2,
+                filter_by_country,
+                category,
+                routine,
+                collection,
+                search,
+                page,
+                limit,
+            } = query;
+
+            const userId = (<{ id: string }>req.user).id;
+
+            const currentConsultant = await this.consultantRepository.getConsultantById(Number(userId), [
+                'consultant_branch',
+            ]);
+
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            if (!diorConsultant) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.NOT_FOUND,
+                    error: `Cannot found dior consultant`,
+                });
+            }
+
+            let prQuery;
+
+            if (request_origin && request_origin === 'dior_bo') {
+                prQuery = this.productRecommendationRepository
+                    .createQueryBuilder('productRecommendation')
+                    .where('productRecommendation.productRecommendationId IS NULL')
+                    .andWhere('productRecommendation.consultantId = :diorConsultantId', {
+                        diorConsultantId: diorConsultant.id,
+                    });
+            } else {
+                if (currentConsultant.consultant_position_id === 5) {
+                    prQuery = this.productRecommendationRepository
+                        .createQueryBuilder('productRecommendation')
+                        .where('productRecommendation.productRecommendationId IS NULL')
+                        .andWhere('productRecommendation.consultantId = :diorConsultantId', {
+                            diorConsultantId: diorConsultant.id,
+                        });
+                } else if (currentConsultant.consultant_position_id === 6) {
+                    prQuery = this.productRecommendationRepository
+                        .createQueryBuilder('productRecommendation')
+                        .where('productRecommendation.productRecommendationId IS NULL')
+                        .andWhere('productRecommendation.consultantId = :diorConsultantId', {
+                            diorConsultantId: diorConsultant.id,
+                        })
+                        .andWhere('productRecommendation.countries && ARRAY[:countries]', {
+                            countries: currentConsultant.countries,
+                        });
+                } else {
+                    prQuery = this.productRecommendationRepository
+                        .createQueryBuilder('productRecommendation')
+                        .where('productRecommendation.productRecommendationId IS NULL')
+                        .andWhere('productRecommendation.consultantId = :diorConsultantId', {
+                            diorConsultantId: diorConsultant.id,
+                        })
+                        .andWhere('productRecommendation.countries && ARRAY[:country]', {
+                            country: currentConsultant.consultant_branch?.country,
+                        });
+                }
+            }
+
+            if (search) {
+                prQuery.andWhere(
+                    'LOWER(productRecommendation.name) LIKE :search OR LOWER(productRecommendation.category) LIKE :search OR LOWER(productRecommendation.collection) LIKE :search OR LOWER(productRecommendation.routine) LIKE :search OR LOWER(productRecommendation.code) LIKE :search',
+                    { search: `%${search.toLowerCase()}%` },
+                );
+            }
+
+            if (filter_by) {
+                prQuery.andWhere('productRecommendation.category = :filterBy', {
+                    filterBy: req.query.filter_by,
+                });
+            }
+
+            if (filter_by_2) {
+                prQuery.andWhere('productRecommendation.collection = :filterBy2', {
+                    filterBy2: filter_by_2,
+                });
+            }
+
+            if (filter_by_country) {
+                prQuery.andWhere('productRecommendation.countries && ARRAY[:filterByCountry]', {
+                    filterByCountry: filter_by_country,
+                });
+            }
+
+            if (category) {
+                prQuery.andWhere('productRecommendation.category = :category', {
+                    category: category,
+                });
+            }
+
+            if (routine) {
+                prQuery.andWhere('productRecommendation.routine = :routine', {
+                    routine: routine,
+                });
+                prQuery.orderBy('productRecommendation.orderNumber', 'ASC');
+            }
+
+            if (collection) {
+                prQuery.andWhere('productRecommendation.collection = :collection', {
+                    collection: collection,
+                });
+            }
+
+            const searchPage = Number(page || 1);
+            const searchLimit = Number(limit || 30);
+
+            const [data, totalCount] = await prQuery
+                // .leftJoinAndSelect(
+                //     'productRecommendation.productTranslations',
+                //     'productTranslations',
+                //     'CAST(productTranslations.product_recommendation_id AS bigint) = productRecommendation.id',
+                // )
+                .skip((searchPage - 1) * searchLimit)
+                .take(searchLimit)
+                .getManyAndCount();
+
+            const result = data.map(async (d) => {
+                const returnFormat = {
+                    id: d.id,
+                    product_type: d.productType,
+                    description: d.description,
+                    link: d.link,
+                    image_url: d.imageUrl,
+                    code: d.code,
+                    routine: d.routine,
+                    collection: d.collection,
+                    category: d.category,
+                    countries: d.countries,
+                    product_recommendation_id: d.productRecommendationId,
+                    name: d.name,
+                    shades: d.shades,
+                    collection_shades: [] as any[],
+                    product_translations: [] as any[],
+                    category_translations: [] as any[],
+                    collection_translations: [] as any[],
+                    product_variants: [] as any[],
+                };
+
+                // name, product_translationsu
+
+                let recommendationForProperties = d;
+                if (d.productRecommendationId) {
+                    recommendationForProperties = await this.productRecommendationRepository.findOne({
+                        where: { id: String(d.productRecommendationId) },
+                        relations: ['productTranslations'],
+                    });
+
+                    returnFormat.name = recommendationForProperties ? recommendationForProperties.name : d.name;
+                }
+
+                recommendationForProperties.productTranslations?.forEach((translation) => {
+                    returnFormat.product_translations.push({
+                        id: translation.id,
+                        field_name: translation.fieldName,
+                        language: translation.language,
+                        value: translation.value,
+                        attribute_name: null,
+                        collection_name: null,
+                    });
+                });
+
+                // collection_shades
+                const recommendationForShade = await this.productRecommendationRepository.find({
+                    where: {
+                        collection: d.collection,
+                    },
+                });
+                recommendationForShade
+                    .filter((forShade) => forShade.shades)
+                    .forEach((forShade) => returnFormat.collection_shades.push(forShade.shades));
+
+                // category_translations
+                returnFormat.category_translations = await this.productAttributesRepository.getTranslationsByType(
+                    'Category',
+                    d.category,
+                );
+
+                // collection_translations
+                returnFormat.collection_translations = await this.productAttributesRepository.getTranslationsByType(
+                    'Collection',
+                    d.collection,
+                );
+
+                return returnFormat;
+            });
+
+            return {
+                data: await Promise.all(result),
+                total_size: totalCount,
+                current_page_size: data.length,
+                current_page: searchPage,
+                total_pages: Math.ceil(totalCount / searchLimit),
             };
         } catch (e) {
             throw e;
