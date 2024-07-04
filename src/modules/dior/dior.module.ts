@@ -4,16 +4,23 @@ import { DiorService } from './dior.service';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 
 // DataBase
-import { ConsultantBranches, ConsultantCountries, Consultants, Customers } from '@/src/common/entities/crmEntities';
+import {
+    ConsultantBranches,
+    ConsultantCountries,
+    Consultants,
+    Customers,
+    ProductRecommendationGroups,
+} from '@/src/common/entities/crmEntities';
 import {
     ConsultantsRepository,
     ConsultantCountriesRepository,
     ConsultnatBranchesRepository,
     CustomersRepository,
+    ProductRecommendationGroupsRepository,
 } from '@/src/common/repositories';
 
 @Module({
-    imports: [Consultants, ConsultantCountries, ConsultantBranches, Customers],
+    imports: [Consultants, ConsultantCountries, ConsultantBranches, Customers, ProductRecommendationGroups],
     controllers: [DiorController],
     providers: [
         DiorService,
@@ -23,6 +30,7 @@ import {
         ConsultantCountriesRepository,
         ConsultnatBranchesRepository,
         CustomersRepository,
+        ProductRecommendationGroupsRepository,
     ],
 })
 export class DiorModule {

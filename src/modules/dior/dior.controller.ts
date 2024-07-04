@@ -4,7 +4,7 @@ import { DiorService } from './dior.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { Request, query } from 'express';
-import { CustomerByConsultantIdDto, SearchBranchesDto } from './dior.dto';
+import { CustomerByConsultantIdDto, SearchBranchesDto, SearchProductRecommendationGroups } from './dior.dto';
 
 @ApiTags('Dior')
 @Controller('dior')
@@ -37,5 +37,13 @@ export class DiorController {
     @Get('company_consultants/by_consultant')
     async getBranchesByConsultantsId(@Req() req: Request) {
         return await this.diorService.getBranchesByConsultantsId(req);
+    }
+
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'search product_recommendation groups by name' })
+    @Roles(Role.Consultant)
+    @Get('product_recommendation_groups')
+    async getProductRecommendationGroups(@Query() query: SearchProductRecommendationGroups) {
+        return await this.diorService.getProductRecommendationGroups(query);
     }
 }

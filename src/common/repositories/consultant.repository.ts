@@ -37,4 +37,19 @@ export class ConsultantsRepository extends Repository<Consultants> {
 
         return diorConsultant.consultant_company_id;
     }
+
+    async getDiorConsultant() {
+        const diorConsultant = await this.findOne({
+            select: ['consultant_company_id'],
+            where: {
+                email: 'dior@chowis.com',
+            },
+        });
+
+        if (!diorConsultant) {
+            return null;
+        }
+
+        return diorConsultant;
+    }
 }

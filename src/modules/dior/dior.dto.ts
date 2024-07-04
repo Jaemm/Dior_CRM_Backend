@@ -8,6 +8,18 @@ export class CustomerByConsultantIdDto {
     email?: string;
 }
 
+export class SearchProductRecommendationGroups {
+    @IsNotEmpty()
+    @IsString()
+    search: string;
+
+    @IsOptional()
+    page: string;
+
+    @IsOptional()
+    per: string;
+}
+
 export class SearchBranchesDto {
     @IsOptional()
     search: string;

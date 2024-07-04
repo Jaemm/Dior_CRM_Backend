@@ -7,11 +7,12 @@ import {
     ConsultantCountriesRepository,
     ConsultnatBranchesRepository,
     CustomersRepository,
+    ProductRecommendationGroupsRepository,
 } from '@/src/common/repositories';
 
 import { Request } from 'express';
 
-import { CustomerByConsultantIdDto, SearchBranchesDto } from './dior.dto';
+import { CustomerByConsultantIdDto, SearchBranchesDto, SearchProductRecommendationGroups } from './dior.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 
@@ -22,6 +23,7 @@ export class DiorService {
         private consultantCountriesRepository: ConsultantCountriesRepository,
         private consultnatBranchesRepository: ConsultnatBranchesRepository,
         private customersRepository: CustomersRepository,
+        private prGroupsRepository: ProductRecommendationGroupsRepository,
     ) {}
 
     async getCountries(search?: string) {
@@ -210,6 +212,76 @@ export class DiorService {
 
             return {
                 data: customersByConsultant,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getProductRecommendationGroups(query: SearchProductRecommendationGroups) {
+        try {
+            const { search, page, per } = query;
+
+            const diorConsultant = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            if (!diorConsultant) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.NOT_FOUND,
+                    error: `Cannot Found Dior Consultant`,
+                });
+            }
+
+            const prGroupsQuery = this.prGroupsRepository
+                .createQueryBuilder('prGroups')
+                .where('prGroups.name ILIKE :search', {
+                    search: `%${search}%`,
+                })
+                .leftJoinAndSelect('prGroups.prSelecteds', 'prSelecteds')
+                .leftJoinAndSelect('prSelecteds.productRecommendations', 'productRecommendations');
+
+            const searchPage = Number(page || 1);
+            const searchPer = Number(per || 10);
+
+            const [prGroups, totalCount] = await prGroupsQuery
+                .skip((searchPage - 1) * searchPage)
+                .take(searchPer)
+                .getManyAndCount();
+
+            const data = prGroups.map((group) => ({
+                id: group.id,
+                name: group.name,
+                countries: group.countries,
+                products: group.prSelecteds
+                    .sort((a, b) => a.orderNumber - b.orderNumber)
+                    .map((selected) => {
+                        const product = selected.productRecommendations;
+                        return product && product.length > 0
+                            ? selected.productRecommendations.map((p) => {
+                                  return {
+                                      id: p.id,
+                                      name: p.name,
+                                      product_type: p.productType,
+                                      description: p.description,
+                                      link: p.link,
+                                      image_url: p.imageUrl,
+                                      category: p.category,
+                                      routine: p.routine,
+                                      code: p.code,
+                                      collection: p.collection,
+                                      is_principal: selected.isPrincipal,
+                                  };
+                              })
+                            : null;
+                    })
+                    .filter((product) => product !== null),
+            }));
+
+            return {
+                data: data,
+                total_size: totalCount,
+                current_page_size: prGroups.length,
+                current_page: searchPage,
+                total_pages: Math.ceil(totalCount / searchPer),
             };
         } catch (e) {
             throw e;
