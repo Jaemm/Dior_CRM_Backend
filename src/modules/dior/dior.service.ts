@@ -51,6 +51,7 @@ export class DiorService {
         }
     }
 
+    /** Branches */
     async getBranchesByConsultantsId(req: Request) {
         try {
             const userId = (<{ id: string }>req.user).id;
@@ -183,6 +184,7 @@ export class DiorService {
         }
     }
 
+    /** Customers */
     async getCustomers(query: CustomerByConsultantIdDto) {
         try {
             const { consultant_id: consultantId, email } = query;
