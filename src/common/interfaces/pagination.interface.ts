@@ -5,4 +5,4 @@ interface PaginationResult<T> {
     current_page: number;
     total_pages: number;
     perPage: number;
-  }
+}

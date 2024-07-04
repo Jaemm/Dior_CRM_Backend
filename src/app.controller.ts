@@ -67,7 +67,7 @@ export class AppController {
         return res.status(200).send({ countries: countriesList });
     }
 
-    // CUSTOMER 
+    // CUSTOMER
     @ApiTags('Customers')
     @ApiBearerAuth()
     @Get('basic-details-customers')

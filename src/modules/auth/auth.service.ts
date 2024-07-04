@@ -19,9 +19,8 @@ export class AuthService {
         private readonly jwtService: JwtService,
         // private readonly userService: UserService,
         private readonly common: CommonService,
-        // private EmailService: EmailService,
-    ) {}
-
+    ) // private EmailService: EmailService,
+    {}
 
     async generateAuthTokens(user: any, domain?: string, tokenId?: string): Promise<[string, string]> {
         return Promise.all([
@@ -57,8 +56,6 @@ export class AuthService {
     //       throw new UnauthorizedException('Token is invalid');
     //     }
     //   }
-
-
 
     // password recovering
     generateRandomToken(length: number = 32): string {
@@ -117,8 +114,6 @@ export class AuthService {
     //     }
     // }
 
-
-
     // async resendConfirmationEmail(email: string) {
     //     const getUser: any = await this.userService.findByEmail(email);
     //     const confirmationToken = await this.jwtService.generateToken(
@@ -137,10 +132,8 @@ export class AuthService {
 
     // update Token
 
-
-
     isTokenExpired(token: string): any {
-       return Jwt.verify(token, process.env.CRM_ACCESS_TOKEN_SECRET, (err, decoded) => {
+        return Jwt.verify(token, process.env.CRM_ACCESS_TOKEN_SECRET, (err, decoded) => {
             if (err) {
                 if (err.name === 'TokenExpiredError') {
                     return false;

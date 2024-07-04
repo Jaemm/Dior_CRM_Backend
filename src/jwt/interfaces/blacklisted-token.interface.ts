@@ -5,4 +5,3 @@ export interface IBlacklistedToken {
     user: any;
     createdAt: Date;
 }
-

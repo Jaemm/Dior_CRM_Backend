@@ -16,7 +16,7 @@ export class ConsultantShopsService {
     async findOneConsultantShops(id: any) {
         const consultantshops = await this.consultantShopsRepository.findOne({
             where: {
-                id: (id),
+                id: id,
             },
         });
         return consultantshops;

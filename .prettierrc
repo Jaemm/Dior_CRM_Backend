@@ -9,10 +9,12 @@
     "bracketSpacing": true,
     "arrowParens": "always",
     "endOfLine": "crlf",
-    "overrides": [{
-        "files": "*.hbs",
-        "options": {
-            "singleQuote": false
+    "overrides": [
+        {
+            "files": "*.hbs",
+            "options": {
+                "singleQuote": false
+            }
         }
-    }]
+    ]
 }

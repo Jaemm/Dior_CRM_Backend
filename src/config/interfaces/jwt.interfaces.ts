@@ -16,4 +16,3 @@ export interface IJwt {
     resetPassword: ISingleJwt;
     refresh: ISingleJwt;
 }
-

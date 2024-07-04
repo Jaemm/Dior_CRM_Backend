@@ -1,6 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsNumber, IsOptional, IsString, MinLength, Validate } from "class-validator";
-import { IsNumberOrString } from "./common/validators/number-or-string.validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNumber, IsOptional, IsString, MinLength, Validate } from 'class-validator';
+import { IsNumberOrString } from './common/validators/number-or-string.validator';
 
 export class LoginSocialDto {
     @ApiProperty()
@@ -24,9 +24,7 @@ export class LoginSocialDto {
     consultant_id: string;
 }
 
-export class LoginDto {
-
-}
+export class LoginDto {}
 
 export class ShopListDto {
     @ApiProperty()

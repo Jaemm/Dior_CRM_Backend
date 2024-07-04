@@ -23,7 +23,7 @@ export class CrmDataReplicationService {
         private readonly customersRepository: Repository<Customers>,
 
         private readonly analysisData: AnalysisDataReplicationService,
-    ) { }
+    ) {}
 
     // Hande message
     async handleMessage(channel: string, message: string) {

@@ -31,4 +31,3 @@ export class Analysis {
     @OneToMany(() => Questionnaire, (questionnaire) => questionnaire.batch)
     questionnaires: Questionnaire[];
 }
-

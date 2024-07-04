@@ -10,4 +10,3 @@ import { AwsS3Service } from 'src/common/awsS3/awsS3.service';
     exports: [],
 })
 export class ImageModule {}
-

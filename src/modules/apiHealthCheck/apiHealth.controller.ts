@@ -5,8 +5,8 @@ import { Response } from 'express';
 @ApiTags('Health')
 @Controller()
 export class HealthController {
-  @Get('/health')
-  healthCheck(@Res() res: Response) {
-    return res.status(HttpStatus.OK).json({ message: 'Server is up and running' });
-  }
+    @Get('/health')
+    healthCheck(@Res() res: Response) {
+        return res.status(HttpStatus.OK).json({ message: 'Server is up and running' });
+    }
 }

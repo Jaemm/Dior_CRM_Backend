@@ -418,11 +418,11 @@ export class DiorService {
             const searchLimit = Number(limit || 30);
 
             const [data, totalCount] = await prQuery
-                // .leftJoinAndSelect(
-                //     'productRecommendation.productTranslations',
-                //     'productTranslations',
-                //     'CAST(productTranslations.product_recommendation_id AS bigint) = productRecommendation.id',
-                // )
+                .leftJoinAndSelect(
+                    ProductTranslations,
+                    'productTranslations',
+                    'CAST(productTranslations.product_recommendation_id AS bigint) = productRecommendation.id',
+                )
                 .skip((searchPage - 1) * searchLimit)
                 .take(searchLimit)
                 .getManyAndCount();

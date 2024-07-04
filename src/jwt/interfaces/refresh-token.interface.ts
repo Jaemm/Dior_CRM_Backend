@@ -12,4 +12,3 @@ export interface IRefreshPayload extends IEmailPayload {
 }
 
 export interface IRefreshToken extends IRefreshPayload, ITokenBase {}
-
