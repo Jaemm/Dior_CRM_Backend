@@ -1,7 +1,14 @@
-import { IsOptional } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
+export class CustomerByConsultantIdDto {
+    @IsNotEmpty()
+    consultant_id: string;
+
+    @IsOptional()
+    email?: string;
+}
 
 export class SearchDto {
-    @IsOptional()
     search: string;
 }
 

@@ -8,6 +8,21 @@ export class ConsultantsRepository extends Repository<Consultants> {
         super(Consultants, dataSource.createEntityManager());
     }
 
+    async getConsultantById(consultantId: number, relations?: string[]) {
+        const query: { where: object; relations: any[] } = {
+            where: {
+                id: consultantId,
+            },
+            relations: [],
+        };
+
+        if (relations) {
+            query.relations = relations;
+        }
+
+        return await this.findOne(query);
+    }
+
     async getDiorConsultantCompanyId() {
         const diorConsultant = await this.findOne({
             select: ['consultant_company_id'],

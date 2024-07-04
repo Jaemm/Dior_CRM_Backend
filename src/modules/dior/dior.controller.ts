@@ -4,12 +4,19 @@ import { DiorService } from './dior.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { Request, query } from 'express';
-import { SearchBranchesDto, SearchDto } from './dior.dto';
+import { CustomerByConsultantIdDto, SearchBranchesDto, SearchDto } from './dior.dto';
 
 @ApiTags('Dior')
 @Controller('dior')
 export class DiorController {
     constructor(private readonly diorService: DiorService) {}
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('customers')
+    async getCustomers(@Query() query: CustomerByConsultantIdDto) {
+        return await this.diorService.getCustomers(query);
+    }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)

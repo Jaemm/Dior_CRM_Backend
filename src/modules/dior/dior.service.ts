@@ -6,11 +6,12 @@ import {
     ConsultantsRepository,
     ConsultantCountriesRepository,
     ConsultnatBranchesRepository,
+    CustomersRepository,
 } from '@/src/common/repositories';
 
 import { Request } from 'express';
 
-import { SearchBranchesDto, SearchDto } from './dior.dto';
+import { CustomerByConsultantIdDto, SearchBranchesDto, SearchDto } from './dior.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 
@@ -20,6 +21,7 @@ export class DiorService {
         private consultantRepository: ConsultantsRepository,
         private consultantCountriesRepository: ConsultantCountriesRepository,
         private consultnatBranchesRepository: ConsultnatBranchesRepository,
+        private customersRepository: CustomersRepository,
     ) {}
 
     async getCountries(query: SearchDto) {
@@ -175,6 +177,37 @@ export class DiorService {
                 currentPage: page,
                 pageSize: branches.length,
                 totalPages: Math.ceil(total / perCondition),
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getCustomers(query: CustomerByConsultantIdDto) {
+        try {
+            const { consultant_id: consultantId, email } = query;
+
+            const foundConsultant = await this.consultantRepository.getConsultantById(Number(consultantId));
+
+            if (!foundConsultant) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.NOT_FOUND,
+                    error: `Cannot Found consultant userId: ${consultantId}`,
+                });
+            }
+
+            const customerByConsultantIdQuery = this.customersRepository
+                .createQueryBuilder('customers')
+                .where('customers.consultant_id = :consultantId', { consultantId });
+
+            if (email) {
+                customerByConsultantIdQuery.andWhere('customers.email LIKE :email', { email: `%${email}%` });
+            }
+
+            const customersByConsultant = await customerByConsultantIdQuery.getMany();
+
+            return {
+                data: customersByConsultant,
             };
         } catch (e) {
             throw e;
