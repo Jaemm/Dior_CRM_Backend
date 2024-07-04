@@ -18,3 +18,4 @@ export { HealthTips } from './HealthTips.entity';
 export { Identities } from './Identities.entity';
 export { DiorCustomerConsents } from './DiorCustomerConsents.entity';
 export { ConsultantCountries } from './ConsultantCountries.entity';
+export { ProductRecommendationGroups } from './ProductRecommendationGroups.entity';
