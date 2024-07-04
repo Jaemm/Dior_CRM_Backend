@@ -8,10 +8,6 @@ export class CustomerByConsultantIdDto {
     email?: string;
 }
 
-export class SearchDto {
-    search: string;
-}
-
 export class SearchBranchesDto {
     @IsOptional()
     search: string;

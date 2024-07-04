@@ -4,7 +4,7 @@ import { DiorService } from './dior.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { Request, query } from 'express';
-import { CustomerByConsultantIdDto, SearchBranchesDto, SearchDto } from './dior.dto';
+import { CustomerByConsultantIdDto, SearchBranchesDto } from './dior.dto';
 
 @ApiTags('Dior')
 @Controller('dior')
@@ -21,8 +21,8 @@ export class DiorController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('countries')
-    async getCountries(@Req() req: Request, @Query() query: SearchDto) {
-        return await this.diorService.getCountries(query);
+    async getCountries(@Req() req: Request, @Query('search') search?: string) {
+        return await this.diorService.getCountries(search);
     }
 
     @ApiBearerAuth()

@@ -11,7 +11,7 @@ import {
 
 import { Request } from 'express';
 
-import { CustomerByConsultantIdDto, SearchBranchesDto, SearchDto } from './dior.dto';
+import { CustomerByConsultantIdDto, SearchBranchesDto } from './dior.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 
@@ -24,7 +24,7 @@ export class DiorService {
         private customersRepository: CustomersRepository,
     ) {}
 
-    async getCountries(query: SearchDto) {
+    async getCountries(search?: string) {
         try {
             const diorConsultantCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
@@ -36,9 +36,9 @@ export class DiorService {
                 .createQueryBuilder('countries')
                 .where('countries.consultant_company_id = :diorConsultantCompanyId', { diorConsultantCompanyId });
 
-            if (query.search) {
-                const search = `%${query.search}%`;
-                countriesQuery.andWhere('(countries.code LIKE :search OR countries.name LIKE :search)', { search });
+            if (search) {
+                const likeSearch = `%${search}%`;
+                countriesQuery.andWhere('(countries.code LIKE :search OR countries.name LIKE :search)', { likeSearch });
             }
 
             const countries = await countriesQuery.getMany();
