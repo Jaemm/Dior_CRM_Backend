@@ -250,7 +250,7 @@ export class DiorService {
                     search: `%${search}%`,
                 })
                 .leftJoinAndSelect('prGroups.prSelecteds', 'prSelecteds')
-                .leftJoinAndSelect('prSelecteds.productRecommendations', 'productRecommendations');
+                .leftJoinAndSelect('prSelecteds.productRecommendation', 'productRecommendation');
 
             const searchPage = Number(page || 1);
             const searchPer = Number(per || 10);
@@ -329,27 +329,21 @@ export class DiorService {
                 });
             }
 
-            let prQuery;
+            const prQuery = this.productRecommendationRepository
+                .createQueryBuilder('productRecommendation')
+                .where('productRecommendation.productRecommendationId IS NULL');
 
             if (request_origin && request_origin === 'dior_bo') {
-                prQuery = this.productRecommendationRepository
-                    .createQueryBuilder('productRecommendation')
-                    .where('productRecommendation.productRecommendationId IS NULL')
-                    .andWhere('productRecommendation.consultantId = :diorConsultantId', {
-                        diorConsultantId: diorConsultant.id,
-                    });
+                prQuery.andWhere('productRecommendation.consultantId = :diorConsultantId', {
+                    diorConsultantId: diorConsultant.id,
+                });
             } else {
                 if (currentConsultant.consultant_position_id === 5) {
-                    prQuery = this.productRecommendationRepository
-                        .createQueryBuilder('productRecommendation')
-                        .where('productRecommendation.productRecommendationId IS NULL')
-                        .andWhere('productRecommendation.consultantId = :diorConsultantId', {
-                            diorConsultantId: diorConsultant.id,
-                        });
+                    prQuery.andWhere('productRecommendation.consultantId = :diorConsultantId', {
+                        diorConsultantId: diorConsultant.id,
+                    });
                 } else if (currentConsultant.consultant_position_id === 6) {
-                    prQuery = this.productRecommendationRepository
-                        .createQueryBuilder('productRecommendation')
-                        .where('productRecommendation.productRecommendationId IS NULL')
+                    prQuery
                         .andWhere('productRecommendation.consultantId = :diorConsultantId', {
                             diorConsultantId: diorConsultant.id,
                         })
@@ -357,9 +351,7 @@ export class DiorService {
                             countries: currentConsultant.countries,
                         });
                 } else {
-                    prQuery = this.productRecommendationRepository
-                        .createQueryBuilder('productRecommendation')
-                        .where('productRecommendation.productRecommendationId IS NULL')
+                    prQuery
                         .andWhere('productRecommendation.consultantId = :diorConsultantId', {
                             diorConsultantId: diorConsultant.id,
                         })
@@ -404,7 +396,6 @@ export class DiorService {
                 prQuery.andWhere('productRecommendation.routine = :routine', {
                     routine: routine,
                 });
-                prQuery.orderBy('productRecommendation.orderNumber', 'ASC');
             }
 
             if (collection) {
@@ -420,7 +411,7 @@ export class DiorService {
                 .leftJoinAndSelect(
                     ProductTranslations,
                     'productTranslations',
-                    'CAST(productTranslations.product_recommendation_id AS bigint) = productRecommendation.id',
+                    'productRecommendation.id = CAST(productTranslations.product_recommendation_id AS integer)',
                 )
                 .skip((searchPage - 1) * searchLimit)
                 .take(searchLimit)
