@@ -27,5 +27,6 @@ export { Products } from './Products.entity';
 export { ProductAttributes } from './ProductAttributes.entity';
 export { ProductAttributeTranslations } from './ProductAttributeTranslations.entity';
 export { ProductRecommendations } from './ProductRecommendations.entity';
+export { ProductRecommendationSelecteds } from './ProductRecommendationSelecteds.entity';
 export { ProductRecommendationGroups } from './ProductRecommendationGroups.entity';
 export { ProductTranslations } from './ProductTranslations.entity';

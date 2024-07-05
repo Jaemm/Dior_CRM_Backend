@@ -61,8 +61,7 @@ export class ProductRecommendations {
     @Column('character varying', { name: 'shades', nullable: true })
     shades: string | null;
 
-    @ManyToOne(() => ProductRecommendationSelecteds, (prSelecteds) => prSelecteds.productRecommendations)
-    @JoinColumn([{ name: 'product_recommendation_id', referencedColumnName: 'productRecommendationId' }])
+    @OneToMany(() => ProductRecommendationSelecteds, (prSelecteds) => prSelecteds.productRecommendation)
     prSelecteds: ProductRecommendationSelecteds[];
 
     @OneToMany(() => ProductTranslations, (translations) => translations.productRecommendations)

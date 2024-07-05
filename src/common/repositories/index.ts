@@ -6,6 +6,8 @@ export { CustomersRepository } from './customers.repository';
 export { ProductAttributesRepository } from './productAttributes.respository';
 export { ProductAttributeTranslationsRepository } from './productAttributeTranslations.repository';
 
-export { ProductRecommendationGroupsRepository } from './productRecommendtaionGroups.repository';
 export { ProductRecommendationRepository } from './productRecommendation.repository';
+export { ProductRecommendationSelectedRepository } from './productRecommendationSelected.repository';
+export { ProductRecommendationGroupsRepository } from './productRecommendtaionGroups.repository';
+
 export { ProductTranslationsRepository } from './productTranslations.repository';

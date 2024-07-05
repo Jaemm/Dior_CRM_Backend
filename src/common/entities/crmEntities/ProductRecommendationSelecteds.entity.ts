@@ -45,6 +45,7 @@ export class ProductRecommendationSelecteds {
     @JoinColumn([{ name: 'product_recommendation_group_id', referencedColumnName: 'id' }])
     prGroup: ProductRecommendationGroups;
 
-    @OneToMany(() => ProductRecommendations, (productRecommendations) => productRecommendations.prSelecteds)
-    productRecommendations: ProductRecommendations[];
+    @ManyToOne(() => ProductRecommendations, (productRecommendations) => productRecommendations.prSelecteds)
+    @JoinColumn([{ name: 'product_recommendation_id', referencedColumnName: 'id' }])
+    productRecommendation: ProductRecommendations;
 }

@@ -8,6 +8,14 @@ export class CustomerByConsultantIdDto {
     email?: string;
 }
 
+export class GetRecommendationSelectedDto {
+    @IsOptional()
+    customer_id: string;
+
+    @IsOptional()
+    batch_id: string;
+}
+
 export class SearchProductRecommendationGroupsDto {
     @IsNotEmpty()
     @IsString()

@@ -8,8 +8,8 @@ import {
     ConsultnatBranchesRepository,
     CustomersRepository,
     ProductAttributesRepository,
-    ProductAttributeTranslationsRepository,
     ProductRecommendationRepository,
+    ProductRecommendationSelectedRepository,
     ProductRecommendationGroupsRepository,
 } from '@/src/common/repositories';
 
@@ -17,6 +17,7 @@ import { Request } from 'express';
 
 import {
     CustomerByConsultantIdDto,
+    GetRecommendationSelectedDto,
     SearchBranchesDto,
     SearchProductRecommendationDto,
     SearchProductRecommendationGroupsDto,
@@ -33,8 +34,8 @@ export class DiorService {
         private consultnatBranchesRepository: ConsultnatBranchesRepository,
         private customersRepository: CustomersRepository,
         private productAttributesRepository: ProductAttributesRepository,
-        private productAttributeTranslationsRepository: ProductAttributeTranslationsRepository,
         private productRecommendationRepository: ProductRecommendationRepository,
+        private prSelectedRepository: ProductRecommendationSelectedRepository,
         private prGroupsRepository: ProductRecommendationGroupsRepository,
     ) {}
 
@@ -266,23 +267,21 @@ export class DiorService {
                 products: group.prSelecteds
                     .sort((a, b) => a.orderNumber - b.orderNumber)
                     .map((selected) => {
-                        const product = selected.productRecommendations;
-                        return product && product.length > 0
-                            ? selected.productRecommendations.map((p) => {
-                                  return {
-                                      id: p.id,
-                                      name: p.name,
-                                      product_type: p.productType,
-                                      description: p.description,
-                                      link: p.link,
-                                      image_url: p.imageUrl,
-                                      category: p.category,
-                                      routine: p.routine,
-                                      code: p.code,
-                                      collection: p.collection,
-                                      is_principal: selected.isPrincipal,
-                                  };
-                              })
+                        const product = selected.productRecommendation;
+                        return product
+                            ? {
+                                  id: product.id,
+                                  name: product.name,
+                                  product_type: product.productType,
+                                  description: product.description,
+                                  link: product.link,
+                                  image_url: product.imageUrl,
+                                  category: product.category,
+                                  routine: product.routine,
+                                  code: product.code,
+                                  collection: product.collection,
+                                  is_principal: selected.isPrincipal,
+                              }
                             : null;
                     })
                     .filter((product) => product !== null),
@@ -503,6 +502,93 @@ export class DiorService {
                 current_page_size: data.length,
                 current_page: searchPage,
                 total_pages: Math.ceil(totalCount / searchLimit),
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getProductRecommendationSelecteds(query: GetRecommendationSelectedDto) {
+        try {
+            const { customer_id, batch_id } = query;
+
+            const prsQuery = this.prSelectedRepository
+                .createQueryBuilder('prSelected')
+                .where('prSelected.customer_id = :customerId', { customerId: Number(customer_id) })
+                .orderBy('order_number')
+                .leftJoinAndSelect('prSelected.productRecommendation', 'productRecommendation')
+                .leftJoinAndSelect(
+                    ProductTranslations,
+                    'productTranslations',
+                    'CAST(productTranslations.product_recommendation_id AS bigint) = productRecommendation.id',
+                );
+
+            if (customer_id && batch_id) {
+                prsQuery.andWhere('prSelected.batch_id = :batchId', { batchId: batch_id });
+            } else if (customer_id && !batch_id) {
+                prsQuery.andWhere('prSelected.batch_id IS NULL');
+            }
+
+            const productRecommendationSelecteds = await prsQuery.getMany();
+
+            const data = productRecommendationSelecteds.map(async (productRecommendationSelected) => {
+                const product = productRecommendationSelected.productRecommendation;
+
+                if (!product) {
+                    return null;
+                }
+
+                let recommendedProduct = product;
+                if (product && product.productRecommendationId) {
+                    // Fetch the recommended product if productRecommendationId is present
+                    recommendedProduct = await this.productRecommendationRepository.findOne({
+                        where: {
+                            id: String(product.productRecommendationId),
+                        },
+                        relations: ['productTranslations'],
+                    });
+                }
+
+                const productInfo = {
+                    id: product.id,
+                    product_type: product.productType,
+                    description: product.description,
+                    link: product.link,
+                    image_url: product.imageUrl,
+                    code: product.code,
+                    routine: product.routine,
+                    collection: product.collection,
+                    category: product.category,
+                    countries: product.countries,
+                    product_recommendation_id: product.productRecommendationId,
+                    is_principal: productRecommendationSelected.isPrincipal,
+                    name: recommendedProduct?.name,
+                    shades: recommendedProduct?.shades,
+                    product_translations: recommendedProduct?.productTranslations?.map((translation) => ({
+                        id: translation.id,
+                        field_name: translation.fieldName,
+                        language: translation.language,
+                        value: translation.value,
+                        attribute_name: null,
+                        collection_name: null,
+                    })),
+                    category_translations: await this.productAttributesRepository.getTranslationsByType(
+                        'Category',
+                        recommendedProduct.category,
+                    ),
+                    collection_translations: await this.productAttributesRepository.getTranslationsByType(
+                        'Collection',
+                        recommendedProduct.category,
+                    ),
+                    batch_id: productRecommendationSelected?.batchId,
+                    customer_id: productRecommendationSelected?.customerId,
+                };
+
+                return productInfo;
+            });
+
+            return {
+                data: (await Promise.all(data)).filter(Boolean),
             };
         } catch (e) {
             throw e;

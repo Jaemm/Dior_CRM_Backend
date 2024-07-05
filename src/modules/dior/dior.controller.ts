@@ -6,6 +6,7 @@ import { Role } from '@/src/common/enums/role.enum';
 import { Request, query } from 'express';
 import {
     CustomerByConsultantIdDto,
+    GetRecommendationSelectedDto,
     SearchBranchesDto,
     SearchProductRecommendationDto,
     SearchProductRecommendationGroupsDto,
@@ -57,5 +58,12 @@ export class DiorController {
     @Get('product_recommendations')
     async getProductRecommendation(@Req() req: Request, @Query() query: SearchProductRecommendationDto) {
         return await this.diorService.getProductRecommendation(req, query);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('product_recommendation_selecteds')
+    async getProductRecommendationSelecteds(@Query() query: GetRecommendationSelectedDto) {
+        return await this.diorService.getProductRecommendationSelecteds(query);
     }
 }

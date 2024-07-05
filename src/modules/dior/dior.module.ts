@@ -13,6 +13,7 @@ import {
     ProductAttributeTranslations,
     ProductRecommendations,
     ProductRecommendationGroups,
+    ProductRecommendationSelecteds,
 } from '@/src/common/entities/crmEntities';
 import {
     ConsultantsRepository,
@@ -23,6 +24,7 @@ import {
     ProductAttributeTranslationsRepository,
     ProductRecommendationRepository,
     ProductRecommendationGroupsRepository,
+    ProductRecommendationSelectedRepository,
 } from '@/src/common/repositories';
 
 @Module({
@@ -34,6 +36,7 @@ import {
         ProductAttributes,
         ProductAttributeTranslations,
         ProductRecommendations,
+        ProductRecommendationSelecteds,
         ProductRecommendationGroups,
     ],
     controllers: [DiorController],
@@ -48,6 +51,7 @@ import {
         ProductAttributesRepository,
         ProductAttributeTranslationsRepository,
         ProductRecommendationRepository,
+        ProductRecommendationSelectedRepository,
         ProductRecommendationGroupsRepository,
     ],
 })
