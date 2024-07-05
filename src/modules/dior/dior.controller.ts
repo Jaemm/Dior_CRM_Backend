@@ -82,4 +82,11 @@ export class DiorController {
     async getRecommendationsCollection(@Query('routine') routine?: AttributeRoutine) {
         return await this.diorService.getRecommendationsCollection(routine);
     }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('product_recommendations/get_category')
+    async getRecommendationsCategories(@Query('routine') routine?: AttributeRoutine) {
+        return await this.diorService.getRecommendationsCategories(routine);
+    }
 }

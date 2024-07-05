@@ -632,19 +632,7 @@ export class DiorService {
                 routine,
             );
 
-            const data = categories
-                .map((category) => category.value)
-                .filter((value, index, self) => self.indexOf(value) === index);
-
-            const translatedData = categories.map((category) => ({
-                value: category.value,
-                category_translations: category.productAttributeTranslations?.map((translation) => ({
-                    id: translation.id,
-                    field_name: translation.fieldName,
-                    language: translation.language,
-                    value: translation.value,
-                })),
-            }));
+            const { data, translatedData } = this.createReturnFormForRecoCollectionAndCategories(categories);
 
             return {
                 data: data,
@@ -653,5 +641,45 @@ export class DiorService {
         } catch (e) {
             throw e;
         }
+    }
+
+    async getRecommendationsCategories(routine: AttributeRoutine) {
+        try {
+            const categories: ProductAttributes[] = await this.productAttributesRepository.findAndOrderByValue(
+                'productAttributes',
+                "productAttributes.typ = 'Category'",
+                routine,
+            );
+
+            const { data, translatedData } = this.createReturnFormForRecoCollectionAndCategories(categories);
+
+            return {
+                data,
+                translated_data: translatedData,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    createReturnFormForRecoCollectionAndCategories(categories: ProductAttributes[]) {
+        const data = categories
+            .map((category) => category.value)
+            .filter((value, index, self) => self.indexOf(value) === index);
+
+        const translatedData = categories.map((category) => ({
+            value: category.value,
+            category_translations: category.productAttributeTranslations.map((translation) => ({
+                id: translation.id,
+                field_name: translation.fieldName,
+                language: translation.language,
+                value: translation.value,
+            })),
+        }));
+
+        return {
+            data,
+            translatedData,
+        };
     }
 }
