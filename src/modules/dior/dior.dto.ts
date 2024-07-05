@@ -7,7 +7,16 @@ export class CustomerByConsultantIdDto {
     @IsOptional()
     email?: string;
 }
+export class SelectProductsDto {
+    @IsNotEmpty()
+    batch_id: number;
 
+    @IsNotEmpty()
+    customer_id: number;
+
+    @IsNotEmpty()
+    products_selected: number[];
+}
 export class GetRecommendationSelectedDto {
     @IsOptional()
     customer_id: string;

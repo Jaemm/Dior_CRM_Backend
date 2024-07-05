@@ -21,6 +21,7 @@ import {
     SearchBranchesDto,
     SearchProductRecommendationDto,
     SearchProductRecommendationGroupsDto,
+    SelectProductsDto,
 } from './dior.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
@@ -580,6 +581,42 @@ export class DiorService {
 
             return {
                 data: (await Promise.all(data)).filter(Boolean),
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async selectProducts(body: SelectProductsDto) {
+        const { batch_id, customer_id, products_selected } = body;
+        try {
+            const prevProductSelected = await this.prSelectedRepository.find({
+                where: {
+                    batchId: batch_id,
+                    customerId: customer_id,
+                },
+            });
+
+            const deleteList = prevProductSelected.map((prev) => this.prSelectedRepository.delete(prev));
+            await Promise.all(deleteList);
+
+            const newSelectedList = products_selected.map(async (pid, i) => {
+                const newSelect = this.prSelectedRepository.create({
+                    batchId: batch_id,
+                    customerId: customer_id,
+                    productRecommendationId: pid,
+                    orderNumber: i + 1,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                });
+
+                await this.prSelectedRepository.save(newSelect);
+            });
+
+            await Promise.all(newSelectedList);
+
+            return {
+                message: 'Saved selected products',
             };
         } catch (e) {
             throw e;

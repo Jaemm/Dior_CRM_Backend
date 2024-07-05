@@ -1,5 +1,5 @@
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Controller, Get, Req, Query } from '@nestjs/common';
+import { Controller, Get, Req, Query, Post, Body } from '@nestjs/common';
 import { DiorService } from './dior.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
@@ -10,6 +10,7 @@ import {
     SearchBranchesDto,
     SearchProductRecommendationDto,
     SearchProductRecommendationGroupsDto,
+    SelectProductsDto,
 } from './dior.dto';
 
 @ApiTags('Dior')
@@ -65,5 +66,12 @@ export class DiorController {
     @Get('product_recommendation_selecteds')
     async getProductRecommendationSelecteds(@Query() query: GetRecommendationSelectedDto) {
         return await this.diorService.getProductRecommendationSelecteds(query);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('product_recommendation_selecteds')
+    async selectProducts(@Body() body: SelectProductsDto) {
+        return await this.diorService.selectProducts(body);
     }
 }
