@@ -2697,6 +2697,13 @@ export class ConsultantsService {
         });
     }
 
+    async generateFlatFileDior() {
+        try {
+        } catch (e) {
+            throw e;
+        }
+    }
+
     daysLeftFromExpired(licensePeriod: number, firstUseDate: string) {
         let periodLeft = 0;
         if (licensePeriod && firstUseDate) {

@@ -195,12 +195,18 @@ export class ConsultantsController {
         return await this.consultants.loginPhone(body, userId);
     }
 
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('generate_flat_file_dior')
+    async generateFlatFileDior() {
+        return await this.consultants.generateFlatFileDior();
+    }
+
     /**
      *
      * Existing codes
      *
      * */
-
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get()
