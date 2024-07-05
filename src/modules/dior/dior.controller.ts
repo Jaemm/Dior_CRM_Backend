@@ -13,6 +13,7 @@ import {
     SearchProductRecommendationDto,
     SearchProductRecommendationGroupsDto,
     SelectProductsDto,
+    createCustomerDto,
 } from './dior.dto';
 
 @ApiTags('Dior')
@@ -25,6 +26,13 @@ export class DiorController {
     @Get('customers')
     async getCustomers(@Query() query: CustomerByConsultantIdDto) {
         return await this.diorService.getCustomers(query);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('customers')
+    async createCustomers(@Body() body: createCustomerDto) {
+        return await this.diorService.createCustomers(body);
     }
 
     @ApiBearerAuth()

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export type AttributeRoutine = 'Makeup' | 'Skincare';
 
@@ -8,6 +8,28 @@ export class CustomerByConsultantIdDto {
 
     @IsOptional()
     email?: string;
+}
+
+export class createCustomerDto {
+    @IsNotEmpty()
+    @IsString()
+    email: string;
+
+    @IsNotEmpty()
+    @IsString()
+    external_id: string;
+
+    @IsNotEmpty()
+    @IsNumber()
+    consultant_id: number;
+
+    @IsOptional()
+    @IsString()
+    name: string;
+
+    @IsOptional()
+    @IsString()
+    surname: string;
 }
 export class SelectProductsDto {
     @IsNotEmpty()

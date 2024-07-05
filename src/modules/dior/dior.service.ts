@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { NotFoundException, BadRequestException } from '@nestjs/common/exceptions';
+import { NotFoundException, BadRequestException, ConflictException } from '@nestjs/common/exceptions';
 
 import {
     ConsultantsRepository,
@@ -24,10 +24,12 @@ import {
     SearchProductRecommendationDto,
     SearchProductRecommendationGroupsDto,
     SelectProductsDto,
+    createCustomerDto,
 } from './dior.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 import { ProductAttributes, ProductTranslations } from '@/src/common/entities/crmEntities';
+import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
 
 @Injectable()
 export class DiorService {
@@ -264,6 +266,68 @@ export class DiorService {
 
             return {
                 data: customersByConsultant,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async createCustomers(body: createCustomerDto) {
+        try {
+            const { email, consultant_id, name, external_id, surname } = body;
+
+            const existCustomer = await this.customersRepository.find({
+                where: {
+                    email: email,
+                    consultant_id: Number(consultant_id),
+                    external_id: external_id,
+                },
+            });
+
+            if (existCustomer.length > 0) {
+                throw new ConflictException({
+                    result_code: 409,
+                    error: `Data already Exists.`,
+                });
+            }
+
+            const newCustomer = this.customersRepository.create({
+                email: email,
+                consultant_id: Number(consultant_id),
+                name: name,
+                external_id: external_id,
+                surname: surname,
+                created_at: new Date(),
+                updated_at: new Date(),
+            });
+
+            const savedCustomer = await this.customersRepository.save(newCustomer);
+
+            return {
+                id: savedCustomer.id,
+                external_id: savedCustomer.external_id,
+                email: savedCustomer.email,
+                name: savedCustomer.name,
+                surname: savedCustomer.surname,
+                os: savedCustomer.os,
+                language: savedCustomer.language,
+                phone: savedCustomer.phone,
+                birth: savedCustomer.birth,
+                address: savedCustomer.address,
+                city: savedCustomer.city,
+                state: savedCustomer.state,
+                zip_code: savedCustomer.zip_code,
+                country: savedCustomer.country,
+                notes: savedCustomer.notes,
+                push_token: savedCustomer.push_token,
+                app_id: savedCustomer.app_id,
+                company_id: savedCustomer.company_id,
+                consultant_id: savedCustomer.consultant_id,
+                skin_color_group_id: savedCustomer.skin_color_group_id,
+                ethnicity_id: savedCustomer.ethnicity_id,
+                gender: savedCustomer.gender,
+                sign_in_count: savedCustomer.sign_in_count,
+                image_url: savedCustomer.image_url,
             };
         } catch (e) {
             throw e;
