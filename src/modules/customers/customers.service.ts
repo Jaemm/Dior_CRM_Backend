@@ -59,14 +59,9 @@ export class CustomersService {
 
         private readonly authService: AuthService,
         private readonly jwtService: JwtService,
-        private readonly devices: DeviceService,
+
         private readonly commonService: CommonService,
-        private readonly dataReplication: CrmDataReplicationService,
-        private readonly companies: ConsultantCompanyService,
-        @Inject(forwardRef(() => ConsultantsService)) private readonly consultant: ConsultantsService,
-        private readonly consultantShops: ConsultantShopsService,
-        private readonly consultantPositions: ConsultantPositionsService,
-        private readonly genders: GendersService,
+
         private readonly applications: ApplicationsService,
         private readonly countries: CountriesService,
         private readonly ethnicities: EthinicitiesService,

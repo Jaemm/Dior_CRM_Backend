@@ -56,7 +56,6 @@ import { ApplicationsService } from '../applications/applications.service';
 import { CountriesService } from '../countries/countries.service';
 import { EthinicitiesService } from '../ethinicities/ethinicities.service';
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
-import { CustomerDataReplicationService } from '../dataReplication/customerDataReplication/customerDataReplication.service';
 import { CustomerDataReplicationModule } from '../dataReplication/customerDataReplication/customerDataReplication.module';
 import { StoreModule } from '../stores/stores.module';
 import { ConsultantBranchesModule } from '../consultantBranches/consultantBranches.module';
@@ -137,7 +136,6 @@ import { ProductRecommendations, HealthTips, Identities } from '@/src/common/ent
         JwtService,
         ConsultantCompanyService,
         DeviceService,
-        ConsultantsService,
         ConsultantPositionsService,
         ConsultantShopsService,
         GendersService,

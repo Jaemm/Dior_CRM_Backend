@@ -51,7 +51,6 @@ import {
     UpdateConsultantRubyDto,
     HealthTipsDto,
     HealthTipsByCompanyDto,
-    NotificationTestDto,
 } from '@/src/modules/consultants/consultants.dto';
 
 import {
@@ -71,15 +70,15 @@ import { ConsultantPositions } from '@/src/common/entities/crmEntities/Consultan
 import { CrmDataReplicationService } from '../dataReplication/consultantDataReplication/consultantDataReplication.service';
 import * as fs from 'fs/promises';
 import * as handlebars from 'handlebars';
-import { ConsultantPositionsService } from '../consultantPositions/consultantPositions.service';
+
 import { ConsultantShopsService } from '../consultantShops/consultantShops.service';
 import { GendersService } from '../genders/genders.service';
 import { CountriesService } from '../countries/countries.service';
-import { StoreService } from '../stores/stores.service';
+
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
 import { EthinicitiesService } from '../ethinicities/ethinicities.service';
 import { ApplicationsService } from '../applications/applications.service';
-import { ConsultantBranchesService } from '../consultantBranches/consultantBranches.service';
+
 import { IJwt } from 'src/config/interfaces/jwt.interfaces';
 import { ConfigService } from '@nestjs/config';
 import { ProductsService } from '../products/products.service';
@@ -87,33 +86,25 @@ import { LicenceService } from '../licence/licence.service';
 import { LicenseType } from '@/src/common/enums/license-type.enum';
 
 import { ResponseMessages } from '@/src/common/constants/response-messages';
-import { CustomersService } from '../customers/customers.service';
-import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
+
 import { Role } from '@/src/common/enums/role.enum';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { TargetType } from '@/src/common/enums/target-type.enum';
 import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
 import { HealthTips } from '@/src/common/entities/crmEntities/HealthTips.entity';
+import { ConsultantsRepository, DevicesRepository, ProductsRepository } from '@/src/common/repositories';
 
 @Injectable()
 export class ConsultantsService {
     private readonly jwtConfig: IJwt;
 
     constructor(
-        @InjectRepository(Consultants)
-        private readonly consultantsRepository: Repository<Consultants>,
         @InjectRepository(ConsultantCompanies)
         private readonly consultantCompanyRepository: Repository<ConsultantCompanies>,
         @InjectRepository(ConsultantPositions)
         private readonly position: Repository<ConsultantPositions>,
-        @InjectRepository(Versions)
-        private readonly versionsRepository: Repository<Versions>,
         @InjectRepository(Notifications)
         private readonly notificationRepository: Repository<Notifications>,
-        @InjectRepository(Devices)
-        private readonly deviceRepository: Repository<Devices>,
-        @InjectRepository(Products)
-        private readonly productsRepository: Repository<Products>,
         @InjectRepository(PasswordEmailDetails)
         private readonly passwordDetailRepository: Repository<PasswordEmailDetails>,
         @InjectRepository(ProductRecommendations)
@@ -126,22 +117,25 @@ export class ConsultantsService {
         private readonly configService: ConfigService,
         private readonly licenceService: LicenceService,
         private readonly productsService: ProductsService,
-        private readonly consultantPositionsService: ConsultantPositionsService,
-        private readonly customerService: CustomersService,
         private readonly applicationsService: ApplicationsService,
         private readonly consultantShopsService: ConsultantShopsService,
         private readonly genderService: GendersService,
         private readonly countriesService: CountriesService,
-        private readonly consultantStoreService: StoreService,
+
         private readonly skinColorGroupService: SkinColorGroupsService,
         private readonly ethinicityService: EthinicitiesService,
-        private readonly consultantBranchesService: ConsultantBranchesService,
+
         private readonly authService: AuthService,
         private readonly jwtService: JwtService,
         private readonly companies: ConsultantCompanyService,
         private readonly devices: DeviceService,
         private readonly commonService: CommonService,
         private readonly dataReplication: CrmDataReplicationService,
+
+        // Repos
+        private readonly consultantsRepository: ConsultantsRepository,
+        private readonly deviceRepository: DevicesRepository,
+        private readonly productsRepository: ProductsRepository,
     ) {
         this.jwtConfig = this.configService.get<IJwt>('jwt');
     }
@@ -251,7 +245,7 @@ export class ConsultantsService {
             throw new BadRequestException({ result_code: ErrorStatus.VALIDATION_ERROR, error: errors.join('\n') });
         }
 
-        const user = await this.findConsultant(newUser.app_id, newUser.email);
+        const user = await this.consultantsRepository.findConsultant(newUser.app_id, newUser.email);
 
         if (user) {
             throw new ConflictException({
@@ -335,7 +329,7 @@ export class ConsultantsService {
 
     public async signUpRuby(newUser: ConsultantDto, locale: string = 'en') {
         try {
-            const existUser = await this.findConsultant(Number(newUser.app_id), newUser.email);
+            const existUser = await this.consultantsRepository.findConsultant(Number(newUser.app_id), newUser.email);
 
             if (existUser) {
                 throw new ConflictException({
@@ -625,23 +619,6 @@ export class ConsultantsService {
         return consultants;
     }
 
-    async findConsultant(app_id: number, email: string) {
-        const consultant = await this.consultantsRepository.findOne({
-            where: { app_id: Or(Equal(app_id), null), email },
-            relations: [
-                'consultant_shop',
-                'country_details',
-                'consultant_company',
-                'consultant_position',
-                'products',
-                'products.device',
-                'products.device.consultant_company',
-            ],
-        });
-
-        return consultant;
-    }
-
     async findNotifications(
         conditions: any,
         selections?: string[],
@@ -676,7 +653,7 @@ export class ConsultantsService {
     }
 
     async checkConsultant(app_id: number, email: string) {
-        const consultant: any = await this.findConsultant(Number(app_id), email);
+        const consultant: any = await this.consultantsRepository.findConsultant(Number(app_id), email);
 
         if (!consultant) {
             throw new BadRequestException({
@@ -1135,15 +1112,6 @@ export class ConsultantsService {
         } catch (e) {
             throw e;
         }
-    }
-
-    public async findOneConsultant(id: number) {
-        const consultant = await this.consultantsRepository.findOne({
-            where: { id },
-            relations: ['consultant_company', 'country_details', 'consultant_position'],
-        });
-
-        return consultant;
     }
 
     public async getConsultants(data: GetConsultantDto) {
@@ -1704,7 +1672,7 @@ export class ConsultantsService {
         try {
             const { email, app_id } = data;
 
-            const consultant = await this.findConsultant(Number(app_id), email);
+            const consultant = await this.consultantsRepository.findConsultant(Number(app_id), email);
 
             if (!consultant) {
                 throw new NotFoundException('Please enter a valid email address.');
@@ -1810,7 +1778,7 @@ export class ConsultantsService {
     public async passwordRecovery(data: PasswordDto, locale = 'en') {
         const { email, app_id } = data;
 
-        let consultant = await this.findConsultant(Number(app_id), email);
+        let consultant = await this.consultantsRepository.findConsultant(Number(app_id), email);
 
         if (!consultant) {
             consultant = await this.getConsultant({ email });
@@ -2469,7 +2437,7 @@ export class ConsultantsService {
             let useDate = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // Format: YYYYMMDD
             let useTime = new Date().toISOString().slice(11, 16).replace(/:/g, ''); // Format: HHMM
 
-            const consultant = await this.findOneConsultant(consultantId);
+            const consultant = await this.consultantsRepository.findOneConsultantById(consultantId);
 
             if (!consultant) {
                 this.commonService.throwNotFoundError();

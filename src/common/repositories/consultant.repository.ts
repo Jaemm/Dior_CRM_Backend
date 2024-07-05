@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Repository, Or, Equal } from 'typeorm';
 import { Consultants } from '../entities/crmEntities';
 
 @Injectable()
@@ -23,6 +23,7 @@ export class ConsultantsRepository extends Repository<Consultants> {
         return await this.findOne(query);
     }
 
+    /** Dior */
     async getDiorConsultantCompanyId() {
         const diorConsultant = await this.findOne({
             select: ['consultant_company_id'],
@@ -51,5 +52,33 @@ export class ConsultantsRepository extends Repository<Consultants> {
         }
 
         return diorConsultant;
+    }
+
+    /** Consultant */
+
+    async findOneConsultantById(id: number) {
+        const consultant = await this.findOne({
+            where: { id },
+            relations: ['consultant_company', 'country_details', 'consultant_position'],
+        });
+
+        return consultant;
+    }
+
+    async findConsultant(app_id: number, email: string) {
+        const consultant = await this.findOne({
+            where: { app_id: Or(Equal(app_id), null), email },
+            relations: [
+                'consultant_shop',
+                'country_details',
+                'consultant_company',
+                'consultant_position',
+                'products',
+                'products.device',
+                'products.device.consultant_company',
+            ],
+        });
+
+        return consultant;
     }
 }

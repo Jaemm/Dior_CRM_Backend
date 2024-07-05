@@ -54,11 +54,14 @@ import { ProductsModule } from '../products/products.module';
 
 import { JwtService } from '@/src/jwt/jwt.service';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
+import { ConsultantsRepository, CustomersRepository, DiorCustomerConsentsRepository } from '@/src/common/repositories';
 
 @Module({
     imports: [
+        Customers,
+        Consultants,
+        DiorCustomerConsents,
         TypeOrmModule.forFeature([
-            Consultants,
             ConsultantShops,
             ConsultantBranches,
             ConsultantCompanies,
@@ -67,7 +70,6 @@ import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 
             ConsultantCountrys,
             Countries,
-            Customers,
 
             CustomerApplications,
             Applications,
@@ -97,7 +99,6 @@ import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
             ConsultantCountries,
 
             ActiveStorageAttachments,
-            DiorCustomerConsents,
         ]),
         CustomersModule,
         forwardRef(() => ConsultantsModule),
@@ -105,7 +106,17 @@ import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
         ProductsModule,
     ],
     controllers: [CRMController],
-    providers: [CRMService, JwtService, AwsS3Service],
+    providers: [
+        // Services
+        CRMService,
+        JwtService,
+        AwsS3Service,
+
+        // Repos
+        CustomersRepository,
+        ConsultantsRepository,
+        DiorCustomerConsentsRepository,
+    ],
     exports: [CRMService],
 })
 export class CRMModule {

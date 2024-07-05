@@ -69,11 +69,15 @@ import { ProductsModule } from '../products/products.module';
 import { CustomersModule } from '../customers/customers.module';
 import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
 import { CRMModule } from '../crm/crm.module';
+import { ConsultantsRepository, DevicesRepository, ProductsRepository } from '@/src/common/repositories';
 
 @Module({
     imports: [
+        Consultants,
+        Products,
+        Devices,
+
         TypeOrmModule.forFeature([
-            Consultants,
             ConsultantShops,
             ConsultantBranches,
             ConsultantCompanies,
@@ -84,7 +88,6 @@ import { CRMModule } from '../crm/crm.module';
             HealthTips,
 
             Devices,
-            AdminUsers,
 
             ConsultantCountrys,
             Countries,
@@ -95,7 +98,6 @@ import { CRMModule } from '../crm/crm.module';
 
             ConsultantApplications,
             Products,
-            Devices,
 
             Licenses,
             LicenseHistories,
@@ -140,7 +142,18 @@ import { CRMModule } from '../crm/crm.module';
         CRMModule,
     ],
     controllers: [ConsultantsController],
-    providers: [ConsultantsService, AuthService, JwtService, ConsultantCompanyService, DeviceService],
+    providers: [
+        ConsultantsService,
+        AuthService,
+        JwtService,
+        ConsultantCompanyService,
+        DeviceService,
+
+        // Repos
+        ConsultantsRepository,
+        DevicesRepository,
+        ProductsRepository,
+    ],
     exports: [ConsultantsService],
 })
 export class ConsultantsModule {

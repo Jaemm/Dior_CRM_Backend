@@ -1,6 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In } from 'typeorm';
 
 import { ConsultantsService } from '../consultants/consultants.service';
 import {
@@ -22,27 +21,23 @@ import axios from 'axios';
 import * as fs from 'fs';
 import * as FormData from 'form-data';
 import { ErrorStatus } from '@/src/common/constants/error-status';
-import { Customers, Consultants, DiorCustomerConsents, Countries } from '@/src/common/entities/crmEntities';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
+import { ConsultantsRepository, CustomersRepository, DiorCustomerConsentsRepository } from '@/src/common/repositories';
 
 @Injectable()
 export class CRMService {
     constructor(
-        @InjectRepository(Customers)
-        private readonly customersRepository: Repository<Customers>,
-        @InjectRepository(Consultants)
-        private readonly consultantRepository: Repository<Consultants>,
-        @InjectRepository(DiorCustomerConsents)
-        private readonly diorCustomerConsentsRepository: Repository<DiorCustomerConsents>,
-        @InjectRepository(Countries)
-        private readonly countryRepository: Repository<Countries>,
-
         private awsS3Service: AwsS3Service,
         private readonly customerService: CustomersService,
         private consultantsService: ConsultantsService,
         private countriesService: CountriesService,
         private productService: ProductsService,
         private commonService: CommonService,
+
+        // Repos
+        private readonly customersRepository: CustomersRepository,
+        private readonly consultantRepository: ConsultantsRepository,
+        private readonly diorCustomerConsentsRepository: DiorCustomerConsentsRepository,
     ) {}
 
     async getCustomer(id: number, data: GetCustomerDto) {
