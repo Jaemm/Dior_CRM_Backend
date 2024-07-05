@@ -6,6 +6,7 @@ import { Role } from '@/src/common/enums/role.enum';
 import { Request, query } from 'express';
 import {
     AttributeRoutine,
+    CreateBranchesDto,
     CustomerByConsultantIdDto,
     GetRecommendationSelectedDto,
     SearchBranchesDto,
@@ -38,6 +39,13 @@ export class DiorController {
     @Get('company_branches')
     async searchBranches(@Req() req: Request, @Query() query: SearchBranchesDto) {
         return await this.diorService.searchBranches(req, query);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('company_branches')
+    async createBranches(@Req() req: Request, @Body() body: CreateBranchesDto) {
+        return await this.diorService.createBranches(req, body);
     }
 
     @ApiBearerAuth()

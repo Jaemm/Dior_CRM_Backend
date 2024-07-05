@@ -17,6 +17,7 @@ import { Request } from 'express';
 
 import {
     AttributeRoutine,
+    CreateBranchesDto,
     CustomerByConsultantIdDto,
     GetRecommendationSelectedDto,
     SearchBranchesDto,
@@ -195,6 +196,42 @@ export class DiorService {
                 currentPage: page,
                 pageSize: branches.length,
                 totalPages: Math.ceil(total / perCondition),
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async createBranches(req: Request, body: CreateBranchesDto) {
+        try {
+            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            const { email, name, code, password, country } = body;
+
+            if (!diorCompanyId) {
+                throw new NotFoundException();
+            }
+
+            const newBranch = this.consultnatBranchesRepository.create({
+                consultantCompanyId: String(diorCompanyId),
+                email,
+                name,
+                password,
+                country,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+
+            const savedBranch = await this.consultnatBranchesRepository.save(newBranch);
+
+            return {
+                id: savedBranch.id,
+                name: savedBranch.name,
+                code: savedBranch.code,
+                email: savedBranch.email,
+                created_at: savedBranch.createdAt,
+                country: savedBranch.country,
+                password: savedBranch.password,
             };
         } catch (e) {
             throw e;

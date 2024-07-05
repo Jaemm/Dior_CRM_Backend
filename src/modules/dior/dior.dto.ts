@@ -71,6 +71,22 @@ export class SearchProductRecommendationDto {
     limit: string;
 }
 
+export class CreateBranchesDto {
+    @IsString()
+    email: string;
+
+    @IsString()
+    name: string;
+
+    @IsString()
+    code: string;
+
+    @IsString()
+    password: string;
+
+    @IsString()
+    country: string;
+}
 export class SearchBranchesDto {
     @IsOptional()
     search: string;
