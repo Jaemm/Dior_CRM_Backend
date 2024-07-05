@@ -1,5 +1,7 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
+export type AttributeRoutine = 'Makeup' | 'Skincare';
+
 export class CustomerByConsultantIdDto {
     @IsNotEmpty()
     consultant_id: string;

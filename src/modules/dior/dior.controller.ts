@@ -5,6 +5,7 @@ import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { Request, query } from 'express';
 import {
+    AttributeRoutine,
     CustomerByConsultantIdDto,
     GetRecommendationSelectedDto,
     SearchBranchesDto,
@@ -73,5 +74,12 @@ export class DiorController {
     @Post('product_recommendation_selecteds')
     async selectProducts(@Body() body: SelectProductsDto) {
         return await this.diorService.selectProducts(body);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('product_recommendations/get_collection')
+    async getRecommendationsCollection(@Query('routine') routine?: AttributeRoutine) {
+        return await this.diorService.getRecommendationsCollection(routine);
     }
 }

@@ -16,6 +16,7 @@ import {
 import { Request } from 'express';
 
 import {
+    AttributeRoutine,
     CustomerByConsultantIdDto,
     GetRecommendationSelectedDto,
     SearchBranchesDto,
@@ -25,7 +26,7 @@ import {
 } from './dior.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
-import { ProductTranslations } from '@/src/common/entities/crmEntities';
+import { ProductAttributes, ProductTranslations } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class DiorService {
@@ -617,6 +618,37 @@ export class DiorService {
 
             return {
                 message: 'Saved selected products',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getRecommendationsCollection(routine: AttributeRoutine) {
+        try {
+            const categories: ProductAttributes[] = await this.productAttributesRepository.findAndOrderByValue(
+                'productAttributes',
+                "productAttributes.typ = 'Collection'",
+                routine,
+            );
+
+            const data = categories
+                .map((category) => category.value)
+                .filter((value, index, self) => self.indexOf(value) === index);
+
+            const translatedData = categories.map((category) => ({
+                value: category.value,
+                category_translations: category.productAttributeTranslations?.map((translation) => ({
+                    id: translation.id,
+                    field_name: translation.fieldName,
+                    language: translation.language,
+                    value: translation.value,
+                })),
+            }));
+
+            return {
+                data: data,
+                translated_data: translatedData,
             };
         } catch (e) {
             throw e;
