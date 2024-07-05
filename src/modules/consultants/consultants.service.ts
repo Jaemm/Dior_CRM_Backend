@@ -14,7 +14,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Or, Equal, Repository } from 'typeorm';
+import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Or, Equal, Repository, Between } from 'typeorm';
 import { TokenTypeEnum } from 'src/jwt/enums/auth-token.enum';
 
 import { AuthService } from '../auth/auth.service';
@@ -92,7 +92,12 @@ import { ErrorStatus } from '@/src/common/constants/error-status';
 import { TargetType } from '@/src/common/enums/target-type.enum';
 import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
 import { HealthTips } from '@/src/common/entities/crmEntities/HealthTips.entity';
-import { ConsultantsRepository, DevicesRepository, ProductsRepository } from '@/src/common/repositories';
+import {
+    ConsultantsRepository,
+    CustomersRepository,
+    DevicesRepository,
+    ProductsRepository,
+} from '@/src/common/repositories';
 
 @Injectable()
 export class ConsultantsService {
@@ -133,6 +138,7 @@ export class ConsultantsService {
         private readonly dataReplication: CrmDataReplicationService,
 
         // Repos
+        private readonly customersRepository: CustomersRepository,
         private readonly consultantsRepository: ConsultantsRepository,
         private readonly deviceRepository: DevicesRepository,
         private readonly productsRepository: ProductsRepository,
@@ -2667,6 +2673,7 @@ export class ConsultantsService {
 
     async generateFlatFileDior() {
         try {
+            const customers = await this.customersRepository.getTodayCreatedCustomers();
         } catch (e) {
             throw e;
         }
