@@ -74,7 +74,7 @@ import {
     CustomersRepository,
     DevicesRepository,
     ProductsRepository,
-} from '@/src/common/repositories';
+} from '@/src/common/repositories/crm';
 
 @Module({
     imports: [

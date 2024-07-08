@@ -62,6 +62,7 @@ import {
     ProductRecommendations,
     ConsultantCompanies,
     Identities,
+    HealthTips,
 } from '@/src/common/entities/crmEntities';
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { DeviceService } from '../devices/devices.service';
@@ -91,13 +92,12 @@ import { Role } from '@/src/common/enums/role.enum';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { TargetType } from '@/src/common/enums/target-type.enum';
 import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
-import { HealthTips } from '@/src/common/entities/crmEntities/HealthTips.entity';
 import {
     ConsultantsRepository,
     CustomersRepository,
     DevicesRepository,
     ProductsRepository,
-} from '@/src/common/repositories';
+} from '@/src/common/repositories/crm';
 
 @Injectable()
 export class ConsultantsService {

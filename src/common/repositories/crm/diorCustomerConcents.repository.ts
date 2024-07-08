@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { DiorCustomerConsents } from '../entities/crmEntities';
+import { DiorCustomerConsents } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class DiorCustomerConsentsRepository extends Repository<DiorCustomerConsents> {

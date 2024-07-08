@@ -22,7 +22,11 @@ import * as fs from 'fs';
 import * as FormData from 'form-data';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
-import { ConsultantsRepository, CustomersRepository, DiorCustomerConsentsRepository } from '@/src/common/repositories';
+import {
+    ConsultantsRepository,
+    CustomersRepository,
+    DiorCustomerConsentsRepository,
+} from '@/src/common/repositories/crm';
 
 @Injectable()
 export class CRMService {

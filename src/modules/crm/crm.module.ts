@@ -54,7 +54,11 @@ import { ProductsModule } from '../products/products.module';
 
 import { JwtService } from '@/src/jwt/jwt.service';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
-import { ConsultantsRepository, CustomersRepository, DiorCustomerConsentsRepository } from '@/src/common/repositories';
+import {
+    ConsultantsRepository,
+    CustomersRepository,
+    DiorCustomerConsentsRepository,
+} from '@/src/common/repositories/crm';
 
 @Module({
     imports: [

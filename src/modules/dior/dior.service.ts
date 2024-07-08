@@ -11,7 +11,7 @@ import {
     ProductRecommendationRepository,
     ProductRecommendationSelectedRepository,
     ProductRecommendationGroupsRepository,
-} from '@/src/common/repositories';
+} from '@/src/common/repositories/crm';
 
 import { Request } from 'express';
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { ProductRecommendationSelecteds } from '../entities/crmEntities';
+import { ProductRecommendationSelecteds } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class ProductRecommendationSelectedRepository extends Repository<ProductRecommendationSelecteds> {
