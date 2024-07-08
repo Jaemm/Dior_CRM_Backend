@@ -75,6 +75,7 @@ import {
     DevicesRepository,
     ProductsRepository,
 } from '@/src/common/repositories/crm';
+import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.repository';
 
 @Module({
     imports: [
@@ -158,6 +159,9 @@ import {
         CustomersRepository,
         DevicesRepository,
         ProductsRepository,
+
+        // Analysis Repos
+        AnalysisRepository,
     ],
     exports: [ConsultantsService],
 })

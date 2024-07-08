@@ -98,6 +98,7 @@ import {
     DevicesRepository,
     ProductsRepository,
 } from '@/src/common/repositories/crm';
+import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.repository';
 
 @Injectable()
 export class ConsultantsService {
@@ -142,6 +143,9 @@ export class ConsultantsService {
         private readonly consultantsRepository: ConsultantsRepository,
         private readonly deviceRepository: DevicesRepository,
         private readonly productsRepository: ProductsRepository,
+
+        // Analysis Repo
+        private readonly analysisRepository: AnalysisRepository,
     ) {
         this.jwtConfig = this.configService.get<IJwt>('jwt');
     }
