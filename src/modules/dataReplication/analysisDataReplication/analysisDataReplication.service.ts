@@ -1,6 +1,6 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Analysis } from '@/src/common/entities/analysisEntities/Analysis.entity';
 import { Measurements } from '@/src/common/entities/analysisEntities/Measurements.entity';
 
@@ -13,6 +13,9 @@ export class AnalysisDataReplicationService {
         private readonly globalcndpSkinRepository: Repository<Analysis>,
         @InjectRepository(Measurements, 'cndpSkinDB')
         private readonly globalCndpAnalysisRepository: Repository<Measurements>,
+
+        @InjectRepository(Analysis, 'diorCndpSkinDB')
+        private readonly diorCndpSkinRepository: Repository<Analysis>,
 
         // Hair
         @InjectRepository(Analysis, 'cndpHairDB')
@@ -32,6 +35,16 @@ export class AnalysisDataReplicationService {
         @InjectRepository(Measurements, 'ohioCndpHairDB')
         private readonly ohioCndpHairAnalysisRepository: Repository<Measurements>, // ohioCndpHairDB
     ) {}
+
+    async getDiorAnalysisByCustomerIds(customerIds: string[]) {
+        const rows = await this.diorCndpSkinRepository.find({
+            where: {
+                customerId: In(customerIds),
+            },
+        });
+
+        return rows;
+    }
 
     async getBatchId(customerId: string, appId: number) {
         const repository = this.DBRediction(appId).ohioRepos;

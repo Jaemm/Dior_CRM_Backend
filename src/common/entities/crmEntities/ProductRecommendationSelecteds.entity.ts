@@ -1,6 +1,7 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { ProductRecommendationGroups } from './ProductRecommendationGroups.entity';
 import { ProductRecommendations } from './ProductRecommendations.entity';
+import { Customers } from './Customers.entity';
 
 @Index('product_recommendation_selecteds_pkey', ['id'], { unique: true })
 @Entity('product_recommendation_selecteds', { schema: 'public' })
@@ -48,4 +49,8 @@ export class ProductRecommendationSelecteds {
     @ManyToOne(() => ProductRecommendations, (productRecommendations) => productRecommendations.prSelecteds)
     @JoinColumn([{ name: 'product_recommendation_id', referencedColumnName: 'id' }])
     productRecommendation: ProductRecommendations;
+
+    @ManyToOne(() => Customers, (customer) => customer.prSelecteds)
+    @JoinColumn([{ name: 'customer_id', referencedColumnName: 'id' }])
+    customer: Customers;
 }

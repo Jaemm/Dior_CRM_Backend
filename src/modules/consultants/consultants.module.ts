@@ -75,7 +75,7 @@ import {
     DevicesRepository,
     ProductsRepository,
 } from '@/src/common/repositories/crm';
-import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.repository';
+import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
 
 @Module({
     imports: [
@@ -83,6 +83,8 @@ import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.
         Products,
         Devices,
         Customers,
+
+        AnalysisDataReplicationModule,
         TypeOrmModule.forFeature([
             ConsultantShops,
             ConsultantBranches,
@@ -129,6 +131,7 @@ import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.
             Notifications,
         ]),
         AuthModule,
+
         ConsultantCompanyModule,
         CrmDataReplicationModule,
         ConsultantPositionsModule,
@@ -159,9 +162,6 @@ import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.
         CustomersRepository,
         DevicesRepository,
         ProductsRepository,
-
-        // Analysis Repos
-        AnalysisRepository,
     ],
     exports: [ConsultantsService],
 })

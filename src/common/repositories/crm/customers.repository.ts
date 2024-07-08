@@ -19,6 +19,7 @@ export class CustomersRepository extends Repository<Customers> {
             where: {
                 created_at: Between(startOfToday, endOfToday),
             },
+            relations: ['prSelecteds', 'prSelecteds.productRecommendation'],
         });
 
         return customers;

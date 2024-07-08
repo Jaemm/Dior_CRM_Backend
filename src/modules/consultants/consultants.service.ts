@@ -99,6 +99,7 @@ import {
     ProductsRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.repository';
+import { AnalysisDataReplicationService } from '../dataReplication/analysisDataReplication/analysisDataReplication.service';
 
 @Injectable()
 export class ConsultantsService {
@@ -138,14 +139,13 @@ export class ConsultantsService {
         private readonly commonService: CommonService,
         private readonly dataReplication: CrmDataReplicationService,
 
+        private readonly analysisReplService: AnalysisDataReplicationService,
+
         // Repos
         private readonly customersRepository: CustomersRepository,
         private readonly consultantsRepository: ConsultantsRepository,
         private readonly deviceRepository: DevicesRepository,
         private readonly productsRepository: ProductsRepository,
-
-        // Analysis Repo
-        private readonly analysisRepository: AnalysisRepository,
     ) {
         this.jwtConfig = this.configService.get<IJwt>('jwt');
     }
@@ -2678,6 +2678,17 @@ export class ConsultantsService {
     async generateFlatFileDior() {
         try {
             const customers = await this.customersRepository.getTodayCreatedCustomers();
+
+            const customerIds = customers.map((row) => String(row.id));
+
+            if (customerIds.length < 1) {
+                return;
+            }
+
+            const diorAnalysis = await this.analysisReplService.getDiorAnalysisByCustomerIds(customerIds);
+
+            const result = [];
+            diorAnalysis.forEach((da) => {});
         } catch (e) {
             throw e;
         }

@@ -14,6 +14,8 @@ import { TypeMeasurements } from '@/src/common/entities/analysisEntities/TypeMea
 
         TypeOrmModule.forFeature([Analysis, Measurements, TypeImages, TypeMeasurements], 'cndpSkinDB'),
 
+        TypeOrmModule.forFeature([Analysis, Measurements, TypeImages, TypeMeasurements], 'diorCndpSkinDB'),
+
         TypeOrmModule.forFeature([Analysis, Measurements, TypeImages, TypeMeasurements], 'ohioCndpSkinDB'),
 
         TypeOrmModule.forFeature([Analysis, Measurements, TypeImages, TypeMeasurements], 'cndpHairDB'),

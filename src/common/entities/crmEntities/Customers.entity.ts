@@ -20,6 +20,7 @@ import { SkinColorGroups } from './SkinColorGroups.entity';
 import { Products } from './Products.entity';
 import { Genders } from './Genders.entity';
 import { Consultants } from './Consultants.entity';
+import { ProductRecommendationSelecteds } from './ProductRecommendationSelecteds.entity';
 
 @Index('index_customers_on_email', ['email'], {})
 @Index('customers_pkey', ['id'], { unique: true })
@@ -200,6 +201,9 @@ export class Customers {
 
     @OneToMany(() => Products, (products) => products.customer)
     products: Products[];
+
+    @OneToMany(() => ProductRecommendationSelecteds, (prSelecteds) => prSelecteds.customer)
+    prSelecteds: ProductRecommendationSelecteds[];
 
     @BeforeInsert()
     insertCreated() {

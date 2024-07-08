@@ -11,6 +11,7 @@ import {
     thirdDB,
     thirdCndpSkinDB,
     thirdCndpHairDB,
+    diorCndpSkinDB,
 } from './config/typeOrm.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module';
@@ -96,6 +97,7 @@ import { DatabaseModule } from './modules/database/database.module';
                 globalDB,
                 secondDB,
                 cndpSkinDB,
+                diorCndpSkinDB,
                 ohioCndpSkinDB,
                 cndpHairDB,
                 ohioCndpHairDB,
