@@ -198,8 +198,8 @@ export class ConsultantsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('generate_flat_file_dior')
-    async generateFlatFileDior() {
-        return await this.consultants.generateFlatFileDior();
+    async generateFlatFileDior(@Req() req: Request) {
+        return await this.consultants.generateFlatFileDior(req);
     }
 
     /**

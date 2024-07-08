@@ -2675,8 +2675,17 @@ export class ConsultantsService {
         });
     }
 
-    async generateFlatFileDior() {
+    async generateFlatFileDior(req: Request) {
         try {
+
+            const CNDP_SKIN_ANALYSIS_URL = '';
+
+            const token = req.headers.authorization.split(' ')[1];
+
+            if(!token) {
+                throw new Error();
+            }
+
             const customers = await this.customersRepository.getTodayCreatedCustomers();
 
             const customerIds = customers.map((row) => String(row.id));
@@ -2687,8 +2696,43 @@ export class ConsultantsService {
 
             const diorAnalysis = await this.analysisReplService.getDiorAnalysisByCustomerIds(customerIds);
 
-            const result = [];
-            diorAnalysis.forEach((da) => {});
+
+            
+            const promiseData = diorAnalysis.map( async (analysis) => {
+                const batchId = analysis.batchId;
+                const response = await axios.get(`${CNDP_SKIN_ANALYSIS_URL}/web-result/cndpskin/${batchId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                const responseBody = response.data;
+
+                const products: any[] = [];
+
+                customers.forEach( customer => {
+                    customer.prSelecteds.forEach( prSelect => {
+                        const recomm = prSelect.productRecommendation;
+                        products.push({
+                            name: recomm.name,
+                            link: recomm.link,
+                            image_url: recomm.imageUrl,
+                            category: recomm.category,
+                            collection: recomm.collection
+                        });
+                    });
+                })
+
+                const newData = {
+                    batch_id: batchId,
+                    created_time: analysis.createdTime,
+                    results: responseBody,
+                    product_recommendation: products
+                }
+            });
+
+            const result = await Promise.all(promiseData);
+
         } catch (e) {
             throw e;
         }
