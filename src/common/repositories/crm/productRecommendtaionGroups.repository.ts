@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository, ILike } from 'typeorm';
-import { ProductRecommendationGroups } from '@/src/common/entities/crmEntities';
+import { ProductRecommendationGroups, ProductTranslations } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class ProductRecommendationGroupsRepository extends Repository<ProductRecommendationGroups> {
@@ -8,14 +8,16 @@ export class ProductRecommendationGroupsRepository extends Repository<ProductRec
         super(ProductRecommendationGroups, dataSource.createEntityManager());
     }
 
-    getGroupByNameAndRoutine(routine: number, name: string) {
-        const group = this.findOne({
-            where: {
-                name: ILike(`%${name}%`),
-                routine: routine,
-            },
-            relations: ['prSelecteds'],
-        });
+    async getGroupByNameAndRoutine(routine: number, name: string): Promise<ProductRecommendationGroups> {
+        const searchName = `%${name}%`;
+
+        const group = await this.createQueryBuilder('groups')
+        .where('groups.name ILIKE :name AND groups.routine = :routine', {name: searchName, routine: routine})
+        .leftJoinAndSelect('groups.prSelecteds', 'prSelecteds')
+        .leftJoinAndSelect('prSelecteds.productRecommendation', 'productRecommendation')
+        .leftJoinAndSelect('productRecommendation.productVariants', 'productVariants')
+        .leftJoinAndSelect(ProductTranslations, 'productTranslations', 'CAST (productTranslations.product_recommendation_id as bigint) = productRecommendation.id')
+        .getOne()
 
         return group;
     }
