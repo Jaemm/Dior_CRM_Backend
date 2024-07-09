@@ -37,4 +37,38 @@ export class DiorCustomerConsents {
 
     @Column('integer', { name: 'batch_id', nullable: true })
     batchId: number | null;
+
+    get fetchOptions() {
+        const TWO_QUESTIONS = [
+            'Collect and store my personal and sensitive data (e.g. skin pictures) in order to complete the skincare conultation.',
+            'Store my sensitive personal data (e.g skin picture, beauty routine) for research purposes.',
+        ];
+        const FOUR_QUESTIONS = [
+            'Collect and store my personal and sensitive data (e.g. skin pictures) in order to complete the skincare conultation.',
+            'Collect and store my contact information to send me my skincare conultation',
+            'Collect and store my skincare routine in my customer account, at the end of the consultation',
+            'Store my sensitive personal data (e.g skin picture, beauty routine) for research purposes.',
+        ];
+
+        const answersCount = this.consentFormAnswers.length;
+
+        const options: object[] = [];
+        if (answersCount === 2) {
+            this.consentFormAnswers.forEach((answer, i) => {
+                options.push({
+                    [TWO_QUESTIONS[i]]: answer,
+                });
+            });
+        }
+
+        if (answersCount === 4) {
+            this.consentFormAnswers.forEach((answer, i) => {
+                options.push({
+                    [FOUR_QUESTIONS[i]]: answer,
+                });
+            });
+        }
+
+        return options;
+    }
 }

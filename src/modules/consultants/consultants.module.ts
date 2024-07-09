@@ -17,6 +17,7 @@ import {
     ProductRecommendations,
     HealthTips,
     Identities,
+    DiorCustomerConsents,
 } from '@/src/common/entities/crmEntities';
 
 import { ConsultantsController } from './consultants.controller';
@@ -73,6 +74,7 @@ import {
     ConsultantsRepository,
     CustomersRepository,
     DevicesRepository,
+    DiorCustomerConsentsRepository,
     ProductsRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
@@ -83,6 +85,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         Products,
         Devices,
         Customers,
+        DiorCustomerConsents,
 
         AnalysisDataReplicationModule,
         TypeOrmModule.forFeature([
@@ -162,6 +165,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         CustomersRepository,
         DevicesRepository,
         ProductsRepository,
+        DiorCustomerConsentsRepository,
     ],
     exports: [ConsultantsService],
 })

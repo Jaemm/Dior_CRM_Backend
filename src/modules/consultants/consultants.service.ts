@@ -63,6 +63,7 @@ import {
     ConsultantCompanies,
     Identities,
     HealthTips,
+    DiorCustomerConsents,
 } from '@/src/common/entities/crmEntities';
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { DeviceService } from '../devices/devices.service';
@@ -96,6 +97,7 @@ import {
     ConsultantsRepository,
     CustomersRepository,
     DevicesRepository,
+    DiorCustomerConsentsRepository,
     ProductsRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.repository';
@@ -146,6 +148,7 @@ export class ConsultantsService {
         private readonly consultantsRepository: ConsultantsRepository,
         private readonly deviceRepository: DevicesRepository,
         private readonly productsRepository: ProductsRepository,
+        private readonly diorConsentRepository: DiorCustomerConsentsRepository,
     ) {
         this.jwtConfig = this.configService.get<IJwt>('jwt');
     }
@@ -2677,12 +2680,12 @@ export class ConsultantsService {
 
     async generateFlatFileDior(req: Request) {
         try {
-
-            const CNDP_SKIN_ANALYSIS_URL = '';
+            const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
+            // const CNDP_SKIN_ANALYSIS_URL = 'http://localhost:3444';
 
             const token = req.headers.authorization.split(' ')[1];
 
-            if(!token) {
+            if (!token) {
                 throw new Error();
             }
 
@@ -2696,43 +2699,116 @@ export class ConsultantsService {
 
             const diorAnalysis = await this.analysisReplService.getDiorAnalysisByCustomerIds(customerIds);
 
-
-            
-            const promiseData = diorAnalysis.map( async (analysis) => {
+            const promiseData = diorAnalysis.map(async (analysis) => {
                 const batchId = analysis.batchId;
+
                 const response = await axios.get(`${CNDP_SKIN_ANALYSIS_URL}/web-result/cndpskin/${batchId}`, {
                     headers: {
-                        Authorization: `Bearer ${token}`
-                    }
+                        Authorization: `Bearer ${token}`,
+                    },
                 });
 
-                const responseBody = response.data;
+                const responseData = response.data;
+                const responseBody = responseData.body;
+
+                const customer = await this.customersRepository.findOne({
+                    where: {
+                        id: Number(analysis.customerId),
+                    },
+                    relations: [
+                        'prSelecteds',
+                        'prSelecteds.productRecommendation',
+                        'conslutant',
+                        'conslutant.consultant_branch',
+                    ],
+                });
 
                 const products: any[] = [];
 
-                customers.forEach( customer => {
-                    customer.prSelecteds.forEach( prSelect => {
-                        const recomm = prSelect.productRecommendation;
-                        products.push({
-                            name: recomm.name,
-                            link: recomm.link,
-                            image_url: recomm.imageUrl,
-                            category: recomm.category,
-                            collection: recomm.collection
-                        });
+                customer.prSelecteds.forEach((prSelect) => {
+                    const recomm = prSelect.productRecommendation;
+                    products.push({
+                        name: recomm.name,
+                        link: recomm.link,
+                        image_url: recomm.imageUrl,
+                        category: recomm.category,
+                        collection: recomm.collection,
+                        code: recomm.code,
                     });
-                })
+                });
 
-                const newData = {
-                    batch_id: batchId,
-                    created_time: analysis.createdTime,
-                    results: responseBody,
-                    product_recommendation: products
+                const consent = await this.diorConsentRepository.findOne({
+                    where: {
+                        customerId: customer.id,
+                        batchId: batchId,
+                    },
+                });
+
+                const returnData = {
+                    client_iw_id: customer.id,
+                    country: customer.country,
+                    consultation_id: batchId,
+                    pos: customer.conslutant?.consultant_branch?.code || null,
+                    bc: customer.conslutant?.code || null,
+                    consultation_date: analysis.createdTime,
+                    opt_in: consent?.fetchOptions || null,
+                    scores: responseBody,
+                    recommended_product: products,
+                };
+
+                if (consent) {
+                    const consentAnswers = consent.consentFormAnswers;
+                    if (consent.consentType === 'without_ipos_consent') {
+                        if (consentAnswers && consentAnswers[2] === 'No') {
+                            returnData.client_iw_id = null;
+                            returnData.recommended_product = null;
+                            returnData.scores = null;
+                        }
+                    }
+
+                    if (consent.consentType === 'ipos_consent') {
+                        if (consentAnswers && consentAnswers[2] === 'No') {
+                            returnData.client_iw_id = null;
+                        }
+
+                        if (consentAnswers && consentAnswers[3] === 'No') {
+                            returnData.recommended_product = null;
+                            returnData.scores = null;
+                        }
+                    }
                 }
+
+                return returnData;
             });
 
             const result = await Promise.all(promiseData);
 
+            const rootDirectoryPath = process.cwd();
+
+            const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
+
+            if (!existsSync(flatFilesDirectoryPath)) {
+                await fs.mkdir(flatFilesDirectoryPath);
+            }
+
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const dateString = `${yyyy}-${mm}-${dd}`;
+
+            const fileName = `${dateString}.json`;
+            const filePath = path.join(flatFilesDirectoryPath, fileName);
+
+            const jsonData = JSON.stringify(result);
+
+            fs.writeFile(filePath, jsonData)
+                .then(() => console.log(`${fileName} writing success`))
+                .catch(() => console.log(`${fileName} writing failed`));
+
+            return {
+                data: result,
+            };
         } catch (e) {
             throw e;
         }

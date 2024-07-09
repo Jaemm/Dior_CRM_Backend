@@ -9,7 +9,7 @@ export class CustomersRepository extends Repository<Customers> {
     }
 
     async getTodayCreatedCustomers() {
-        const startOfToday = new Date('2022.01.01');
+        const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
 
         const endOfToday = new Date();
