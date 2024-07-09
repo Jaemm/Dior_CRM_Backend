@@ -17,6 +17,7 @@ import { Products } from './Products.entity';
 import { ConsultantCountries } from './ConsultantCountries.entity';
 import { ConsultantBranches } from './ConsultantBranches.entity';
 import { Identities } from './Identities.entity';
+import { ProductRecommendations } from './ProductRecommendations.entity';
 
 @Index('index_consultants_on_email_and_app_id', ['app_id', 'email'], {
     unique: true,
@@ -244,6 +245,9 @@ export class Consultants {
 
     @OneToMany(() => Products, (products: Products) => products.consultant)
     'products': Products[];
+
+    @OneToMany(() => ProductRecommendations, (productRecomm) => productRecomm.consultant)
+    'productRecommendations': ProductRecommendations[];
 
     @OneToOne(() => ConsultantPositions, (consultantPositions: ConsultantPositions) => consultantPositions.consultant)
     @JoinColumn([{ name: 'consultant_position_id', referencedColumnName: 'id' }])

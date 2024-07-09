@@ -17,6 +17,7 @@ import { Request } from 'express';
 
 import {
     AttributeRoutine,
+    AutomaticProductByBatchIdDto,
     CreateBranchesDto,
     CustomerByConsultantIdDto,
     GetRecommendationSelectedDto,
@@ -30,6 +31,7 @@ import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 import { ProductAttributes, ProductTranslations } from '@/src/common/entities/crmEntities';
 import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
+import { AutomaticProductDiorGenerator } from './automaticProductDiorGenerator';
 
 @Injectable()
 export class DiorService {
@@ -758,6 +760,42 @@ export class DiorService {
                 data,
                 translated_data: translatedData,
             };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getAutomaticProductByBatchId(query: AutomaticProductByBatchIdDto) {
+        try {
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            if (!diorConsultant) {
+                throw new NotFoundException();
+            }
+
+            const market = await this.consultantCountriesRepository.findOne({
+                where: {
+                    name: query.market.toLocaleLowerCase(),
+                },
+            });
+
+            if (!market) {
+                throw new NotFoundException();
+            }
+
+            const recommended = market.defaultRecommendation.toLocaleLowerCase();
+
+            const automaticProductDiorGenerator = new AutomaticProductDiorGenerator({
+                dior_consultant: diorConsultant,
+                skin_tone: query.skin_tone,
+                routine_recommendation: query.routine_recommendation,
+                market: query.market,
+                recommended: recommended,
+                answers: query.answers,
+                old: true,
+            });
+
+            automaticProductDiorGenerator.questionAnswers();
         } catch (e) {
             throw e;
         }

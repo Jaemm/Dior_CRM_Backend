@@ -45,6 +45,7 @@ export class ConsultantsRepository extends Repository<Consultants> {
             where: {
                 email: 'dior@chowis.com',
             },
+            relations: ['productRecommendations'],
         });
 
         if (!diorConsultant) {

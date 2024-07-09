@@ -6,6 +6,7 @@ import { Role } from '@/src/common/enums/role.enum';
 import { Request, query } from 'express';
 import {
     AttributeRoutine,
+    AutomaticProductByBatchIdDto,
     CreateBranchesDto,
     CustomerByConsultantIdDto,
     GetRecommendationSelectedDto,
@@ -104,5 +105,12 @@ export class DiorController {
     @Get('product_recommendations/get_category')
     async getRecommendationsCategories(@Query('routine') routine?: AttributeRoutine) {
         return await this.diorService.getRecommendationsCategories(routine);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('product_recommendations/get_automatic_product_by_batch_id')
+    async getAutomaticProductByBatchId(@Query() query: AutomaticProductByBatchIdDto) {
+        return await this.diorService.getAutomaticProductByBatchId(query);
     }
 }

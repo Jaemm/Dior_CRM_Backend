@@ -2,6 +2,27 @@ import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export type AttributeRoutine = 'Makeup' | 'Skincare';
 
+export class AutomaticProductByBatchIdDto {
+    @IsNotEmpty()
+    @IsString()
+    skin_tone: string;
+
+    @IsOptional()
+    @IsString()
+    batch_id: string;
+
+    @IsOptional()
+    @IsString()
+    market: string;
+
+    @IsOptional()
+    @IsString()
+    routine_recommendation: string;
+
+    @IsOptional()
+    @IsString()
+    answers: string;
+}
 export class CustomerByConsultantIdDto {
     @IsNotEmpty()
     consultant_id: string;
