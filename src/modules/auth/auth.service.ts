@@ -18,9 +18,8 @@ export class AuthService {
     constructor(
         private readonly jwtService: JwtService,
         // private readonly userService: UserService,
-        private readonly common: CommonService,
-    ) // private EmailService: EmailService,
-    {}
+        private readonly common: CommonService, // private EmailService: EmailService,
+    ) {}
 
     async generateAuthTokens(user: any, domain?: string, tokenId?: string): Promise<[string, string]> {
         return Promise.all([

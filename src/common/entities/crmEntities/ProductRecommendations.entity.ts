@@ -71,4 +71,34 @@ export class ProductRecommendations {
     @ManyToOne(() => Consultants, (consultant) => consultant.productRecommendations)
     @JoinColumn([{ name: 'consultant_id', referencedColumnName: 'id' }])
     consultant: Consultants;
+
+    @ManyToOne(() => ProductRecommendations, (productRecommendation) => productRecommendation.productVariants, {
+        nullable: true,
+    })
+    @JoinColumn([{ name: 'product_recommendation_id', referencedColumnName: 'id' }])
+    productVariant: ProductRecommendations;
+
+    @OneToMany(() => ProductRecommendations, (productRecommendation) => productRecommendation.productVariant)
+    productVariants: ProductRecommendations[];
+
+    isMarketMatch(market: string): boolean {
+        const arr = this.countries.map((country) => country.toLowerCase());
+
+        return arr.includes('world wide') || arr.includes(market.toLowerCase());
+    }
+
+    getSkinToneFromProduct(skinTone: string) {
+        if (!this.productVariant) {
+            return this;
+        }
+        const parentProduct = this.productVariant;
+
+        const productWithSkinTone = parentProduct.productVariants.find((variants) => variants.shades === skinTone);
+
+        if (!productWithSkinTone) {
+            return parentProduct;
+        }
+
+        return productWithSkinTone;
+    }
 }

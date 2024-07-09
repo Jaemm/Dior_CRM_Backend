@@ -29,9 +29,15 @@ import {
 } from './dior.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
-import { ProductAttributes, ProductTranslations } from '@/src/common/entities/crmEntities';
+import {
+    Consultants,
+    ProductAttributes,
+    ProductRecommendations,
+    ProductTranslations,
+} from '@/src/common/entities/crmEntities';
 import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
 import { AutomaticProductDiorGenerator } from './automaticProductDiorGenerator';
+import { Not } from 'typeorm';
 
 @Injectable()
 export class DiorService {
@@ -785,7 +791,7 @@ export class DiorService {
 
             const recommended = market.defaultRecommendation.toLocaleLowerCase();
 
-            const automaticProductDiorGenerator = new AutomaticProductDiorGenerator({
+            const generatorCreateParameter = {
                 dior_consultant: diorConsultant,
                 skin_tone: query.skin_tone,
                 routine_recommendation: query.routine_recommendation,
@@ -793,9 +799,124 @@ export class DiorService {
                 recommended: recommended,
                 answers: query.answers,
                 old: true,
-            });
+            };
 
-            automaticProductDiorGenerator.questionAnswers();
+            const automaticProductDiorGenerator = new AutomaticProductDiorGenerator(
+                generatorCreateParameter,
+                this.prGroupsRepository,
+            );
+
+            const psSelecteds = await automaticProductDiorGenerator.questionAnswers();
+
+            const data = psSelecteds
+                .sort((a, b) => a.orderNumber - b.orderNumber)
+                .map(async (productRecommendationSelected) => {
+                    let productRecommendation = productRecommendationSelected.productRecommendation;
+
+                    if (productRecommendation) {
+                        if (productRecommendation.routine === 'Makeup') {
+                            productRecommendation = productRecommendation.getSkinToneFromProduct(query.skin_tone);
+                        }
+
+                        const jsonProductRecommendation = {
+                            id: productRecommendation.id,
+                            product_type: productRecommendation.productType,
+                            description: productRecommendation.description,
+                            link: productRecommendation.link,
+                            image_url: productRecommendation.imageUrl,
+                            code: productRecommendation.code,
+                            routine: productRecommendation.routine,
+                            collection: productRecommendation.collection,
+                            category: productRecommendation.category,
+                            countries: productRecommendation.countries,
+                            product_recommendation_id: productRecommendation.productRecommendationId,
+                            name: null as string,
+                            is_principal: null as boolean,
+                            shades: null as string,
+                            collection_shades: null as ProductRecommendations,
+                        };
+
+                        if (productRecommendation.productRecommendationId) {
+                            const _productRecommendation = await this.productRecommendationRepository.findOneBy({
+                                id: String(productRecommendation.productRecommendationId),
+                            });
+                            jsonProductRecommendation.name = _productRecommendation.name;
+                        } else {
+                            jsonProductRecommendation.name = productRecommendation.name;
+                        }
+
+                        jsonProductRecommendation.is_principal = productRecommendationSelected.isPrincipal;
+
+                        if (productRecommendation.productVariants.length > 0) {
+                            jsonProductRecommendation.shades = 'Select Shade';
+                        } else {
+                            jsonProductRecommendation.shades = productRecommendation.shades;
+                        }
+
+                        jsonProductRecommendation.collection_shades =
+                            await this.productRecommendationRepository.findOne({
+                                where: {
+                                    collection: productRecommendation.collection,
+                                    shades: Not(null),
+                                },
+                            });
+
+                        jsonProductRecommendation.product_translations = productRecommendation.productTranslations.map(
+                            (translation) => ({
+                                id: translation.id,
+                                field_name: translation.fieldName,
+                                language: translation.language,
+                                value: translation.value,
+                                attribute_name: translation.getAttributeName(),
+                                collection_name: translation.getCollectionName(),
+                            }),
+                        );
+
+                        jsonProductRecommendation.category_translations = (
+                            ProductAttribute.findOne({ typ: 'Category', value: productRecommendation.category })
+                                .productAttributeTranslations || []
+                        ).map((translation) => ({
+                            id: translation.id,
+                            field_name: translation.fieldName,
+                            language: translation.language,
+                            value: translation.value,
+                        }));
+
+                        jsonProductRecommendation.collection_translations = (
+                            ProductAttribute.findOne({ typ: 'Collection', value: productRecommendation.collection })
+                                .productAttributeTranslations || []
+                        ).map((translation) => ({
+                            id: translation.id,
+                            field_name: translation.fieldName,
+                            language: translation.language,
+                            value: translation.value,
+                        }));
+
+                        jsonProductRecommendation.product_variants = productRecommendation.productVariants.map(
+                            (productVariant) => ({
+                                id: productVariant.id,
+                                name: productVariant.name,
+                                product_type: productVariant.productType,
+                                description: productVariant.description,
+                                link: productVariant.link,
+                                image_url: productVariant.imageUrl,
+                                code: productVariant.code,
+                                routine: productVariant.routine,
+                                collection: productVariant.collection,
+                                category: productVariant.category,
+                                countries: productVariant.countries,
+                                product_recommendation_id: productVariant.productRecommendationId,
+                                shades: productVariant.shades,
+                            }),
+                        );
+
+                        return jsonProductRecommendation;
+                    }
+                });
+
+            return {
+                data: [],
+            };
         } catch (e) {
             throw e;
         }
