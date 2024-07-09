@@ -12,12 +12,11 @@ export class ProductRecommendationGroupsRepository extends Repository<ProductRec
         const searchName = `%${name}%`;
 
         const group = await this.createQueryBuilder('groups')
-        .where('groups.name ILIKE :name AND groups.routine = :routine', {name: searchName, routine: routine})
-        .leftJoinAndSelect('groups.prSelecteds', 'prSelecteds')
-        .leftJoinAndSelect('prSelecteds.productRecommendation', 'productRecommendation')
-        .leftJoinAndSelect('productRecommendation.productVariants', 'productVariants')
-        .leftJoinAndSelect(ProductTranslations, 'productTranslations', 'CAST (productTranslations.product_recommendation_id as bigint) = productRecommendation.id')
-        .getOne()
+            .where('groups.name ILIKE :name AND groups.routine = :routine', { name: searchName, routine: routine })
+            .leftJoinAndSelect('groups.prSelecteds', 'prSelecteds')
+            .leftJoinAndSelect('prSelecteds.productRecommendation', 'productRecommendation')
+            .leftJoinAndSelect('productRecommendation.productVariants', 'productVariants')
+            .getOne();
 
         return group;
     }

@@ -20,7 +20,7 @@ const globalConfig = {
     migrations: ['dist/migrations/*{.ts,.js}'],
     autoLoadEntities: true,
     synchronize: false,
-    // logging: true,
+    logging: true,
     // cli: {
     //   migrationsDir: 'src/common/entities',
     // },

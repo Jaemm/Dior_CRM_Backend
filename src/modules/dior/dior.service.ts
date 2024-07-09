@@ -12,6 +12,7 @@ import {
     ProductRecommendationSelectedRepository,
     ProductRecommendationGroupsRepository,
     ProductAttributeTranslationsRepository,
+    ProductTranslationsRepository,
 } from '@/src/common/repositories/crm';
 
 import { Request } from 'express';
@@ -52,6 +53,7 @@ export class DiorService {
         private productRecommendationRepository: ProductRecommendationRepository,
         private prSelectedRepository: ProductRecommendationSelectedRepository,
         private prGroupsRepository: ProductRecommendationGroupsRepository,
+        private productTranslationsRepository: ProductTranslationsRepository,
     ) {}
 
     async getCountries(search?: string) {
@@ -814,7 +816,22 @@ export class DiorService {
                 .map(async (productRecommendationSelected) => {
                     let productRecommendation = productRecommendationSelected.productRecommendation;
 
-                    console.log(productRecommendationSelected);
+                    const productTranslations = await this.productTranslationsRepository.find({
+                        where: {
+                            productRecommendationId: productRecommendation.id,
+                        },
+                    });
+
+                    for (let i = 0; i < productTranslations.length; i++) {
+                        const translation = productTranslations[i];
+                        const productRecomm = await this.productRecommendationRepository.findOneBy({
+                            id: translation.productRecommendationId,
+                        });
+
+                        translation.productRecommendations = productRecomm;
+                    }
+
+                    productRecommendation.productTranslations = productTranslations;
 
                     if (productRecommendation) {
                         if (productRecommendation.routine === 'Makeup') {
@@ -836,14 +853,12 @@ export class DiorService {
                             name: null as string,
                             is_principal: null as boolean,
                             shades: null as string,
-                            collection_shades: null as ProductRecommendations,
-                            product_translations: null as object,
-                            category_translations: null as object,
-                            collection_translations: null as object,
-                            product_variants: null as object,
+                            collection_shades: null as any,
+                            product_translations: [] as any[],
+                            category_translations: [] as any[],
+                            collection_translations: [] as any[],
+                            product_variants: [] as any[],
                         };
-
-                        console.log(jsonProductRecommendation);
 
                         if (productRecommendation.productRecommendationId) {
                             const _productRecommendation = await this.productRecommendationRepository.findOneBy({
@@ -869,13 +884,13 @@ export class DiorService {
                                     shades: Not(null),
                                 },
                             });
-                            
-                        jsonProductRecommendation.product_translations = productRecommendation.productTranslations.map(
-                            async (translation) => {
+
+                        jsonProductRecommendation.product_translations = await Promise.all(
+                            productRecommendation.productTranslations.map(async (translation) => {
                                 const productRecomm = translation.productRecommendations;
 
-                                const category = productRecomm.category;
-                                const collection = productRecomm.collection;
+                                const category = productRecomm?.category;
+                                const collection = productRecomm?.collection;
 
                                 let attributeName;
                                 let collectionName;
@@ -914,37 +929,43 @@ export class DiorService {
                                     attribute_name: attributeName,
                                     collection_name: collectionName,
                                 };
-                            },
+                            }),
                         );
 
-                        jsonProductRecommendation.category_translations = (
+                        jsonProductRecommendation.category_translations = await Promise.all(
                             (
-                                await this.productAttributesRepository.findOne({
-                                    where: { typ: 'Category', value: productRecommendation.category },
-                                })
-                            ).productAttributeTranslations || []
-                        ).map((translation: any) => ({
-                            id: translation.id,
-                            field_name: translation.fieldName,
-                            language: translation.language,
-                            value: translation.value,
-                        }));
+                                (
+                                    await this.productAttributesRepository.findOne({
+                                        where: { typ: 'Category', value: productRecommendation.category },
+                                        relations: ['productAttributeTranslations'],
+                                    })
+                                ).productAttributeTranslations || []
+                            ).map((translation: any) => ({
+                                id: translation.id,
+                                field_name: translation.fieldName,
+                                language: translation.language,
+                                value: translation.value,
+                            })),
+                        );
 
-                        jsonProductRecommendation.collection_translations = (
+                        jsonProductRecommendation.collection_translations = await Promise.all(
                             (
-                                await this.productAttributesRepository.findOne({
-                                    where: {
-                                        typ: 'Collection',
-                                        value: productRecommendation.collection,
-                                    },
-                                })
-                            ).productAttributeTranslations || []
-                        ).map((translation: any) => ({
-                            id: translation.id,
-                            field_name: translation.fieldName,
-                            language: translation.language,
-                            value: translation.value,
-                        }));
+                                (
+                                    await this.productAttributesRepository.findOne({
+                                        where: {
+                                            typ: 'Collection',
+                                            value: productRecommendation.collection,
+                                        },
+                                        relations: ['productAttributeTranslations'],
+                                    })
+                                )?.productAttributeTranslations || []
+                            ).map((translation: any) => ({
+                                id: translation.id,
+                                field_name: translation.fieldName,
+                                language: translation.language,
+                                value: translation.value,
+                            })),
+                        );
 
                         jsonProductRecommendation.product_variants = productRecommendation.productVariants.map(
                             (productVariant) => ({

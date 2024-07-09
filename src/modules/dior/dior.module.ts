@@ -25,6 +25,7 @@ import {
     ProductRecommendationRepository,
     ProductRecommendationGroupsRepository,
     ProductRecommendationSelectedRepository,
+    ProductTranslationsRepository,
 } from '@/src/common/repositories/crm';
 
 @Module({
@@ -53,6 +54,7 @@ import {
         ProductRecommendationRepository,
         ProductRecommendationSelectedRepository,
         ProductRecommendationGroupsRepository,
+        ProductTranslationsRepository,
     ],
 })
 export class DiorModule {
