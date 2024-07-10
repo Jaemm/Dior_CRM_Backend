@@ -304,9 +304,7 @@ export class CRMService {
         return { ...updatedCustomer, consultant_name: consultant.name, optic_number: updatedCustomer.getOpticNumbers };
     }
 
-    async createCustomer(consultantId: number, data: UpdateCrmCustomersDto) {
-        // TODO: Use locale from headers for translation
-
+    async createCustomer(consultantId: number, data: UpdateCrmCustomersDto, locale = 'en') {
         try {
             const { email, phone } = data;
 

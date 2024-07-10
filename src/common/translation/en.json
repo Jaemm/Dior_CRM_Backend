@@ -1,0 +1,355 @@
+{
+  "en": {
+      "activerecord": {
+          "errors": {
+              "messages": {
+                  "record_invalid": "Validation failed: {{errors}}",
+                  "restrict_dependent_destroy": {
+                      "has_one": "Cannot delete record because a dependent {{record}} exists",
+                      "has_many": "Cannot delete record because dependent {{record}} exist"
+                  }
+              }
+          }
+      },
+      "date": {
+          "abbr_day_names": ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+          "abbr_month_names": [
+              "",
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec"
+          ],
+          "day_names": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          "formats": {
+              "default": "%Y-%m-%d",
+              "long": "%B %d, %Y",
+              "short": "%b %d"
+          },
+          "month_names": [
+              "",
+              "January",
+              "February",
+              "March",
+              "April",
+              "May",
+              "June",
+              "July",
+              "August",
+              "September",
+              "October",
+              "November",
+              "December"
+          ],
+          "order": [":year", ":month", ":day"]
+      },
+      "datetime": {
+          "distance_in_words": {
+              "about_x_hours": {
+                  "one": "about 1 hour",
+                  "other": "about {{count}} hours"
+              },
+              "about_x_months": {
+                  "one": "about 1 month",
+                  "other": "about {{count}} months"
+              },
+              "about_x_years": {
+                  "one": "about 1 year",
+                  "other": "about {{count}} years"
+              },
+              "almost_x_years": {
+                  "one": "almost 1 year",
+                  "other": "almost {{count}} years"
+              },
+              "half_a_minute": "half a minute",
+              "less_than_x_seconds": {
+                  "one": "less than 1 second",
+                  "other": "less than {{count}} seconds"
+              },
+              "less_than_x_minutes": {
+                  "one": "less than a minute",
+                  "other": "less than {{count}} minutes"
+              },
+              "over_x_years": {
+                  "one": "over 1 year",
+                  "other": "over {{count}} years"
+              },
+              "x_seconds": {
+                  "one": "1 second",
+                  "other": "{{count}} seconds"
+              },
+              "x_minutes": {
+                  "one": "1 minute",
+                  "other": "{{count}} minutes"
+              },
+              "x_days": {
+                  "one": "1 day",
+                  "other": "{{count}} days"
+              },
+              "x_months": {
+                  "one": "1 month",
+                  "other": "{{count}} months"
+              },
+              "x_years": {
+                  "one": "1 year",
+                  "other": "{{count}} years"
+              }
+          },
+          "prompts": {
+              "second": "Second",
+              "minute": "Minute",
+              "hour": "Hour",
+              "day": "Day",
+              "month": "Month",
+              "year": "Year"
+          }
+      },
+      "errors": {
+          "format": "{{attribute}} {{message}}",
+          "messages": {
+              "accepted": "must be accepted",
+              "blank": "can't be blank",
+              "confirmation": "doesn't match {{attribute}}",
+              "empty": "can't be empty",
+              "equal_to": "must be equal to {{count}}",
+              "even": "must be even",
+              "exclusion": "is reserved",
+              "greater_than": "must be greater than {{count}}",
+              "greater_than_or_equal_to": "must be greater than or equal to {{count}}",
+              "inclusion": "is not included in the list",
+              "invalid": "is invalid",
+              "less_than": "must be less than {{count}}",
+              "less_than_or_equal_to": "must be less than or equal to {{count}}",
+              "model_invalid": "Validation failed: {{errors}}",
+              "not_a_number": "is not a number",
+              "not_an_integer": "must be an integer",
+              "odd": "must be odd",
+              "other_than": "must be other than {{count}}",
+              "present": "must be blank",
+              "required": "must exist",
+              "taken": "has already been taken",
+              "too_long": {
+                  "one": "is too long (maximum is 1 character)",
+                  "other": "is too long (maximum is {{count}} characters)"
+              },
+              "too_short": {
+                  "one": "is too short (minimum is 1 character)",
+                  "other": "is too short (minimum is {{count}} characters)"
+              },
+              "wrong_length": {
+                  "one": "is the wrong length (should be 1 character)",
+                  "other": "is the wrong length (should be {{count}} characters)"
+              }
+          },
+          "template": {
+              "body": "There were problems with the following fields:",
+              "header": {
+                  "one": "1 error prohibited this {{model}} from being saved",
+                  "other": "{{count}} errors prohibited this {{model}} from being saved"
+              }
+          }
+      },
+      "helpers": {
+          "select": {
+              "prompt": "Please select"
+          },
+          "submit": {
+              "create": "Create {{model}}",
+              "submit": "Save {{model}}",
+              "update": "Update {{model}}"
+          }
+      },
+      "number": {
+          "currency": {
+              "format": {
+                  "delimiter": ",",
+                  "format": "%u%n",
+                  "precision": 2,
+                  "separator": ".",
+                  "significant": false,
+                  "strip_insignificant_zeros": false,
+                  "unit": "$"
+              }
+          },
+          "format": {
+              "delimiter": ",",
+              "precision": 3,
+              "separator": ".",
+              "significant": false,
+              "strip_insignificant_zeros": false
+          },
+          "human": {
+              "decimal_units": {
+                  "format": "%n %u",
+                  "units": {
+                      "billion": "Billion",
+                      "million": "Million",
+                      "quadrillion": "Quadrillion",
+                      "thousand": "Thousand",
+                      "trillion": "Trillion",
+                      "unit": ""
+                  }
+              },
+              "format": {
+                  "delimiter": "",
+                  "precision": 3,
+                  "significant": true,
+                  "strip_insignificant_zeros": true
+              },
+              "storage_units": {
+                  "format": "%n %u",
+                  "units": {
+                      "byte": {
+                          "one": "Byte",
+                          "other": "Bytes"
+                      },
+                      "eb": "EB",
+                      "gb": "GB",
+                      "kb": "KB",
+                      "mb": "MB",
+                      "pb": "PB",
+                      "tb": "TB"
+                  }
+              }
+          },
+          "percentage": {
+              "format": {
+                  "delimiter": "",
+                  "format": "%n%"
+              }
+          },
+          "precision": {
+              "format": {
+                  "delimiter": ""
+              }
+          }
+      },
+      "support": {
+          "array": {
+              "last_word_connector": ", and ",
+              "two_words_connector": " and ",
+              "words_connector": ", "
+          }
+      },
+      "mailers": {
+          "confirm_email_title": "Chowis - Email Address Confirmation",
+          "confirm_email_header": "Email Address Confirmation",
+          "greeting_confirm_email_html": "Hello {{name}}, Thank you for using {{app_name}} services.",
+          "confirm_email": "Please confirm your email to continue using the application:",
+          "support_text": "support page",
+          "confirm": "Confirm",
+          "notification_text": "This email is only for notification purpose. If you have any questions, feel free to contact us on",
+          "notification_text1": "This is a system generated email. Please do not reply. For questions and comments, contact us at",
+          "address": "Address",
+          "address_text": "A-1301-2, 184, Jungbu-daero, Giheung-gu, Yongin-si, Gyeonggi-do, Republic of Korea (17095)",
+          "email": "Email",
+          "email_text": "chowis@chowis.com",
+          "phone": "Phone",
+          "phone_text": "+82-31-706-7950",
+          "server_issue_fix_title": "Chowis - Server Issue Fix",
+          "server_issue_fix_header": "Server Issue Fix",
+          "server_issue_fix_text": "We would like to apologize for recent server issues that might have caused you troubles. Be noticed that all problems have been fixed and you can continue using your service.",
+          "license_status_text": "We would like to inform you about the current license status:",
+          "device_number": "Device number",
+          "program_name": "Program name",
+          "program_version": "Program version",
+          "activation_date": "Activation date",
+          "expiration_date": "Expiration date",
+          "remaining_days": "Remaining days",
+          "device_name": "Device name ",
+          "license_status": "License status",
+          "license_status1": "Activated",
+          "license_status2": "Not activated",
+          "last_update": "Last update",
+          "server_issue_fix_description1": "The service will be stopped for the following maintenance work:",
+          "server_issue_fix_description2": "Please check back after the maintenance is completed.",
+          "server_issue_fix_description3": "We apologize for the inconvenience and thank you for your patience.",
+          "server_issue_fix_description4": "Chowis support team",
+          "device_activation_title": "Your device is now activated!",
+          "device_activation_greeting_email_html": "Dear {{name}}, Thank you for using {{app_name}} services.",
+          "device_activation": "We completed your activation request with the following details:",
+          "device_activation_warning_paragraph": "Please note that the device can only be paired with a single ID. Mismatching the device number and ID will block app usage so make sure you remember your ID, password and device number.",
+          "new_password": "New password",
+          "confirm_password": "Confirm password",
+          "password_recovery": "Password recovery",
+          "password_recovery_verification": "Password reset verification",
+          "password_recovery_para1": "Your request for password reset is pending confirmation. Please click the link below to proceed:",
+          "password_recovery_para2": "This link is only valid for 12 hours from time of receipt.",
+          "pass_recovery_greeting": "Dear {{name}}, Thank you for using {{app_name}} services.",
+          "supoprt_page": "support page",
+          "password_reset_notice": "Password reset notice",
+          "password_reset_greeting": "Hello {{name}}, Thank you for using {{app_name}}.",
+          "password_reset_para1": "You have requested a password reset for your user account.",
+          "password_reset_para2": "Your temporary password is: {{password}}",
+          "password_reset_para3": "Please copy the password when you login to the application. Go to the settings, click Salon user and reset your password.",
+          "pass_reset_success": "Password reset success",
+          "pass_reset_success_greeting": "Dear {{name}}, Thank you for using {{app_name}} services.",
+          "pass_reset_success_para1": "Your password has been successfully reset and you can continue using the service.",
+          "email_verified": "Email Verified",
+          "email_verified_para1": "Your email address was successfully verified.",
+          "email_verified_para2": "Please close the window, and you may go back to the previous service and enjoy.",
+          "email_verified_not": "Email Not Verified",
+          "email_verified_not_para1": "Please contact your system administrator.",
+          "recover_password_title": "Recover Password"
+      },
+      "mailer": {
+          "greeting": "Hello {{name}},",
+          "greeting_no_name": "Hello,",
+          "no_subject": "No Subject",
+          "signature": "Best regards,<br />{{app_name}} Team"
+      },
+      "title": {
+          "license_expiration": "License Expiration Notification",
+          "activation_failed": "Activation Failed",
+          "reset_password": "Password Reset",
+          "confirmation_email": "Confirmation Email",
+          "server_issue_fix": "Server Issue Fix"
+      }
+  },
+  "time": {
+      "am": "AM",
+      "formats": {
+          "default": "%Y-%m-%d %H:%M:%S",
+          "short": "%b %d",
+          "long": "%B %d, %Y %H:%M"
+      },
+      "pm": "PM"
+  },
+  "t": {
+      "confirm": "Confirm",
+      "errors": {
+          "messages": {
+              "record_invalid": "Validation failed: {{errors}}"
+          }
+      },
+      "hello": "Hello {{name}}!",
+      "login": "Login",
+      "logout": "Logout",
+      "signup": "Sign Up",
+      "welcome": "Welcome to {{app_name}}!"
+  },
+  "web": {
+      "site_title": "Chowis",
+      "home": {
+          "welcome_message": "Welcome to Chowis!"
+      },
+      "errors": {
+          "page_not_found": "The page you were looking for doesn't exist.",
+          "server_error": "An unexpected error occurred."
+      },
+      "footer": {
+          "contact_us": "Contact Us",
+          "about_us": "About Us",
+          "privacy_policy": "Privacy Policy",
+          "terms_of_service": "Terms of Service"
+      }
+  }
+}

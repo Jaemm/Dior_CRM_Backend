@@ -509,7 +509,7 @@ export class ConsultantsService {
         return position;
     }
 
-    async getHelthTips(req: Request, query: HealthTipsDto) {
+    async getHelthTips(req: Request, query: HealthTipsDto, locale: string = 'en') {
         try {
             const userId = (<{ id: string }>req.user).id;
             const appId = query.app_id ? parseInt(query.app_id as string) : undefined;

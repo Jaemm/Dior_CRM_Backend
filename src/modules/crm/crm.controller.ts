@@ -3,6 +3,7 @@ import {
     Controller,
     Delete,
     Get,
+    Headers,
     Param,
     Post,
     Put,
@@ -49,9 +50,13 @@ export class CRMController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('customers')
-    async createCustomer(@Req() req: Request, @Body() body: UpdateCrmCustomersDto) {
+    async createCustomer(
+        @Req() req: Request,
+        @Body() body: UpdateCrmCustomersDto,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
+    ) {
         const userId = Number((<{ id: string }>req['user']).id);
-        return await this.crmService.createCustomer(userId, body);
+        return await this.crmService.createCustomer(userId, body, locale);
     }
 
     @ApiBearerAuth()

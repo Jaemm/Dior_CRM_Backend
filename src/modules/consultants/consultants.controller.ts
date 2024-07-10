@@ -183,8 +183,12 @@ export class ConsultantsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('health_tips')
-    async getHelthTips(@Req() req: Request, @Query() query: HealthTipsDto) {
-        return await this.consultants.getHelthTips(req, query);
+    async getHelthTips(
+        @Req() req: Request,
+        @Query() query: HealthTipsDto,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
+    ) {
+        return await this.consultants.getHelthTips(req, query, locale);
     }
 
     @ApiBearerAuth()

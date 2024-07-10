@@ -1,5 +1,5 @@
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Controller, Get, Req, Query, Post, Body } from '@nestjs/common';
+import { Controller, Get, Req, Query, Post, Body, Headers } from '@nestjs/common';
 import { DiorService } from './dior.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';

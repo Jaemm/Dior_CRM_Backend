@@ -1,0 +1,428 @@
+{
+  "ko": {
+      "activerecord": {
+          "errors": {
+              "messages": {
+                  "record_invalid": "데이터 검증에 실패하였습니다. {{{errors}}}",
+                  "restrict_dependent_destroy": {
+                      "has_one": "{{{record}}}가 존재하기 때문에 삭제할 수 없습니다",
+                      "has_many": "{{{record}}}가 존재하기 때문에 삭제할 수 없습니다"
+                  }
+              }
+          }
+      },
+      "date": {
+          "abbr_day_names": ["일", "월", "화", "수", "목", "금", "토"],
+          "abbr_month_names": [
+              "",
+              "1월",
+              "2월",
+              "3월",
+              "4월",
+              "5월",
+              "6월",
+              "7월",
+              "8월",
+              "9월",
+              "10월",
+              "11월",
+              "12월"
+          ],
+          "day_names": ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"],
+          "formats": {
+              "default": "%Y/%m/%d",
+              "long": "%Y년 %m월 %d일 (%a)",
+              "short": "%m/%d"
+          },
+          "month_names": ["", "1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"],
+          "order": [":year", ":month", ":day"]
+      },
+      "datetime": {
+          "distance_in_words": {
+              "about_x_hours": {
+                  "one": "약 한 시간",
+                  "other": "약 {{{count}}}시간"
+              },
+              "about_x_months": {
+                  "one": "약 한 달",
+                  "other": "약 {{{count}}}달"
+              },
+              "about_x_years": {
+                  "one": "약 일 년",
+                  "other": "약 {{{count}}}년"
+              },
+              "almost_x_years": {
+                  "one": "일 년 이하",
+                  "other": "{{{count}}}년 이하"
+              },
+              "half_a_minute": "30초",
+              "less_than_x_seconds": {
+                  "one": "일 초 이하",
+                  "other": "{{{count}}}초 이하"
+              },
+              "less_than_x_minutes": {
+                  "one": "일 분 이하",
+                  "other": "{{{count}}}분 이하"
+              },
+              "over_x_years": {
+                  "one": "일 년 이상",
+                  "other": "{{{count}}}년 이상"
+              },
+              "x_seconds": {
+                  "one": "일 초",
+                  "other": "{{{count}}}초"
+              },
+              "x_minutes": {
+                  "one": "일 분",
+                  "other": "{{{count}}}분"
+              },
+              "x_days": {
+                  "one": "하루",
+                  "other": "{{{count}}}일"
+              },
+              "x_months": {
+                  "one": "한 달",
+                  "other": "{{{count}}}달"
+              },
+              "x_years": {
+                  "one": "일 년",
+                  "other": "{{{count}}}년"
+              }
+          },
+          "prompts": {
+              "second": "초",
+              "minute": "분",
+              "hour": "시",
+              "day": "일",
+              "month": "월",
+              "year": "년"
+          }
+      },
+      "errors": {
+          "format": "{{{message}}}",
+          "messages": {
+              "accepted": "{{{attribute}}}을(를) 반드시 확인해야 합니다",
+              "blank": "{{{attribute}}}에 내용을 입력해 주세요",
+              "confirmation": "{{{attribute}}}은(는) 서로 일치해야 합니다",
+              "empty": "{{{attribute}}}에 내용을 입력해 주세요",
+              "equal_to": "{{{attribute}}}은(는) {{{count}}}과 같아야 합니다",
+              "even": "{{{attribute}}}에 짝수를 입력해 주세요",
+              "exclusion": "{{{attribute}}}은(는) 이미 예약되어 있는 값입니다",
+              "greater_than": "{{{attribute}}}은(는) {{{count}}}보다 커야 합니다",
+              "greater_than_or_equal_to": "{{{attribute}}}은(는) {{{count}}}보다 크거나 같아야 합니다",
+              "inclusion": "{{{attribute}}}은(는) 목록에 포함되어 있는 값이 아닙니다",
+              "invalid": "{{{attribute}}}은(는) 올바르지 않은 값입니다",
+              "less_than": "{{{attribute}}}은(는) {{{count}}}보다 작아야 합니다",
+              "less_than_or_equal_to": "{{{attribute}}}은(는) {{{count}}}과 작거나 같아야 합니다",
+              "model_invalid": "{{{attribute}}}에 대한 데이터 검증에 실패하였습니다: {{{errors}}}",
+              "not_a_number": "{{{attribute}}}에 숫자를 입력해 주세요",
+              "not_an_integer": "{{{attribute}}}에 정수를 입력해 주세요",
+              "odd": "{{{attribute}}}에 홀수를 입력해 주세요",
+              "other_than": "{{{attribute}}}은(는) {{{count}}}와(과) 달라야 합니다",
+              "present": "{{{attribute}}}은(는) 비어있어야 합니다",
+              "required": "{{{attribute}}}은(는) 반드시 있어야 합니다",
+              "taken": "{{{attribute}}}은(는) 이미 존재합니다",
+              "too_long": "{{{attribute}}}은(는) {{{count}}}자를 넘을 수 없습니다",
+              "too_short": "{{{attribute}}}은(는) 적어도 {{{count}}}자를 넘어야 합니다",
+              "wrong_length": "{{{attribute}}}은(는) {{{count}}}자여야 합니다"
+          },
+          "template": {
+              "body": "아래 문제를 확인해 주세요.",
+              "header": {
+                  "one": "한 개의 오류로 인해 {{{model}}}을(를) 저장할 수 없습니다",
+                  "other": "{{{count}}}개의 오류로 인해 {{{model}}}을(를) 저장할 수 없습니다"
+              }
+          }
+      },
+      "helpers": {
+          "select": {
+              "prompt": "선택해주세요"
+          },
+          "submit": {
+              "create": "등록",
+              "submit": "제출",
+              "update": "수정"
+          }
+      },
+      "number": {
+          "currency": {
+              "format": {
+                  "delimiter": ",",
+                  "format": "%n%u",
+                  "precision": 0,
+                  "separator": ".",
+                  "significant": false,
+                  "strip_insignificant_zeros": false,
+                  "unit": "원"
+              }
+          },
+          "format": {
+              "delimiter": ",",
+              "precision": 3,
+              "separator": ".",
+              "significant": false,
+              "strip_insignificant_zeros": false
+          },
+          "human": {
+              "decimal_units": {
+                  "format": "%n%u",
+                  "units": {
+                      "billion": "십억",
+                      "million": "백만",
+                      "quadrillion": "경",
+                      "thousand": "천",
+                      "trillion": "조",
+                      "unit": ""
+                  }
+              },
+              "format": {
+                  "delimiter": "",
+                  "precision": 3,
+                  "significant": true,
+                  "strip_insignificant_zeros": true
+              },
+              "storage_units": {
+                  "format": "%n%u",
+                  "units": {
+                      "byte": "바이트",
+                      "gb": "기가바이트",
+                      "kb": "킬로바이트",
+                      "mb": "메가바이트",
+                      "tb": "테라바이트"
+                  }
+              }
+          },
+          "percentage": {
+              "format": {
+                  "delimiter": "",
+                  "format": "%n%"
+              }
+          },
+          "precision": {
+              "format": {
+                  "delimiter": ""
+              }
+          }
+      },
+      "support": {
+          "array": {
+              "last_word_connector": ", ",
+              "two_words_connector": "와(과) ",
+              "words_connector": ", "
+          }
+      },
+      "mailers": {
+          "user-login": "사용자 로그인",
+          "username": "사용자 이름",
+          "password": "비밀번호",
+          "remember": "로그인 유지",
+          "forget-password": "비밀번호를 잊어버리셨나요?",
+          "login": {
+              "title-email": "이메일 주소",
+              "title-password": "비밀번호",
+              "title-email-new": "새로운 이메일 주소",
+              "title-password-new": "새 비밀번호",
+              "submit": "진행 중",
+              "error": "이메일/비밀번호 조합을 확인하세요.\n"
+          },
+          "logout": "로그아웃",
+          "recover-password-message": "비밀번호를 찾으려면 사용하고자 하는 계정의 이메일 주소를 입력하세요. 해당 이메일로 임시 비밀번호가 발송됩니다.",
+          "enter-email-address": "이메일 주소 입력하기",
+          "submit": "제출",
+          "cancel": "취소",
+          "password-recovery": "비밀번호 찾기",
+          "check-email": "비밀번호를 찾기 위해 이메일을 확인하세요.",
+          "menu": "메뉴",
+          "my-profile": "나의 프로필",
+          "personal-info": "개인정보",
+          "required": "필수",
+          "firstname": "이름",
+          "lastname": "성",
+          "gender": "성별",
+          "birthyear": "생년월일",
+          "skin-tone": "피부톤",
+          "ethnicity": "인종",
+          "upload-image": "이미지 업로드하기",
+          "upload-message": "프로필 이미지는 300 x 300 픽셀 1MB 미만으로 제한됩니다.",
+          "contact-info": "연락처 정보",
+          "phone-number": "전화 번호",
+          "mobile-number": "휴대 전화 번호",
+          "email-address": "이메일 주소",
+          "address-info": "주소 정보",
+          "building": "건물명 및 도로명 주소",
+          "city": "동",
+          "zipcode": "우편번호",
+          "neighborhood": "군·구",
+          "province": "시",
+          "state": "도",
+          "country": "국가",
+          "edit-details": "세부 정보 편집",
+          "user-account": "사용자 계정",
+          "login-credentials": "로그인 정보",
+          "verification-status": "확인 상태",
+          "verified": "확인",
+          "privacy": "개인 정보 보호 정책",
+          "app-name": "애플리케이션 이름",
+          "view-agreement": "등록 약관 보기",
+          "view-policy": "개인 정보 보호 정책 보기",
+          "view-data": "데이터 동의서 보기",
+          "change-password": "비밀번호 변경",
+          "old-password": "이전 비밀번호 입력",
+          "new-password": "새로운 비밀번호 입력",
+          "confirm-password": "새로운 비밀번호 확인",
+          "save-changes": "변경 사항 저장",
+          "password-change-message": "비밀번호가 성공적으로 변경되었습니다. 계속하려면 로그인해 주세요.",
+          "dismiss": "닫기",
+          "analysis-history": "분석 이력",
+          "data-table": "데이터 테이블",
+          "search-content": "내용 검색",
+          "date-picker": "날짜 선택",
+          "filter-by-service": "서비스 이름으로 필터링하기",
+          "input-field": "입력란",
+          "start-date": "시작일",
+          "end-date": "종료일",
+          "all": "전체",
+          "myskin-home": "MySkin Home",
+          "myhair-home": "MyHair Home",
+          "mynail-home": "MyNail Home",
+          "dermconcept": "DermConcept용 MySkin Choice(개발 중)",
+          "refresh": "새로고침",
+          "id": "아이디",
+          "service-name": "서비스 이름",
+          "device": "진단기",
+          "data": "날짜",
+          "time": "시간",
+          "history": "이력",
+          "view": "보기",
+          "analysis-result": "분석 결과",
+          "dark-circles": "다크서클",
+          "pores": "모공",
+          "spots": "기미·잡티",
+          "wrinkles": "주름",
+          "skin-dullness": "칙칙함",
+          "skin-radiance": "광채",
+          "skin-oilness": "유분",
+          "skin-elasticity": "탄력도",
+          "very-poor": "매우 나쁨",
+          "poor": "나쁨",
+          "moderate": "보통",
+          "good": "좋음",
+          "excellent": "매우 좋음",
+          "back": "뒤로 가기",
+          "management": "관리",
+          "managing-portal": "포털 관리",
+          "managing-portal-text": "귀하의 계정이 일시적으로 비활성화될 수 있습니다. 즉 모든 정보에 접근이 불가능하며 귀하의 계정은 진단 또는 다른 프로세스를 사용하기 위해 초위스의 애플리케이션에 로그인할 수 없습니다.",
+          "use-our-service": "당사의 서비스를 이용하기 위하여 계정이 활성화 되어 있는지 확인해 주세요.",
+          "account-status": "계정 상태",
+          "choose-app": "애플리케이션 선택하기",
+          "enable-account": "활성화 계정",
+          "disable-account": "비활성화 계정",
+          "enable-text": "계정을 활성화/비활성화 하려면 암호를 입력한 후 사용하고자 하는 애플리케이션을 선택하세요.",
+          "caution": "주의: ",
+          "caution-text": "계정을 완전히 삭제하면 초위스 데이터베이스에서도 모든 기록이 영구적으로 삭제되며 삭제된 기록에 대해 당사는 책임을 지지 않습니다. 이전에 사용한 이메일 주소로 재등록은 가능하나 이때는 각 측정에 대해 새로운 기록이 제공됩니다.",
+          "delete-account": "계정 삭제하기",
+          "active-text": "계정이 활성화되었습니다.",
+          "disabled-text": "계정이 비활성화되어 이후의 모든 정보는 접근할 수 없습니다.",
+          "enabled": "활성화",
+          "disabled": "비활성화",
+          "delete-account-text": "계정을 영구히 삭제하려면 이메일로 발송된 비밀번호와 확인 코드를 입력하세요.",
+          "note": "참고: ",
+          "note-text": "계정이 영구히 삭제되면 다시 복구할 수 없습니다.",
+          "contact-support": "고객 지원",
+          "version": "버전",
+          "help": "도움말",
+          "language": "언어",
+          "optional": "옵션",
+          "save": "저장",
+          "loading": "로딩 중",
+          "verification-code": "인증 코드",
+          "wrong-email": "올바르지 않은 이메일 혹은 비밀번호입니다!",
+          "wrong-password": "비밀번호를 잘못 입력하였습니다. 다시 시도해 주세요.",
+          "invalid-email": "이메일 주소가 잘못되었습니다.",
+          "something-wrong": "오류가 발생했습니다!",
+          "submit-successfully": "변경사항이 성공적으로 제출되었습니다.",
+          "layout": {
+              "title": "이메일 재설정",
+              "step-1": "데이터 입력",
+              "success": "이메일 주소 변경 요청을 처리 중입니다. 다음으로 전송된 이메일에서 확인 버튼을 클릭하세요."
+          },
+          "confirm": "확인",
+          "confirm_email_title": "초위스 - 이메일 주소 확인",
+          "confirm_email_header": "이메일 주소 확인",
+          "greeting_confirm_email_html": "안녕하세요 {{{name}}}. {{{app_name}}} 서비스를 이용해 주셔서 감사합니다.\n",
+          "confirm_email": "애플리케이션을 계속 사용하려면 이메일을 확인해 주세요:",
+          "support_text": "지원 페이지",
+          "address": "주소",
+          "address_text": "대한민국 경기도 용인시 기흥구 중부대로 184 A동 1302호 (17095)",
+          "email": "이메일",
+          "phone": "전화번호",
+          "device_number": "진단기 넘버",
+          "program_name": "프로그램명",
+          "program_version": "프로그램 버전",
+          "activation_date": "활성화 날짜",
+          "expiration_date": "만기 날짜",
+          "remaining_days": "남은 기간",
+          "license_title": "라이선스의 남은 기간",
+          "license_email_title": "초위스 - 라이선스의 남은 기간",
+          "reset_device_title": "진단기 재설정",
+          "reset_device_subject": "초위스 - 진단기 재설정",
+          "email_confirm_subject": "초위스 - 이메일 주소 변경 확인",
+          "email_confirm_title": "이메일 주소 변경 확인",
+          "optic_number": "옵틱 넘버",
+          "old_email": "이전 이메일",
+          "new_email": "새로운 이메일",
+          "verify": "확인",
+          "email_confirm_title1": "이메일 주소 변경",
+          "email_confirm_subject1": "초위스 - 이메일 주소 변경",
+          "password_reset_subject": "초위스 - 비밀번호 재설정 성공",
+          "password_reset_title": "비밀번호 재설정 성공",
+          "app_new_feature_subject": "초위스 - 애플리케이션 새로운 기능",
+          "app_new_feature_title": "애플리케이션 새로운 기능",
+          "app_new_feature_text": "애플리케이션의 새로운 기능에 대해 설명해드립니다.",
+          "app_new_update_subject": "초위스 - 애플리케이션 업데이트",
+          "app_new_update_title": "애플리케이션 업데이트",
+          "weekly_data_report_subject": "초위스 - 주간 데이터 리포트",
+          "weekly_data_report_title": "주간 데이터 리포트",
+          "weekly_data_report_text1": "더 자세한 사항을 확인하시려면 ",
+          "weekly_data_report_data_hub": "데이터 허브",
+          "brand_data_report_subject": "초위스 - 브랜드 데이터 리포트",
+          "brand_data_report_title": "브랜드 데이터 리포트",
+          "brand_data_report_text": "데이터 리포트 생성을 요청하였습니다. 자세한 내용은 첨부 파일을 참조하세요.",
+          "activate_device_subject": "초위스 - 진단기 활성화",
+          "activate_device_title": "진단기 활성화",
+          "activate_device_text": "진단기 활성화 요청이 완료되었습니다.",
+          "license_summary_subject": "초위스 - 라이선스 요약",
+          "license_summary_title": "라이선스 요약",
+          "license_summary_text": "진단기 요약을 요청하였습니다. 자세한 내용은 첨부 파일을 참조하세요.",
+          "password_recovery_subject": "초위스 - 비밀번호 찾기",
+          "password_recovery_title": "비밀번호 찾기",
+          "password_recovery_text": "비밀번호를 복사하여 앱에 로그인한 뒤 설정으로 이동하여 비밀번호를 변경할 수 있습니다.",
+          "temp_password": "임시 비밀번호:",
+          "counselor_register": "상담원 등록",
+          "notification_text": "이 이메일은 알림 목적으로만 사용됩니다. 질문이 있으면 언제든지 문의하십시오",
+          "notification_text1": "시스템에서 생성된 전자 메일입니다. 답장하지 마세요. 질문 및 의견은 다음 주소로 문의하십시오",
+          "server_issue_fix_title": "초위스 서버 문제 수정",
+          "server_issue_fix_header": "서버 문제 수정",
+          "server_issue_fix_text": "최근 서버 문제로 인해 문제가 발생한 점 사과드립니다. 모든 문제가 해결되었으며 서비스를 계속 사용할 수 있습니다.",
+          "license_status_text": "현재 라이센스 상태에 대해 알려드리고자 합니다 :",
+          "license_bottom_text": "라이센스 만료 후에는 장치가 비활성화됩니다. 추가 라이센스를 연장하거나 구입하려면 chowis@chowis.com 으로 문의하십시오.",
+          "reset_device_message": "장치 재설정 요청이 완료되었습니다.",
+          "reset_device_bottom_msg": "장치는 단일 ID로만 구성되어 있습니다. 다른 ID를 사용하면 장치 데이터 및 라이센스가 비활성화됩니다.",
+          "email_confirm_text": "이메일 주소 변경 요청이 처리되었습니다.",
+          "email_confirm_text1": "이 작업을 확인하려면 아래 링크를 클릭하십시오:",
+          "email_confirm_text2": "확인 후 이전 전자 메일을 더 이상 장치에 연결하는 데 사용할 수 없습니다.",
+          "password_reset_text": "암호가 성공적으로 재설정되었으며 서비스를 계속 사용할 수 있습니다.",
+          "app_new_update_greeting_html": "%{app_name} 버전 <b>%{version} </b>를 사용할 수 있습니다. 애플리케이션을 업데이트하고 사용자 환경을 개선해야 합니다.",
+          "weekly_data_report_text": "당사 제품 및 서비스 사용에 대한 귀사의 주간 성과 보고서를 공유하고자 합니다.",
+          "license_purchased": "구입한 라이센스",
+          "license_renew_msg": "귀하의 기기에 대한 라이센스 갱신 요청을 받았습니다. 가능한 한 빨리 업데이트해 드리겠습니다.",
+          "license_renew_subject": "초위스-라이센스 갱신 요청이 수신됨",
+          "license_renew_title": "라이센스 갱신 요청이 수신됨",
+          "license_renew_msg1": "현재 라이센스 상태를 확인하려면 다음을 사용하십시오",
+          "product_hub": "제품 허브",
+          "license_renew_completed_title": "라이센스 갱신 요청이 완료됨",
+          "license_renew_completed_subject": "초위스 - 라이센스 갱신 요청이 완료됨",
+          "license_renew_completed_msg": "라이센스 갱신 요청이 완료되었음을 알려드립니다."
+      }
+  }
+}
