@@ -11,7 +11,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsSelectByString, Repository, In } from 'typeorm';
 import { ProductsEnterDto, ProductsFetchDto } from './products.dto';
 import { DeviceService } from '../devices/devices.service';
-import { ApplicationsService } from '../applications/applications.service';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 import { CustomersService } from '../customers/customers.service';
 import { CommonService } from '@/src/common/common.service';
@@ -33,7 +32,6 @@ export class ProductsService {
         private readonly versionsRepository: Repository<Versions>,
 
         private readonly devices: DeviceService,
-        private readonly applications: ApplicationsService,
         private readonly companies: ConsultantCompanyService,
         private readonly commonService: CommonService,
         private readonly customersService: CustomersService,

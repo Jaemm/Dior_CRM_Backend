@@ -52,7 +52,6 @@ import { ConsultantsService } from '../consultants/consultants.service';
 import { ConsultantPositionsService } from '../consultantPositions/consultantPositions.service';
 import { ConsultantShopsService } from '../consultantShops/consultantShops.service';
 import { GendersService } from '../genders/genders.service';
-import { ApplicationsService } from '../applications/applications.service';
 import { CountriesService } from '../countries/countries.service';
 import { EthinicitiesService } from '../ethinicities/ethinicities.service';
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
@@ -67,9 +66,11 @@ import { Notifications } from '@/src/common/entities/crmEntities/Notifications.e
 import { PasswordEmailDetails } from '@/src/common/entities/crmEntities/PasswordEmailDetails.entity';
 
 import { ProductRecommendations, HealthTips, Identities } from '@/src/common/entities/crmEntities';
+import { ApplicationsRepository } from '@/src/common/repositories/crm';
 
 @Module({
     imports: [
+        Applications,
         TypeOrmModule.forFeature([
             Consultants,
             ConsultantShops,
@@ -87,7 +88,6 @@ import { ProductRecommendations, HealthTips, Identities } from '@/src/common/ent
             Customers,
 
             CustomerApplications,
-            Applications,
 
             ConsultantApplications,
             Products,
@@ -139,11 +139,13 @@ import { ProductRecommendations, HealthTips, Identities } from '@/src/common/ent
         ConsultantPositionsService,
         ConsultantShopsService,
         GendersService,
-        ApplicationsService,
         CountriesService,
         EthinicitiesService,
         SkinColorGroupsService,
         // CustomerDataReplicationService,
+
+        // Repos
+        ApplicationsRepository,
     ],
     exports: [CustomersService],
 })

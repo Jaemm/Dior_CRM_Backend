@@ -63,7 +63,6 @@ import { GendersModule } from '../genders/genders.module';
 import { CountriesModule } from '../countries/countries.module';
 import { SkinColorGroupsModule } from '../skinColorGroups/skinColorGroups.module';
 import { EthinicitiesModule } from '../ethinicities/ethinicities.module';
-import { ApplicationsModule } from '../applications/applications.module';
 import { ConsultantBranchesModule } from '../consultantBranches/consultantBranches.module';
 import { LicenceModule } from '../licence/licence.module';
 import { ProductsModule } from '../products/products.module';
@@ -71,6 +70,7 @@ import { CustomersModule } from '../customers/customers.module';
 import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
 import { CRMModule } from '../crm/crm.module';
 import {
+    ApplicationsRepository,
     ConsultantsRepository,
     CustomersRepository,
     DevicesRepository,
@@ -86,6 +86,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         Devices,
         Customers,
         DiorCustomerConsents,
+        Applications,
 
         AnalysisDataReplicationModule,
         TypeOrmModule.forFeature([
@@ -145,7 +146,6 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         CountriesModule,
         SkinColorGroupsModule,
         EthinicitiesModule,
-        ApplicationsModule,
         ConsultantBranchesModule,
         LicenceModule,
         forwardRef(() => ProductsModule),
@@ -161,6 +161,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         DeviceService,
 
         // Repos
+        ApplicationsRepository,
         ConsultantsRepository,
         CustomersRepository,
         DevicesRepository,

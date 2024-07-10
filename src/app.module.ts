@@ -24,7 +24,6 @@ import config from './config/config.schema';
 import { DeviceModule } from './modules/devices/devices.module';
 import { DataReplicationModule } from './modules/dataReplication/dataReplication.module';
 import { CustomersModule } from './modules/customers/customers.module';
-import { ApplicationsModule } from './modules/applications/applications.module';
 import { ConsultantShopsModule } from './modules/consultantShops/consultantShops.module';
 import { GendersModule } from './modules/genders/genders.module';
 import { CountriesModule } from './modules/countries/countries.module';
@@ -127,7 +126,6 @@ import { DatabaseModule } from './modules/database/database.module';
         ImageModule,
         DeviceModule,
         DataReplicationModule,
-        ApplicationsModule,
         ConsultantShopsModule,
         GendersModule,
         CountriesModule,

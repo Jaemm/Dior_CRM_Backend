@@ -35,7 +35,6 @@ import { ConsultantsService } from '../consultants/consultants.service';
 import { ConsultantShopsService } from '../consultantShops/consultantShops.service';
 import { ConsultantPositionsService } from '../consultantPositions/consultantPositions.service';
 import { GendersService } from '../genders/genders.service';
-import { ApplicationsService } from '../applications/applications.service';
 import { CountriesService } from '../countries/countries.service';
 import { EthinicitiesService } from '../ethinicities/ethinicities.service';
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
@@ -50,6 +49,7 @@ import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ConfirmHtmlDto } from '../consultants/consultants.dto';
 import * as handlebars from 'handlebars';
 import * as fs from 'fs/promises';
+import { ApplicationsRepository } from '@/src/common/repositories/crm';
 
 @Injectable()
 export class CustomersService {
@@ -62,12 +62,13 @@ export class CustomersService {
 
         private readonly commonService: CommonService,
 
-        private readonly applications: ApplicationsService,
         private readonly countries: CountriesService,
         private readonly ethnicities: EthinicitiesService,
         private readonly skinColorGroups: SkinColorGroupsService,
         private readonly replicateCustomer: CustomerDataReplicationService,
         @Inject(forwardRef(() => ProductsService)) private readonly productService: ProductsService, // TODO: Resolve dependency issue // private readonly customerConsentsService: CustomerConsentsService,
+
+        private readonly applicationsRepository: ApplicationsRepository,
     ) {}
 
     async verifyPasswordBcrypt(enteredPassword: string, bcryptHash: string): Promise<boolean> {
@@ -780,7 +781,7 @@ export class CustomersService {
         // }
 
         if (customer.app_id) {
-            promises.push(this.applications.findOneApplication(customer.app_id));
+            promises.push(this.applicationsRepository.findOneApplication(customer.app_id));
         }
 
         if (customer.country_code) {

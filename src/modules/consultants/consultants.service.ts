@@ -79,7 +79,6 @@ import { CountriesService } from '../countries/countries.service';
 
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
 import { EthinicitiesService } from '../ethinicities/ethinicities.service';
-import { ApplicationsService } from '../applications/applications.service';
 
 import { IJwt } from 'src/config/interfaces/jwt.interfaces';
 import { ConfigService } from '@nestjs/config';
@@ -94,6 +93,7 @@ import { ErrorStatus } from '@/src/common/constants/error-status';
 import { TargetType } from '@/src/common/enums/target-type.enum';
 import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
 import {
+    ApplicationsRepository,
     ConsultantsRepository,
     CustomersRepository,
     DevicesRepository,
@@ -126,7 +126,7 @@ export class ConsultantsService {
         private readonly configService: ConfigService,
         private readonly licenceService: LicenceService,
         private readonly productsService: ProductsService,
-        private readonly applicationsService: ApplicationsService,
+
         private readonly consultantShopsService: ConsultantShopsService,
         private readonly genderService: GendersService,
         private readonly countriesService: CountriesService,
@@ -144,6 +144,7 @@ export class ConsultantsService {
         private readonly analysisReplService: AnalysisDataReplicationService,
 
         // Repos
+        private readonly applicationsRepository: ApplicationsRepository,
         private readonly customersRepository: CustomersRepository,
         private readonly consultantsRepository: ConsultantsRepository,
         private readonly deviceRepository: DevicesRepository,
@@ -1285,7 +1286,7 @@ export class ConsultantsService {
         }
 
         if (data.app_id) {
-            promises.push(this.applicationsService.findOneApplication(Number(data.app_id)));
+            promises.push(this.applicationsRepository.findOneApplication(Number(data.app_id)));
         }
 
         if (data.skin_color_group_id) {

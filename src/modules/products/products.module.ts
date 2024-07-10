@@ -41,7 +41,6 @@ import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/Acti
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
 import { DeviceModule } from '../devices/devices.module';
-import { ApplicationsModule } from '../applications/applications.module';
 import { CustomersModule } from '../customers/customers.module';
 import { ConsultantsModule } from '../consultants/consultants.module';
 import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
@@ -94,7 +93,6 @@ import { ConsultantCompanyService } from '../consultantCompany/consultantCompany
             Versions,
         ]),
         DeviceModule,
-        ApplicationsModule,
         forwardRef(() => ConsultantsModule),
         CustomersModule,
     ],
