@@ -1,7 +1,6 @@
 import { HttpStatus, Inject, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { ILike } from 'typeorm';
 import { FetchFwVersionDto, LoginSocialDto, ShopListDto, UpdateFwVersionDto } from './app.dto';
-import { ConsultantShopsService } from './modules/consultantShops/consultantShops.service';
 import { DeviceService } from './modules/devices/devices.service';
 import { CountriesListDto } from './modules/customers/customers.dto';
 import { CountriesService } from './modules/countries/countries.service';
@@ -14,13 +13,11 @@ import { ResponseMessages } from './common/constants/response-messages';
 import { ProductsService } from './modules/products/products.service';
 import { ErrorStatus } from './common/constants/error-status';
 import { SocialInterface } from './jwt/interfaces/token.interface';
+import { ConsultantShopsRepository } from './common/repositories/crm';
 
 @Injectable()
 export class AppService {
     constructor(
-        @Inject(ConsultantShopsService)
-        private readonly consultantShops: ConsultantShopsService,
-
         @Inject(DeviceService)
         private readonly deviceService: DeviceService,
 
@@ -39,12 +36,14 @@ export class AppService {
         private readonly customersService: CustomersService,
         private readonly commonService: CommonService,
         private readonly productsService: ProductsService,
+
+        private readonly consultantShopsRepository: ConsultantShopsRepository,
     ) {}
 
     async shopList(params: ShopListDto) {
         const select = ['id', 'name', 'country_id', 'consultant_company_id', 'shop_code', 'postal_code'];
         const { consultant_company_id } = params;
-        const shopList = await this.consultantShops.findConsultantShops(
+        const shopList = await this.consultantShopsRepository.findConsultantShops(
             {
                 consultant_company_id,
             },

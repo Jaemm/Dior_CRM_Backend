@@ -32,7 +32,6 @@ import { IMessage } from 'src/common/interfaces/message.interface';
 import { CommonService } from 'src/common/common.service';
 import { CrmDataReplicationService } from '../dataReplication/consultantDataReplication/consultantDataReplication.service';
 import { ConsultantsService } from '../consultants/consultants.service';
-import { ConsultantShopsService } from '../consultantShops/consultantShops.service';
 import { ConsultantPositionsService } from '../consultantPositions/consultantPositions.service';
 import { GendersService } from '../genders/genders.service';
 import { CountriesService } from '../countries/countries.service';

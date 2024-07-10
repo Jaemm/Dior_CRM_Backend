@@ -24,7 +24,6 @@ import config from './config/config.schema';
 import { DeviceModule } from './modules/devices/devices.module';
 import { DataReplicationModule } from './modules/dataReplication/dataReplication.module';
 import { CustomersModule } from './modules/customers/customers.module';
-import { ConsultantShopsModule } from './modules/consultantShops/consultantShops.module';
 import { GendersModule } from './modules/genders/genders.module';
 import { CountriesModule } from './modules/countries/countries.module';
 import { EthinicitiesModule } from './modules/ethinicities/ethinicities.module';
@@ -47,6 +46,7 @@ import { LoggingMiddleware } from './common/middleWare/logMiddleWare/logging.mid
 
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { DatabaseModule } from './modules/database/database.module';
+import { ConsultantShopsRepository } from './common/repositories/crm';
 
 @Module({
     imports: [
@@ -126,7 +126,7 @@ import { DatabaseModule } from './modules/database/database.module';
         ImageModule,
         DeviceModule,
         DataReplicationModule,
-        ConsultantShopsModule,
+
         GendersModule,
         CountriesModule,
         EthinicitiesModule,
@@ -138,6 +138,7 @@ import { DatabaseModule } from './modules/database/database.module';
     ],
     controllers: [AppController],
     providers: [
+        ConsultantShopsRepository,
         AppService,
         {
             provide: APP_GUARD,

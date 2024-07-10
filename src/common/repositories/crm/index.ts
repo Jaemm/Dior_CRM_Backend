@@ -3,6 +3,8 @@ export { ApplicationsRepository } from './applications.repository';
 export { ConsultantsRepository } from './consultant.repository';
 export { ConsultantCountriesRepository } from './consultantCountries.repository';
 export { ConsultnatBranchesRepository } from './consultantBranches.repository';
+export { ConsultantShopsRepository } from './consultantshops.repository';
+
 export { CustomersRepository } from './customers.repository';
 
 export { DiorCustomerConsentsRepository } from './diorCustomerConcents.repository';

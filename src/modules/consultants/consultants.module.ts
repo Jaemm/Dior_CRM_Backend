@@ -58,7 +58,6 @@ import { CrmDataReplicationModule } from '../dataReplication/consultantDataRepli
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 import { ConsultantPositionsModule } from '../consultantPositions/consultantPositions.module';
 import { StoreModule } from '../stores/stores.module';
-import { ConsultantShopsModule } from '../consultantShops/consultantShops.module';
 import { GendersModule } from '../genders/genders.module';
 import { CountriesModule } from '../countries/countries.module';
 import { SkinColorGroupsModule } from '../skinColorGroups/skinColorGroups.module';
@@ -71,6 +70,7 @@ import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
 import { CRMModule } from '../crm/crm.module';
 import {
     ApplicationsRepository,
+    ConsultantShopsRepository,
     ConsultantsRepository,
     CustomersRepository,
     DevicesRepository,
@@ -82,6 +82,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
 @Module({
     imports: [
         Consultants,
+        ConsultantShops,
         Products,
         Devices,
         Customers,
@@ -141,7 +142,6 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         ConsultantPositionsModule,
         StoreModule,
         ConsultantsModule,
-        ConsultantShopsModule,
         GendersModule,
         CountriesModule,
         SkinColorGroupsModule,
@@ -163,6 +163,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         // Repos
         ApplicationsRepository,
         ConsultantsRepository,
+        ConsultantShopsRepository,
         CustomersRepository,
         DevicesRepository,
         ProductsRepository,

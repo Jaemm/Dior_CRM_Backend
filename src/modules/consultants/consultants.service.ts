@@ -73,7 +73,6 @@ import { CrmDataReplicationService } from '../dataReplication/consultantDataRepl
 import * as fs from 'fs/promises';
 import * as handlebars from 'handlebars';
 
-import { ConsultantShopsService } from '../consultantShops/consultantShops.service';
 import { GendersService } from '../genders/genders.service';
 import { CountriesService } from '../countries/countries.service';
 
@@ -94,6 +93,7 @@ import { TargetType } from '@/src/common/enums/target-type.enum';
 import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
 import {
     ApplicationsRepository,
+    ConsultantShopsRepository,
     ConsultantsRepository,
     CustomersRepository,
     DevicesRepository,
@@ -127,7 +127,6 @@ export class ConsultantsService {
         private readonly licenceService: LicenceService,
         private readonly productsService: ProductsService,
 
-        private readonly consultantShopsService: ConsultantShopsService,
         private readonly genderService: GendersService,
         private readonly countriesService: CountriesService,
 
@@ -147,6 +146,7 @@ export class ConsultantsService {
         private readonly applicationsRepository: ApplicationsRepository,
         private readonly customersRepository: CustomersRepository,
         private readonly consultantsRepository: ConsultantsRepository,
+        private readonly consultantShopsRepository: ConsultantShopsRepository,
         private readonly deviceRepository: DevicesRepository,
         private readonly productsRepository: ProductsRepository,
         private readonly diorConsentRepository: DiorCustomerConsentsRepository,
@@ -1278,7 +1278,7 @@ export class ConsultantsService {
         }
 
         if (data.consultant_shop_id) {
-            promises.push(this.consultantShopsService.findOneConsultantShops(Number(data.consultant_shop_id)));
+            promises.push(this.consultantShopsRepository.findOneConsultantShops(Number(data.consultant_shop_id)));
         }
 
         if (data.gender_id) {
