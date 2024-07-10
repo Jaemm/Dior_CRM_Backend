@@ -11,6 +11,8 @@ export { CustomersRepository } from './customers.repository';
 export { DiorCustomerConsentsRepository } from './diorCustomerConcents.repository';
 export { DevicesRepository } from './devices.repository';
 
+export { GendersRepository } from './genders.repository';
+
 export { ProductsRepository } from './products.repository';
 
 export { ProductAttributesRepository } from './productAttributes.respository';

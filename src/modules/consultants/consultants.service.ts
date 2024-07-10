@@ -73,7 +73,6 @@ import { CrmDataReplicationService } from '../dataReplication/consultantDataRepl
 import * as fs from 'fs/promises';
 import * as handlebars from 'handlebars';
 
-import { GendersService } from '../genders/genders.service';
 import { CountriesService } from '../countries/countries.service';
 
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
@@ -98,6 +97,7 @@ import {
     CustomersRepository,
     DevicesRepository,
     DiorCustomerConsentsRepository,
+    GendersRepository,
     ProductsRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.repository';
@@ -127,7 +127,6 @@ export class ConsultantsService {
         private readonly licenceService: LicenceService,
         private readonly productsService: ProductsService,
 
-        private readonly genderService: GendersService,
         private readonly countriesService: CountriesService,
 
         private readonly skinColorGroupService: SkinColorGroupsService,
@@ -143,6 +142,7 @@ export class ConsultantsService {
         private readonly analysisReplService: AnalysisDataReplicationService,
 
         // Repos
+        private readonly gendersRepository: GendersRepository,
         private readonly applicationsRepository: ApplicationsRepository,
         private readonly customersRepository: CustomersRepository,
         private readonly consultantsRepository: ConsultantsRepository,
@@ -1282,7 +1282,7 @@ export class ConsultantsService {
         }
 
         if (data.gender_id) {
-            promises.push(this.genderService.findOneGender(String(data.gender_id)));
+            promises.push(this.gendersRepository.findOneGender(String(data.gender_id)));
         }
 
         if (data.app_id) {

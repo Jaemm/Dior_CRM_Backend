@@ -49,7 +49,6 @@ import { DeviceService } from '../devices/devices.service';
 import { CrmDataReplicationModule } from '../dataReplication/consultantDataReplication/consultantDataReplication.module';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 
-import { GendersService } from '../genders/genders.service';
 import { CountriesService } from '../countries/countries.service';
 import { EthinicitiesService } from '../ethinicities/ethinicities.service';
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
@@ -134,7 +133,6 @@ import { ApplicationsRepository } from '@/src/common/repositories/crm';
         ConsultantCompanyService,
         DeviceService,
 
-        GendersService,
         CountriesService,
         EthinicitiesService,
         SkinColorGroupsService,

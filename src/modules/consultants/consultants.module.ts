@@ -57,7 +57,6 @@ import { DeviceService } from '../devices/devices.service';
 import { CrmDataReplicationModule } from '../dataReplication/consultantDataReplication/consultantDataReplication.module';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 import { StoreModule } from '../stores/stores.module';
-import { GendersModule } from '../genders/genders.module';
 import { CountriesModule } from '../countries/countries.module';
 import { SkinColorGroupsModule } from '../skinColorGroups/skinColorGroups.module';
 import { EthinicitiesModule } from '../ethinicities/ethinicities.module';
@@ -73,6 +72,7 @@ import {
     CustomersRepository,
     DevicesRepository,
     DiorCustomerConsentsRepository,
+    GendersRepository,
     ProductsRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
@@ -140,7 +140,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
 
         StoreModule,
         ConsultantsModule,
-        GendersModule,
+
         CountriesModule,
         SkinColorGroupsModule,
         EthinicitiesModule,
@@ -164,6 +164,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         ConsultantShopsRepository,
         CustomersRepository,
         DevicesRepository,
+        GendersRepository,
         ProductsRepository,
         DiorCustomerConsentsRepository,
     ],

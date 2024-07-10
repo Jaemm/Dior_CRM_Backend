@@ -24,7 +24,6 @@ import config from './config/config.schema';
 import { DeviceModule } from './modules/devices/devices.module';
 import { DataReplicationModule } from './modules/dataReplication/dataReplication.module';
 import { CustomersModule } from './modules/customers/customers.module';
-import { GendersModule } from './modules/genders/genders.module';
 import { CountriesModule } from './modules/countries/countries.module';
 import { EthinicitiesModule } from './modules/ethinicities/ethinicities.module';
 import { SkinColorGroupsModule } from './modules/skinColorGroups/skinColorGroups.module';
@@ -45,7 +44,7 @@ import { LoggingMiddleware } from './common/middleWare/logMiddleWare/logging.mid
 
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { DatabaseModule } from './modules/database/database.module';
-import { ConsultantShopsRepository } from './common/repositories/crm';
+import { ConsultantShopsRepository, GendersRepository } from './common/repositories/crm';
 
 @Module({
     imports: [
@@ -126,7 +125,6 @@ import { ConsultantShopsRepository } from './common/repositories/crm';
         DeviceModule,
         DataReplicationModule,
 
-        GendersModule,
         CountriesModule,
         EthinicitiesModule,
         SkinColorGroupsModule,
@@ -136,6 +134,7 @@ import { ConsultantShopsRepository } from './common/repositories/crm';
     ],
     controllers: [AppController],
     providers: [
+        GendersRepository,
         ConsultantShopsRepository,
         AppService,
         {
