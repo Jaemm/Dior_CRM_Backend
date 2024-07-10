@@ -56,7 +56,6 @@ import { ConsultantCompanyModule } from '../consultantCompany/consultantCompany.
 import { DeviceService } from '../devices/devices.service';
 import { CrmDataReplicationModule } from '../dataReplication/consultantDataReplication/consultantDataReplication.module';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
-import { ConsultantPositionsModule } from '../consultantPositions/consultantPositions.module';
 import { StoreModule } from '../stores/stores.module';
 import { GendersModule } from '../genders/genders.module';
 import { CountriesModule } from '../countries/countries.module';
@@ -139,7 +138,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
 
         ConsultantCompanyModule,
         CrmDataReplicationModule,
-        ConsultantPositionsModule,
+
         StoreModule,
         ConsultantsModule,
         GendersModule,

@@ -4,6 +4,7 @@ export { ConsultantsRepository } from './consultant.repository';
 export { ConsultantCountriesRepository } from './consultantCountries.repository';
 export { ConsultnatBranchesRepository } from './consultantBranches.repository';
 export { ConsultantShopsRepository } from './consultantshops.repository';
+export { ConsultantPositionsRepository } from './consultantPositions.repository';
 
 export { CustomersRepository } from './customers.repository';
 

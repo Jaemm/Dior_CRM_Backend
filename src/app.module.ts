@@ -28,7 +28,6 @@ import { GendersModule } from './modules/genders/genders.module';
 import { CountriesModule } from './modules/countries/countries.module';
 import { EthinicitiesModule } from './modules/ethinicities/ethinicities.module';
 import { SkinColorGroupsModule } from './modules/skinColorGroups/skinColorGroups.module';
-import { ConsultantPositionsModule } from './modules/consultantPositions/consultantPositions.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthMiddleware } from './common/middleWare/authMiddlware/auth.middleware';
@@ -131,7 +130,6 @@ import { ConsultantShopsRepository } from './common/repositories/crm';
         CountriesModule,
         EthinicitiesModule,
         SkinColorGroupsModule,
-        ConsultantPositionsModule,
 
         ProductsModule,
         CRMModule,

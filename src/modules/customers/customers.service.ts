@@ -26,14 +26,9 @@ import {
     PasswordDto,
     DeleteCustomerDto,
 } from '@/src/modules/customers/customers.dto';
-import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
-import { DeviceService } from '../devices/devices.service';
+
 import { IMessage } from 'src/common/interfaces/message.interface';
 import { CommonService } from 'src/common/common.service';
-import { CrmDataReplicationService } from '../dataReplication/consultantDataReplication/consultantDataReplication.service';
-import { ConsultantsService } from '../consultants/consultants.service';
-import { ConsultantPositionsService } from '../consultantPositions/consultantPositions.service';
-import { GendersService } from '../genders/genders.service';
 import { CountriesService } from '../countries/countries.service';
 import { EthinicitiesService } from '../ethinicities/ethinicities.service';
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
