@@ -61,7 +61,6 @@ import { GendersModule } from '../genders/genders.module';
 import { CountriesModule } from '../countries/countries.module';
 import { SkinColorGroupsModule } from '../skinColorGroups/skinColorGroups.module';
 import { EthinicitiesModule } from '../ethinicities/ethinicities.module';
-import { ConsultantBranchesModule } from '../consultantBranches/consultantBranches.module';
 import { LicenceModule } from '../licence/licence.module';
 import { ProductsModule } from '../products/products.module';
 import { CustomersModule } from '../customers/customers.module';
@@ -145,7 +144,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         CountriesModule,
         SkinColorGroupsModule,
         EthinicitiesModule,
-        ConsultantBranchesModule,
+
         LicenceModule,
         forwardRef(() => ProductsModule),
         CustomersModule,

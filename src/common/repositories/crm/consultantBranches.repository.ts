@@ -7,4 +7,13 @@ export class ConsultnatBranchesRepository extends Repository<ConsultantBranches>
     constructor(dataSource: DataSource) {
         super(ConsultantBranches, dataSource.createEntityManager());
     }
+
+    async findOneconsultantBranches(id: string) {
+        const consultantbranches = await this.findOne({
+            where: {
+                id: id,
+            },
+        });
+        return consultantbranches;
+    }
 }
