@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository, Or, Equal } from 'typeorm';
+import { DataSource, Repository, Or, Equal, FindOptionsSelectByString } from 'typeorm';
 import { Consultants } from '@/src/common/entities/crmEntities';
 
 @Injectable()
@@ -21,6 +21,31 @@ export class ConsultantsRepository extends Repository<Consultants> {
         }
 
         return await this.findOne(query);
+    }
+
+    async fetchConsultants(conditions?: any, selections?: string[], includes?: string[], addFields?: string[]) {
+        const consultants: any[] = await this.find({
+            where: conditions ? conditions : {},
+            select: selections
+                ? (selections as FindOptionsSelectByString<Consultants>)
+                : ['id', 'email', 'app_id', 'name'],
+            relations: includes ? includes : [],
+        });
+
+        if (addFields) {
+            consultants.forEach((consultant) => {
+                addFields.forEach((field) => {
+                    if (field === 'country_code') {
+                        consultant.country_code = consultant.getContryCode;
+                    }
+
+                    if (field === 'optic_number') {
+                        consultant.optic_number = consultant.getOpticNumbers;
+                    }
+                });
+            });
+        }
+        return consultants;
     }
 
     /** Dior */

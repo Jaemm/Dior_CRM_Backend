@@ -608,31 +608,6 @@ export class ConsultantsService {
         return consultant;
     }
 
-    async fetchConsultants(conditions?: any, selections?: string[], includes?: string[], addFields?: string[]) {
-        const consultants: any[] = await this.consultantsRepository.find({
-            where: conditions ? conditions : {},
-            select: selections
-                ? (selections as FindOptionsSelectByString<Consultants>)
-                : ['id', 'email', 'app_id', 'name'],
-            relations: includes ? includes : [],
-        });
-
-        if (addFields) {
-            consultants.forEach((consultant) => {
-                addFields.forEach((field) => {
-                    if (field === 'country_code') {
-                        consultant.country_code = consultant.getContryCode;
-                    }
-
-                    if (field === 'optic_number') {
-                        consultant.optic_number = consultant.getOpticNumbers;
-                    }
-                });
-            });
-        }
-        return consultants;
-    }
-
     async findNotifications(
         conditions: any,
         selections?: string[],
@@ -1180,7 +1155,12 @@ export class ConsultantsService {
         if (position_ids.length) conditions['consultant_position_id'] = In(position_ids);
         if (country_ids.length) conditions['country_id'] = In(country_ids);
 
-        const consultants = await this.fetchConsultants(conditions, selections, includes, addFeilds);
+        const consultants = await this.consultantsRepository.fetchConsultants(
+            conditions,
+            selections,
+            includes,
+            addFeilds,
+        );
         const promises: Promise<any>[] = [];
 
         consultants.map((c) => {
