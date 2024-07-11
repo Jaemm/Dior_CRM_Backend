@@ -237,7 +237,7 @@ export class Consultants {
     @JoinColumn([{ name: 'consultant_country_id', referencedColumnName: 'id' }])
     'country_details': ConsultantCountries;
 
-    @OneToMany(() => Customers, (customers: Customers) => customers.conslutant)
+    @OneToMany(() => Customers, (customers: Customers) => customers.consultant)
     'customers': Customers[];
 
     @OneToMany(() => Identities, (identity) => identity.consultants)

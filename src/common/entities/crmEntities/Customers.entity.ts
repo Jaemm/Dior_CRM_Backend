@@ -197,7 +197,7 @@ export class Customers {
 
     @ManyToOne(() => Consultants, (consultants) => consultants.customers)
     @JoinColumn([{ name: 'consultant_id', referencedColumnName: 'id' }])
-    conslutant: Consultants;
+    consultant: Consultants;
 
     @OneToMany(() => Products, (products) => products.customer)
     products: Products[];
@@ -226,8 +226,8 @@ export class Customers {
     }
 
     get getConsultantName(): string | null {
-        if (this.conslutant) {
-            return this.conslutant.name;
+        if (this.consultant) {
+            return this.consultant.name;
         } else {
             return null;
         }
