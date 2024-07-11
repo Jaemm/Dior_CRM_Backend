@@ -3,14 +3,22 @@ import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { ErrorStatus } from '../../constants/error-status';
 import { ResponseMessages } from '../../constants/response-messages';
+import { CommonService } from '../../common.service';
 @Injectable()
 export class AuthMiddleware implements NestMiddleware {
     private readonly secretKey = process.env.CRM_ACCESS_TOKEN_SECRET;
     private readonly jwtSecret = process.env.JWT_ACCESS_TOKEN_SECRET;
 
+    constructor(private readonly commonService: CommonService) {}
+
     use(req: Request, res: Response, next: NextFunction) {
         // const token = String(req.headers['authorization'])
         let token;
+
+        let locale = 'en';
+        if (req.headers['x-chowis-locale']) {
+            locale = String(req.headers['x-chowis-locale']);
+        }
 
         if (req.headers['x-chowis-consultant-token']) {
             token = String(req.headers['x-chowis-consultant-token']);
@@ -27,9 +35,10 @@ export class AuthMiddleware implements NestMiddleware {
             // Token not provided, handle accordingly (e.g., return unauthorized response)
             throw new UnauthorizedException({
                 result_code: ErrorStatus.UNAUTHORIZED,
-                error: ResponseMessages.Unauthorized,
+                error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
             });
         }
+
         try {
             const decoded = jwt.verify(token, this.secretKey);
             // const decoded = jwt.verify(token, this.secretKey, {ignoreExpiration: true});
@@ -69,7 +78,7 @@ export class AuthMiddleware implements NestMiddleware {
             }
             throw new UnauthorizedException({
                 result_code: ErrorStatus.UNAUTHORIZED,
-                error: ResponseMessages.Unauthorized,
+                error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
             });
         }
     }

@@ -279,11 +279,21 @@ export class CommonService {
         }
     }
 
-    createErrorMessage(locale: string, message: string) {
+    createLocaleErrorMessage(locale: string, messageKey: string, message: string = '') {
         const lowerLocale = locale.toLocaleLowerCase();
 
         const errorLocale = `errors.${lowerLocale}`;
 
-        const errorMessages = this.getTranslation(errorLocale)?.[lowerLocale]['chowis']['errors'];
+        const translations = this.getTranslation(errorLocale)?.[lowerLocale]['chowis']['errors'];
+
+        const translationsErrorMessage = translations[messageKey];
+
+        let errorMessage = message;
+
+        if (translationsErrorMessage) {
+            errorMessage = translationsErrorMessage.replace(/%\{(\w+)\}/g, `${message}`).replace(/\n/g, ``);
+        }
+
+        return errorMessage;
     }
 }

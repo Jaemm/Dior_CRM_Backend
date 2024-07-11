@@ -311,7 +311,7 @@ export class CRMService {
             if (!email || !phone) {
                 throw new BadRequestException({
                     result_code: ErrorStatus.INVALID_REQUEST,
-                    error: 'Missing email and phone number',
+                    error: this.commonService.createLocaleErrorMessage(locale, 'invalid_request'),
                 });
             }
 
