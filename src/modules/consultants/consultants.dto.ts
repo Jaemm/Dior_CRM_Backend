@@ -332,44 +332,29 @@ export function singleStringToArray(value: string | string[]): string[] {
 }
 
 export class GetConsultantDto {
-    @ApiPropertyOptional({
-        type: String,
-        isArray: true,
-    })
-    @IsArray()
+    @IsString()
     @IsOptional()
-    @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
-    company_ids: string[];
+    company_ids: string;
 
-    @ApiPropertyOptional({
-        type: String,
-        isArray: true,
-        default: [],
-    })
-    @IsArray()
+    @IsString()
     @IsOptional()
-    @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
-    shop_ids: string[];
+    branch_ids: string;
 
-    @ApiPropertyOptional({
-        type: String,
-        isArray: true,
-        default: [],
-    })
-    @IsArray()
+    @IsString()
     @IsOptional()
-    @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
-    position_ids: string[];
+    shop_ids: string;
 
-    @ApiPropertyOptional({
-        type: String,
-        isArray: true,
-        default: [],
-    })
-    @IsArray()
+    @IsString()
     @IsOptional()
-    @Transform(({ value }) => (Array.isArray(value) ? value : [value]))
-    country_ids: string[];
+    position_ids: string;
+
+    @IsString()
+    @IsOptional()
+    country_ids: string;
+
+    @IsString()
+    @IsOptional()
+    store_ids: string;
 }
 
 export class ResendConfirmationDto {

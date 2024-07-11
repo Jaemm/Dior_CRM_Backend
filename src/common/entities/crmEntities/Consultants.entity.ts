@@ -100,8 +100,8 @@ export class Consultants {
     @Column('character varying', { name: 'surname', nullable: true })
     'surname': string | null;
 
-    @Column('character varying', { name: 'gender', nullable: true })
-    'gender': string | null;
+    @Column('int4', { name: 'gender', nullable: true })
+    'gender': number | null;
 
     @Column('character varying', { name: 'birthdate', nullable: true })
     'birthdate': string | null;
@@ -109,12 +109,7 @@ export class Consultants {
     @Column('character varying', { name: 'city', nullable: true })
     'city': string | null;
 
-    @Column('text', {
-        name: 'country',
-        nullable: true,
-        array: true,
-        default: () => "'{}'[]",
-    })
+    @Column('character varying', { name: 'country', nullable: true })
     'country': string[] | null;
 
     @Column('integer', { name: 'app_id', nullable: true })
@@ -159,9 +154,6 @@ export class Consultants {
     @Column('character varying', { name: 'branch', nullable: true })
     'branch': string | null;
 
-    @Column('text', { name: 'countries', nullable: true })
-    'countries': string[] | null;
-
     @Column('character varying', { name: 'zip_code', nullable: true })
     'zip_code': string | null;
 
@@ -194,6 +186,9 @@ export class Consultants {
         nullable: true,
     })
     'otp_valid_til': Date | null;
+
+    @Column('text', { name: 'countries', nullable: true })
+    'countries': string[] | null;
 
     @Column('timestamp without time zone', {
         name: 'confirmation_sent_at',

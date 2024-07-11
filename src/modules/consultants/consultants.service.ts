@@ -1105,89 +1105,91 @@ export class ConsultantsService {
     }
 
     public async getConsultants(data: GetConsultantDto) {
-        const { company_ids = [], shop_ids = [], position_ids = [], country_ids = [] } = data;
+        const { company_ids, branch_ids, shop_ids, position_ids, country_ids, store_ids } = data;
 
-        const selections = [
-            'id',
-            'email',
-            'token',
-            'app_id',
-            'name',
-            'surname',
-            'phone_country_code',
-            'os',
-            'language',
-            'phone',
-            'address',
-            'city',
-            'zip_code',
-            'state',
-            'note',
-            'push_token',
-            'memo',
-            'company_name',
-            'company_address',
-            'branch',
-            'position',
-            'skin_color_group_id',
-            'ethnicity_id',
-            'callback_url',
-            'code',
-            'social',
-            'country_id',
-        ];
+        const companyIds = company_ids ? company_ids.split(',') : [];
+        const branchIds = branch_ids ? branch_ids.split(',') : [];
+        const shopIds = shop_ids ? shop_ids.split(',') : [];
+        const positionIds = position_ids ? position_ids.split(',') : [];
+        const countryIds = country_ids ? country_ids.split(',') : [];
+        const storeIds = store_ids ? store_ids.split(',') : [];
 
-        const includes = [
-            'country_details',
-            'gender',
-            'consultant_shop',
-            'consultant_company',
-            'consultant_position',
-            'products',
-            'products.device',
-        ];
+        const consultantsQuery = this.consultantsRepository
+            .createQueryBuilder('consultants')
+            .leftJoinAndSelect('consultants.country_details', 'countries')
+            .leftJoinAndSelect('consultants.consultant_shop', 'consultant_shop')
+            .leftJoinAndSelect('consultants.consultant_position', 'consultant_position')
+            .leftJoinAndSelect('consultants.consultant_company', 'consultant_company')
+            .leftJoinAndSelect('consultants.products', 'products')
+            .leftJoinAndSelect('products', 'products.device');
 
-        const addFeilds = ['country_code', 'optic_number'];
+        if (companyIds.length > 0) {
+            consultantsQuery.andWhere('consultants.consultant_company_id IN(:...companyIds)', { companyIds });
+        }
+        if (branchIds.length > 0) {
+            consultantsQuery.andWhere('consultants.consultant_branch_id IN(:...branchIds)', { branchIds });
+        }
+        if (shopIds.length > 0) {
+            consultantsQuery.andWhere('consultants.consultant_shop_id IN(:...shopIds)', { shopIds });
+        }
+        if (positionIds.length > 0) {
+            consultantsQuery.andWhere('consultants.consultant_position_id IN(:...positionIds)', { positionIds });
+        }
+        if (countryIds.length > 0) {
+            consultantsQuery.andWhere('consultants.consultant_company_id IN(:...countryIds)', { countryIds });
+        }
+        if (storeIds.length > 0) {
+            consultantsQuery.andWhere('consultants.consultant_company_id IN(:...storeIds)', { storeIds });
+        }
 
-        const conditions: any = {};
+        const consultantsQueryResult = await consultantsQuery.getMany();
 
-        if (company_ids.length) conditions['consultant_company_id'] = In(company_ids);
-        if (shop_ids.length) conditions['consultant_shop_id'] = In(shop_ids);
-        if (position_ids.length) conditions['consultant_position_id'] = In(position_ids);
-        if (country_ids.length) conditions['country_id'] = In(country_ids);
+        return consultantsQueryResult.map((consultant) => {
+            const data = {
+                id: consultant.id,
+                email: consultant.email,
+                name: consultant.name,
+                surname: consultant.surname,
+                gender: consultant.gender,
+                os: consultant.os,
+                language: consultant.language,
+                phone: consultant.phone,
+                address: consultant.address,
+                token: consultant.token,
+                city: consultant.city,
+                country: consultant.country,
+                zip_code: consultant.zip_code,
+                state: consultant.state,
+                birthdate: consultant.birthdate,
+                note: consultant.note,
+                push_token: consultant.push_token,
+                social: consultant.social,
+                memo: consultant.memo,
+                app_id: consultant.app_id,
+                company_name: consultant.company_name,
+                company_address: consultant.company_address,
+                branch: consultant.branch,
+                position: consultant.position,
+                skin_color_group_id: consultant.skin_color_group_id,
+                ethnicity_id: consultant.ethnicity_id,
+                callback_url: consultant.callback_url,
+                code: consultant.code,
+                country_code: null as string,
+                store: null as string,
+                optic_number: null as string,
+                password_update_needed: null as string,
+                licenses: null as object,
+                products: null as object,
+                consultant_company: null as object,
+                consultant_branch: null as object,
+                consultant_country: null as object,
+                consultant_store: null as object,
+                consultant_shop: null as object,
+                consultant_position: null as object,
+            };
 
-        const consultants = await this.consultantsRepository.fetchConsultants(
-            conditions,
-            selections,
-            includes,
-            addFeilds,
-        );
-        const promises: Promise<any>[] = [];
-
-        consultants.map((c) => {
-            if (c.consultant_company?.id) {
-                promises.push(this.getCompanyDetails({ consultant_company_id: c.consultant_company.id }));
-            }
-            c['country'] = c.country_details;
-            c['store'] = c.consultant_shop;
-            c['refresh_token'] = c.token;
-            c['token'] = null;
-
-            delete c.country_details;
-            delete c.consultant_shop;
-
-            return c;
+            return data;
         });
-
-        const result = await Promise.all(promises);
-
-        const modifiedConsultants = consultants.map((consultant) => {
-            const companyDetails = result.find((r) => r.id == consultant.consultant_company?.id);
-            consultant['consultant_company'] = companyDetails;
-            return consultant;
-        });
-
-        return modifiedConsultants;
     }
 
     public async modifyConsultant(userId: number, data: UpdateConsultantDto, locale: string = 'en') {
