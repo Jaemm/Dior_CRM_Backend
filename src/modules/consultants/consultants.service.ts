@@ -2385,12 +2385,12 @@ export class ConsultantsService {
         }
     }
 
-    public async refreshToken(data: TokenRefreshDto) {
+    public async refreshToken(data: TokenRefreshDto, locale: string = 'en') {
         const { refresh_token, token } = data;
         if (!token) {
             throw new UnauthorizedException({
                 result_code: ErrorStatus.NOT_FOUND,
-                error: ResponseMessages.InvalidToken,
+                error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
             });
         }
         const { secret: tokenAccess, time: accessTime } = this.jwtConfig.access;
@@ -2681,7 +2681,10 @@ export class ConsultantsService {
             const token = req.headers.authorization.split(' ')[1];
 
             if (!token) {
-                throw new Error();
+                throw new UnauthorizedException({
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: this.commonService.createLocaleErrorMessage('en', 'unauthorized');
+                });
             }
 
             const customers = await this.customersRepository.getTodayCreatedCustomers();

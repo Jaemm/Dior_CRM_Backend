@@ -354,8 +354,13 @@ export class ConsultantsController {
     }
 
     @Post('tokens/refresh')
-    async refreshToken(@Req() req: Request, @Res() res: Response, @Body() body: TokenRefreshDto): Promise<any> {
-        const consultant = await this.consultants.refreshToken(body);
+    async refreshToken(
+        @Req() req: Request,
+        @Res() res: Response,
+        @Body() body: TokenRefreshDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ): Promise<any> {
+        const consultant = await this.consultants.refreshToken(body, locale);
         return res.status(200).send(consultant);
     }
 
