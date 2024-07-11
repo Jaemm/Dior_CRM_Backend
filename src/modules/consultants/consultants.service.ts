@@ -1047,7 +1047,7 @@ export class ConsultantsService {
         }
     }
 
-    async getCurConsultantInfo(req: Request) {
+    async getConsultantAboutMe(req: Request) {
         try {
             const { user } = req;
 

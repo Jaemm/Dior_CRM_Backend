@@ -60,11 +60,18 @@ export class ConsultantsController {
         private readonly crmService: CRMService,
     ) {}
 
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get()
+    async getConsultants(@Query() query: GetConsultantDto) {
+        return await this.consultants.getConsultants(query);
+    }
+
     @Get('me')
     @Roles(Role.Consultant)
     @ApiBearerAuth()
-    async getCurConsultantInfo(@Req() req: Request) {
-        return this.consultants.getCurConsultantInfo(req);
+    async getConsultantAboutMe(@Req() req: Request) {
+        return this.consultants.getConsultantAboutMe(req);
     }
 
     @Post('login/social')
@@ -211,13 +218,6 @@ export class ConsultantsController {
      * Existing codes
      *
      * */
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get()
-    async getConsultants(@Res() res: Response, @Query() query: GetConsultantDto): Promise<any> {
-        const consultants = await this.consultants.getConsultants(query);
-        return res.status(200).send(consultants);
-    }
 
     @Post('register')
     async registerConsultant(
