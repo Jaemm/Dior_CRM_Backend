@@ -194,9 +194,9 @@ export class ConsultantsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('login/phone')
-    async loginPhone(@Req() req: Request, @Body() body: LoginPhoneDto) {
+    async loginPhone(@Req() req: Request, @Body() body: LoginPhoneDto, @Headers('X-CHOWIS-LOCALE') locale: string) {
         const userId = Number((<{ id: string }>req['user']).id);
-        return await this.consultants.loginPhone(body, userId);
+        return await this.consultants.loginPhone(body, userId, locale);
     }
 
     @ApiBearerAuth()

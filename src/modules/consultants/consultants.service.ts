@@ -64,6 +64,7 @@ import {
     Identities,
     HealthTips,
     DiorCustomerConsents,
+    Customers,
 } from '@/src/common/entities/crmEntities';
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { DeviceService } from '../devices/devices.service';
@@ -2324,10 +2325,10 @@ export class ConsultantsService {
         }
     }
 
-    public async loginPhone(data: LoginPhoneDto, consultantId: number) {
+    public async loginPhone(data: LoginPhoneDto, consultantId: number, locale: string = 'en') {
         const { phone } = data;
 
-        const consultant = await this.getConsultant(
+        const consultant: Consultants = await this.getConsultant(
             { id: consultantId },
             ['customers.id', 'customers.name', 'customers.email', 'customers.phone'],
             ['customers'],
@@ -2337,10 +2338,17 @@ export class ConsultantsService {
             this.commonService.throwNotFoundError();
         }
 
-        let customers = [];
+        let customers: Customers;
 
         if (consultant.customers) {
             customers = consultant.customers.find((customer: any) => customer.phone == phone);
+        }
+
+        if (!customers) {
+            throw new NotFoundException({
+                result_code: ErrorStatus.CUSTOMER_NOT_FOUND,
+                error: this.commonService.createLocaleErrorMessage(locale, 'crm_customer_not_found'),
+            });
         }
 
         return customers;
