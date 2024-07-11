@@ -62,9 +62,13 @@ export class CRMController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('customers/get_by_email')
-    async getCustomerByEmail(@Req() req: Request, @Query() query: GetByEmailDto): Promise<any> {
+    async getCustomerByEmail(
+        @Req() req: Request,
+        @Query() query: GetByEmailDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ): Promise<any> {
         const userId = Number((<{ id: string }>req['user']).id);
-        return await this.crmService.getByEmail(userId, query);
+        return await this.crmService.getByEmail(userId, query, locale);
     }
 
     @Roles(Role.Consultant)

@@ -381,7 +381,7 @@ export class CRMService {
         }
     }
 
-    async getByEmail(consultantId: number, data: GetByEmailDto) {
+    async getByEmail(consultantId: number, data: GetByEmailDto, locale: string = 'en') {
         const selection = {
             customers: {
                 id: true,
@@ -420,7 +420,7 @@ export class CRMService {
         if (!customer) {
             throw new NotFoundException({
                 result_code: ErrorStatus.NOT_FOUND,
-                error: ResponseMessages.CrmCustomerNotFound,
+                error: this.commonService.createLocaleErrorMessage(locale, 'crm_customer_not_found'),
             });
         }
 
