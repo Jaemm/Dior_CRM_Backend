@@ -73,8 +73,11 @@ export class CRMController {
 
     @Roles(Role.Consultant)
     @Post('customers/presign_upload_consent_form')
-    async presignUploadConsentForm(@Body() body: PresignedUploadDto): Promise<any> {
-        return await this.crmService.presignedUpload(body);
+    async presignUploadConsentForm(
+        @Body() body: PresignedUploadDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ): Promise<any> {
+        return await this.crmService.presignedUpload(body, locale);
     }
 
     @Roles(Role.Consultant)

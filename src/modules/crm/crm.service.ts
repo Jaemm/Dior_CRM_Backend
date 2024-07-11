@@ -310,8 +310,12 @@ export class CRMService {
 
             if (!email || !phone) {
                 throw new BadRequestException({
-                    result_code: ErrorStatus.INVALID_REQUEST,
-                    error: this.commonService.createLocaleErrorMessage(locale, 'invalid_request'),
+                    result_code: ErrorStatus.CUSTOM_ERROR,
+                    error: this.commonService.createLocaleErrorMessage(
+                        locale,
+                        'custom_error',
+                        'Missing email and phone number',
+                    ),
                 });
             }
 
@@ -511,14 +515,29 @@ export class CRMService {
         };
     }
 
-    async presignedUpload(data: PresignedUploadDto) {
+    async presignedUpload(data: PresignedUploadDto, locale: string = 'en') {
         try {
             const { file_name, consent_type, customer_id, file } = data;
+
+            if (!file_name && !consent_type) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.CUSTOM_ERROR,
+                    error: this.commonService.createLocaleErrorMessage(
+                        locale,
+                        'custom_error',
+                        'file or consent_type missing',
+                    ),
+                });
+            }
 
             if (!['ipos_consent', 'without_ipos_consent'].includes(consent_type)) {
                 throw new BadRequestException({
                     result_code: ErrorStatus.CUSTOM_ERROR,
-                    error: ResponseMessages.InvalidConsentType,
+                    error: this.commonService.createLocaleErrorMessage(
+                        locale,
+                        'custom_error',
+                        'Only consent_type ipos_consent or without_ipos_consent accepted',
+                    ),
                 });
             }
 
@@ -535,15 +554,26 @@ export class CRMService {
         }
     }
 
-    async updateConsentForm(data: UpdateConsentForm) {
+    async updateConsentForm(data: UpdateConsentForm, locale: string = 'en') {
         // TODO: Use locale from headers for translation
 
         const { customer_id, consent_type, consent_form_answers, batch_id, url } = data;
 
+        if (!consent_type) {
+            throw new BadRequestException({
+                result_code: ErrorStatus.CUSTOM_ERROR,
+                error: this.commonService.createLocaleErrorMessage(locale, 'custom_error', 'Consent_type missing'),
+            });
+        }
+
         if (!['ipos_consent', 'without_ipos_consent'].includes(consent_type)) {
             throw new BadRequestException({
                 result_code: ErrorStatus.CUSTOM_ERROR,
-                error: ResponseMessages.InvalidConsentType,
+                error: this.commonService.createLocaleErrorMessage(
+                    locale,
+                    'custom_error',
+                    'Only consent_type ipos_consent or without_ipos_consent accepted',
+                ),
             });
         }
 

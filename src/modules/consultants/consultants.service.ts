@@ -2683,7 +2683,7 @@ export class ConsultantsService {
             if (!token) {
                 throw new UnauthorizedException({
                     result_code: ErrorStatus.UNAUTHORIZED,
-                    error: this.commonService.createLocaleErrorMessage('en', 'unauthorized');
+                    error: this.commonService.createLocaleErrorMessage('en', 'unauthorized'),
                 });
             }
 

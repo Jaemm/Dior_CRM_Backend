@@ -75,8 +75,12 @@ export class DiorController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('product_recommendations')
-    async getProductRecommendation(@Req() req: Request, @Query() query: SearchProductRecommendationDto) {
-        return await this.diorService.getProductRecommendation(req, query);
+    async getProductRecommendation(
+        @Req() req: Request,
+        @Query() query: SearchProductRecommendationDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ) {
+        return await this.diorService.getProductRecommendation(req, query, locale);
     }
 
     @ApiBearerAuth()

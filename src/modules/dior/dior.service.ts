@@ -38,7 +38,7 @@ import {
     ProductTranslations,
 } from '@/src/common/entities/crmEntities';
 import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
-import { AutomaticProductDiorGenerator } from './automaticProductDiorGenerator';
+import { AutomaticProductDiorGenerator } from './automatic-product-dior-generator';
 import { Not } from 'typeorm';
 
 @Injectable()
@@ -262,7 +262,6 @@ export class DiorService {
             if (!foundConsultant) {
                 throw new NotFoundException({
                     result_code: ErrorStatus.NOT_FOUND,
-                    error: `Cannot found consultant userId: ${consultantId}`,
                 });
             }
 
@@ -414,7 +413,7 @@ export class DiorService {
         }
     }
 
-    async getProductRecommendation(req: Request, query: SearchProductRecommendationDto) {
+    async getProductRecommendation(req: Request, query: SearchProductRecommendationDto, locale: string = 'en') {
         try {
             const {
                 request_origin,
@@ -440,7 +439,6 @@ export class DiorService {
             if (!diorConsultant) {
                 throw new NotFoundException({
                     result_code: ErrorStatus.NOT_FOUND,
-                    error: `Cannot found dior consultant`,
                 });
             }
 
