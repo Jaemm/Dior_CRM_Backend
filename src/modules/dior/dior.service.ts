@@ -521,11 +521,11 @@ export class DiorService {
             const searchLimit = Number(limit || 30);
 
             const [data, totalCount] = await prQuery
-                .leftJoinAndSelect(
-                    ProductTranslations,
-                    'productTranslations',
-                    'productRecommendation.id = CAST(productTranslations.product_recommendation_id AS integer)',
-                )
+                // .leftJoinAndSelect(
+                //     ProductTranslations,
+                //     'productTranslations',
+                //     'productRecommendation.id = CAST(productTranslations.product_recommendation_id AS integer)',
+                // )
                 .skip((searchPage - 1) * searchLimit)
                 .take(searchLimit)
                 .getManyAndCount();
@@ -552,14 +552,27 @@ export class DiorService {
                     product_variants: [] as any[],
                 };
 
-                // name, product_translationsu
+                d.productTranslations = await this.productTranslationsRepository.find({
+                    where: {
+                        productRecommendationId: d.id,
+                    },
+                });
 
                 let recommendationForProperties = d;
                 if (d.productRecommendationId) {
                     recommendationForProperties = await this.productRecommendationRepository.findOne({
                         where: { id: String(d.productRecommendationId) },
-                        relations: ['productTranslations'],
                     });
+
+                    if (recommendationForProperties) {
+                        recommendationForProperties.productTranslations = await this.productTranslationsRepository.find(
+                            {
+                                where: {
+                                    productRecommendationId: recommendationForProperties.id,
+                                },
+                            },
+                        );
+                    }
 
                     returnFormat.name = recommendationForProperties ? recommendationForProperties.name : d.name;
                 }

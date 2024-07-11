@@ -32,7 +32,7 @@ export class ConsultantsResponseDto {
     code: string | null;
     country_code: string | null;
     store: string | null;
-    optic_number: string | null;
+    optic_number: string[] | null;
     password_update_needed: boolean | null;
     licenses: LicensesResponseDto;
     products: ProductsResponseDto;
