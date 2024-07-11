@@ -1689,7 +1689,10 @@ export class ConsultantsService {
             const consultant = await this.consultantsRepository.findConsultant(Number(app_id), email);
 
             if (!consultant) {
-                throw new NotFoundException('Please enter a valid email address.');
+                throw new NotFoundException({
+                    result_code: ErrorStatus.CUSTOM_ERROR,
+                    error: 'Please enter a valid email address.',
+                });
             }
 
             const MAXIMUM_REQUEST_PASSWORD_RESET = 5;
@@ -1703,7 +1706,10 @@ export class ConsultantsService {
                 .getCount();
 
             if (oneHourCount >= MAXIMUM_REQUEST_PASSWORD_RESET) {
-                throw new BadRequestException('You have reached maximum limit of reset password request!');
+                throw new BadRequestException({
+                    result_code: ErrorStatus.CUSTOM_ERROR,
+                    error: 'You have reached maximum limit of reset password request!',
+                });
             }
 
             await this.passwordDetailRepository.save({ email: email, createdAt: new Date(), updatedAt: new Date() });
@@ -1743,14 +1749,14 @@ export class ConsultantsService {
         if (!consultant) {
             throw new BadRequestException({
                 result_code: ErrorStatus.PASSWORD_CHANGE_FAILED,
-                error: ResponseMessages.PasswordChangeFailed,
+                error: this.commonService.createLocaleErrorMessage(locale, 'password_change_failed'),
             });
         }
 
         if (!consultant.email || !consultant.password_digest) {
             throw new BadRequestException({
                 result_code: ErrorStatus.PASSWORD_CHANGE_FAILED,
-                error: ResponseMessages.PasswordChangeFailed,
+                error: this.commonService.createLocaleErrorMessage(locale, 'password_change_failed2'),
             });
         }
 
@@ -1759,7 +1765,7 @@ export class ConsultantsService {
         if (!confirmPwd) {
             throw new BadRequestException({
                 result_code: ErrorStatus.PASSWORD_CHANGE_FAILED,
-                error: ResponseMessages.PasswordChangeFailed,
+                error: this.commonService.createLocaleErrorMessage(locale, 'password_change_failed'),
             });
         }
 
@@ -2269,20 +2275,20 @@ export class ConsultantsService {
                         metaId: consultant.id,
                         metaType: 'consultant',
                     });
-                    identity = await this.identityRepository.save(newIdentity);
+                    try {
+                        identity = await this.identityRepository.save(newIdentity);
+                    } catch (err) {
+                        throw new InternalServerErrorException({
+                            result_code: ErrorStatus.CUSTOM_ERROR,
+                            error: err.message,
+                        });
+                    }
                 } else {
                     throw new BadRequestException({
-                        result_code: ErrorStatus.BAD_REQUEST,
+                        result_code: ErrorStatus.CUSTOM_ERROR,
                         error: 'Please provide email and app id',
                     });
                 }
-            }
-
-            if (!identity) {
-                throw new InternalServerErrorException({
-                    result_code: ErrorStatus.SERVER_ERROR,
-                    error: 'Please provide email and app id',
-                });
             }
 
             const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
@@ -2354,7 +2360,7 @@ export class ConsultantsService {
         let customers = [];
 
         if (consultant.customers) {
-            customers = consultant.customers.filter((customer: any) => customer.phone == phone);
+            customers = consultant.customers.find((customer: any) => customer.phone == phone);
         }
 
         return customers;
