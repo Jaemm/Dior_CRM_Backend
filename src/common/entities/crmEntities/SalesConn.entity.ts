@@ -1,7 +1,6 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
-@Index('sales_conn_pkey', ['id'], { unique: true })
-@Entity('sales_conn', { schema: 'public' })
+@Entity('sales_connections', { schema: 'public' })
 export class SalesConn {
     @PrimaryGeneratedColumn({ type: 'bigint', name: 'id' })
     id: string;
@@ -12,23 +11,13 @@ export class SalesConn {
     @Column('integer', { name: 'consultant_id', nullable: true })
     consultantId: number | null;
 
-    @Column('integer', { name: 'country_code', nullable: true })
-    countryCode: number | null;
+    @Column('integer', { name: 'answer1', nullable: true })
+    answer1: string | null;
+    @Column('integer', { name: 'answer2', nullable: true })
+    answer2: string | null;
 
-    @Column('character varying', { name: 'store_location', nullable: true })
-    storeLocation: string | null;
-
-    @Column('character varying', { name: 'sales' })
-    sales: string;
-
-    @Column('character varying', { name: 'comment', nullable: true })
-    comment: string | null;
-
-    @Column('integer', { name: 'brand_id', nullable: true })
-    brandId: number | null;
-
-    @Column('integer', { name: 'app_id', nullable: true })
-    appId: number | null;
+    @Column('integer', { name: 'country_name', nullable: true })
+    countryName: string | null;
 
     @Column('timestamp without time zone', {
         name: 'created_at',
@@ -36,4 +25,11 @@ export class SalesConn {
         default: () => 'now()',
     })
     createdAt: Date | null;
+
+    @Column('timestamp without time zone', {
+        name: 'updated_at',
+        nullable: true,
+        default: () => 'now()',
+    })
+    updatedAt: Date | null;
 }

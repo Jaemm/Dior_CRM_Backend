@@ -19,6 +19,10 @@ import {
     HealthTips,
     Identities,
     DiorCustomerConsents,
+    SalesConn,
+    Genders,
+    ConsultantStores,
+    ConsultantCountries,
 } from '@/src/common/entities/crmEntities';
 
 import { ConsultantsController } from './consultants.controller';
@@ -41,14 +45,7 @@ import { CustomerLicenses } from '@/src/common/entities/crmEntities/CustomerLice
 import { Ethnicities } from '@/src/common/entities/crmEntities/Ethnicities.entity';
 import { SkinColorGroups } from '@/src/common/entities/crmEntities/SkinColorGroups.entity';
 
-import { SalesConn } from '@/src/common/entities/crmEntities/SalesConn.entity';
-
 import { AdminGroups } from '@/src/common/entities/crmEntities/AdminGroups.entity';
-
-import { Genders } from '@/src/common/entities/crmEntities/Genders.entity';
-
-import { ConsultantStores } from '@/src/common/entities/crmEntities/ConsultantStores.entity';
-import { ConsultantCountries } from '@/src/common/entities/crmEntities/ConsultantCountries.entity';
 
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/ActiveStorageAttachments.entity';
@@ -77,6 +74,7 @@ import {
     ConsultantPositionsRepository,
     ConsultantCountriesRepository,
     ConsultantStoresRepository,
+    SalesConnectionRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
 
@@ -93,6 +91,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         DiorCustomerConsents,
         Applications,
         ConsultantStores,
+        SalesConn,
 
         AnalysisDataReplicationModule,
         TypeOrmModule.forFeature([
@@ -125,8 +124,6 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
             SkinColorGroups,
 
             AdminUsers,
-
-            SalesConn,
 
             AdminGroups,
 
@@ -172,9 +169,10 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         ConsultantPositionsRepository,
         CustomersRepository,
         DevicesRepository,
+        DiorCustomerConsentsRepository,
         GendersRepository,
         ProductsRepository,
-        DiorCustomerConsentsRepository,
+        SalesConnectionRepository,
     ],
     exports: [ConsultantsService],
 })

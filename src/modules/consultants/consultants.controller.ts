@@ -44,6 +44,7 @@ import {
     HealthTipsDto,
     HealthTipsByCompanyDto,
     NotificationTestDto,
+    CreateSalesConnectionDto,
 } from '@/src/modules/consultants/consultants.dto';
 import { JwtService } from '@/src/jwt/jwt.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -107,6 +108,13 @@ export class ConsultantsController {
     @Get('store')
     async getStores() {
         return await this.consultants.getStores();
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('create_sale_connection')
+    async createSalesConnection(@Body() body: CreateSalesConnectionDto, @Headers('X-CHOWIS_LOCALE') locale: string) {
+        return await this.consultants.createSalesConnection(body, locale);
     }
 
     @Get('me')

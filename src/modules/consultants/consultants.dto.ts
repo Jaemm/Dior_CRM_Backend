@@ -1,7 +1,7 @@
 import { IsNumberOrString } from '@/src/common/validators/number-or-string.validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsArray, IsNotEmpty, IsOptional, IsString, Matches, Validate } from 'class-validator';
+import { IS_NOT_EMPTY, IsArray, IsNotEmpty, IsOptional, IsString, Matches, Validate } from 'class-validator';
 
 export class ConsultantDto {
     @ApiProperty()
@@ -563,6 +563,20 @@ export class LoginSocialDto {
     @IsOptional()
     @IsString()
     name: string;
+}
+
+export class CreateSalesConnectionDto {
+    @IsString()
+    @IsOptional()
+    consultant_id: string;
+
+    @IsString()
+    @IsOptional()
+    batch_id: string;
+
+    @IsString()
+    @IsOptional()
+    country_name: string;
 }
 
 export class LoginPhoneDto {

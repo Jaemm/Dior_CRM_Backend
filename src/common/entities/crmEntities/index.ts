@@ -25,6 +25,8 @@ export { Identities } from './Identities.entity';
 
 export { Notifications } from './Notifications.entity';
 
+export { SalesConn } from './SalesConn.entity';
+
 export { PasswordEmailDetails } from './PasswordEmailDetails.entity';
 export { Products } from './Products.entity';
 export { ProductAttributes } from './ProductAttributes.entity';

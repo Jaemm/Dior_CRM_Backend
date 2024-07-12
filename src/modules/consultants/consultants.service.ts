@@ -51,6 +51,7 @@ import {
     UpdateConsultantRubyDto,
     HealthTipsDto,
     HealthTipsByCompanyDto,
+    CreateSalesConnectionDto,
 } from '@/src/modules/consultants/consultants.dto';
 
 import {
@@ -104,6 +105,7 @@ import {
     DiorCustomerConsentsRepository,
     GendersRepository,
     ProductsRepository,
+    SalesConnectionRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.repository';
 import { AnalysisDataReplicationService } from '../dataReplication/analysisDataReplication/analysisDataReplication.service';
@@ -155,6 +157,7 @@ export class ConsultantsService {
         private readonly analysisReplService: AnalysisDataReplicationService,
 
         // Repos
+        private readonly salesConnectionRepository: SalesConnectionRepository,
         private readonly consultantStoresRepository: ConsultantStoresRepository,
         private readonly consultantCountiresRepository: ConsultantCountriesRepository,
         private readonly gendersRepository: GendersRepository,
@@ -2134,6 +2137,60 @@ export class ConsultantsService {
         } catch (e) {
             throw e;
         }
+    }
+
+    async createSalesConnection(body: CreateSalesConnectionDto, locale = 'en') {
+        const { consultant_id, batch_id, country_name } = body;
+
+        if (!consultant_id) {
+            throw new BadRequestException({
+                result_code: ErrorStatus.CUSTOM_ERROR,
+                error: this.commonService.createLocaleErrorMessage(
+                    locale,
+                    'custom_error',
+                    'Consultant ID missing! consultant_id param needed',
+                ),
+            });
+        }
+        if (!batch_id) {
+            throw new BadRequestException({
+                result_code: ErrorStatus.CUSTOM_ERROR,
+                error: this.commonService.createLocaleErrorMessage(
+                    locale,
+                    'custom_error',
+                    'Batch ID missing! batch_id param needed',
+                ),
+            });
+        }
+        if (!country_name) {
+            throw new BadRequestException({
+                result_code: ErrorStatus.CUSTOM_ERROR,
+                error: this.commonService.createLocaleErrorMessage(
+                    locale,
+                    'custom_error',
+                    'Country name missing! country_name param needed',
+                ),
+            });
+        }
+
+        const newSaleConnection = this.salesConnectionRepository.create({
+            consultantId: Number(consultant_id),
+            batchId: Number(batch_id),
+            countryName: country_name,
+        });
+
+        try {
+            await this.salesConnectionRepository.save(newSaleConnection);
+        } catch (e) {
+            throw new InternalServerErrorException({
+                result_code: ErrorStatus.CUSTOM_ERROR,
+                error: this.commonService.createLocaleErrorMessage(locale, 'custom_error', e.message),
+            });
+        }
+
+        return {
+            message: 'Success',
+        };
     }
 
     public async getCompanyDetails(data: ConsultantCompanyDetailsDto) {
