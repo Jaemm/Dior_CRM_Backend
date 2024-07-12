@@ -27,6 +27,7 @@ import {
     ProductRecommendationSelectedRepository,
     ProductTranslationsRepository,
 } from '@/src/common/repositories/crm';
+import { CommonService } from '@/src/common/common.service';
 
 @Module({
     imports: [
@@ -43,6 +44,7 @@ import {
     controllers: [DiorController],
     providers: [
         DiorService,
+        CommonService,
 
         // Repositories
         ConsultantsRepository,

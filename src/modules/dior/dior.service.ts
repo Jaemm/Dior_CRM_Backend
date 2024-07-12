@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 
-import { NotFoundException, BadRequestException, ConflictException } from '@nestjs/common/exceptions';
+import {
+    NotFoundException,
+    BadRequestException,
+    ConflictException,
+    UnauthorizedException,
+} from '@nestjs/common/exceptions';
 
 import {
     ConsultantsRepository,
@@ -40,10 +45,14 @@ import {
 import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
 import { AutomaticProductDiorGenerator } from './automatic-product-dior-generator';
 import { Not } from 'typeorm';
+import { CommonService } from '@/src/common/common.service';
 
 @Injectable()
 export class DiorService {
     constructor(
+        private commonService: CommonService,
+
+        // Repos
         private consultantRepository: ConsultantsRepository,
         private consultantCountriesRepository: ConsultantCountriesRepository,
         private consultnatBranchesRepository: ConsultnatBranchesRepository,
@@ -84,7 +93,7 @@ export class DiorService {
     }
 
     /** Branches */
-    async getBranchesByConsultantsId(req: Request) {
+    async getBranchesByConsultantsId(req: Request, locale = 'en') {
         try {
             const userId = (<{ id: string }>req.user).id;
 
@@ -94,9 +103,9 @@ export class DiorService {
             });
 
             if (!currentConsultant) {
-                throw new NotFoundException({
-                    result_code: ErrorStatus.NOT_FOUND,
-                    error: `Cannot Found consultant userId:${currentConsultant.email}`,
+                throw new UnauthorizedException({
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
                 });
             }
 
@@ -135,7 +144,7 @@ export class DiorService {
         }
     }
 
-    async searchBranches(req: Request, query: SearchBranchesDto) {
+    async searchBranches(req: Request, query: SearchBranchesDto, locale = 'en') {
         try {
             const { filter_by: filterBy, search, country, page, per } = query;
 
@@ -144,8 +153,8 @@ export class DiorService {
 
             if (!currentConsultant) {
                 throw new NotFoundException({
-                    result_code: ErrorStatus.NOT_FOUND,
-                    error: `Cannot Found consultant userId:${currentConsultant.email}`,
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
                 });
             }
 
@@ -433,6 +442,13 @@ export class DiorService {
             const currentConsultant = await this.consultantRepository.getConsultantById(Number(userId), [
                 'consultant_branch',
             ]);
+
+            if (!currentConsultant) {
+                throw new UnauthorizedException({
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+                });
+            }
 
             const diorConsultant = await this.consultantRepository.getDiorConsultant();
 

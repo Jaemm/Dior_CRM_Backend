@@ -46,8 +46,12 @@ export class DiorController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('company_branches')
-    async searchBranches(@Req() req: Request, @Query() query: SearchBranchesDto) {
-        return await this.diorService.searchBranches(req, query);
+    async searchBranches(
+        @Req() req: Request,
+        @Query() query: SearchBranchesDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ) {
+        return await this.diorService.searchBranches(req, query, locale);
     }
 
     @ApiBearerAuth()
@@ -60,8 +64,8 @@ export class DiorController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('company_consultants/by_consultant')
-    async getBranchesByConsultantsId(@Req() req: Request) {
-        return await this.diorService.getBranchesByConsultantsId(req);
+    async getBranchesByConsultantsId(@Req() req: Request, @Headers('X-CHOWIS-LOCALE') locale: string) {
+        return await this.diorService.getBranchesByConsultantsId(req, locale);
     }
 
     @ApiBearerAuth()

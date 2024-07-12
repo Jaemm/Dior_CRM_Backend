@@ -70,8 +70,8 @@ export class ConsultantsController {
     @Get('me')
     @Roles(Role.Consultant)
     @ApiBearerAuth()
-    async getConsultantAboutMe(@Req() req: Request) {
-        return this.consultants.getConsultantAboutMe(req);
+    async getConsultantAboutMe(@Req() req: Request, @Headers('X-CHOWIS-LOCALE') locale: string) {
+        return this.consultants.getConsultantAboutMe(req, locale);
     }
 
     @Post('login/social')
@@ -176,8 +176,12 @@ export class ConsultantsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('product_recommendations')
-    async getProductRecommendations(@Req() req: Request, @Query() query: ProductRecommendationsDto) {
-        return await this.consultants.getProductRecommendations(req, query);
+    async getProductRecommendations(
+        @Req() req: Request,
+        @Query() query: ProductRecommendationsDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ) {
+        return await this.consultants.getProductRecommendations(req, query, locale);
     }
 
     @ApiBearerAuth()

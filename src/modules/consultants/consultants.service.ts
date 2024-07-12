@@ -441,7 +441,10 @@ export class ConsultantsService {
             });
 
             if (!currentConsultant) {
-                throw new BadRequestException('Cannot found consultant');
+                throw new UnauthorizedException({
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+                });
             }
 
             Object.assign(currentConsultant, body);
@@ -523,6 +526,13 @@ export class ConsultantsService {
                 },
                 relations: ['consultant_company', 'consultant_company.healthTips'],
             });
+
+            if (!currentConsultant) {
+                throw new UnauthorizedException({
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+                });
+            }
 
             let healthTips = currentConsultant.consultant_company.healthTips ?? [];
             let totalCount;
@@ -1047,7 +1057,7 @@ export class ConsultantsService {
         }
     }
 
-    async getConsultantAboutMe(req: Request) {
+    async getConsultantAboutMe(req: Request, locale: string = 'en') {
         try {
             const { user } = req;
 
@@ -1061,6 +1071,13 @@ export class ConsultantsService {
                 },
                 relations: ['products', 'products.device', 'country_details', 'consultant_position'],
             });
+
+            if (!consultants) {
+                throw new UnauthorizedException({
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+                });
+            }
 
             return {
                 id: consultants.id,
@@ -2356,7 +2373,7 @@ export class ConsultantsService {
         return customers;
     }
 
-    public async getProductRecommendations(req: Request, data: ProductRecommendationsDto) {
+    public async getProductRecommendations(req: Request, data: ProductRecommendationsDto, locale = 'en') {
         try {
             const userId = (<{ id: string }>req.user).id;
             const currentConsultant = await this.consultantsRepository.findOne({
@@ -2366,7 +2383,10 @@ export class ConsultantsService {
             });
 
             if (!currentConsultant)
-                throw new NotFoundException({ result_code: ErrorStatus.NOT_FOUND, error: ErrorMessages.NOT_FOUND });
+                throw new UnauthorizedException({
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+                });
 
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
