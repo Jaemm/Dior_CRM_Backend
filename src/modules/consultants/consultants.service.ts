@@ -98,6 +98,7 @@ import {
     ConsultantCountriesRepository,
     ConsultantPositionsRepository,
     ConsultantShopsRepository,
+    ConsultantStoresRepository,
     ConsultantsRepository,
     CustomersRepository,
     DevicesRepository,
@@ -113,6 +114,7 @@ import {
     ConsultantCountryT,
     ConsultantPositionsT,
     ConsultantShopT,
+    ConsultantStoreT,
 } from '@/src/common/types/entities';
 
 @Injectable()
@@ -154,6 +156,7 @@ export class ConsultantsService {
         private readonly analysisReplService: AnalysisDataReplicationService,
 
         // Repos
+        private readonly consultantStoresRepository: ConsultantStoresRepository,
         private readonly consultantCountiresRepository: ConsultantCountriesRepository,
         private readonly gendersRepository: GendersRepository,
         private readonly applicationsRepository: ApplicationsRepository,
@@ -2109,6 +2112,26 @@ export class ConsultantsService {
             });
 
             return reformatCountryList;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getStores() {
+        try {
+            const stores = await this.consultantStoresRepository.find();
+
+            const reformatStores: ConsultantStoreT[] = stores.map((store) => {
+                return {
+                    id: Number(store.id),
+                    consultant_country_id: Number(store.consultantCountryId),
+                    name: store.name,
+                    created_at: store.createdAt,
+                    updated_at: store.updatedAt,
+                };
+            });
+
+            return reformatStores;
         } catch (e) {
             throw e;
         }

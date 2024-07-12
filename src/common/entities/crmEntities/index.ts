@@ -11,6 +11,7 @@ export { ConsultantCompanies } from './ConsultantCompanies.entity';
 export { ConsultantPositions } from './ConsultantPositions.entity';
 export { Countries } from './Countries.entity';
 export { ConsultantShops } from './ConsultantShops.entity';
+export { ConsultantStores } from './ConsultantStores.entity';
 export { Customers } from './Customers.entity';
 
 export { Devices } from './Devices.entity';

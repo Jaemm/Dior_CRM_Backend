@@ -77,6 +77,7 @@ import {
     ConsultantBranchesRepository,
     ConsultantPositionsRepository,
     ConsultantCountriesRepository,
+    ConsultantStoresRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
 
@@ -92,6 +93,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         Customers,
         DiorCustomerConsents,
         Applications,
+        ConsultantStores,
 
         AnalysisDataReplicationModule,
         TypeOrmModule.forFeature([
@@ -131,7 +133,6 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
 
             Genders,
 
-            ConsultantStores,
             ConsultantCountries,
 
             ActiveStorageAttachments,
@@ -169,6 +170,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         ConsultantBranchesRepository,
         ConsultantCountriesRepository,
         ConsultantShopsRepository,
+        ConsultantStoresRepository,
         ConsultantPositionsRepository,
         CustomersRepository,
         DevicesRepository,
@@ -203,6 +205,10 @@ export class ConsultantsModule {
             },
             {
                 path: 'consultants/country',
+                method: RequestMethod.GET,
+            },
+            {
+                path: 'consultants/store',
                 method: RequestMethod.GET,
             },
             {

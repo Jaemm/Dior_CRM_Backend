@@ -102,6 +102,13 @@ export class ConsultantsController {
         return await this.consultants.getCountries();
     }
 
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('store')
+    async getStores() {
+        return await this.consultants.getStores();
+    }
+
     @Get('me')
     @Roles(Role.Consultant)
     @ApiBearerAuth()
