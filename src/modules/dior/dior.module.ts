@@ -9,6 +9,7 @@ import {
     ConsultantCountries,
     Consultants,
     Customers,
+    Products,
     ProductAttributes,
     ProductAttributeTranslations,
     ProductRecommendations,
@@ -26,6 +27,7 @@ import {
     ProductRecommendationGroupsRepository,
     ProductRecommendationSelectedRepository,
     ProductTranslationsRepository,
+    ProductsRepository,
 } from '@/src/common/repositories/crm';
 import { CommonService } from '@/src/common/common.service';
 
@@ -35,6 +37,7 @@ import { CommonService } from '@/src/common/common.service';
         ConsultantCountries,
         ConsultantBranches,
         Customers,
+        Products,
         ProductAttributes,
         ProductAttributeTranslations,
         ProductRecommendations,
@@ -47,6 +50,7 @@ import { CommonService } from '@/src/common/common.service';
         CommonService,
 
         // Repositories
+        ProductsRepository,
         ConsultantsRepository,
         ConsultantCountriesRepository,
         ConsultnatBranchesRepository,

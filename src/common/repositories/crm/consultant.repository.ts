@@ -81,7 +81,6 @@ export class ConsultantsRepository extends Repository<Consultants> {
     }
 
     /** Consultant */
-
     async findOneConsultantById(id: number) {
         const consultant = await this.findOne({
             where: { id },

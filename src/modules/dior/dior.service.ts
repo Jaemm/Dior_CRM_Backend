@@ -18,6 +18,7 @@ import {
     ProductRecommendationGroupsRepository,
     ProductAttributeTranslationsRepository,
     ProductTranslationsRepository,
+    ProductsRepository,
 } from '@/src/common/repositories/crm';
 
 import { Request } from 'express';
@@ -46,7 +47,7 @@ import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandl
 import { AutomaticProductDiorGenerator } from './automatic-product-dior-generator';
 import { Not } from 'typeorm';
 import { CommonService } from '@/src/common/common.service';
-import { CountriesT } from '@/src/common/types/entities';
+import { ConsultantBranchesT, CountriesT } from '@/src/common/types/entities';
 import { CustomersT } from '@/src/common/types/entities/customers.type';
 
 @Injectable()
@@ -55,6 +56,7 @@ export class DiorService {
         private commonService: CommonService,
 
         // Repos
+        private productsRepository: ProductsRepository,
         private consultantRepository: ConsultantsRepository,
         private consultantCountriesRepository: ConsultantCountriesRepository,
         private consultnatBranchesRepository: ConsultnatBranchesRepository,
@@ -127,7 +129,6 @@ export class DiorService {
             if (!branch) {
                 throw new NotFoundException({
                     result_code: ErrorStatus.NOT_FOUND,
-                    error: `Cannot Found consultant branch by userId:${currentConsultant.email}`,
                 });
             }
 
@@ -139,7 +140,13 @@ export class DiorService {
                 })
                 .getMany();
 
-            const data = consultantsByBranch.map((row) => {
+            const data: {
+                id: number;
+                email: string;
+                code: string;
+                name: string;
+                surname: string;
+            }[] = consultantsByBranch.map((row) => {
                 return {
                     id: row.id,
                     email: row.email,
@@ -162,6 +169,7 @@ export class DiorService {
             const { filter_by: filterBy, search, country, page, per } = query;
 
             const userId = (<{ id: string }>req.user).id;
+            // const userId = 8131;
             const currentConsultant = await this.consultantRepository.findOneBy({ id: Number(userId) });
 
             if (!currentConsultant) {
@@ -176,7 +184,7 @@ export class DiorService {
             const branchQuery = this.consultnatBranchesRepository.createQueryBuilder('branch');
 
             if (consultantsPositionId === 5) {
-                branchQuery.andWhere('branch.company_id = :companyId', {
+                branchQuery.andWhere('branch.consultant_company_id = :companyId', {
                     companyId: currentConsultant.consultant_company_id,
                 });
             } else if ([4, 6].includes(consultantsPositionId)) {
@@ -226,8 +234,26 @@ export class DiorService {
                 .take(perCondition)
                 .getManyAndCount();
 
+            const reformatBranches: Promise<ConsultantBranchesT>[] = branches.map(async (branch) => {
+                const totalDevices = await this.productsRepository.getNewOpticNumbersCountByBranch(branch.id);
+
+                const reformatBranch: ConsultantBranchesT = {
+                    id: Number(branch.id),
+                    name: branch.name,
+                    code: branch.code,
+                    email: branch.email,
+                    created_at: branch.createdAt,
+                    country: branch.country,
+                    password: branch.password,
+                    total_devices: totalDevices,
+                    last_consultation_date: null,
+                };
+
+                return reformatBranch;
+            });
+
             return {
-                data: branches,
+                data: await Promise.all(reformatBranches),
                 total,
                 currentPage: page,
                 pageSize: branches.length,
@@ -260,15 +286,19 @@ export class DiorService {
 
             const savedBranch = await this.consultnatBranchesRepository.save(newBranch);
 
-            return {
-                id: savedBranch.id,
+            const reformatBranch: ConsultantBranchesT = {
+                id: Number(savedBranch.id),
                 name: savedBranch.name,
                 code: savedBranch.code,
                 email: savedBranch.email,
                 created_at: savedBranch.createdAt,
                 country: savedBranch.country,
                 password: savedBranch.password,
+                total_devices: 0,
+                last_consultation_date: null,
             };
+
+            return reformatBranch;
         } catch (e) {
             throw e;
         }
