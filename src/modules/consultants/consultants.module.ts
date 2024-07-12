@@ -208,6 +208,14 @@ export class ConsultantsModule {
                 method: RequestMethod.GET,
             },
             {
+                path: 'consultants/create_sale_connection',
+                method: RequestMethod.POST,
+            },
+            {
+                path: 'consultants/fetch_sales_connection',
+                method: RequestMethod.GET,
+            },
+            {
                 path: 'consultants/change_email',
                 method: RequestMethod.GET,
             },

@@ -579,6 +579,20 @@ export class CreateSalesConnectionDto {
     country_name: string;
 }
 
+export class FetchSalesConnectionDto {
+    @IsString()
+    @IsOptional()
+    start_date: string | null;
+
+    @IsString()
+    @IsOptional()
+    end_date: string | null;
+
+    @IsString()
+    @IsOptional()
+    country_name: string | null;
+}
+
 export class LoginPhoneDto {
     @ApiProperty()
     @IsString()

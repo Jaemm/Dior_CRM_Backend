@@ -52,6 +52,7 @@ import {
     HealthTipsDto,
     HealthTipsByCompanyDto,
     CreateSalesConnectionDto,
+    FetchSalesConnectionDto,
 } from '@/src/modules/consultants/consultants.dto';
 
 import {
@@ -116,6 +117,7 @@ import {
     ConsultantPositionsT,
     ConsultantShopT,
     ConsultantStoreT,
+    SalesConnectionT,
 } from '@/src/common/types/entities';
 
 @Injectable()
@@ -2191,6 +2193,43 @@ export class ConsultantsService {
         return {
             message: 'Success',
         };
+    }
+
+    async fetchSalesConnection(query: FetchSalesConnectionDto) {
+        try {
+            const { start_date, end_date, country_name } = query;
+            const fetchQeury = this.salesConnectionRepository.createQueryBuilder('salesConn');
+
+            if (start_date && end_date) {
+                fetchQeury.andWhere(`salesConn.created_at BETWEEN ${start_date} 00:00:00 AND ${end_date} 00:00:00`);
+            }
+
+            if (country_name) {
+                fetchQeury.andWhere('LOWER(country_name) = :countryName', { countryName: country_name });
+            }
+
+            fetchQeury.orderBy('salesConn.created_at', 'DESC');
+
+            const queryResult = await fetchQeury.getMany();
+
+            const reforamtConnectionList: SalesConnectionT[] = queryResult.map((row) => {
+                return {
+                    id: Number(row.id),
+                    consultant_id: Number(row.consultantId),
+                    batch_id: Number(row.batchId),
+                    answer1: row.answer1,
+                    answer2: row.answer2,
+                    country_name: row.countryName,
+                    created_at: row.createdAt,
+                    question1: 'Did this consultation lead to a Dior sale',
+                    question2: 'This consultation took place',
+                };
+            });
+
+            return reforamtConnectionList;
+        } catch (e) {
+            throw e;
+        }
     }
 
     public async getCompanyDetails(data: ConsultantCompanyDetailsDto) {
