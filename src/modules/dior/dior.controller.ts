@@ -25,8 +25,8 @@ export class DiorController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('customers')
-    async getCustomers(@Query() query: CustomerByConsultantIdDto) {
-        return await this.diorService.getCustomers(query);
+    async getCustomers(@Query() query: CustomerByConsultantIdDto, @Headers('X-CHOWIS-LOCALE') locale: string) {
+        return await this.diorService.getCustomers(query, locale);
     }
 
     @ApiBearerAuth()

@@ -275,7 +275,7 @@ export class DiorService {
     }
 
     /** Customers */
-    async getCustomers(query: CustomerByConsultantIdDto) {
+    async getCustomers(query: CustomerByConsultantIdDto, locale = 'en') {
         try {
             const { consultant_id: consultantId, email } = query;
 
@@ -283,7 +283,8 @@ export class DiorService {
 
             if (!foundConsultant) {
                 throw new NotFoundException({
-                    result_code: ErrorStatus.NOT_FOUND,
+                    result_code: ErrorStatus.RECORD_NOT_FOUND,
+                    errors: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
                 });
             }
 
@@ -367,9 +368,8 @@ export class DiorService {
 
             const savedCustomer = await this.customersRepository.save(newCustomer);
 
-            return {
+            const reformatCustomer: CustomersT = {
                 id: savedCustomer.id,
-                external_id: savedCustomer.external_id,
                 email: savedCustomer.email,
                 name: savedCustomer.name,
                 surname: savedCustomer.surname,
@@ -392,7 +392,10 @@ export class DiorService {
                 gender: savedCustomer.gender,
                 sign_in_count: savedCustomer.sign_in_count,
                 image_url: savedCustomer.image_url,
+                external_id: savedCustomer.external_id,
             };
+
+            return reformatCustomer;
         } catch (e) {
             throw e;
         }
