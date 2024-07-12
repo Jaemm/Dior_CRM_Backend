@@ -33,7 +33,7 @@ import {
     SearchProductRecommendationGroupsDto,
     SelectProductsDto,
     createCustomerDto,
-} from './dior.requests.dto';
+} from './dior.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 import {
@@ -46,6 +46,7 @@ import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandl
 import { AutomaticProductDiorGenerator } from './automatic-product-dior-generator';
 import { Not } from 'typeorm';
 import { CommonService } from '@/src/common/common.service';
+import { CountriesT } from '@/src/common/types/entities';
 
 @Injectable()
 export class DiorService {
@@ -84,8 +85,19 @@ export class DiorService {
 
             const countries = await countriesQuery.getMany();
 
+            const reformatCountries: CountriesT[] = countries.map((country) => {
+                const reformatData: CountriesT = {
+                    id: Number(country.id),
+                    name: country.name,
+                    code: country.code,
+                    url_and_port: country.urlAndPort,
+                    default_recommendation: country.defaultRecommendation,
+                };
+                return reformatData;
+            });
+
             return {
-                data: countries,
+                data: reformatCountries,
             };
         } catch (e) {
             throw e;

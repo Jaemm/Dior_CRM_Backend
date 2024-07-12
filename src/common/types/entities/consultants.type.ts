@@ -1,7 +1,7 @@
-import { LicensesEntityDto } from './licenses.entity.dto';
-import { ProductsEntityDto } from './products.entity.dto';
+import { LicensesT } from './licenses.type';
+import { ProductsT } from './products.type';
 
-export class ConsultantsEntityDto {
+export type ConsultantsEntityDto = {
     id: number | null;
     email: string | null;
     name: string | null;
@@ -34,14 +34,12 @@ export class ConsultantsEntityDto {
     store: string | null;
     optic_number: string[] | null;
     password_update_needed: boolean | null;
-    licenses: LicensesEntityDto;
-    products: ProductsEntityDto;
+    licenses: LicensesT;
+    products: ProductsT;
     consultant_company: object;
     consultant_branch: object;
     consultant_country: object;
     consultant_store: object;
     consultant_shop: object;
     consultant_position: object;
-
-    constructor() {}
-}
+};

@@ -1,6 +1,6 @@
-import { LicensesEntityDto } from './licenses.entity.dto';
+import { LicensesT } from './licenses.type';
 
-export class ProductsEntityDto {
+export type ProductsT = {
     id: number | null;
     first_use_date: string | null;
     use_date: string | null;
@@ -11,6 +11,6 @@ export class ProductsEntityDto {
     created_at: Date | null;
     is_expired: boolean | null;
     device: object;
-    license: LicensesEntityDto;
+    license: LicensesT | null;
     application: object;
-}
+};
