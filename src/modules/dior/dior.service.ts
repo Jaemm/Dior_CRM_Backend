@@ -47,6 +47,7 @@ import { AutomaticProductDiorGenerator } from './automatic-product-dior-generato
 import { Not } from 'typeorm';
 import { CommonService } from '@/src/common/common.service';
 import { CountriesT } from '@/src/common/types/entities';
+import { CustomersT } from '@/src/common/types/entities/customers.type';
 
 @Injectable()
 export class DiorService {
@@ -296,8 +297,39 @@ export class DiorService {
 
             const customersByConsultant = await customerByConsultantIdQuery.getMany();
 
+            const reformatCustomerList: CustomersT[] = customersByConsultant.map((customer) => {
+                const reformatCustomer: CustomersT = {
+                    id: customer.id,
+                    email: customer.email,
+                    name: customer.name,
+                    surname: customer.surname,
+                    os: customer.os,
+                    language: customer.language,
+                    phone: customer.phone,
+                    birth: customer.birth,
+                    address: customer.address,
+                    city: customer.city,
+                    state: customer.state,
+                    zip_code: customer.zip_code,
+                    country: customer.country,
+                    notes: customer.notes,
+                    push_token: customer.push_token,
+                    app_id: customer.app_id,
+                    company_id: customer.company_id,
+                    consultant_id: customer.consultant_id,
+                    skin_color_group_id: customer.skin_color_group_id,
+                    ethnicity_id: customer.ethnicity_id,
+                    gender: customer.gender,
+                    sign_in_count: customer.sign_in_count,
+                    image_url: customer.image_url,
+                    external_id: customer.external_id,
+                };
+
+                return reformatCustomer;
+            });
+
             return {
-                data: customersByConsultant,
+                data: reformatCustomerList,
             };
         } catch (e) {
             throw e;

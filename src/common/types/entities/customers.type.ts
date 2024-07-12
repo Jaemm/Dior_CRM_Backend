@@ -1,0 +1,26 @@
+export type CustomersT = {
+    id: number | null;
+    email: string | null;
+    name: string | null;
+    surname: string | null;
+    os: string | null;
+    language: string | null;
+    phone: string | null;
+    birth: string | null;
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    zip_code: string | null;
+    country: string | null;
+    notes: string | null;
+    push_token: string | null;
+    app_id: number | null;
+    company_id: number | null;
+    consultant_id: number | null;
+    skin_color_group_id: number | null;
+    ethnicity_id: number | null;
+    gender: string | null;
+    sign_in_count: number | null;
+    image_url: string | null;
+    external_id: string | null;
+};
