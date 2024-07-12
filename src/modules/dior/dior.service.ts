@@ -33,7 +33,7 @@ import {
     SearchProductRecommendationGroupsDto,
     SelectProductsDto,
     createCustomerDto,
-} from './dior.dto';
+} from './dior.requests.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 import {

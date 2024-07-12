@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { ProductAttributes } from '@/src/common/entities/crmEntities';
-import { AttributeRoutine } from '@/src/modules/dior/dior.dto';
+import { AttributeRoutine } from '@/src/modules/dior/dior.requests.dto';
 
 @Injectable()
 export class ProductAttributesRepository extends Repository<ProductAttributes> {

@@ -15,7 +15,7 @@ import {
     SearchProductRecommendationGroupsDto,
     SelectProductsDto,
     createCustomerDto,
-} from './dior.dto';
+} from './dior.requests.dto';
 
 @ApiTags('Dior')
 @Controller('dior')
