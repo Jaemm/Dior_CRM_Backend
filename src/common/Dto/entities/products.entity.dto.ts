@@ -1,6 +1,6 @@
-import { LicensesResponseDto } from './licenses.response.dto';
+import { LicensesEntityDto } from './licenses.entity.dto';
 
-export class ProductsResponseDto {
+export class ProductsEntityDto {
     id: number | null;
     first_use_date: string | null;
     use_date: string | null;
@@ -11,6 +11,6 @@ export class ProductsResponseDto {
     created_at: Date | null;
     is_expired: boolean | null;
     device: object;
-    license: LicensesResponseDto;
+    license: LicensesEntityDto;
     application: object;
 }

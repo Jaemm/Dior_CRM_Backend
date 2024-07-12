@@ -1,7 +1,7 @@
-import { LicensesResponseDto } from './licenses.response.dto';
-import { ProductsResponseDto } from './products.response.dto';
+import { LicensesEntityDto } from './licenses.entity.dto';
+import { ProductsEntityDto } from './products.entity.dto';
 
-export class ConsultantsResponseDto {
+export class ConsultantsEntityDto {
     id: number | null;
     email: string | null;
     name: string | null;
@@ -34,8 +34,8 @@ export class ConsultantsResponseDto {
     store: string | null;
     optic_number: string[] | null;
     password_update_needed: boolean | null;
-    licenses: LicensesResponseDto;
-    products: ProductsResponseDto;
+    licenses: LicensesEntityDto;
+    products: ProductsEntityDto;
     consultant_company: object;
     consultant_branch: object;
     consultant_country: object;

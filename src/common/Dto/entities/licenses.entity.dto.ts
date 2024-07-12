@@ -1,6 +1,6 @@
 import { Licenses } from '../../entities/crmEntities/Licenses.entity';
 
-export class LicensesResponseDto {
+export class LicensesEntityDto {
     id: number | null;
     name: string | null;
 
