@@ -65,6 +65,7 @@ import {
     HealthTips,
     DiorCustomerConsents,
     Customers,
+    ConsultantBranches,
 } from '@/src/common/entities/crmEntities';
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { DeviceService } from '../devices/devices.service';
@@ -93,6 +94,7 @@ import { TargetType } from '@/src/common/enums/target-type.enum';
 import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
 import {
     ApplicationsRepository,
+    ConsultantBranchesRepository,
     ConsultantShopsRepository,
     ConsultantsRepository,
     CustomersRepository,
@@ -103,6 +105,7 @@ import {
 } from '@/src/common/repositories/crm';
 import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.repository';
 import { AnalysisDataReplicationService } from '../dataReplication/analysisDataReplication/analysisDataReplication.service';
+import { ConsultantBranchesT, ConsultantCompaniesT } from '@/src/common/types/entities';
 
 @Injectable()
 export class ConsultantsService {
@@ -143,6 +146,7 @@ export class ConsultantsService {
         private readonly analysisReplService: AnalysisDataReplicationService,
 
         // Repos
+        private readonly consultantBranchesRepository: ConsultantBranchesRepository,
         private readonly gendersRepository: GendersRepository,
         private readonly applicationsRepository: ApplicationsRepository,
         private readonly customersRepository: CustomersRepository,
@@ -1957,9 +1961,77 @@ export class ConsultantsService {
         }
     }
 
-    public async getCompany() {
-        const companies = await this.companies.getCompanies();
-        return companies;
+    public async getCompanies() {
+        try {
+            const companies = await this.consultantCompanyRepository.find();
+
+            const reformatCompanyList: ConsultantCompaniesT[] = companies.map((company) => {
+                const reformatCompany: ConsultantCompaniesT = {
+                    id: company.id,
+                    name: company.name,
+                    created_at: company.created_at,
+                    updated_at: company.updated_at,
+                    address: company.address,
+                    email: company.email,
+                    phone: company.phone,
+                    registeration_date: company.registeration_date,
+                    primary_color_code: company.primary_color_code,
+                    secondary_color_code: company.secondary_color_code,
+                    font: company.font,
+                    program_color_code: company.program_color_code,
+                    top_color_code: company.top_color_code,
+                    text_icon_color_code: company.text_icon_color_code,
+                    pie_chart_color_1: company.pie_chart_color_1,
+                    pie_chart_color_2: company.pie_chart_color_2,
+                    pie_chart_color_3: company.pie_chart_color_3,
+                    pie_chart_color_4: company.pie_chart_color_4,
+                    pie_chart_color_5: company.pie_chart_color_5,
+                    pie_chart_points_color: company.pie_chart_points_color,
+                    active: company.active,
+                    font_color_1: company.font_color_1,
+                    font_color_2: company.font_color_2,
+                    data_exchange_url: company.data_exchange_url,
+                    pmx: company.pmx,
+                };
+                return reformatCompany;
+            });
+
+            return reformatCompanyList;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getBranches(companyId: string) {
+        try {
+            let branches = await this.consultantBranchesRepository.find();
+            if (!companyId) {
+                branches = await this.consultantBranchesRepository.find({
+                    where: {
+                        id: companyId,
+                    },
+                });
+            }
+
+            const reformatBranchList: ConsultantBranchesT[] = branches.map((branch): ConsultantBranchesT => {
+                return {
+                    id: Number(branch.id),
+                    consultant_company_id: Number(branch.consultantCompanyId),
+                    name: branch.name,
+                    created_at: branch.createdAt,
+                    updated_at: branch.updatedAt,
+                    code: branch.code,
+                    email: branch.email,
+                    password: branch.password,
+                    country: branch.country,
+                    consultant_country_id: branch.countryId,
+                };
+            });
+
+            return reformatBranchList;
+        } catch (e) {
+            throw e;
+        }
     }
 
     public async getCompanyDetails(data: ConsultantCompanyDetailsDto) {

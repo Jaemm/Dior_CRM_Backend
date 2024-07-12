@@ -11,6 +11,7 @@ import {
     Products,
     ConsultantCompanies,
     Countries,
+    ConsultantBranches,
     Customers,
     ConsultantShops,
     ConsultantPositions,
@@ -25,7 +26,6 @@ import { ConsultantsService } from './consultants.service';
 import { AuthModule } from '../auth/auth.module';
 import { AuthService } from '../auth/auth.service';
 import { JwtService } from 'src/jwt/jwt.service';
-import { ConsultantBranches } from '@/src/common/entities/crmEntities/ConsultantBranches.entity';
 
 import { ConsultantCountrys } from '@/src/common/entities/crmEntities/ConsultantCountrys.entity';
 
@@ -74,12 +74,14 @@ import {
     DiorCustomerConsentsRepository,
     GendersRepository,
     ProductsRepository,
+    ConsultantBranchesRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
 
 @Module({
     imports: [
         Consultants,
+        ConsultantBranches,
         ConsultantShops,
         Products,
         Devices,
@@ -90,7 +92,6 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         AnalysisDataReplicationModule,
         TypeOrmModule.forFeature([
             ConsultantShops,
-            ConsultantBranches,
             ConsultantCompanies,
 
             Identities,
@@ -161,6 +162,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         // Repos
         ApplicationsRepository,
         ConsultantsRepository,
+        ConsultantBranchesRepository,
         ConsultantShopsRepository,
         CustomersRepository,
         DevicesRepository,

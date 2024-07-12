@@ -10,7 +10,7 @@ import {
 import {
     ConsultantsRepository,
     ConsultantCountriesRepository,
-    ConsultnatBranchesRepository,
+    ConsultantBranchesRepository,
     CustomersRepository,
     ProductAttributesRepository,
     ProductRecommendationRepository,
@@ -48,7 +48,7 @@ import { AutomaticProductDiorGenerator } from './automatic-product-dior-generato
 import { Not } from 'typeorm';
 import { CommonService } from '@/src/common/common.service';
 import {
-    ConsultantBranchesT,
+    ConsultantBranchesForDiorT,
     CountriesT,
     CustomersT,
     ProductRecommendationT,
@@ -64,7 +64,7 @@ export class DiorService {
         private productsRepository: ProductsRepository,
         private consultantRepository: ConsultantsRepository,
         private consultantCountriesRepository: ConsultantCountriesRepository,
-        private consultnatBranchesRepository: ConsultnatBranchesRepository,
+        private consultantBranchesRepository: ConsultantBranchesRepository,
         private customersRepository: CustomersRepository,
         private productAttributesRepository: ProductAttributesRepository,
         private paTranslationsRepository: ProductAttributeTranslationsRepository,
@@ -186,7 +186,7 @@ export class DiorService {
 
             const consultantsPositionId = currentConsultant.consultant_position_id;
 
-            const branchQuery = this.consultnatBranchesRepository.createQueryBuilder('branch');
+            const branchQuery = this.consultantBranchesRepository.createQueryBuilder('branch');
 
             if (consultantsPositionId === 5) {
                 branchQuery.andWhere('branch.consultant_company_id = :companyId', {
@@ -239,10 +239,10 @@ export class DiorService {
                 .take(perCondition)
                 .getManyAndCount();
 
-            const reformatBranches: Promise<ConsultantBranchesT>[] = branches.map(async (branch) => {
+            const reformatBranches: Promise<ConsultantBranchesForDiorT>[] = branches.map(async (branch) => {
                 const totalDevices = await this.productsRepository.getNewOpticNumbersCountByBranch(branch.id);
 
-                const reformatBranch: ConsultantBranchesT = {
+                const reformatBranch: ConsultantBranchesForDiorT = {
                     id: Number(branch.id),
                     name: branch.name,
                     code: branch.code,
@@ -279,7 +279,7 @@ export class DiorService {
                 throw new NotFoundException();
             }
 
-            const newBranch = this.consultnatBranchesRepository.create({
+            const newBranch = this.consultantBranchesRepository.create({
                 consultantCompanyId: String(diorCompanyId),
                 email,
                 name,
@@ -289,9 +289,9 @@ export class DiorService {
                 updatedAt: new Date(),
             });
 
-            const savedBranch = await this.consultnatBranchesRepository.save(newBranch);
+            const savedBranch = await this.consultantBranchesRepository.save(newBranch);
 
-            const reformatBranch: ConsultantBranchesT = {
+            const reformatBranch: ConsultantBranchesForDiorT = {
                 id: Number(savedBranch.id),
                 name: savedBranch.name,
                 code: savedBranch.code,

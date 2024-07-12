@@ -67,6 +67,16 @@ export class ConsultantsController {
         return await this.consultants.getConsultants(query);
     }
 
+    @Get('company')
+    async getCompanies(): Promise<any> {
+        return await this.consultants.getCompanies();
+    }
+
+    @Get('branch')
+    async getBranches(@Query('consultant_company_id') companyId: string) {
+        return await this.consultants.getBranches(companyId);
+    }
+
     @Get('me')
     @Roles(Role.Consultant)
     @ApiBearerAuth()
@@ -285,12 +295,6 @@ export class ConsultantsController {
     async updatePassword(@Req() req: Request, @Res() res: Response, @Body() data: UpdatePasswordDto): Promise<any> {
         const consultant = await this.consultants.updatePassword(data);
         return res.status(200).send(consultant);
-    }
-
-    @Get('company')
-    async getCompany(@Req() req: Request, @Res() res: Response): Promise<any> {
-        const company = await this.consultants.getCompany();
-        return res.status(200).send(company);
     }
 
     @Get('consult-company-details')

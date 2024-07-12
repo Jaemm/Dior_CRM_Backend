@@ -19,7 +19,7 @@ import {
 import {
     ConsultantsRepository,
     ConsultantCountriesRepository,
-    ConsultnatBranchesRepository,
+    ConsultantBranchesRepository,
     CustomersRepository,
     ProductAttributesRepository,
     ProductAttributeTranslationsRepository,
@@ -53,7 +53,7 @@ import { CommonService } from '@/src/common/common.service';
         ProductsRepository,
         ConsultantsRepository,
         ConsultantCountriesRepository,
-        ConsultnatBranchesRepository,
+        ConsultantBranchesRepository,
         CustomersRepository,
         ProductAttributesRepository,
         ProductAttributeTranslationsRepository,

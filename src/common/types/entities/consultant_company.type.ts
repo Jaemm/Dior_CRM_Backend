@@ -1,0 +1,27 @@
+export type ConsultantCompaniesT = {
+    id: number | null;
+    name: string | null;
+    created_at: Date | null;
+    updated_at: Date | null;
+    address: string | null;
+    email: string | null;
+    phone: string | null;
+    registeration_date: string | null;
+    primary_color_code: string | null;
+    secondary_color_code: string | null;
+    font: string | null;
+    program_color_code: string | null;
+    top_color_code: string | null;
+    text_icon_color_code: string | null;
+    pie_chart_color_1: string | null;
+    pie_chart_color_2: string | null;
+    pie_chart_color_3: string | null;
+    pie_chart_color_4: string | null;
+    pie_chart_color_5: string | null;
+    pie_chart_points_color: string | null;
+    active: boolean | null;
+    font_color_1: string | null;
+    font_color_2: string | null;
+    data_exchange_url: string | null;
+    pmx: boolean | null;
+};
