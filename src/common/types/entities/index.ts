@@ -6,6 +6,8 @@ export { ConsultantPositionsT } from './consultant_positions.type';
 export { ConsultantCountryT, ConsultantCountryForDiorT } from './consultnat_countries.type';
 
 export { CustomersT } from './customers.type';
+
+export { DeviceT } from './device.typs';
 export { ProudctRecommendationGroupsT } from './product_recommendation_groups.type';
 export { ProductRecommendationT } from './product_recommendatoin.type';
 

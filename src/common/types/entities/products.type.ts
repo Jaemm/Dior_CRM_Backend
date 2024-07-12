@@ -1,3 +1,5 @@
+import { ApplicationT } from './applications.type';
+import { DeviceT } from './device.typs';
 import { LicensesT } from './licenses.type';
 
 export type ProductsT = {
@@ -10,7 +12,7 @@ export type ProductsT = {
     license_period: string | null;
     created_at: Date | null;
     is_expired: boolean | null;
-    device: object;
-    license: LicensesT | null;
-    application: object;
+    device?: DeviceT | null;
+    license?: LicensesT | null;
+    application?: ApplicationT | null;
 };

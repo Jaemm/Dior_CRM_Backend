@@ -1,7 +1,13 @@
+import { ConsultantBranchesT } from './consultant_branches.type';
+import { ConsultantCompaniesT } from './consultant_companies.type';
+import { ConsultantPositionsT } from './consultant_positions.type';
+import { ConsultantShopT } from './consultant_shops.type';
+import { ConsultantStoreT } from './consultant_stores.type';
+import { ConsultantCountryT } from './consultnat_countries.type';
 import { LicensesT } from './licenses.type';
 import { ProductsT } from './products.type';
 
-export type ConsultantsEntityDto = {
+export type ConsultantsT = {
     id: number | null;
     email: string | null;
     name: string | null;
@@ -34,12 +40,12 @@ export type ConsultantsEntityDto = {
     store: string | null;
     optic_number: string[] | null;
     password_update_needed: boolean | null;
-    licenses: LicensesT;
-    products: ProductsT;
-    consultant_company: object;
-    consultant_branch: object;
-    consultant_country: object;
-    consultant_store: object;
-    consultant_shop: object;
-    consultant_position: object;
+    licenses: LicensesT[] | null;
+    products: ProductsT[] | null;
+    consultant_company: ConsultantCompaniesT[] | null;
+    consultant_branch: ConsultantBranchesT[] | null;
+    consultant_country: ConsultantCountryT[] | null;
+    consultant_store: ConsultantStoreT[] | null;
+    consultant_shop: ConsultantShopT[] | null;
+    consultant_position: ConsultantPositionsT[] | null;
 };
