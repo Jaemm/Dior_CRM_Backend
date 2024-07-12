@@ -47,8 +47,13 @@ import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandl
 import { AutomaticProductDiorGenerator } from './automatic-product-dior-generator';
 import { Not } from 'typeorm';
 import { CommonService } from '@/src/common/common.service';
-import { ConsultantBranchesT, CountriesT } from '@/src/common/types/entities';
-import { CustomersT } from '@/src/common/types/entities/customers.type';
+import {
+    ConsultantBranchesT,
+    CountriesT,
+    CustomersT,
+    ProductRecommendationT,
+    ProudctRecommendationGroupsT,
+} from '@/src/common/types/entities';
 
 @Injectable()
 export class DiorService {
@@ -460,35 +465,46 @@ export class DiorService {
                 .take(searchPer)
                 .getManyAndCount();
 
-            const data = prGroups.map((group) => ({
-                id: group.id,
-                name: group.name,
-                countries: group.countries,
-                products: group.prSelecteds
+            const reformatGroups: ProudctRecommendationGroupsT[] = prGroups.map((group) => {
+                const products = group?.prSelecteds
                     .sort((a, b) => a.orderNumber - b.orderNumber)
                     .map((selected) => {
-                        const product = selected.productRecommendation;
-                        return product
-                            ? {
-                                  id: product.id,
-                                  name: product.name,
-                                  product_type: product.productType,
-                                  description: product.description,
-                                  link: product.link,
-                                  image_url: product.imageUrl,
-                                  category: product.category,
-                                  routine: product.routine,
-                                  code: product.code,
-                                  collection: product.collection,
-                                  is_principal: selected.isPrincipal,
-                              }
-                            : null;
+                        const recommendation = selected?.productRecommendation;
+
+                        if (!recommendation) {
+                            return null;
+                        }
+
+                        const product: ProductRecommendationT = {
+                            id: recommendation.id,
+                            name: recommendation.name,
+                            product_type: recommendation.productType,
+                            description: recommendation.description,
+                            link: recommendation.link,
+                            image_url: recommendation.imageUrl,
+                            category: recommendation.category,
+                            routine: recommendation.routine,
+                            code: recommendation.code,
+                            collection: recommendation.collection,
+                            is_principal: selected.isPrincipal,
+                        };
+
+                        return product;
                     })
-                    .filter((product) => product !== null),
-            }));
+                    .filter((product) => product !== null);
+
+                const reformatGroup: ProudctRecommendationGroupsT = {
+                    id: Number(group.id),
+                    name: group.name,
+                    countries: group.countries,
+                    products: products || [],
+                };
+
+                return reformatGroup;
+            });
 
             return {
-                data: data,
+                data: reformatGroups,
                 total_size: totalCount,
                 current_page_size: prGroups.length,
                 current_page: searchPage,
