@@ -117,6 +117,7 @@ import {
     ConsultantPositionsT,
     ConsultantShopT,
     ConsultantStoreT,
+    ConsultantT,
     SalesConnectionT,
 } from '@/src/common/types/entities';
 
@@ -1181,6 +1182,53 @@ export class ConsultantsService {
         }
 
         const consultantsQueryResult = await consultantsQuery.getMany();
+
+        const reformatConsultantList: ConsultantT[] = consultantsQueryResult.map((consultant) => {
+            const reformatConsultant: ConsultantT = {
+                id: consultant.id,
+                email: consultant.email,
+                name: consultant.name,
+                surname: consultant.surname,
+                gender: consultant.gender,
+                os: consultant.os,
+                language: consultant.language,
+                phone: consultant.phone,
+                address: consultant.address,
+                token: consultant.token,
+                city: consultant.city,
+                country: consultant.country,
+                zip_code: consultant.zip_code,
+                state: consultant.state,
+                birthdate: consultant.birthdate,
+                note: consultant.note,
+                push_token: consultant.push_token,
+                social: consultant.social,
+                memo: consultant.memo,
+                app_id: consultant.app_id,
+                company_name: consultant.company_name,
+                company_address: consultant.company_address,
+                branch: consultant.branch,
+                position: consultant.position,
+                skin_color_group_id: consultant.skin_color_group_id,
+                ethnicity_id: consultant.ethnicity_id,
+                callback_url: consultant.callback_url,
+                code: consultant.code,
+                country_code: null,
+                store: null,
+                optic_number: [],
+                password_update_needed: false,
+                licenses: null,
+                products: null,
+                consultant_company: null,
+                consultant_branch: null,
+                consultant_country: null,
+                consultant_store: null,
+                consultant_shop: null,
+                consultant_position: null,
+            };
+
+            return reformatConsultant;
+        });
 
         return consultantsQueryResult.map((consultant) => {
             const data = {

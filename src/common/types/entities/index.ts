@@ -1,3 +1,4 @@
+export { ConsultantT } from './consultants.type';
 export { ConsultantBranchesForDiorT, ConsultantBranchesT } from './consultant_branches.type';
 export { ConsultantCompaniesT } from './consultant_companies.type';
 export { ConsultantShopT } from './consultant_shops.type';
