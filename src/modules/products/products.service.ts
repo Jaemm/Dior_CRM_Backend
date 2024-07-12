@@ -10,7 +10,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsSelectByString, Repository, In } from 'typeorm';
 import { ProductsEnterDto, ProductsFetchDto } from './products.dto';
-import { DeviceService } from '../devices/devices.service';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 import { CustomersService } from '../customers/customers.service';
 import { CommonService } from '@/src/common/common.service';
@@ -22,20 +21,22 @@ import { EmailSubject } from '@/src/common/constants/email-subjects';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
+import { DevicesRepository, ProductsRepository } from '@/src/common/repositories/crm';
 
 @Injectable()
 export class ProductsService {
     constructor(
-        @InjectRepository(Products)
-        private readonly productsRepository: Repository<Products>,
         @InjectRepository(Versions)
         private readonly versionsRepository: Repository<Versions>,
 
-        private readonly devices: DeviceService,
         private readonly companies: ConsultantCompanyService,
         private readonly commonService: CommonService,
         private readonly customersService: CustomersService,
         @Inject(forwardRef(() => ConsultantsService)) private readonly consultantsService: ConsultantsService,
+
+        // repos
+        private readonly productsRepository: ProductsRepository,
+        private readonly devicesRepository: DevicesRepository,
     ) {}
 
     async findOneProductById(id: number) {
@@ -123,7 +124,7 @@ export class ProductsService {
             });
         }
 
-        const device = await this.devices.findOneDevices({ optic_number, pwd: password });
+        const device = await this.devicesRepository.findOneDevices({ optic_number, pwd: password });
 
         const latt = lat ?? device.lat;
         const long = lng ?? device.long;
@@ -233,7 +234,7 @@ export class ProductsService {
             }
         }
 
-        await this.devices.updateDevice(device.id, { lat: latt, lng: long });
+        await this.devicesRepository.updateDevice(device.id, { lat: latt, lng: long });
 
         if (device.consultant_company_id) {
             updatedProduct.device.consultant_company = await this.consultantsService.getCompanyDetails({
@@ -273,7 +274,7 @@ export class ProductsService {
     async fetchProduct(query: ProductsFetchDto) {
         const { optic_number, password } = query;
 
-        const device = await this.devices.findOneDevices({ optic_number, pwd: password });
+        const device = await this.devicesRepository.findOneDevices({ optic_number, pwd: password });
 
         if (!device) {
             throw new NotFoundException({

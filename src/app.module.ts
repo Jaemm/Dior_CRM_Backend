@@ -21,7 +21,6 @@ import { DiorModule } from './modules/dior/dior.module';
 import { AwsS3Module } from './common/awsS3/awsS3.module';
 import { ImageModule } from './modules/image/image.module';
 import config from './config/config.schema';
-import { DeviceModule } from './modules/devices/devices.module';
 import { DataReplicationModule } from './modules/dataReplication/dataReplication.module';
 import { CustomersModule } from './modules/customers/customers.module';
 import { CountriesModule } from './modules/countries/countries.module';
@@ -44,7 +43,7 @@ import { LoggingMiddleware } from './common/middleWare/logMiddleWare/logging.mid
 
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { DatabaseModule } from './modules/database/database.module';
-import { ConsultantShopsRepository, GendersRepository } from './common/repositories/crm';
+import { ConsultantShopsRepository, DevicesRepository, GendersRepository } from './common/repositories/crm';
 
 @Module({
     imports: [
@@ -122,7 +121,7 @@ import { ConsultantShopsRepository, GendersRepository } from './common/repositor
         HealthModule,
         AwsS3Module,
         ImageModule,
-        DeviceModule,
+
         DataReplicationModule,
 
         CountriesModule,
@@ -134,8 +133,10 @@ import { ConsultantShopsRepository, GendersRepository } from './common/repositor
     ],
     controllers: [AppController],
     providers: [
-        GendersRepository,
         ConsultantShopsRepository,
+        DevicesRepository,
+        GendersRepository,
+
         AppService,
         {
             provide: APP_GUARD,

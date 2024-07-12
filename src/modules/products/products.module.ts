@@ -40,16 +40,18 @@ import { ConsultantCountries } from '@/src/common/entities/crmEntities/Consultan
 import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/ActiveStorageAttachments.entity';
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
-import { DeviceModule } from '../devices/devices.module';
 import { CustomersModule } from '../customers/customers.module';
 import { ConsultantsModule } from '../consultants/consultants.module';
 import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
+import { DevicesRepository, ProductsRepository } from '@/src/common/repositories/crm';
 
 @Module({
     imports: [
+        Products,
+        Devices,
         TypeOrmModule.forFeature([
             Consultants,
             ConsultantShops,
@@ -92,12 +94,11 @@ import { ConsultantCompanyService } from '../consultantCompany/consultantCompany
             ActiveStorageAttachments,
             Versions,
         ]),
-        DeviceModule,
         forwardRef(() => ConsultantsModule),
         CustomersModule,
     ],
     controllers: [ProductsController],
-    providers: [ProductsService, ConsultantCompanyService],
+    providers: [ProductsService, ConsultantCompanyService, ProductsRepository, DevicesRepository],
     exports: [ProductsService],
 })
 export class ProductsModule {

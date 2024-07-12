@@ -53,7 +53,6 @@ import { ConsultantCountries } from '@/src/common/entities/crmEntities/Consultan
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/ActiveStorageAttachments.entity';
 import { ConsultantCompanyModule } from '../consultantCompany/consultantCompany.module';
-import { DeviceService } from '../devices/devices.service';
 import { CrmDataReplicationModule } from '../dataReplication/consultantDataReplication/consultantDataReplication.module';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 import { StoreModule } from '../stores/stores.module';
@@ -162,7 +161,6 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         AuthService,
         JwtService,
         ConsultantCompanyService,
-        DeviceService,
 
         // Repos
         ApplicationsRepository,

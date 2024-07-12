@@ -1,7 +1,6 @@
 import { HttpStatus, Inject, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { ILike } from 'typeorm';
 import { FetchFwVersionDto, LoginSocialDto, ShopListDto, UpdateFwVersionDto } from './app.dto';
-import { DeviceService } from './modules/devices/devices.service';
 import { CountriesListDto } from './modules/customers/customers.dto';
 import { CountriesService } from './modules/countries/countries.service';
 import { SkinColorGroupsService } from './modules/skinColorGroups/skinColorGroups.service';
@@ -12,14 +11,11 @@ import { ResponseMessages } from './common/constants/response-messages';
 import { ProductsService } from './modules/products/products.service';
 import { ErrorStatus } from './common/constants/error-status';
 import { SocialInterface } from './jwt/interfaces/token.interface';
-import { ConsultantShopsRepository, GendersRepository } from './common/repositories/crm';
+import { ConsultantShopsRepository, DevicesRepository, GendersRepository } from './common/repositories/crm';
 
 @Injectable()
 export class AppService {
     constructor(
-        @Inject(DeviceService)
-        private readonly deviceService: DeviceService,
-
         @Inject(EthinicitiesService)
         private readonly ethnicities: EthinicitiesService,
 
@@ -34,6 +30,7 @@ export class AppService {
         private readonly productsService: ProductsService,
 
         //repos
+        private readonly deviceRepository: DevicesRepository,
         private readonly gendersRepository: GendersRepository,
         private readonly consultantShopsRepository: ConsultantShopsRepository,
     ) {}
@@ -53,7 +50,7 @@ export class AppService {
     async fetchFwVersion(params: FetchFwVersionDto) {
         const { optic_number } = params;
 
-        const devices = await this.deviceService.findDevices(
+        const devices = await this.deviceRepository.findDevices(
             {
                 optic_number,
             },
@@ -87,7 +84,7 @@ export class AppService {
     async updateFwVersion(params: UpdateFwVersionDto) {
         const { optic_number, fw_version } = params;
 
-        const device = await this.deviceService.findOneDevices({
+        const device = await this.deviceRepository.findOneDevices({
             optic_number,
         });
 
@@ -95,7 +92,7 @@ export class AppService {
             this.commonService.throwNotFoundError();
         }
 
-        await this.deviceService.updateDevice(device.id, { fw_version: fw_version });
+        await this.deviceRepository.updateDevice(device.id, { fw_version: fw_version });
 
         return this.commonService.generateMessage('Success!');
     }

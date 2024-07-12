@@ -68,7 +68,6 @@ import {
     ConsultantBranches,
 } from '@/src/common/entities/crmEntities';
 import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
-import { DeviceService } from '../devices/devices.service';
 import { CommonService } from 'src/common/common.service';
 import { ConsultantPositions } from '@/src/common/entities/crmEntities/ConsultantPositions.entity';
 import { CrmDataReplicationService } from '../dataReplication/consultantDataReplication/consultantDataReplication.service';
@@ -149,7 +148,7 @@ export class ConsultantsService {
         private readonly authService: AuthService,
         private readonly jwtService: JwtService,
         private readonly companies: ConsultantCompanyService,
-        private readonly devices: DeviceService,
+
         private readonly commonService: CommonService,
         private readonly dataReplication: CrmDataReplicationService,
 
@@ -706,7 +705,7 @@ export class ConsultantsService {
             consultant.consultant_position = await this.checkConsultantPosition(consultant?.consultant_position_id);
         }
 
-        const products = await this.devices.getCompaniesFiles(consultant?.id ?? null, Number(app_id));
+        const products = await this.productsRepository.getCompaniesFiles(consultant?.id ?? null, Number(app_id));
 
         const promises: Promise<any>[] = [];
         products.map((p) => {
@@ -2193,7 +2192,7 @@ export class ConsultantsService {
     public async getAllLicense(data: AllLicenseDto) {
         const { application_id, optic_number } = data;
 
-        const device = await this.devices.findOneDevices({ optic_number });
+        const device = await this.deviceRepository.findOneDevices({ optic_number });
         if (!device) {
             this.commonService.throwNotFoundError();
         }
@@ -2219,7 +2218,7 @@ export class ConsultantsService {
 
         const [license, devices] = await Promise.all([
             this.licenceService.findLicence({ id: license_id }),
-            this.devices.findDevices({ optic_number }),
+            this.deviceRepository.findDevices({ optic_number }),
         ]);
 
         if (!license || !devices) {
@@ -2341,7 +2340,7 @@ export class ConsultantsService {
         // TODO: Send Email
         const { optic_number, duration, time_type } = data;
 
-        const device = await this.devices.findOneDevices({ optic_number });
+        const device = await this.deviceRepository.findOneDevices({ optic_number });
         const product = await this.productsService.findOneProduct({ device_id: device.id });
 
         if (!device || !product) {
