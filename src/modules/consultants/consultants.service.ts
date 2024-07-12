@@ -95,6 +95,8 @@ import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandl
 import {
     ApplicationsRepository,
     ConsultantBranchesRepository,
+    ConsultantCountriesRepository,
+    ConsultantPositionsRepository,
     ConsultantShopsRepository,
     ConsultantsRepository,
     CustomersRepository,
@@ -105,7 +107,13 @@ import {
 } from '@/src/common/repositories/crm';
 import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.repository';
 import { AnalysisDataReplicationService } from '../dataReplication/analysisDataReplication/analysisDataReplication.service';
-import { ConsultantBranchesT, ConsultantCompaniesT } from '@/src/common/types/entities';
+import {
+    ConsultantBranchesT,
+    ConsultantCompaniesT,
+    ConsultantCountryT,
+    ConsultantPositionsT,
+    ConsultantShopT,
+} from '@/src/common/types/entities';
 
 @Injectable()
 export class ConsultantsService {
@@ -146,12 +154,14 @@ export class ConsultantsService {
         private readonly analysisReplService: AnalysisDataReplicationService,
 
         // Repos
-        private readonly consultantBranchesRepository: ConsultantBranchesRepository,
+        private readonly consultantCountiresRepository: ConsultantCountriesRepository,
         private readonly gendersRepository: GendersRepository,
         private readonly applicationsRepository: ApplicationsRepository,
         private readonly customersRepository: CustomersRepository,
         private readonly consultantsRepository: ConsultantsRepository,
         private readonly consultantShopsRepository: ConsultantShopsRepository,
+        private readonly consultantBranchesRepository: ConsultantBranchesRepository,
+        private readonly consultantPositionRepository: ConsultantPositionsRepository,
         private readonly deviceRepository: DevicesRepository,
         private readonly productsRepository: ProductsRepository,
         private readonly diorConsentRepository: DiorCustomerConsentsRepository,
@@ -2029,6 +2039,76 @@ export class ConsultantsService {
             });
 
             return reformatBranchList;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getShops(branchId: string) {
+        try {
+            let shops = await this.consultantShopsRepository.find();
+
+            if (branchId) {
+                shops = await this.consultantShopsRepository.find({
+                    where: {
+                        consultantBranchId: branchId,
+                    },
+                });
+            }
+
+            const reformatShopList: ConsultantShopT[] = shops.map((shop) => {
+                return {
+                    id: shop.id,
+                    name: shop.name,
+                    created_at: shop.createdAt,
+                    updated_at: shop.updatedAt,
+                };
+            });
+
+            return reformatShopList;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getPositions() {
+        try {
+            const positions = await this.consultantPositionRepository.find();
+
+            const reformatPoistionList: ConsultantPositionsT[] = await positions.map((position) => {
+                return {
+                    id: position.id,
+                    name: position.name,
+                    created_at: position.created_at,
+                    updated_at: position.updated_at,
+                };
+            });
+
+            return reformatPoistionList;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getCountries() {
+        try {
+            const countries = await this.consultantCountiresRepository.find();
+
+            const reformatCountryList: ConsultantCountryT[] = countries.map((country) => {
+                return {
+                    id: Number(country.id),
+                    consultant_branch_id: Number(country.consultantBranchId),
+                    name: country.name,
+                    code: country.code,
+                    created_at: country.createdAt,
+                    updated_at: country.updatedAt,
+                    consultant_company_id: Number(country.consultantCompanyId),
+                    url_and_port: country.urlAndPort,
+                    default_recommendation: country.defaultRecommendation,
+                };
+            });
+
+            return reformatCountryList;
         } catch (e) {
             throw e;
         }

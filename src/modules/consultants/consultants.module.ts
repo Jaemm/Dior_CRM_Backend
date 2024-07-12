@@ -75,6 +75,8 @@ import {
     GendersRepository,
     ProductsRepository,
     ConsultantBranchesRepository,
+    ConsultantPositionsRepository,
+    ConsultantCountriesRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
 
@@ -83,6 +85,8 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         Consultants,
         ConsultantBranches,
         ConsultantShops,
+        ConsultantPositions,
+        ConsultantCountries,
         Products,
         Devices,
         Customers,
@@ -93,6 +97,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         TypeOrmModule.forFeature([
             ConsultantShops,
             ConsultantCompanies,
+            ConsultantPositions,
 
             Identities,
             PasswordEmailDetails,
@@ -125,7 +130,6 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
             AdminGroups,
 
             Genders,
-            ConsultantPositions,
 
             ConsultantStores,
             ConsultantCountries,
@@ -163,7 +167,9 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         ApplicationsRepository,
         ConsultantsRepository,
         ConsultantBranchesRepository,
+        ConsultantCountriesRepository,
         ConsultantShopsRepository,
+        ConsultantPositionsRepository,
         CustomersRepository,
         DevicesRepository,
         GendersRepository,
@@ -177,6 +183,26 @@ export class ConsultantsModule {
         consumer.apply(AuthMiddleware).forRoutes(
             {
                 path: 'consultants',
+                method: RequestMethod.GET,
+            },
+            {
+                path: 'consultants/company',
+                method: RequestMethod.GET,
+            },
+            {
+                path: 'consultants/branch',
+                method: RequestMethod.GET,
+            },
+            {
+                path: 'consultants/shop',
+                method: RequestMethod.GET,
+            },
+            {
+                path: 'consultants/position',
+                method: RequestMethod.GET,
+            },
+            {
+                path: 'consultants/country',
                 method: RequestMethod.GET,
             },
             {

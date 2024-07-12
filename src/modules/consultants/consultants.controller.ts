@@ -67,14 +67,39 @@ export class ConsultantsController {
         return await this.consultants.getConsultants(query);
     }
 
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
     @Get('company')
-    async getCompanies(): Promise<any> {
+    async getCompanies() {
         return await this.consultants.getCompanies();
     }
 
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
     @Get('branch')
     async getBranches(@Query('consultant_company_id') companyId: string) {
         return await this.consultants.getBranches(companyId);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('shop')
+    async getShops(@Query('consultant_branch_id') branchId: string) {
+        return await this.consultants.getShops(branchId);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('position')
+    async getPositions() {
+        return await this.consultants.getPositions();
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('country')
+    async getCountries() {
+        return await this.consultants.getCountries();
     }
 
     @Get('me')

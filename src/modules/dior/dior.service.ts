@@ -49,7 +49,7 @@ import { Not } from 'typeorm';
 import { CommonService } from '@/src/common/common.service';
 import {
     ConsultantBranchesForDiorT,
-    CountriesT,
+    ConsultantCountryForDiorT,
     CustomersT,
     ProductRecommendationT,
     ProudctRecommendationGroupsT,
@@ -93,8 +93,8 @@ export class DiorService {
 
             const countries = await countriesQuery.getMany();
 
-            const reformatCountries: CountriesT[] = countries.map((country) => {
-                const reformatData: CountriesT = {
+            const reformatCountries: ConsultantCountryForDiorT[] = countries.map((country) => {
+                const reformatData: ConsultantCountryForDiorT = {
                     id: Number(country.id),
                     name: country.name,
                     code: country.code,
