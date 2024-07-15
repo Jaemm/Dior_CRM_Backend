@@ -2760,9 +2760,11 @@ export class ConsultantsService {
         }
         const { secret: tokenAccess, time: accessTime } = this.jwtConfig.access;
         const decoded = jwt.verify(token, tokenAccess);
+
         const { id } = decoded as any;
 
-        const consultant = await this.getConsultant({ id }, ['id', 'token', 'email']);
+        const consultant = await this.consultantsRepository.findOneBy({ id });
+
         if (!consultant) {
             throw new UnauthorizedException({
                 result_code: ErrorStatus.NOT_FOUND,
@@ -2770,24 +2772,42 @@ export class ConsultantsService {
             });
         }
 
-        if (consultant.token !== refresh_token.trim()) {
-            throw new UnauthorizedException({
-                result_code: ErrorStatus.NOT_FOUND,
-                error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
-            });
+        const hashedRefreshToken = await bcrypt.hash(refresh_token, 12);
+        const foundRefreshToken = await this.refreshTokenRepository.findOne({
+            where: {
+                accessToken: token,
+                refreshToken: refresh_token,
+            },
+        });
+
+        if (!foundRefreshToken) {
+            return {
+                access_token: null as string,
+                refresh_token: null as string,
+                message: 'Refresh token does not exist in the system. Please check with admin',
+            };
         }
 
-        const [accessToken, new_refresh_token] = await this.authService.generateAuthTokens(
+        if (Date.now() > Number(foundRefreshToken.refreshTokenExpiredAt)) {
+            return {
+                access_token: null as string,
+                refresh_token: null as string,
+                message: 'Refresh token already expired',
+            };
+        }
+
+        const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
             { id: consultant.id, email: consultant.email, role: Role.Consultant },
             '',
         );
-        await this.consultantsRepository.updateConsultant(consultant.id, {
-            token: new_refresh_token,
-        });
+
+        consultant.token = accessToken;
+        await this.refreshTokenRepository.remove(foundRefreshToken);
+        await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
 
         return {
-            token: accessToken,
-            refresh_token: new_refresh_token,
+            access_token: accessToken,
+            refresh_token: refreshToken,
         };
     }
 

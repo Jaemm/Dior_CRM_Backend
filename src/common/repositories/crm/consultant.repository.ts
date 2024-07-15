@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository, Or, Equal, FindOptionsSelectByString } from 'typeorm';
 import { Consultants } from '@/src/common/entities/crmEntities';
-import argon2 from 'argon2';
+import * as argon2 from 'argon2';
 
 @Injectable()
 export class ConsultantsRepository extends Repository<Consultants> {

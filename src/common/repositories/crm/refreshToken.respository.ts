@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { Consultants, RefreshTokens } from '@/src/common/entities/crmEntities';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class RefreshTokensRepository extends Repository<RefreshTokens> {
