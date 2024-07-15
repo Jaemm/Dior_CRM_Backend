@@ -153,7 +153,7 @@ export class ConsultantsController {
         @Res() res: Response,
         @Body() body: ConsultantDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
-    ): Promise<any> {
+    ) {
         const consultant = await this.consultants.signUpRuby(body, locale);
         return res.status(200).send(consultant);
     }
@@ -225,6 +225,13 @@ export class ConsultantsController {
     }
 
     @ApiBearerAuth()
+    @Get('notifications')
+    async notifications(@Req() req: Request, @Query() query: GetNotificationsDto) {
+        const consultantId = Number((<{ id: string }>req['user']).id);
+        return await this.consultants.getNotifications(consultantId, query);
+    }
+
+    @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('request_callback_url')
     async requestCallbackUrl(@Req() req: Request, @Body() body: RequestCallBackUrlDto) {
@@ -266,6 +273,11 @@ export class ConsultantsController {
     async loginPhone(@Req() req: Request, @Body() body: LoginPhoneDto, @Headers('X-CHOWIS-LOCALE') locale: string) {
         const userId = Number((<{ id: string }>req['user']).id);
         return await this.consultants.loginPhone(body, userId, locale);
+    }
+
+    @Post('tokens/refresh')
+    async refreshToken(@Body() body: TokenRefreshDto, @Headers('X-CHOWIS-LOCALE') locale: string) {
+        return await this.consultants.refreshToken(body, locale);
     }
 
     @ApiBearerAuth()
@@ -407,32 +419,5 @@ export class ConsultantsController {
     async renewDevices(@Res() res: Response, @Body() body: RenewDevicesDto): Promise<any> {
         const consultant = await this.consultants.renewDevices(body);
         return res.status(200).send(consultant);
-    }
-
-    @Post('tokens/refresh')
-    async refreshToken(
-        @Req() req: Request,
-        @Res() res: Response,
-        @Body() body: TokenRefreshDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ): Promise<any> {
-        const consultant = await this.consultants.refreshToken(body, locale);
-        return res.status(200).send(consultant);
-    }
-
-    @ApiTags('CRM')
-    @ApiBearerAuth()
-    @Get('customers/:id')
-    async getCustomerById(@Req() req: Request, @Res() res: Response, @Param('id') customerId: string): Promise<any> {
-        const consultantId = Number((<{ id: string }>req['user']).id);
-        const customer = await this.crmService.getCustomerById(consultantId, Number(customerId));
-        return res.status(200).send(customer);
-    }
-
-    @ApiBearerAuth()
-    @Get('notifications')
-    async notifications(@Req() req: Request, @Query() query: GetNotificationsDto): Promise<any> {
-        const consultantId = Number((<{ id: string }>req['user']).id);
-        return await this.consultants.getNotifications(consultantId, query);
     }
 }

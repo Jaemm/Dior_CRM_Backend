@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository, Or, Equal, FindOptionsSelectByString } from 'typeorm';
 import { Consultants } from '@/src/common/entities/crmEntities';
+import argon2 from 'argon2';
 
 @Injectable()
 export class ConsultantsRepository extends Repository<Consultants> {
@@ -105,5 +106,32 @@ export class ConsultantsRepository extends Repository<Consultants> {
         });
 
         return consultant;
+    }
+
+    async updateConsultant(id: number, consultantInput: any) {
+        const result = await this.update(id, consultantInput);
+        return result;
+    }
+
+    async insertConsultant(newConsultant: Consultants) {
+        const newCustomer = this.create(newConsultant);
+        const result = await this.save(newCustomer);
+        return result;
+    }
+
+    async createConsultant(newUser: any) {
+        const user: any = {
+            password_digest: (await argon2.hash(newUser.password)) ?? null,
+            email: newUser.email,
+            unconfirmed_email: newUser.email,
+            app_id: newUser.app_id,
+            email_confirmed: newUser.email_confirmed ? newUser.email_confirmed : false,
+            rememberCreatedAt: new Date(),
+            updated_at: new Date(),
+            created_at: new Date(),
+        };
+
+        const result: any = await this.insertConsultant(user);
+        return result;
     }
 }

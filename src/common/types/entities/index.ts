@@ -9,6 +9,9 @@ export { ConsultantCountryT, ConsultantCountryForDiorT } from './consultnat_coun
 export { CustomersT } from './customers.type';
 
 export { DeviceT } from './device.typs';
+
+export { NotificationsT } from './notifications.type';
+
 export { ProudctRecommendationGroupsT } from './product_recommendation_groups.type';
 export { ProductRecommendationT } from './product_recommendatoin.type';
 

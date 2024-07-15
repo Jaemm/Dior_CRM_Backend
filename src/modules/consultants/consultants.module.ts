@@ -23,6 +23,7 @@ import {
     Genders,
     ConsultantStores,
     ConsultantCountries,
+    RefreshTokens,
 } from '@/src/common/entities/crmEntities';
 
 import { ConsultantsController } from './consultants.controller';
@@ -75,6 +76,8 @@ import {
     ConsultantCountriesRepository,
     ConsultantStoresRepository,
     SalesConnectionRepository,
+    NotificationsRepository,
+    RefreshTokensRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
 
@@ -92,6 +95,8 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         Applications,
         ConsultantStores,
         SalesConn,
+        Notifications,
+        RefreshTokens,
 
         AnalysisDataReplicationModule,
         TypeOrmModule.forFeature([
@@ -133,7 +138,6 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
 
             ActiveStorageAttachments,
             Versions,
-            Notifications,
         ]),
         AuthModule,
 
@@ -171,6 +175,8 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         DevicesRepository,
         DiorCustomerConsentsRepository,
         GendersRepository,
+        RefreshTokensRepository,
+        NotificationsRepository,
         ProductsRepository,
         SalesConnectionRepository,
     ],

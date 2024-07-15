@@ -105,7 +105,9 @@ import {
     DevicesRepository,
     DiorCustomerConsentsRepository,
     GendersRepository,
+    NotificationsRepository,
     ProductsRepository,
+    RefreshTokensRepository,
     SalesConnectionRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.repository';
@@ -118,6 +120,7 @@ import {
     ConsultantShopT,
     ConsultantStoreT,
     ConsultantT,
+    NotificationsT,
     SalesConnectionT,
 } from '@/src/common/types/entities';
 import { ProductsT } from '@/src/common/types/entities/products.type';
@@ -132,8 +135,6 @@ export class ConsultantsService {
         private readonly consultantCompanyRepository: Repository<ConsultantCompanies>,
         @InjectRepository(ConsultantPositions)
         private readonly position: Repository<ConsultantPositions>,
-        @InjectRepository(Notifications)
-        private readonly notificationRepository: Repository<Notifications>,
         @InjectRepository(PasswordEmailDetails)
         private readonly passwordDetailRepository: Repository<PasswordEmailDetails>,
         @InjectRepository(ProductRecommendations)
@@ -162,6 +163,8 @@ export class ConsultantsService {
         private readonly analysisReplService: AnalysisDataReplicationService,
 
         // Repos
+        private readonly refreshTokenRepository: RefreshTokensRepository,
+        private readonly notificationRepository: NotificationsRepository,
         private readonly salesConnectionRepository: SalesConnectionRepository,
         private readonly consultantStoresRepository: ConsultantStoresRepository,
         private readonly consultantCountiresRepository: ConsultantCountriesRepository,
@@ -240,40 +243,6 @@ export class ConsultantsService {
         }
     }
 
-    async insertConsultant(newConsultant: Consultants) {
-        const newCustomer = this.consultantsRepository.create(newConsultant);
-        const result = await this.consultantsRepository.save(newCustomer);
-        return result;
-    }
-
-    async updateConsultant(id: number, consultantInput: any) {
-        const result = await this.consultantsRepository.update(id, consultantInput);
-        return result;
-    }
-
-    async createConsultant(newUser: any) {
-        try {
-            const user: any = {
-                password_digest: (await argon2.hash(newUser.password)) ?? null,
-                email: newUser.email,
-                unconfirmed_email: newUser.email,
-                app_id: newUser.app_id,
-                email_confirmed: newUser.email_confirmed ? newUser.email_confirmed : false,
-                rememberCreatedAt: new Date(),
-                updated_at: new Date(),
-                created_at: new Date(),
-            };
-
-            const result: any = await this.insertConsultant(user);
-            return result;
-        } catch (e) {
-            throw new InternalServerErrorException({
-                result_code: ErrorStatus.SERVER_ERROR,
-                error: ResponseMessages.ConsultantNotCreated,
-            });
-        }
-    }
-
     public async signUp(newUser: any, locale: string = 'en') {
         const errors: string[] = [];
 
@@ -296,7 +265,7 @@ export class ConsultantsService {
         if (newUser.email.includes('@chowistest.com')) {
             newUser.email_confirmed = true;
         }
-        const consultant = await this.createConsultant(newUser);
+        const consultant = await this.consultantsRepository.createConsultant(newUser);
 
         const selections = [
             'id',
@@ -347,7 +316,7 @@ export class ConsultantsService {
 
         const [emailSent, updateStatus] = await Promise.all([
             this.sendAccountConfimationEmail(confirmationToken, newUser.email, locale),
-            this.updateConsultant(consultantData.id, {
+            this.consultantsRepository.updateConsultant(consultantData.id, {
                 confirm_token: confirmationToken,
                 token: refreshToken,
                 confirmation_sent_at: new Date(),
@@ -383,7 +352,7 @@ export class ConsultantsService {
                 consultantData['email_confirmed'] = true;
             }
 
-            const consultant: Consultants = await this.createConsultant(consultantData);
+            const consultant: Consultants = await this.consultantsRepository.createConsultant(consultantData);
 
             const [confirmationToken, token] = await Promise.all([
                 this.jwtService.generateToken(
@@ -401,7 +370,7 @@ export class ConsultantsService {
 
             await Promise.all([
                 this.sendAccountConfimationEmail(confirmationToken, consultant.email, locale),
-                this.updateConsultant(consultant.id, {
+                this.consultantsRepository.updateConsultant(consultant.id, {
                     confirm_token: confirmationToken,
                     token: refreshToken,
                 }),
@@ -830,7 +799,7 @@ export class ConsultantsService {
                     TokenTypeEnum.CONFIRMATION,
                     '',
                 );
-                await this.updateConsultant(consultant.id, {
+                await this.consultantsRepository.updateConsultant(consultant.id, {
                     confirm_token: confirmationToken,
                 });
 
@@ -862,12 +831,15 @@ export class ConsultantsService {
         consultant.token = accessToken;
         consultant.refresh_token = refreshToken;
 
-        await this.updateConsultant(consultant.id, {
+        await this.consultantsRepository.updateConsultant(consultant.id, {
             token: refreshToken,
             confirm_token: consultant.confirm_token,
         });
 
-        await this.updateConsultant(consultant.id, { token: refreshToken, confirm_token: consultant.confirm_token });
+        await this.consultantsRepository.updateConsultant(consultant.id, {
+            token: refreshToken,
+            confirm_token: consultant.confirm_token,
+        });
         return {
             id: consultant.id,
             email: consultant.email,
@@ -1509,7 +1481,7 @@ export class ConsultantsService {
         };
 
         // Call updateConsultant in the background
-        this.updateConsultant(consultant.id, { token: refreshToken }).catch((error) => {
+        this.consultantsRepository.updateConsultant(consultant.id, { token: refreshToken }).catch((error) => {
             console.error('Error updating consultant:', error);
         });
 
@@ -1528,7 +1500,7 @@ export class ConsultantsService {
             });
         }
 
-        await this.updateConsultant(consultant.id, {
+        await this.consultantsRepository.updateConsultant(consultant.id, {
             email_confirmed: true,
             confirmed_at: new Date(),
         });
@@ -1562,7 +1534,7 @@ export class ConsultantsService {
 
         const [emailSent, updateStatus] = await Promise.all([
             this.sendAccountConfimationEmail(customer.confirm_token, customer.email, locale),
-            this.updateConsultant(customer.id, {
+            this.consultantsRepository.updateConsultant(customer.id, {
                 confirmation_sent_at: new Date(),
             }),
         ]);
@@ -1589,7 +1561,7 @@ export class ConsultantsService {
         const [emailSent, newEmailSent, updatedConsultant] = await Promise.all([
             this.sendAccountConfimationEmail(confirmationToken, data.email, locale),
             this.sendAccountConfimationEmail(confirmationToken, consultant.email, locale),
-            this.updateConsultant(consultantId, {
+            this.consultantsRepository.updateConsultant(consultantId, {
                 unconfirmed_email: data.email,
                 confirm_token: confirmationToken,
                 email_confirmed: false,
@@ -1623,7 +1595,7 @@ export class ConsultantsService {
             return htmlFile;
         }
 
-        await this.updateConsultant(consultant.id, {
+        await this.consultantsRepository.updateConsultant(consultant.id, {
             email: consultant.unconfirmed_email,
             unconfirmed_email: null,
             email_confirmed: true,
@@ -1832,7 +1804,7 @@ export class ConsultantsService {
             const password = this.commonService.generateRandomPassword(12);
             const hashedPassword = await argon2.hash(password);
 
-            await this.updateConsultant(consultant.id, { password_digest: hashedPassword });
+            await this.consultantsRepository.updateConsultant(consultant.id, { password_digest: hashedPassword });
 
             const subject = await this.commonService.translate('password_recovery_subject', locale);
 
@@ -1886,7 +1858,7 @@ export class ConsultantsService {
 
         const password_digest = await argon2.hash(new_password);
 
-        const updatedConsultant = await this.updateConsultant(consultantId, {
+        const updatedConsultant = await this.consultantsRepository.updateConsultant(consultantId, {
             password_digest,
         });
 
@@ -1929,7 +1901,7 @@ export class ConsultantsService {
             '',
         );
 
-        await this.updateConsultant(consultant.id, { recovery_password_digest: token });
+        await this.consultantsRepository.updateConsultant(consultant.id, { recovery_password_digest: token });
 
         const link = `${process.env.BASE_URL}/consultants/password-change?token=${token}`;
 
@@ -1972,7 +1944,10 @@ export class ConsultantsService {
 
         const hashedPassword = await argon2.hash(password);
 
-        await this.updateConsultant(consultant.id, { password_digest: hashedPassword, recovery_password_digest: null });
+        await this.consultantsRepository.updateConsultant(consultant.id, {
+            password_digest: hashedPassword,
+            recovery_password_digest: null,
+        });
 
         return this.commonService.generateMessage('Password updated successfully.');
     }
@@ -2787,14 +2762,14 @@ export class ConsultantsService {
         if (!consultant) {
             throw new UnauthorizedException({
                 result_code: ErrorStatus.NOT_FOUND,
-                error: ResponseMessages.InvalidToken,
+                error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
             });
         }
 
         if (consultant.token !== refresh_token.trim()) {
             throw new UnauthorizedException({
                 result_code: ErrorStatus.NOT_FOUND,
-                error: ResponseMessages.InvalidRefreshToken,
+                error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
             });
         }
 
@@ -2802,7 +2777,7 @@ export class ConsultantsService {
             { id: consultant.id, email: consultant.email, role: Role.Consultant },
             '',
         );
-        await this.updateConsultant(consultant.id, {
+        await this.consultantsRepository.updateConsultant(consultant.id, {
             token: new_refresh_token,
         });
 
@@ -2987,17 +2962,61 @@ export class ConsultantsService {
         }
     }
 
-    async getNotifications(id: number, data: GetNotificationsDto) {
-        const notifications = await this.findNotifications(
-            { target_id: id, target_type: TargetType.Consultant },
-            [],
-            [],
-            data.title ?? '',
-            Number(data.page),
-            Number(data.per),
-        );
+    async getNotifications(consultatnId: number, data: GetNotificationsDto) {
+        const { per, page, title } = data;
 
-        return notifications;
+        const currentConsultant = await this.consultantsRepository.getConsultantById(consultatnId);
+
+        if (!currentConsultant) {
+            throw new UnauthorizedException();
+        }
+
+        const notificationQuery = this.notificationRepository
+            .createQueryBuilder('notifications')
+            .leftJoinAndSelect('notifications.messages', 'messages');
+
+        if (title) {
+            notificationQuery.where('notifications.title LIKE :title', { title: `%${title}%` });
+        }
+
+        const searchPage = Number(page || 1);
+        const searchPer = Number(per || 10);
+
+        const [notifications, totalCount] = await notificationQuery
+            .skip((searchPage - 1) * searchPer)
+            .take(searchPer)
+            .getManyAndCount();
+
+        const reformatNotificationList: NotificationsT[] = notifications.map((notification) => {
+            const message = notification.messages;
+
+            return {
+                id: Number(notification.id),
+                kind: notification.kind,
+                title: notification.title,
+                content: notification.content,
+                ios_link: notification.iosLink,
+                android_link: notification.androidLink,
+                created_at: notification.created_at,
+                message: message
+                    ? {
+                          id: Number(message.id),
+                          kind: message.kind,
+                          send_kind: message.sendKind,
+                          os: message.os,
+                          language: message.language,
+                      }
+                    : null,
+            };
+        });
+
+        return {
+            data: reformatNotificationList,
+            total_size: totalCount,
+            current_page_size: reformatNotificationList.length,
+            current_page: searchPage,
+            total_pages: Math.ceil(totalCount / searchPer),
+        };
     }
 
     async deleteNotification(id: number) {

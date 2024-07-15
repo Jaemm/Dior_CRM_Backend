@@ -1,4 +1,5 @@
-import { Column, Entity, Index, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, OneToOne, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Messages } from './Messages.entity';
 
 @Index('notifications_pkey', ['id'], { unique: true })
 @Index('index_notifications_on_message_id', ['message_id'], {})
@@ -37,4 +38,8 @@ export class Notifications {
 
     @Column('timestamp without time zone', { name: 'updated_at' })
     updated_at: Date;
+
+    @ManyToOne(() => Messages, (messages) => messages.notifications)
+    @JoinColumn({ name: 'message_id', referencedColumnName: 'id' })
+    messages: Messages;
 }

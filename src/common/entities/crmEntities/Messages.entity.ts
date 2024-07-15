@@ -1,4 +1,5 @@
-import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Notifications } from './Notifications.entity';
 
 @Index('messages_pkey', ['id'], { unique: true })
 @Entity('messages', { schema: 'public' })
@@ -35,4 +36,7 @@ export class Messages {
 
     @Column('timestamp without time zone', { name: 'updated_at' })
     updatedAt: Date;
+
+    @OneToMany(() => Notifications, (notification) => notification.messages)
+    notifications: Notifications[];
 }

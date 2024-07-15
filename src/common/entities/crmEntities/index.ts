@@ -21,6 +21,8 @@ export { Genders } from './Genders.entity';
 
 export { HealthTips } from './HealthTips.entity';
 
+export { RefreshTokens } from './RefreshTokens.entity';
+
 export { Identities } from './Identities.entity';
 
 export { Notifications } from './Notifications.entity';
