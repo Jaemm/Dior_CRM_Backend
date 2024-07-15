@@ -252,6 +252,207 @@ export class ProductRecommendationService {
         }
     }
 
+    async getProductRecommendationById(recommendationId: string, locale = 'en') {
+        try {
+            const foundRecommendtaion = await this.productRecommendationRepository.findOne({
+                where: {
+                    id: recommendationId,
+                },
+                relations: ['productVariants'],
+            });
+
+            if (!foundRecommendtaion) {
+                throw new NotFoundException({});
+            }
+
+            const foundVariants = foundRecommendtaion.productVariants || [];
+
+            const productVariants = foundVariants.map((variant) => {
+                return {
+                    id: variant.id,
+                    name: variant.name,
+                    product_type: variant.productType,
+                    description: variant.description,
+                    link: variant.link,
+                    image_url: variant.imageUrl,
+                    category: variant.category,
+                    routine: variant.routine,
+                    code: variant.code,
+                    collection: variant.collection,
+                    shades: variant.shades,
+                };
+            });
+
+            const foundProductTranslations = await this.productTranslationsRepository.find({
+                where: {
+                    productRecommendationId: foundRecommendtaion.id,
+                },
+            });
+
+            let translations: ProductTranslationT[] = [];
+            if (foundProductTranslations) {
+                translations = foundProductTranslations.map((translations) => {
+                    return {
+                        id: Number(translations.id),
+                        field_name: translations.fieldName,
+                        language: translations.language,
+                        value: translations.value,
+                    };
+                });
+            }
+
+            const reformatProductRecommendation: ProductRecommendationT = {
+                id: foundRecommendtaion.id,
+                name: foundRecommendtaion.name,
+                product_type: foundRecommendtaion.productType,
+                description: foundRecommendtaion.description,
+                link: foundRecommendtaion.link,
+                image_url: foundRecommendtaion.imageUrl,
+                category: foundRecommendtaion.category,
+                routine: foundRecommendtaion.routine,
+                code: foundRecommendtaion.code,
+                collection: foundRecommendtaion.collection,
+                shades: foundRecommendtaion.getShade(),
+                product_translations: translations,
+                product_variants: productVariants,
+            };
+
+            return reformatProductRecommendation;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async updateProductRecommendationById(
+        body: CreateProductRecommendationDto,
+        recommendationId: string,
+        locale = 'en',
+    ) {
+        try {
+            const foundRecommendtaion = await this.productRecommendationRepository.findOneBy({ id: recommendationId });
+
+            if (!foundRecommendtaion) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.RECORD_NOT_FOUND,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
+                });
+            }
+
+            foundRecommendtaion.productType = body.product_type ? body.product_type : foundRecommendtaion.productType;
+            foundRecommendtaion.name = body.name ? body.name : foundRecommendtaion.name;
+            foundRecommendtaion.description = body.description ? body.description : foundRecommendtaion.description;
+            foundRecommendtaion.link = body.link ? body.link : foundRecommendtaion.link;
+            foundRecommendtaion.imageUrl = body.image_url ? body.image_url : foundRecommendtaion.imageUrl;
+            foundRecommendtaion.code = body.code ? body.code : foundRecommendtaion.code;
+            foundRecommendtaion.category = body.category ? body.category : foundRecommendtaion.category;
+            foundRecommendtaion.productRecommendationId = body.product_recommendation_id
+                ? Number(body.product_recommendation_id)
+                : foundRecommendtaion.productRecommendationId;
+            foundRecommendtaion.collection = body.collection ? body.collection : foundRecommendtaion.collection;
+            foundRecommendtaion.countries = body.countries ? body.countries : foundRecommendtaion.countries;
+
+            await this.productRecommendationRepository.save(foundRecommendtaion);
+
+            const foundProductTranslations = await this.productTranslationsRepository.findBy({
+                productRecommendationId: foundRecommendtaion.id,
+            });
+
+            await this.productTranslationsRepository.remove(foundProductTranslations);
+
+            if (body.product_translations_attributes) {
+                const productTranslationList = body.product_translations_attributes.map(async (translations) => {
+                    const newTranslations = this.productTranslationsRepository.create({
+                        productRecommendationId: foundRecommendtaion.id,
+                        fieldName: translations.field_name,
+                        language: translations.field_name,
+                        value: translations.value,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    });
+                    return await this.productTranslationsRepository.save(newTranslations);
+                });
+
+                const translations = await Promise.all(productTranslationList);
+                foundRecommendtaion.productTranslations = translations;
+            }
+
+            const foundVariants = await this.productRecommendationRepository.find({
+                where: {
+                    productRecommendationId: Number(foundRecommendtaion.id),
+                },
+            });
+            foundRecommendtaion.productVariants = foundVariants;
+
+            const productVariants = foundVariants.map((variant) => {
+                return {
+                    id: variant.id,
+                    name: variant.name,
+                    product_type: variant.productType,
+                    description: variant.description,
+                    link: variant.link,
+                    image_url: variant.imageUrl,
+                    category: variant.category,
+                    routine: variant.routine,
+                    code: variant.code,
+                    collection: variant.collection,
+                    shades: variant.shades,
+                };
+            });
+
+            let translations: ProductTranslationT[] = [];
+            if (foundRecommendtaion.productTranslations) {
+                translations = foundRecommendtaion.productTranslations.map((translations) => {
+                    return {
+                        id: Number(translations.id),
+                        field_name: translations.fieldName,
+                        language: translations.language,
+                        value: translations.value,
+                    };
+                });
+            }
+
+            const reformatProductRecommendation: ProductRecommendationT = {
+                id: foundRecommendtaion.id,
+                name: foundRecommendtaion.name,
+                product_type: foundRecommendtaion.productType,
+                description: foundRecommendtaion.description,
+                link: foundRecommendtaion.link,
+                image_url: foundRecommendtaion.imageUrl,
+                category: foundRecommendtaion.category,
+                routine: foundRecommendtaion.routine,
+                code: foundRecommendtaion.code,
+                collection: foundRecommendtaion.collection,
+                shades: foundRecommendtaion.getShade(),
+                product_translations: translations,
+                product_variants: productVariants,
+            };
+
+            return reformatProductRecommendation;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async deleteProductRecommendationById(recommendandationId: string, locale = 'en') {
+        try {
+            const foundRecommendtaion = await this.productRecommendationRepository.findOneBy({
+                id: recommendandationId,
+            });
+
+            if (!foundRecommendtaion) {
+                throw new NotFoundException({});
+            }
+
+            await this.productRecommendationRepository.remove(foundRecommendtaion);
+
+            return {
+                message: 'Product deleted',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
     async createProductRecommendation(body: CreateProductRecommendationDto) {
         try {
             const diorConsultant = await this.consultantRepository.getDiorConsultant();

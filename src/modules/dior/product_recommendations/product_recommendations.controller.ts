@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { Controller, Get, Req, Query, Headers, Post, Body } from '@nestjs/common';
+import { Controller, Get, Req, Query, Headers, Post, Body, Param, Delete, Put } from '@nestjs/common';
 import { ProductRecommendationService } from './product_recommendations.service';
 
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -14,13 +14,6 @@ export class ProductRecommendationController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('get_automatic_product_by_batch_id')
-    async getAutomaticProductByBatchId(@Query() query: AutomaticProductByBatchIdDto) {
-        return await this.productRecommendationsService.getAutomaticProductByBatchId(query);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get()
     async getProductRecommendation(
         @Req() req: Request,
@@ -28,6 +21,51 @@ export class ProductRecommendationController {
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
         return await this.productRecommendationsService.getProductRecommendation(req, query, locale);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get(':id')
+    async getProductRecommendationById(
+        @Req() req: Request,
+        @Param('id') recommendandationId: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ) {
+        return await this.productRecommendationsService.getProductRecommendationById(recommendandationId, locale);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Put(':id')
+    async updateProductRecommendationById(
+        @Req() req: Request,
+        @Param('id') recommendandationId: string,
+        @Body() body: CreateProductRecommendationDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ) {
+        return await this.productRecommendationsService.updateProductRecommendationById(
+            body,
+            recommendandationId,
+            locale,
+        );
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Delete(':id')
+    async deleteProductRecommendationById(
+        @Req() req: Request,
+        @Param('id') recommendandationId: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ) {
+        return await this.productRecommendationsService.deleteProductRecommendationById(recommendandationId, locale);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('get_automatic_product_by_batch_id')
+    async getAutomaticProductByBatchId(@Query() query: AutomaticProductByBatchIdDto) {
+        return await this.productRecommendationsService.getAutomaticProductByBatchId(query);
     }
 
     @ApiBearerAuth()
