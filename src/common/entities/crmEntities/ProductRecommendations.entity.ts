@@ -101,4 +101,12 @@ export class ProductRecommendations {
 
         return productWithSkinTone;
     }
+
+    getShade() {
+        if (this.productVariants && this.productVariants.length > 0) {
+            return 'Seclet Shade';
+        }
+
+        return this.shades;
+    }
 }

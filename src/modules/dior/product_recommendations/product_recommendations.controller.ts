@@ -1,11 +1,12 @@
 import { Request } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { Controller, Get, Req, Query, Headers } from '@nestjs/common';
+import { Controller, Get, Req, Query, Headers, Post, Body } from '@nestjs/common';
 import { ProductRecommendationService } from './product_recommendations.service';
 
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { AttributeRoutine, AutomaticProductByBatchIdDto, SearchProductRecommendationDto } from '../dior.dto';
+import { CreateProductRecommendationDto } from './product_recommendation.dto';
 
 @Controller('/dior/product_recommendations')
 export class ProductRecommendationController {
@@ -27,6 +28,17 @@ export class ProductRecommendationController {
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
         return await this.productRecommendationsService.getProductRecommendation(req, query, locale);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post()
+    async createProductRecommendation(
+        @Body() body: CreateProductRecommendationDto,
+        @Headers('X-CHOWIS-LOCALE')
+        locale: string,
+    ) {
+        return await this.productRecommendationsService.createProductRecommendation(body);
     }
 
     @ApiBearerAuth()

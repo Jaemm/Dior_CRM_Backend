@@ -1,3 +1,5 @@
+import { ProductTranslationT } from './product_translations.type';
+
 export type ProductRecommendationT = {
     id: string | null;
     name: string | null;
@@ -10,4 +12,7 @@ export type ProductRecommendationT = {
     code: string | null;
     collection: string | null;
     is_principal?: boolean | null;
+    shades?: string | null;
+    product_translations?: ProductTranslationT[] | null;
+    product_variants?: Omit<ProductRecommendationT, 'countries'>[];
 };

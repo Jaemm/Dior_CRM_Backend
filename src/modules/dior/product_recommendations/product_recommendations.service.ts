@@ -17,6 +17,8 @@ import { CommonService } from '@/src/common/common.service';
 import { ProductAttributes } from '@/src/common/entities/crmEntities';
 import { Not } from 'typeorm';
 import { AutomaticProductDiorGenerator } from '../automatic-product-dior-generator';
+import { CreateProductRecommendationDto } from './product_recommendation.dto';
+import { ProductRecommendationT, ProductTranslationT } from '@/src/common/types/entities';
 
 @Injectable()
 export class ProductRecommendationService {
@@ -245,6 +247,105 @@ export class ProductRecommendationService {
                 current_page: searchPage,
                 total_pages: Math.ceil(totalCount / searchLimit),
             };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async createProductRecommendation(body: CreateProductRecommendationDto) {
+        try {
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const newProductRecommendation = this.productRecommendationRepository.create({
+                consultantId: diorConsultant.id,
+                shades: body.shades,
+                productType: body.product_type,
+                name: body.name,
+                description: body.description,
+                link: body.link,
+                imageUrl: body.image_url,
+                code: body.code,
+                category: body.category,
+                routine: body.routine,
+                productRecommendationId: Number(body.product_recommendation_id),
+                collection: body.collection,
+                countries: body.countries,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+
+            const savedProductRecommendation = await this.productRecommendationRepository.save(
+                newProductRecommendation,
+            );
+
+            if (body.product_translations_attributes) {
+                const productTranslationList = body.product_translations_attributes.map(async (translations) => {
+                    const newTranslations = this.productTranslationsRepository.create({
+                        productRecommendationId: savedProductRecommendation.id,
+                        fieldName: translations.field_name,
+                        language: translations.field_name,
+                        value: translations.value,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    });
+                    return await this.productTranslationsRepository.save(newTranslations);
+                });
+
+                const translations = await Promise.all(productTranslationList);
+                savedProductRecommendation.productTranslations = translations;
+            }
+
+            const foundVariants = await this.productRecommendationRepository.find({
+                where: {
+                    productRecommendationId: Number(savedProductRecommendation.id),
+                },
+            });
+
+            const productVariants = foundVariants.map((variant) => {
+                return {
+                    id: variant.id,
+                    name: variant.name,
+                    product_type: variant.productType,
+                    description: variant.description,
+                    link: variant.link,
+                    image_url: variant.imageUrl,
+                    category: variant.category,
+                    routine: variant.routine,
+                    code: variant.code,
+                    collection: variant.collection,
+                    shades: variant.shades,
+                };
+            });
+
+            let translations: ProductTranslationT[] = [];
+            if (savedProductRecommendation.productTranslations) {
+                translations = savedProductRecommendation.productTranslations.map((translations) => {
+                    return {
+                        id: Number(translations.id),
+                        field_name: translations.fieldName,
+                        language: translations.language,
+                        value: translations.value,
+                    };
+                });
+            }
+
+            const reformatProductRecommendation: ProductRecommendationT = {
+                id: savedProductRecommendation.id,
+                name: savedProductRecommendation.name,
+                product_type: savedProductRecommendation.productType,
+                description: savedProductRecommendation.description,
+                link: savedProductRecommendation.link,
+                image_url: savedProductRecommendation.imageUrl,
+                category: savedProductRecommendation.category,
+                routine: savedProductRecommendation.routine,
+                code: savedProductRecommendation.code,
+                collection: savedProductRecommendation.collection,
+                shades: savedProductRecommendation.getShade(),
+                product_translations: translations,
+                product_variants: productVariants,
+            };
+
+            return reformatProductRecommendation;
         } catch (e) {
             throw e;
         }

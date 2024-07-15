@@ -14,5 +14,6 @@ export { NotificationsT } from './notifications.type';
 
 export { ProudctRecommendationGroupsT } from './product_recommendation_groups.type';
 export { ProductRecommendationT } from './product_recommendatoin.type';
+export { ProductTranslationT } from './product_translations.type';
 
 export { SalesConnectionT } from './sales_connection.type';
