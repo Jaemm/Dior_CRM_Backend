@@ -415,7 +415,7 @@ export class ConsultantsService {
                 social: consultantResponseData.social,
                 country_code: consultantResponseData.country_details?.code,
                 store: consultantResponseData.consultant_shop,
-                optic_number: consultantResponseData.products[0]?.device.optic_number,
+                optic_number: consultantResponseData.getOpticNumbers,
                 password_update_needed: consultantResponseData.password_update_needed,
             };
         } catch (e) {
@@ -908,6 +908,8 @@ export class ConsultantsService {
 
             consultant.token = accessToken;
             await this.consultantsRepository.save(consultant);
+
+            await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
 
             return {
                 id: consultant.id,
@@ -2637,6 +2639,8 @@ export class ConsultantsService {
 
             consultant.token = accessToken;
             await this.consultantsRepository.save(consultant);
+
+            await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
 
             return {
                 id: consultant.id,
