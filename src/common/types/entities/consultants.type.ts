@@ -42,10 +42,10 @@ export type ConsultantT = {
     password_update_needed: boolean | null;
     licenses?: LicensesT[] | null;
     products?: ProductsT[] | null;
-    consultant_company?: ConsultantCompaniesT[] | null;
-    consultant_branch?: ConsultantBranchesT[] | null;
-    consultant_country?: ConsultantCountryT[] | null;
-    consultant_store?: ConsultantStoreT[] | null;
-    consultant_shop?: ConsultantShopT[] | null;
-    consultant_position?: ConsultantPositionsT[] | null;
+    consultant_company?: ConsultantCompaniesT | null;
+    consultant_branch?: ConsultantBranchesT | null;
+    consultant_country?: ConsultantCountryT | null;
+    consultant_store?: ConsultantStoreT | null;
+    consultant_shop?: ConsultantShopT | null;
+    consultant_position?: ConsultantPositionsT | null;
 };

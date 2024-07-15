@@ -13,8 +13,6 @@ import {
 import { Products } from './Products.entity';
 import { ConsultantCompanies } from './ConsultantCompanies.entity';
 
-@Index('devices_pkey', ['id'], { unique: true })
-@Index('on_uni', ['optic_number'], { unique: true })
 @Entity('devices', { schema: 'public' })
 export class Devices {
     @PrimaryGeneratedColumn({ type: 'bigint', name: 'id' })

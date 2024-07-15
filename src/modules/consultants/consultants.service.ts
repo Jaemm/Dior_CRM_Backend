@@ -120,6 +120,8 @@ import {
     ConsultantT,
     SalesConnectionT,
 } from '@/src/common/types/entities';
+import { ProductsT } from '@/src/common/types/entities/products.type';
+import { LicensesT } from '@/src/common/types/entities/licenses.type';
 
 @Injectable()
 export class ConsultantsService {
@@ -1155,12 +1157,15 @@ export class ConsultantsService {
 
         const consultantsQuery = this.consultantsRepository
             .createQueryBuilder('consultants')
-            .leftJoinAndSelect('consultants.country_details', 'countries')
+            .leftJoinAndSelect('consultants.country_details', 'country_details')
+            .leftJoinAndSelect('consultants.consultant_store', 'consultant_store')
             .leftJoinAndSelect('consultants.consultant_shop', 'consultant_shop')
             .leftJoinAndSelect('consultants.consultant_position', 'consultant_position')
             .leftJoinAndSelect('consultants.consultant_company', 'consultant_company')
+            .leftJoinAndSelect('consultants.consultant_licenses', 'consultant_licenses')
+            .leftJoinAndSelect('consultant_licenses.licenses', 'licenses')
             .leftJoinAndSelect('consultants.products', 'products')
-            .leftJoinAndSelect('products', 'products.device');
+            .leftJoinAndSelect('products.device', 'device');
 
         if (companyIds.length > 0) {
             consultantsQuery.andWhere('consultants.consultant_company_id IN(:...companyIds)', { companyIds });
@@ -1175,15 +1180,33 @@ export class ConsultantsService {
             consultantsQuery.andWhere('consultants.consultant_position_id IN(:...positionIds)', { positionIds });
         }
         if (countryIds.length > 0) {
-            consultantsQuery.andWhere('consultants.consultant_company_id IN(:...countryIds)', { countryIds });
+            consultantsQuery.andWhere('consultants.consultant_country_id IN(:...countryIds)', { countryIds });
         }
         if (storeIds.length > 0) {
-            consultantsQuery.andWhere('consultants.consultant_company_id IN(:...storeIds)', { storeIds });
+            consultantsQuery.andWhere('consultants.consultant_store_id IN(:...storeIds)', { storeIds });
         }
 
         const consultantsQueryResult = await consultantsQuery.getMany();
 
         const reformatConsultantList: ConsultantT[] = consultantsQueryResult.map((consultant) => {
+            const countryDetail = consultant.country_details;
+            const consultantShop = consultant.consultant_shop;
+            const consultantStore = consultant.consultant_store;
+            const consultantPostion = consultant.consultant_position;
+            const consultantBranch = consultant.consultant_branch;
+            let countryCode = null;
+            let store = null;
+
+            const opticNumber = consultant?.getOpticNumbers;
+
+            if (countryDetail) {
+                countryCode = consultant.country_details.code;
+            }
+
+            if (consultantStore) {
+                store = consultantStore.name;
+            }
+
             const reformatConsultant: ConsultantT = {
                 id: consultant.id,
                 email: consultant.email,
@@ -1213,69 +1236,92 @@ export class ConsultantsService {
                 ethnicity_id: consultant.ethnicity_id,
                 callback_url: consultant.callback_url,
                 code: consultant.code,
-                country_code: null,
-                store: null,
-                optic_number: [],
-                password_update_needed: false,
-                licenses: null,
-                products: null,
-                consultant_company: null,
-                consultant_branch: null,
-                consultant_country: null,
-                consultant_store: null,
-                consultant_shop: null,
-                consultant_position: null,
+                country_code: countryCode,
+                store: store,
+                optic_number: opticNumber,
+                password_update_needed: consultant.password_update_needed,
+                licenses:
+                    consultant?.consultant_licenses?.map((cLicenses) => {
+                        return {
+                            id: cLicenses.id,
+                            name: cLicenses.licenses.name,
+                        };
+                    }) || null,
+                products:
+                    consultant?.products?.map((product) => {
+                        return {
+                            id: product.id,
+                            first_use_date: product.first_use_date,
+                            use_date: product.use_date,
+                            use_time: product.use_time,
+                            mac_address: product.mac_address,
+                            app_use_yn: product.app_use_yn,
+                            license_period: product.license_period,
+                            created_at: product.created_at,
+                            is_expired: product.getIsExpired,
+                        };
+                    }) || null,
+                consultant_company: consultant?.consultant_company,
+                consultant_branch: consultantBranch
+                    ? {
+                          id: Number(consultantBranch.id),
+                          consultant_company_id: Number(consultantBranch.consultantCompanyId),
+                          name: consultantBranch.name,
+                          created_at: consultantBranch.createdAt,
+                          updated_at: consultantBranch.updatedAt,
+                          code: consultantBranch.code,
+                          email: consultantBranch.email,
+                          password: consultantBranch.password,
+                          country: consultantBranch.country,
+                          consultant_country_id: consultantBranch.countryId,
+                      }
+                    : null,
+                consultant_country: countryDetail
+                    ? {
+                          id: Number(countryDetail.id),
+                          consultant_branch_id: Number(countryDetail.consultantBranchId),
+                          name: countryDetail.name,
+                          code: countryDetail.code,
+                          created_at: countryDetail.createdAt,
+                          updated_at: countryDetail.updatedAt,
+                          consultant_company_id: countryDetail.consultantCompanyId,
+                          url_and_port: countryDetail.urlAndPort,
+                          default_recommendation: countryDetail.defaultRecommendation,
+                      }
+                    : null,
+                consultant_store: consultantStore
+                    ? {
+                          id: Number(consultantStore.id),
+                          consultant_country_id: Number(consultantStore.consultantCountryId),
+                          name: consultantStore.name,
+                          created_at: consultantStore.createdAt,
+                          updated_at: consultantStore.updatedAt,
+                      }
+                    : null,
+                consultant_shop: consultantShop
+                    ? {
+                          id: consultantShop.id,
+                          name: consultantShop.name,
+                          created_at: consultantShop.createdAt,
+                          updated_at: consultantShop.updatedAt,
+                      }
+                    : null,
+                consultant_position: consultantPostion
+                    ? {
+                          id: consultantPostion.id,
+                          name: consultantPostion.name,
+                          created_at: consultantPostion.created_at,
+                          updated_at: consultantPostion.updated_at,
+                      }
+                    : null,
             };
 
             return reformatConsultant;
         });
 
-        return consultantsQueryResult.map((consultant) => {
-            const data = {
-                id: consultant.id,
-                email: consultant.email,
-                name: consultant.name,
-                surname: consultant.surname,
-                gender: consultant.gender,
-                os: consultant.os,
-                language: consultant.language,
-                phone: consultant.phone,
-                address: consultant.address,
-                token: consultant.token,
-                city: consultant.city,
-                country: consultant.country,
-                zip_code: consultant.zip_code,
-                state: consultant.state,
-                birthdate: consultant.birthdate,
-                note: consultant.note,
-                push_token: consultant.push_token,
-                social: consultant.social,
-                memo: consultant.memo,
-                app_id: consultant.app_id,
-                company_name: consultant.company_name,
-                company_address: consultant.company_address,
-                branch: consultant.branch,
-                position: consultant.position,
-                skin_color_group_id: consultant.skin_color_group_id,
-                ethnicity_id: consultant.ethnicity_id,
-                callback_url: consultant.callback_url,
-                code: consultant.code,
-                country_code: null as string,
-                store: null as string,
-                optic_number: null as string,
-                password_update_needed: null as string,
-                licenses: null as object,
-                products: null as object,
-                consultant_company: null as object,
-                consultant_branch: null as object,
-                consultant_country: null as object,
-                consultant_store: null as object,
-                consultant_shop: null as object,
-                consultant_position: null as object,
-            };
-
-            return data;
-        });
+        return {
+            data: reformatConsultantList,
+        };
     }
 
     public async modifyConsultant(userId: number, data: UpdateConsultantDto, locale: string = 'en') {

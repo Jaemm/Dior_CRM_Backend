@@ -1,5 +1,6 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Licenses } from './Licenses.entity';
+import { Consultants } from './Consultants.entity';
 
 @Index('index_consultant_licenses_on_consultant_id', ['consultantId'], {})
 @Index('consultant_licenses_pkey', ['id'], { unique: true })
@@ -22,9 +23,10 @@ export class ConsultantLicenses {
     updatedAt: Date;
 
     @ManyToOne(() => Licenses, (licenses) => licenses.consultantLicenses)
-    @JoinColumn([
-        { name: 'license_id', referencedColumnName: 'id' },
-        { name: 'license_id', referencedColumnName: 'id' },
-    ])
+    @JoinColumn([{ name: 'license_id', referencedColumnName: 'id' }])
     licenses: Licenses;
+
+    @ManyToOne(() => Consultants, (consultants) => consultants.consultant_licenses)
+    @JoinColumn([{ name: 'consultant_id', referencedColumnName: 'id' }])
+    consultants: Consultants;
 }

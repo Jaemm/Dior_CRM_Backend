@@ -94,8 +94,8 @@ export class Products {
     consultant: Consultants;
 
     @ManyToOne(() => Devices, (devices) => devices.products, {
-        onDelete: 'SET NULL',
-        onUpdate: 'CASCADE',
+        // onDelete: 'SET NULL',
+        // onUpdate: 'CASCADE',
     })
     @JoinColumn([{ name: 'device_id', referencedColumnName: 'id' }])
     device: Devices;

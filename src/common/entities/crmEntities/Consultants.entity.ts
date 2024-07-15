@@ -18,6 +18,8 @@ import { ConsultantCountries } from './ConsultantCountries.entity';
 import { ConsultantBranches } from './ConsultantBranches.entity';
 import { Identities } from './Identities.entity';
 import { ProductRecommendations } from './ProductRecommendations.entity';
+import { ConsultantStores } from './ConsultantStores.entity';
+import { ConsultantLicenses } from './ConsultantLicenses.entity';
 
 @Index('index_consultants_on_email_and_app_id', ['app_id', 'email'], {
     unique: true,
@@ -211,6 +213,13 @@ export class Consultants {
     @Column('boolean', { name: 'hide_for_bc', nullable: true })
     'hide_for_bc': boolean | null;
 
+    @OneToMany(() => ConsultantLicenses, (cLicenses) => cLicenses.consultants)
+    'consultant_licenses': ConsultantLicenses[];
+
+    @ManyToOne(() => ConsultantStores, (consultantStores) => consultantStores.consultants)
+    @JoinColumn([{ name: 'consultant_store_id', referencedColumnName: 'id' }])
+    'consultant_store': ConsultantStores;
+
     @ManyToOne(() => ConsultantShops, (consultantShops: ConsultantShops) => consultantShops.consultants, {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
@@ -262,7 +271,11 @@ export class Consultants {
     get 'getOpticNumbers'(): string[] | null {
         if (this.products && this.products.length > 0) {
             // Map each product's optic_number to an array
-            return this.products.map((product) => product.device.optic_number);
+            return this.products.map((product) => {
+                if (product.device) {
+                    return product.device.optic_number;
+                }
+            });
         }
         return [];
     }

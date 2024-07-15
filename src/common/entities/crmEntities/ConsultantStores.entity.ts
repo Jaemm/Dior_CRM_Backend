@@ -1,5 +1,6 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { ConsultantCountries } from './ConsultantCountries.entity';
+import { Consultants } from './Consultants.entity';
 
 @Index('index_consultant_stores_on_consultant_country_id', ['consultantCountryId'], {})
 @Index('consultant_stores_pkey', ['id'], { unique: true })
@@ -19,4 +20,7 @@ export class ConsultantStores {
 
     @Column('timestamp without time zone', { name: 'updated_at' })
     updatedAt: Date;
+
+    @OneToMany(() => Consultants, (consultants) => consultants.consultant_store)
+    consultants: Consultants[];
 }
