@@ -78,17 +78,6 @@ export class DiorController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('product_recommendations')
-    async getProductRecommendation(
-        @Req() req: Request,
-        @Query() query: SearchProductRecommendationDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ) {
-        return await this.diorService.getProductRecommendation(req, query, locale);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get('product_recommendation_selecteds')
     async getProductRecommendationSelecteds(@Query() query: GetRecommendationSelectedDto) {
         return await this.diorService.getProductRecommendationSelecteds(query);
@@ -99,26 +88,5 @@ export class DiorController {
     @Post('product_recommendation_selecteds')
     async selectProducts(@Body() body: SelectProductsDto) {
         return await this.diorService.selectProducts(body);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get('product_recommendations/get_collection')
-    async getRecommendationsCollection(@Query('routine') routine?: AttributeRoutine) {
-        return await this.diorService.getRecommendationsCollection(routine);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get('product_recommendations/get_category')
-    async getRecommendationsCategories(@Query('routine') routine?: AttributeRoutine) {
-        return await this.diorService.getRecommendationsCategories(routine);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get('product_recommendations/get_automatic_product_by_batch_id')
-    async getAutomaticProductByBatchId(@Query() query: AutomaticProductByBatchIdDto) {
-        return await this.diorService.getAutomaticProductByBatchId(query);
     }
 }

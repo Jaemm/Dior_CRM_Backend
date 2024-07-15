@@ -30,6 +30,7 @@ import {
     ProductsRepository,
 } from '@/src/common/repositories/crm';
 import { CommonService } from '@/src/common/common.service';
+import { ProductRecommendationModule } from './product_recommendations/product_recommendations.module';
 
 @Module({
     imports: [
@@ -43,6 +44,9 @@ import { CommonService } from '@/src/common/common.service';
         ProductRecommendations,
         ProductRecommendationSelecteds,
         ProductRecommendationGroups,
+
+        // Modules
+        ProductRecommendationModule,
     ],
     controllers: [DiorController],
     providers: [
