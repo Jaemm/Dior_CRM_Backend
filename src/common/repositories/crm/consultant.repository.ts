@@ -9,10 +9,11 @@ export class ConsultantsRepository extends Repository<Consultants> {
         super(Consultants, dataSource.createEntityManager());
     }
 
-    async getConsultantById(consultantId: number, relations?: string[]) {
+    async getConsultantById(consultantId: number | string, relations?: string[]) {
+        const numberedId = Number(consultantId);
         const query: { where: object; relations: any[] } = {
             where: {
-                id: consultantId,
+                id: numberedId,
             },
             relations: [],
         };

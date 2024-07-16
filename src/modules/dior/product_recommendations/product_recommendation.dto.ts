@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateProductRecommendationDto {
     @IsString()
@@ -72,4 +72,26 @@ export class ImportPicturesDto {
     @IsString()
     @IsNotEmpty()
     file_url: string;
+}
+
+export class ExportRecommendtaionsDto {
+    @IsOptional()
+    @IsString()
+    search: string;
+
+    @IsOptional()
+    @IsString()
+    filter_by: string;
+
+    @IsOptional()
+    @IsString()
+    filter_by2: string;
+
+    @IsOptional()
+    @IsString()
+    country: string;
+
+    @IsOptional()
+    @IsString()
+    typ: string;
 }

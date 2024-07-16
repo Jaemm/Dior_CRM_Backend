@@ -1,4 +1,5 @@
 import path from 'path';
+import * as csv from 'csv';
 
 import { Request } from 'express';
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
@@ -17,11 +18,12 @@ import {
 
 import { AttributeRoutine, AutomaticProductByBatchIdDto, SearchProductRecommendationDto } from '../dior.dto';
 import { CommonService } from '@/src/common/common.service';
-import { ProductAttributes } from '@/src/common/entities/crmEntities';
-import { Not } from 'typeorm';
+import { ProductAttributes, ProductRecommendations } from '@/src/common/entities/crmEntities';
+import { Not, In } from 'typeorm';
 import { AutomaticProductDiorGenerator } from '../automatic-product-dior-generator';
 import {
     CreateProductRecommendationDto,
+    ExportRecommendtaionsDto,
     ImportCountriesDto,
     ImportPicturesDto,
     ImportProductRecommendtaionDto,
@@ -998,6 +1000,86 @@ export class ProductRecommendationService {
         }
     }
 
+    async exportRecommendation(req: Request, query: ExportRecommendtaionsDto, locale = 'en') {
+        try {
+            const { search, filter_by, filter_by2, country, typ } = query;
+            const userId = (<{ id: string }>req.user).id;
+
+            const currentConsultant = await this.consultantRepository.getConsultantById(userId, [
+                'consultant_position',
+                'consultant_branch',
+            ]);
+
+            if (!currentConsultant) {
+                throw new UnauthorizedException({
+                    resule_code: ErrorStatus.UNAUTHORIZED,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+                });
+            }
+
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const recommendationQuery = await this.productRecommendationRepository
+                .createQueryBuilder('productRecommendation')
+                .where('productRecommendation.consultant_id = :consultantId', { consultantId: diorConsultant.id });
+            if (Number(currentConsultant.consultant_position.id) === 5) {
+            } else if (Number(currentConsultant.consultant_position_id) === 6) {
+                recommendationQuery.andWhere('productRecommendation.countries && ARRAY[:countries]', {
+                    countries: currentConsultant.countries,
+                });
+            } else {
+                recommendationQuery.andWhere('productRecommendation.countries && ARRAY[:country]', {
+                    country: currentConsultant.consultant_branch.country,
+                });
+            }
+
+            if (search) {
+                recommendationQuery.andWhere('LOWER (productRecommendation.name) LIKE :search', {
+                    search: `%${search}%`,
+                });
+            }
+
+            if (filter_by) {
+                recommendationQuery.andWhere('productRecommendation.category = :category', { category: filter_by });
+            }
+            if (filter_by2) {
+                recommendationQuery
+                    .andWhere('productRecommendation.collection = :collection', {
+                        collection: filter_by2,
+                    })
+                    .orWhere('productRecommendation.countries = :countries', { countries: filter_by2 });
+            }
+            if (country) {
+                recommendationQuery.andWhere('productRecommendation.countries && :countries', { countries: [country] });
+            }
+
+            const productRecommendations = await recommendationQuery.getMany();
+            const productTranslations = await this.productTranslationsRepository.find({
+                where: {
+                    productRecommendationId: In(productRecommendations.map((recomm) => recomm.id)),
+                },
+            });
+
+            productRecommendations.forEach((recomm) => {
+                const foundTranslations = productTranslations.filter(
+                    (translation) => translation.productRecommendationId === recomm.id,
+                );
+                recomm.productTranslations = foundTranslations;
+            });
+
+            let result;
+            if (typ === 'translations') {
+                result = await this.writeCSVFileForExportByTranslations(productRecommendations);
+            } else {
+                result = await this.writeCSVFileForExportByOthers(productRecommendations);
+            }
+
+            return result;
+        } catch (e) {
+            throw e;
+        }
+    }
+
     /**
      *
      * Utils
@@ -1009,6 +1091,58 @@ export class ProductRecommendationService {
         const worksheet = workbook.getWorksheet(1);
 
         return worksheet;
+    }
+
+    writeCSVFileForExportByTranslations(recommendations: ProductRecommendations[]) {
+        const header = ['Product Code', 'Language', 'Value'];
+
+        const records = recommendations.flatMap((u) => u.productTranslations.map((t) => [u.code, t.language, t.value]));
+
+        return new Promise((resolve, reject) => {
+            csv.stringify([header, ...records], (err, output) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(output);
+            });
+        });
+    }
+
+    writeCSVFileForExportByOthers(recommendations: ProductRecommendations[]) {
+        const header = [
+            'Product Code',
+            'Product Name',
+            'Category',
+            'Collection',
+            'Axis',
+            'Link',
+            'Image URL',
+            'Product Variant Code',
+        ];
+
+        const records = recommendations.map((u) => [
+            u.code,
+            u.name,
+            u.category,
+            u.collection,
+            u.routine,
+            u.link,
+            u.imageUrl,
+            u.productVariant?.code || '',
+        ]);
+
+        return new Promise((resolve, reject) => {
+            csv.stringify([header, ...records], (err, output) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(output);
+            });
+        });
     }
 
     createReturnFormForRecoCollectionAndCategories(categories: ProductAttributes[]) {

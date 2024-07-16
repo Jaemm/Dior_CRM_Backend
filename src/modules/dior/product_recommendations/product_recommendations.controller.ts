@@ -1,6 +1,6 @@
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { Controller, Get, Req, Query, Headers, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get, Req, Res, Query, Headers, Post, Body, Param, Delete, Put } from '@nestjs/common';
 import { ProductRecommendationService } from './product_recommendations.service';
 
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -8,6 +8,7 @@ import { Role } from '@/src/common/enums/role.enum';
 import { AttributeRoutine, AutomaticProductByBatchIdDto, SearchProductRecommendationDto } from '../dior.dto';
 import {
     CreateProductRecommendationDto,
+    ExportRecommendtaionsDto,
     ImportCountriesDto,
     ImportPicturesDto,
     ImportProductRecommendtaionDto,
@@ -27,44 +28,6 @@ export class ProductRecommendationController {
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
         return await this.productRecommendationsService.getProductRecommendation(req, query, locale);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get(':id')
-    async getProductRecommendationById(
-        @Req() req: Request,
-        @Param('id') recommendandationId: string,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ) {
-        return await this.productRecommendationsService.getProductRecommendationById(recommendandationId, locale);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Put(':id')
-    async updateProductRecommendationById(
-        @Req() req: Request,
-        @Param('id') recommendandationId: string,
-        @Body() body: CreateProductRecommendationDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ) {
-        return await this.productRecommendationsService.updateProductRecommendationById(
-            body,
-            recommendandationId,
-            locale,
-        );
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Delete(':id')
-    async deleteProductRecommendationById(
-        @Req() req: Request,
-        @Param('id') recommendandationId: string,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ) {
-        return await this.productRecommendationsService.deleteProductRecommendationById(recommendandationId, locale);
     }
 
     @ApiBearerAuth()
@@ -125,5 +88,54 @@ export class ProductRecommendationController {
     @Post('import_pictures ')
     async importPictures(@Body() body: ImportPicturesDto) {
         return await this.productRecommendationsService.importPictures(body);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('export')
+    async exportRecommendation(@Req() req: Request, @Res() res: Response, @Query() query: ExportRecommendtaionsDto) {
+        const resultFile = await this.productRecommendationsService.exportRecommendation(req, query);
+
+        res.header('Content-Type', 'text/csv');
+        res.attachment('list_of_products.csv');
+        return res.send(resultFile);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get(':id')
+    async getProductRecommendationById(
+        @Req() req: Request,
+        @Param('id') recommendandationId: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ) {
+        return await this.productRecommendationsService.getProductRecommendationById(recommendandationId, locale);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Put(':id')
+    async updateProductRecommendationById(
+        @Req() req: Request,
+        @Param('id') recommendandationId: string,
+        @Body() body: CreateProductRecommendationDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ) {
+        return await this.productRecommendationsService.updateProductRecommendationById(
+            body,
+            recommendandationId,
+            locale,
+        );
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Delete(':id')
+    async deleteProductRecommendationById(
+        @Req() req: Request,
+        @Param('id') recommendandationId: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ) {
+        return await this.productRecommendationsService.deleteProductRecommendationById(recommendandationId, locale);
     }
 }
