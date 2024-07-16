@@ -1,3 +1,5 @@
+import path from 'path';
+
 import { Request } from 'express';
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
@@ -21,10 +23,12 @@ import { AutomaticProductDiorGenerator } from '../automatic-product-dior-generat
 import {
     CreateProductRecommendationDto,
     ImportCountriesDto,
+    ImportPicturesDto,
     ImportProductRecommendtaionDto,
     ImportTranslationsDto,
 } from './product_recommendation.dto';
 import { ProductRecommendationT, ProductTranslationT } from '@/src/common/types/entities';
+import axios from 'axios';
 
 @Injectable()
 export class ProductRecommendationService {
@@ -835,7 +839,7 @@ export class ProductRecommendationService {
 
             const fileUrl = body.file_url;
 
-            const worksheet = this.getWorkSheet(fileUrl);
+            const worksheet = await this.getWorkSheet(fileUrl);
 
             const rowCount = worksheet.rowCount + 1;
 
@@ -963,6 +967,42 @@ export class ProductRecommendationService {
         }
     }
 
+    async importPictures(body: ImportPicturesDto) {
+        try {
+            const fileUrl = body.file_url;
+
+            const response = await axios.get(fileUrl);
+
+            const isExistImage = response.headers['Content-Type'].toLocaleString().startsWith('image');
+
+            if (isExistImage) {
+                throw new Error();
+            }
+
+            const fileName = path.basename(fileUrl, path.extname(fileUrl));
+            const productCode = fileName.slice(37);
+
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const product = diorConsultant.productRecommendations.find((pr) => pr.code === productCode);
+            if (product) {
+                product.imageUrl = fileUrl;
+                await this.productRecommendationRepository.save(product);
+            }
+
+            return {
+                message: 'Success import data',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    /**
+     *
+     * Utils
+     *
+     * */
     async getWorkSheet(fileUrl: string) {
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.readFile(fileUrl);

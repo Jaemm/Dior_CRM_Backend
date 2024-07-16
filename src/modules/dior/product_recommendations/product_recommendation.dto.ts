@@ -67,3 +67,9 @@ export class ImportCountriesDto {
     @IsNotEmpty()
     country: string;
 }
+
+export class ImportPicturesDto {
+    @IsString()
+    @IsNotEmpty()
+    file_url: string;
+}

@@ -9,6 +9,7 @@ import { AttributeRoutine, AutomaticProductByBatchIdDto, SearchProductRecommenda
 import {
     CreateProductRecommendationDto,
     ImportCountriesDto,
+    ImportPicturesDto,
     ImportProductRecommendtaionDto,
     ImportTranslationsDto,
 } from './product_recommendation.dto';
@@ -117,5 +118,12 @@ export class ProductRecommendationController {
     @Post('import_countries ')
     async importCountries(@Body() body: ImportCountriesDto) {
         return await this.productRecommendationsService.importCountries(body);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('import_pictures ')
+    async importPictures(@Body() body: ImportPicturesDto) {
+        return await this.productRecommendationsService.importPictures(body);
     }
 }
