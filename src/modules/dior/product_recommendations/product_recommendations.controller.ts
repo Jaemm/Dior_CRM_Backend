@@ -99,4 +99,11 @@ export class ProductRecommendationController {
     async importProductRecommendtaion(@Body() body: ImportProductRecommendtaionDto) {
         return await this.productRecommendationsService.importProductRecommendtaion(body);
     }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('import_translations ')
+    async importProductTranslations(@Body() body: ImportProductRecommendtaionDto) {
+        return await this.productRecommendationsService.importProductTranslations(body);
+    }
 }

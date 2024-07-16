@@ -18,7 +18,11 @@ import { CommonService } from '@/src/common/common.service';
 import { ProductAttributes } from '@/src/common/entities/crmEntities';
 import { Not } from 'typeorm';
 import { AutomaticProductDiorGenerator } from '../automatic-product-dior-generator';
-import { CreateProductRecommendationDto, ImportProductRecommendtaionDto } from './product_recommendation.dto';
+import {
+    CreateProductRecommendationDto,
+    ImportProductRecommendtaionDto,
+    ImportTranslationsDto,
+} from './product_recommendation.dto';
 import { ProductRecommendationT, ProductTranslationT } from '@/src/common/types/entities';
 
 @Injectable()
@@ -815,15 +819,15 @@ export class ProductRecommendationService {
 
     async importProductRecommendtaion(body: ImportProductRecommendtaionDto, locale = 'en') {
         //  Columns
-        //  0 - Product Code
-        //  1 - Product Name
-        //  2 - Product Link
-        //  3 - Category
-        //  4 - Collection
-        //  5 - Axis
-        //  6 - Image URL
-        //  7 - Product Variant Code
-        //  8 - Shades
+        //  1 - Product Code
+        //  2 - Product Name
+        //  3 - Product Link
+        //  4 - Category
+        //  5 - Collection
+        //  6 - Axis
+        //  7 - Image URL
+        //  8 - Product Variant Code
+        //  9 - Shades
 
         try {
             const diorConsultant = await this.consultantRepository.getDiorConsultant();
@@ -863,6 +867,56 @@ export class ProductRecommendationService {
             }
 
             return { message: 'Success import data' };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async importProductTranslations(body: ImportTranslationsDto, locale = 'en') {
+        try {
+            const fileUrl = body.file_url;
+            const country = body.country;
+
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.readFile(fileUrl);
+            const worksheet = workbook.getWorksheet(1);
+
+            const headers = worksheet.getRow(1);
+
+            const rowCount = worksheet.rowCount + 1;
+
+            const newBranches = [];
+
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            for (let i = 2; i < rowCount; i++) {
+                const row = worksheet.getRow(1);
+                const productCode = row.getCell(1).value as string;
+                const translationProductName = row.getCell(2).value as string;
+
+                const product = diorConsultant?.productRecommendations.find((pr) => pr.code === productCode);
+                if (product) {
+                    let translation = product.productTranslations.find(
+                        (pt) => pt.fieldName === 'product_name' && pt.language === country,
+                    );
+                    if (translation) {
+                        translation.value = translationProductName;
+                        await this.productTranslationsRepository.save(translation);
+                    } else {
+                        translation = this.productTranslationsRepository.create({
+                            fieldName: 'product_name',
+                            language: country,
+                            value: translationProductName,
+                            productRecommendationId: product.id,
+                        });
+                        await this.productTranslationsRepository.save(translation);
+                    }
+                }
+            }
+
+            return {
+                message: 'Success import data',
+            };
         } catch (e) {
             throw e;
         }

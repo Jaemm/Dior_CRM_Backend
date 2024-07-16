@@ -47,3 +47,13 @@ export class ImportProductRecommendtaionDto {
     @IsNotEmpty()
     file_url: string;
 }
+
+export class ImportTranslationsDto {
+    @IsString()
+    @IsNotEmpty()
+    file_url: string;
+
+    @IsString()
+    @IsNotEmpty()
+    country: string;
+}
