@@ -24,7 +24,9 @@ export class DiorCountriesService {
 
             if (search) {
                 const likeSearch = `%${search}%`;
-                countriesQuery.andWhere('(countries.code LIKE :search OR countries.name LIKE :search)', { likeSearch });
+                countriesQuery.andWhere('(countries.code LIKE :search OR countries.name LIKE :search)', {
+                    search: likeSearch,
+                });
             }
 
             const countries = await countriesQuery.getMany();
