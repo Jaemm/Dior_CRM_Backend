@@ -95,3 +95,9 @@ export class ExportRecommendtaionsDto {
     @IsString()
     typ: string;
 }
+
+export class GetPresignUploadDto {
+    @IsOptional()
+    @IsString()
+    filename: string;
+}

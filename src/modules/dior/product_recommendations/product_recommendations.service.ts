@@ -24,6 +24,7 @@ import { AutomaticProductDiorGenerator } from '../automatic-product-dior-generat
 import {
     CreateProductRecommendationDto,
     ExportRecommendtaionsDto,
+    GetPresignUploadDto,
     ImportCountriesDto,
     ImportPicturesDto,
     ImportProductRecommendtaionDto,
@@ -31,11 +32,13 @@ import {
 } from './product_recommendation.dto';
 import { ProductRecommendationT, ProductTranslationT } from '@/src/common/types/entities';
 import axios from 'axios';
+import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 
 @Injectable()
 export class ProductRecommendationService {
     constructor(
         private readonly commonService: CommonService,
+        private readonly awsS3Service: AwsS3Service,
 
         private readonly consultantCountriesRepository: ConsultantCountriesRepository,
         private readonly productRecommendationRepository: ProductRecommendationRepository,
@@ -1075,6 +1078,53 @@ export class ProductRecommendationService {
             }
 
             return result;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getAxis() {
+        try {
+            const axis = [];
+
+            const productAttributes = await this.productAttributesRepository.find({
+                where: {
+                    typ: 'Axis',
+                },
+                relations: ['productAttributeTranslations'],
+            });
+
+            return {
+                data: [...new Set(productAttributes.map((row) => row.value))],
+                translated_data: productAttributes.map((category) => ({
+                    value: category.value,
+                    category_translations: (category.productAttributeTranslations || []).map((translation) => ({
+                        id: translation.id,
+                        field_name: translation.fieldName,
+                        language: translation.language,
+                        value: translation.value,
+                    })),
+                })),
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getPresignUpload(query: GetPresignUploadDto) {
+        try {
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const { filename } = query;
+
+            const result = await this.awsS3Service.getPresignUploadForDiorProductRecommendation(
+                filename,
+                diorConsultant.id,
+            );
+
+            return {
+                result,
+            };
         } catch (e) {
             throw e;
         }

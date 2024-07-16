@@ -12,7 +12,32 @@ import { NotFoundException } from '@nestjs/common/exceptions';
 export class AwsS3Service {
     constructor(private readonly configService: ConfigService) {}
 
-    async getPresignedUpload({
+    async getPresignUploadForDiorProductRecommendation(fileName: string, diorConsultantId: number) {
+        const prefix = `uploads/images/product_recommendations/${diorConsultantId}`;
+
+        const s3 = new S3();
+
+        const key = `${prefix}/${fileName}`;
+
+        const params: {
+            Bucket: string;
+            Key: string;
+            Expires: number;
+            ACL: string;
+            ContentLength?: number;
+        } = {
+            Bucket: this.configService.get('AWS_BUCKET_NAME'),
+            Key: key,
+            Expires: 60 * 5,
+            ACL: 'public-read',
+        };
+
+        const result = await s3.getSignedUrlPromise('putObject', params);
+
+        return result;
+    }
+
+    async getPresignedUploadForCRM({
         fileName,
         consentType,
         customerId,

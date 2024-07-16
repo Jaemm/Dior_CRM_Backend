@@ -541,7 +541,7 @@ export class CRMService {
                 });
             }
 
-            const result = await this.awsS3Service.getPresignedUpload({
+            const result = await this.awsS3Service.getPresignedUploadForCRM({
                 fileName: file_name,
                 consentType: consent_type,
                 customerId: customer_id,

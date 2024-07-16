@@ -1,6 +1,19 @@
 import { Request, Response } from 'express';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { Controller, Get, Req, Res, Query, Headers, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Req,
+    Res,
+    Query,
+    Headers,
+    Post,
+    Body,
+    Param,
+    Delete,
+    Put,
+    BadRequestException,
+} from '@nestjs/common';
 import { ProductRecommendationService } from './product_recommendations.service';
 
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -9,6 +22,7 @@ import { AttributeRoutine, AutomaticProductByBatchIdDto, SearchProductRecommenda
 import {
     CreateProductRecommendationDto,
     ExportRecommendtaionsDto,
+    GetPresignUploadDto,
     ImportCountriesDto,
     ImportPicturesDto,
     ImportProductRecommendtaionDto,
@@ -99,6 +113,26 @@ export class ProductRecommendationController {
         res.header('Content-Type', 'text/csv');
         res.attachment('list_of_products.csv');
         return res.send(resultFile);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('get_axis')
+    async getAxis() {
+        return await this.productRecommendationsService.getAxis();
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('presign_upload')
+    async getPresignUpload(@Query() query: GetPresignUploadDto) {
+        if (!query.filename) {
+            throw new BadRequestException({
+                result_code: 400,
+                error: 'Filename is missing',
+            });
+        }
+        return await this.productRecommendationsService.getPresignUpload(query);
     }
 
     @ApiBearerAuth()
