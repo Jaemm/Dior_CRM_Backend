@@ -928,6 +928,36 @@ export class ProductRecommendationService {
 
             const headers = worksheet.getRow(1);
             const rowCount = worksheet.rowCount + 1;
+
+            for (let i = 2; i < rowCount; i++) {
+                const row = worksheet.getRow(1);
+
+                const productCode = row.getCell(1).value as string;
+                const excludeInCountry = (row.getCell(2).value as string).toLocaleLowerCase() === 'y';
+
+                const product = await this.productRecommendationRepository.findOne({
+                    where: {
+                        code: productCode,
+                    },
+                });
+
+                if (product) {
+                    let productCountries = product.countries;
+                    if (excludeInCountry) {
+                        productCountries = productCountries.filter((c) => c !== country);
+                    } else {
+                        if (!productCountries.includes(country)) {
+                            productCountries.push(country);
+                        }
+                    }
+                    product.countries = productCountries;
+                    await this.productRecommendationRepository.save(product);
+                }
+            }
+
+            return {
+                message: 'Success import data',
+            };
         } catch (e) {
             throw e;
         }
