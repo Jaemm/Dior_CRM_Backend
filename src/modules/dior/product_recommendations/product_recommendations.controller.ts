@@ -6,7 +6,7 @@ import { ProductRecommendationService } from './product_recommendations.service'
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { AttributeRoutine, AutomaticProductByBatchIdDto, SearchProductRecommendationDto } from '../dior.dto';
-import { CreateProductRecommendationDto } from './product_recommendation.dto';
+import { CreateProductRecommendationDto, ImportProductRecommendtaionDto } from './product_recommendation.dto';
 
 @Controller('/dior/product_recommendations')
 export class ProductRecommendationController {
@@ -91,5 +91,12 @@ export class ProductRecommendationController {
     @Get('get_category')
     async getRecommendationsCategories(@Query('routine') routine?: AttributeRoutine) {
         return await this.productRecommendationsService.getRecommendationsCategories(routine);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('import')
+    async importProductRecommendtaion(@Body() body: ImportProductRecommendtaionDto) {
+        return await this.productRecommendationsService.importProductRecommendtaion(body);
     }
 }

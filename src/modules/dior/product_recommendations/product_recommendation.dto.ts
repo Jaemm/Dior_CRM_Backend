@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateProductRecommendationDto {
     @IsString()
@@ -40,4 +40,10 @@ export class CreateProductRecommendationDto {
         language: string;
         value: string;
     }[];
+}
+
+export class ImportProductRecommendtaionDto {
+    @IsString()
+    @IsNotEmpty()
+    file_url: string;
 }
