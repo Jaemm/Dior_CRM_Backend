@@ -6,7 +6,11 @@ import { ProductRecommendationService } from './product_recommendations.service'
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { AttributeRoutine, AutomaticProductByBatchIdDto, SearchProductRecommendationDto } from '../dior.dto';
-import { CreateProductRecommendationDto, ImportProductRecommendtaionDto } from './product_recommendation.dto';
+import {
+    CreateProductRecommendationDto,
+    ImportProductRecommendtaionDto,
+    ImportTranslationsDto,
+} from './product_recommendation.dto';
 
 @Controller('/dior/product_recommendations')
 export class ProductRecommendationController {
@@ -103,7 +107,7 @@ export class ProductRecommendationController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('import_translations ')
-    async importProductTranslations(@Body() body: ImportProductRecommendtaionDto) {
+    async importProductTranslations(@Body() body: ImportTranslationsDto) {
         return await this.productRecommendationsService.importProductTranslations(body);
     }
 }
