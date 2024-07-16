@@ -1,9 +1,12 @@
+import { In } from 'typeorm';
+import * as csv from 'csv';
+import * as ExcelJS from 'exceljs';
+
 import { ConsultantCountriesRepository, ConsultantsRepository } from '@/src/common/repositories/crm';
 import { ConsultantCountryForDiorT, ConsultantCountryT } from '@/src/common/types/entities';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateCountries, UpdateCountriesDto } from './dior_countries.dto';
-
-import { In } from 'typeorm';
+import { CreateCountries, ExportCountriesDto, ImportCountriesDto, UpdateCountriesDto } from './dior_countries.dto';
+import { ConsultantCountries } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class DiorCountriesService {
@@ -164,5 +167,88 @@ export class DiorCountriesService {
         } catch (e) {
             throw e;
         }
+    }
+
+    async exportCountries(query: ExportCountriesDto) {
+        try {
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const countriesQuery = await this.consultantCountriesRepository
+                .createQueryBuilder('countries')
+                .where('countries.id != :diorConsultantId', { diorConsultantId: diorConsultant.id });
+
+            if (query.search) {
+                countriesQuery.andWhere('(countries.code LIKE :search OR countries.name LIKE :search)', {
+                    search: `%${query.search}%`,
+                });
+            }
+
+            const countries = await countriesQuery.getMany();
+
+            return await this.createCSVFileForExportCountries(countries);
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async importCountries(body: ImportCountriesDto) {
+        const { file_url } = body;
+        try {
+            const worksheet = await this.getWorkSheet(file_url);
+
+            const headers = worksheet.getRow(1);
+
+            const rowCount = worksheet.rowCount + 1;
+
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            for (let i = 2; i < rowCount; i++) {
+                const row = worksheet.getRow(i);
+
+                const newCountries = this.consultantCountriesRepository.create({
+                    code: row.getCell(1).value as string,
+                    name: row.getCell(2).value as string,
+                    defaultRecommendation: row.getCell(3).value as string,
+                    urlAndPort: row.getCell(4).value as string,
+                    consultantCompanyId: diorConsultant.consultant_company_id,
+                });
+
+                await this.consultantCountriesRepository.save(newCountries);
+            }
+
+            return {
+                message: 'Success import data',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    /**
+     * Utils
+     */
+    createCSVFileForExportCountries(countries: ConsultantCountries[]) {
+        const header = ['Country Code', 'Country Name', 'Default Recommendation', 'eCRM URL & PORT'];
+
+        const records = countries.map((u) => [u.code, u.name, u.urlAndPort, u.defaultRecommendation]);
+
+        return new Promise((resolve, reject) => {
+            csv.stringify([header, ...records], (err, output) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(output);
+            });
+        });
+    }
+
+    async getWorkSheet(fileUrl: string) {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.readFile(fileUrl);
+        const worksheet = workbook.getWorksheet(1);
+
+        return worksheet;
     }
 }

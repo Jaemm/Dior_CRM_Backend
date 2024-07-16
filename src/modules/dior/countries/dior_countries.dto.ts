@@ -35,3 +35,15 @@ export class UpdateCountriesDto {
     @IsString()
     default_recommendation: string;
 }
+
+export class ExportCountriesDto {
+    @IsOptional()
+    @IsString()
+    search: string;
+}
+
+export class ImportCountriesDto {
+    @IsNotEmpty()
+    @IsString()
+    file_url: string;
+}
