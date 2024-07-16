@@ -1,5 +1,6 @@
 import { Request } from 'express';
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import * as ExcelJS from 'exceljs';
 
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import {
@@ -17,7 +18,7 @@ import { CommonService } from '@/src/common/common.service';
 import { ProductAttributes } from '@/src/common/entities/crmEntities';
 import { Not } from 'typeorm';
 import { AutomaticProductDiorGenerator } from '../automatic-product-dior-generator';
-import { CreateProductRecommendationDto } from './product_recommendation.dto';
+import { CreateProductRecommendationDto, ImportProductRecommendtaionDto } from './product_recommendation.dto';
 import { ProductRecommendationT, ProductTranslationT } from '@/src/common/types/entities';
 
 @Injectable()
@@ -807,6 +808,61 @@ export class ProductRecommendationService {
                 data,
                 translated_data: translatedData,
             };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async importProductRecommendtaion(body: ImportProductRecommendtaionDto, locale = 'en') {
+        //  Columns
+        //  0 - Product Code
+        //  1 - Product Name
+        //  2 - Product Link
+        //  3 - Category
+        //  4 - Collection
+        //  5 - Axis
+        //  6 - Image URL
+        //  7 - Product Variant Code
+        //  8 - Shades
+
+        try {
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const fileUrl = body.file_url;
+
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.readFile(fileUrl);
+            const worksheet = workbook.getWorksheet(1);
+
+            const rowCount = worksheet.rowCount;
+
+            for (let i = 2; i < rowCount; i++) {
+                const row = worksheet.getRow(i);
+
+                const productCode = row.getCell(8).value as string;
+                const productVariant = productCode
+                    ? await this.productRecommendationRepository.findOne({ where: { code: productCode } })
+                    : null;
+
+                const newProduct = this.productRecommendationRepository.create({
+                    code: row.getCell(1).value as string,
+                    name: (row.getCell(2).value as string).trim(),
+                    link: row.getCell(3).value as string,
+                    category: row.getCell(4).value as string,
+                    collection: row.getCell(5).value as string,
+                    routine: row.getCell(6).value as string,
+                    imageUrl: row.getCell(7).value as string,
+                    shades: row.getCell(9).value as string,
+                    productRecommendationId: Number(productVariant?.id || null),
+                    consultantId: Number(diorConsultant.id),
+                    updatedAt: new Date(),
+                    createdAt: new Date(),
+                });
+
+                await this.productRecommendationRepository.save(newProduct);
+            }
+
+            return { message: 'Success import data' };
         } catch (e) {
             throw e;
         }
