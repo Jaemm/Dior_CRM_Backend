@@ -1,7 +1,9 @@
 import { ConsultantCountriesRepository, ConsultantsRepository } from '@/src/common/repositories/crm';
-import { ConsultantCountryForDiorT } from '@/src/common/types/entities';
+import { ConsultantCountryForDiorT, ConsultantCountryT } from '@/src/common/types/entities';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateCountries } from './dior_countries.dto';
+import { CreateCountries, UpdateCountriesDto } from './dior_countries.dto';
+
+import { In } from 'typeorm';
 
 @Injectable()
 export class DiorCountriesService {
@@ -76,6 +78,89 @@ export class DiorCountriesService {
             };
 
             return reformatCountries;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async updateCountries(countryId: string, body: UpdateCountriesDto, locale = 'en') {
+        try {
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const country = await this.consultantCountriesRepository.findOne({
+                where: {
+                    id: countryId,
+                    consultantCompanyId: diorConsultant.consultant_company_id,
+                },
+            });
+
+            if (!country) {
+                throw new NotFoundException({});
+            }
+
+            country.name = body?.name ? body.name : country.name;
+            country.code = body?.code ? body.code : country.code;
+            country.urlAndPort = body?.url_and_port ? body.url_and_port : country.urlAndPort;
+            country.defaultRecommendation = body?.default_recommendation
+                ? body.default_recommendation
+                : country.defaultRecommendation;
+            country.updatedAt = new Date();
+
+            const savedCountry = await this.consultantCountriesRepository.save(country);
+
+            const reformatCountries: ConsultantCountryForDiorT = {
+                id: Number(savedCountry.id),
+                name: savedCountry.name,
+                code: savedCountry.code,
+                url_and_port: savedCountry.urlAndPort,
+                default_recommendation: savedCountry.defaultRecommendation,
+            };
+
+            return reformatCountries;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async deleteCountryById(countryId: string) {
+        try {
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const foundCountry = await this.consultantCountriesRepository.findOne({
+                where: {
+                    consultantCompanyId: diorConsultant.consultant_company_id,
+                    id: countryId,
+                },
+            });
+
+            await this.consultantCountriesRepository.remove(foundCountry);
+
+            return {
+                message: 'Delete country successful',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async deleteMultipleCountries(countryIds: string) {
+        try {
+            const splitIds = countryIds.split(',');
+
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const foundCountries = await this.consultantCountriesRepository.find({
+                where: {
+                    consultantCompanyId: diorConsultant.consultant_company_id,
+                    id: In(splitIds),
+                },
+            });
+
+            await this.consultantCountriesRepository.remove(foundCountries);
+
+            return {
+                message: 'Successfully deleted multiple record',
+            };
         } catch (e) {
             throw e;
         }
