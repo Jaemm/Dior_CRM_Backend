@@ -20,6 +20,7 @@ import { Not } from 'typeorm';
 import { AutomaticProductDiorGenerator } from '../automatic-product-dior-generator';
 import {
     CreateProductRecommendationDto,
+    ImportCountriesDto,
     ImportProductRecommendtaionDto,
     ImportTranslationsDto,
 } from './product_recommendation.dto';
@@ -834,9 +835,7 @@ export class ProductRecommendationService {
 
             const fileUrl = body.file_url;
 
-            const workbook = new ExcelJS.Workbook();
-            await workbook.xlsx.readFile(fileUrl);
-            const worksheet = workbook.getWorksheet(1);
+            const worksheet = this.getWorkSheet(fileUrl);
 
             const rowCount = worksheet.rowCount + 1;
 
@@ -877,9 +876,7 @@ export class ProductRecommendationService {
             const fileUrl = body.file_url;
             const country = body.country;
 
-            const workbook = new ExcelJS.Workbook();
-            await workbook.xlsx.readFile(fileUrl);
-            const worksheet = workbook.getWorksheet(1);
+            const worksheet = await this.getWorkSheet(fileUrl);
 
             const headers = worksheet.getRow(1);
 
@@ -920,6 +917,28 @@ export class ProductRecommendationService {
         } catch (e) {
             throw e;
         }
+    }
+
+    async importCountries(body: ImportCountriesDto) {
+        try {
+            const fileUrl = body.file_url;
+            const country = body.country;
+
+            const worksheet = await this.getWorkSheet(fileUrl);
+
+            const headers = worksheet.getRow(1);
+            const rowCount = worksheet.rowCount + 1;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getWorkSheet(fileUrl: string) {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.readFile(fileUrl);
+        const worksheet = workbook.getWorksheet(1);
+
+        return worksheet;
     }
 
     createReturnFormForRecoCollectionAndCategories(categories: ProductAttributes[]) {

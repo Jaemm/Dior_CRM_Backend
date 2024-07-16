@@ -57,3 +57,13 @@ export class ImportTranslationsDto {
     @IsNotEmpty()
     country: string;
 }
+
+export class ImportCountriesDto {
+    @IsString()
+    @IsNotEmpty()
+    file_url: string;
+
+    @IsString()
+    @IsNotEmpty()
+    country: string;
+}
