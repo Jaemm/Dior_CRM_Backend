@@ -31,6 +31,7 @@ import {
 } from '@/src/common/repositories/crm';
 import { CommonService } from '@/src/common/common.service';
 import { ProductRecommendationModule } from './product_recommendations/product_recommendations.module';
+import { DiorCountriesModule } from './countries/dior_countries.module';
 
 @Module({
     imports: [
@@ -46,6 +47,7 @@ import { ProductRecommendationModule } from './product_recommendations/product_r
         ProductRecommendationGroups,
 
         // Modules
+        DiorCountriesModule,
         ProductRecommendationModule,
     ],
     controllers: [DiorController],

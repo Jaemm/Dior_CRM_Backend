@@ -38,13 +38,6 @@ export class DiorController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('countries')
-    async getCountries(@Req() req: Request, @Query('search') search?: string) {
-        return await this.diorService.getCountries(search);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get('company_branches')
     async searchBranches(
         @Req() req: Request,

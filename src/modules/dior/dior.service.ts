@@ -74,44 +74,6 @@ export class DiorService {
         private productTranslationsRepository: ProductTranslationsRepository,
     ) {}
 
-    async getCountries(search?: string) {
-        try {
-            const diorConsultantCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
-
-            if (!diorConsultantCompanyId) {
-                throw new NotFoundException({});
-            }
-
-            const countriesQuery = this.consultantCountriesRepository
-                .createQueryBuilder('countries')
-                .where('countries.consultant_company_id = :diorConsultantCompanyId', { diorConsultantCompanyId });
-
-            if (search) {
-                const likeSearch = `%${search}%`;
-                countriesQuery.andWhere('(countries.code LIKE :search OR countries.name LIKE :search)', { likeSearch });
-            }
-
-            const countries = await countriesQuery.getMany();
-
-            const reformatCountries: ConsultantCountryForDiorT[] = countries.map((country) => {
-                const reformatData: ConsultantCountryForDiorT = {
-                    id: Number(country.id),
-                    name: country.name,
-                    code: country.code,
-                    url_and_port: country.urlAndPort,
-                    default_recommendation: country.defaultRecommendation,
-                };
-                return reformatData;
-            });
-
-            return {
-                data: reformatCountries,
-            };
-        } catch (e) {
-            throw e;
-        }
-    }
-
     /** Branches */
     async getBranchesByConsultantsId(req: Request, locale = 'en') {
         try {
