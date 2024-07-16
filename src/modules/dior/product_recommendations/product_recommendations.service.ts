@@ -917,7 +917,7 @@ export class ProductRecommendationService {
             const diorConsultant = await this.consultantRepository.getDiorConsultant();
 
             for (let i = 2; i < rowCount; i++) {
-                const row = worksheet.getRow(1);
+                const row = worksheet.getRow(i);
                 const productCode = row.getCell(1).value as string;
                 const translationProductName = row.getCell(2).value as string;
 
@@ -960,7 +960,7 @@ export class ProductRecommendationService {
             const rowCount = worksheet.rowCount + 1;
 
             for (let i = 2; i < rowCount; i++) {
-                const row = worksheet.getRow(1);
+                const row = worksheet.getRow(i);
 
                 const productCode = row.getCell(1).value as string;
                 const excludeInCountry = (row.getCell(2).value as string).toLocaleLowerCase() === 'y';
