@@ -32,6 +32,7 @@ import {
 import { CommonService } from '@/src/common/common.service';
 import { ProductRecommendationModule } from './product_recommendations/product_recommendations.module';
 import { DiorCountriesModule } from './countries/dior_countries.module';
+import { DiorDevicesModule } from './deivces/dior_devices.module';
 
 @Module({
     imports: [
@@ -48,6 +49,7 @@ import { DiorCountriesModule } from './countries/dior_countries.module';
 
         // Modules
         DiorCountriesModule,
+        DiorDevicesModule,
         ProductRecommendationModule,
     ],
     controllers: [DiorController],
