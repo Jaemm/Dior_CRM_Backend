@@ -468,6 +468,26 @@ export class ProductRecommendationService {
         }
     }
 
+    async deleteMultipleProductRecommendationByIds(recommendationsIds: string, locale = 'en') {
+        try {
+            const splitIds = recommendationsIds.split(',').map((id) => Number(id));
+
+            const foundRecommendtaions = await this.productRecommendationRepository.find({
+                where: {
+                    id: In(splitIds),
+                },
+            });
+
+            await this.productRecommendationRepository.remove(foundRecommendtaions);
+
+            return {
+                message: 'Successfully deleted multiple record',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
     async createProductRecommendation(body: CreateProductRecommendationDto) {
         try {
             const diorConsultant = await this.consultantRepository.getDiorConsultant();

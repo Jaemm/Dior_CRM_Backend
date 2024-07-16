@@ -164,6 +164,20 @@ export class ProductRecommendationController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
+    @Delete('delete_multiple/:ids')
+    async deleteMultipleProductRecommendationByIds(
+        @Req() req: Request,
+        @Param('ids') recommendandationIds: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ) {
+        return await this.productRecommendationsService.deleteMultipleProductRecommendationByIds(
+            recommendandationIds,
+            locale,
+        );
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
     @Delete(':id')
     async deleteProductRecommendationById(
         @Req() req: Request,
