@@ -365,6 +365,7 @@ export class ProductRecommendationService {
                 : foundRecommendtaion.productRecommendationId;
             foundRecommendtaion.collection = body.collection ? body.collection : foundRecommendtaion.collection;
             foundRecommendtaion.countries = body.countries ? body.countries : foundRecommendtaion.countries;
+            foundRecommendtaion.updatedAt = new Date();
 
             await this.productRecommendationRepository.save(foundRecommendtaion);
 

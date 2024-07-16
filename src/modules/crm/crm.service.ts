@@ -581,8 +581,8 @@ export class CRMService {
 
         if (!customer) {
             throw new NotFoundException({
-                status_code: ErrorStatus.NOT_FOUND,
-                error: ResponseMessages.CustomerNotFound,
+                status_code: ErrorStatus.CUSTOMER_NOT_FOUND,
+                error: this.commonService.createLocaleErrorMessage(locale, 'crm_customer_not_found'),
             });
         }
 
