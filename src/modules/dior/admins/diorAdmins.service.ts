@@ -1,7 +1,10 @@
-import { ConsultantsRepository } from '@/src/common/repositories/crm';
 import { Injectable } from '@nestjs/common';
+import * as argon2 from 'argon2';
+
+import { ConsultantsRepository } from '@/src/common/repositories/crm';
+
 import { In } from 'typeorm';
-import { GetAdminsDto } from './diorAdmins.dto';
+import { CreateAdminDto, GetAdminsDto } from './diorAdmins.dto';
 import { AdminsForDiorT } from '@/src/common/types/entities/admins.type';
 
 @Injectable()
@@ -59,5 +62,51 @@ export class DiorAdminsService {
         } catch (e) {
             throw e;
         }
+    }
+
+    async postAdmins(body: CreateAdminDto) {
+        try {
+            const { email, password, name, surname, consultant_position_id, countries, is_admin } = body;
+
+            const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
+
+            const newAdmin = this.consultantsRepository.create({
+                email: email,
+                name: name,
+                password_digest: await argon2.hash(password),
+                surname: surname,
+                consultant_company_id: diorCompanyId,
+                consultant_position_id: Number(consultant_position_id),
+                countries: countries,
+                app_id: 88,
+                email_confirmed: true,
+            });
+
+            if (is_admin) {
+                newAdmin.consultant_position_id = this.getPositionId(is_admin);
+            }
+            const savedAdmin = await this.consultantsRepository.save(newAdmin);
+
+            const reformatAdmin: AdminsForDiorT = {
+                id: savedAdmin.id,
+                email: savedAdmin.email,
+                name: savedAdmin.name,
+                surname: savedAdmin.surname,
+                consultant_position_id: savedAdmin.consultant_position_id,
+                countries: savedAdmin.countries,
+            };
+
+            return reformatAdmin;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    getPositionId(isAdmin: string | boolean) {
+        if (isAdmin === 'true' || isAdmin === 'yes' || isAdmin === true) {
+            return 5;
+        }
+
+        return 6;
     }
 }
