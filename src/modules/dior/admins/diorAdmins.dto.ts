@@ -77,3 +77,9 @@ export class UpdateAdminDto {
     @IsString()
     is_admin: string | boolean;
 }
+
+export class ImportAdminsDto {
+    @IsNotEmpty()
+    @IsString()
+    file_url: string;
+}

@@ -1,12 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { extname } from 'path';
+
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import * as argon2 from 'argon2';
+import * as csv from 'csv';
+import * as ExcelJS from 'exceljs';
 
 import { ConsultantsRepository } from '@/src/common/repositories/crm';
 
 import { In } from 'typeorm';
-import { CreateAdminDto, GetAdminsDto, UpdateAdminDto } from './diorAdmins.dto';
+import { CreateAdminDto, GetAdminsDto, ImportAdminsDto, UpdateAdminDto } from './diorAdmins.dto';
 import { AdminsForDiorT } from '@/src/common/types/entities/admins.type';
 import { ErrorStatus } from '@/src/common/constants/error-status';
+import { String } from 'aws-sdk/clients/acm';
 
 @Injectable()
 export class DiorAdminsService {
@@ -169,6 +174,73 @@ export class DiorAdminsService {
         } catch (e) {
             throw e;
         }
+    }
+
+    async importAdmins(body: ImportAdminsDto) {
+        try {
+            const fileUrl = body.file_url;
+
+            const fileExtends = extname(fileUrl);
+
+            if (['.xls', '.xlsx'].includes(fileExtends)) {
+            } else {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.BAD_REQUEST,
+                    error: `Unknown file type: ${fileUrl}`,
+                });
+            }
+
+            const worksheet = await this.getWorkSheet(fileUrl);
+
+            const headers = worksheet.getRow(1);
+
+            const rowCount = worksheet.rowCount + 1;
+
+            const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
+
+            for (let i = 2; i < rowCount; i++) {
+                const row = worksheet.getRow(i);
+
+                const emailText = (<{ text: string }>row.getCell(3).value)?.text;
+                const password = await argon2.hash(row.getCell(4).value as string);
+
+                const email = emailText ? emailText : row.getCell(3).value.toString();
+
+                const newConsultant = this.consultantsRepository.create({
+                    name: row.getCell(1).value as string,
+                    surname: row.getCell(2).value as string,
+                    email: email,
+                    password_digest: password,
+                    countries: (row.getCell(5).value as string).split(','),
+                    consultant_position_id: this.getPositionId((row.getCell(6).value as string).toLocaleLowerCase()),
+                    app_id: 88,
+                    email_confirmed: true,
+                    consultant_company_id: diorCompanyId,
+                    created_at: new Date(),
+                    updated_at: new Date(),
+                });
+
+                try {
+                    await this.consultantsRepository.save(newConsultant);
+                } catch (e) {
+                    throw new BadRequestException(e);
+                }
+            }
+
+            return {
+                message: 'Success import data',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getWorkSheet(fileUrl: string) {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.readFile(fileUrl);
+        const worksheet = workbook.getWorksheet(1);
+
+        return worksheet;
     }
 
     getPositionId(isAdmin: string | boolean) {

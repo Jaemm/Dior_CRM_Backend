@@ -3,7 +3,7 @@ import { DiorAdminsService } from './diorAdmins.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
-import { CreateAdminDto, GetAdminsDto, UpdateAdminDto } from './diorAdmins.dto';
+import { CreateAdminDto, GetAdminsDto, ImportAdminsDto, UpdateAdminDto } from './diorAdmins.dto';
 
 @Controller('dior/admins')
 export class DiorAdminsController {
@@ -35,5 +35,12 @@ export class DiorAdminsController {
     @Delete('delete_multiple/:ids')
     async deleteMutipleAdmins(@Param('ids') adminIds: string) {
         return await this.diorAdminsService.deleteMutipleAdmins(adminIds);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('import')
+    async importAdmins(@Body() body: ImportAdminsDto) {
+        return await this.diorAdminsService.importAdmins(body);
     }
 }
