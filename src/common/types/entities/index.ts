@@ -8,7 +8,7 @@ export { ConsultantCountryT, ConsultantCountryForDiorT } from './consultnat_coun
 
 export { CustomersT } from './customers.type';
 
-export { DeviceT } from './device.typs';
+export { DeviceT, DeviceForDiorT } from './device.typs';
 
 export { NotificationsT } from './notifications.type';
 

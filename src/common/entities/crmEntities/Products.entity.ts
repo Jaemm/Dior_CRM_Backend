@@ -101,10 +101,7 @@ export class Products {
     device: Devices;
 
     @ManyToOne(() => Licenses, (licenses) => licenses.products)
-    @JoinColumn([
-        { name: 'license_id', referencedColumnName: 'id' },
-        { name: 'license_id', referencedColumnName: 'id' },
-    ])
+    @JoinColumn([{ name: 'license_id', referencedColumnName: 'id' }])
     license: Licenses;
 
     get getExpiredDate(): Date | null {

@@ -163,4 +163,20 @@ export class Devices {
     afterLoad() {
         this.id = Number(this.id);
     }
+
+    getLicensePeriod() {
+        if (this.products && this.products.length > 0) {
+            return this.products[0].license_period;
+        }
+
+        return null;
+    }
+
+    getConsultant() {
+        if (this.products && this.products.length > 0) {
+            return this.products[0].consultant;
+        }
+
+        return null;
+    }
 }

@@ -11,6 +11,7 @@ import {
 import { Consultants } from '@/src/common/entities/crmEntities';
 
 import { In } from 'typeorm';
+import { DeviceForDiorT } from '@/src/common/types/entities';
 
 @Injectable()
 export class DiorDevicesService {
@@ -59,13 +60,14 @@ export class DiorDevicesService {
 
             const deviceQuery = await this.devicesRepository
                 .createQueryBuilder('devices')
-                .where('devices.consultant_id IN (:...deviceIds)', {
+                .leftJoinAndSelect('devices.products', 'products')
+                .where('devices.id IN (:...deviceIds)', {
                     deviceIds: products.map((row) => row.device_id),
                 })
-                .orWhere('devices.consultant_company_id IN (:...companyId)', {
+                .orWhere('devices.consultant_company_id = :companyId', {
                     companyId: diorConsultant.consultant_company_id,
                 })
-                .andWhere('devices.optic_numer NOT IN (:...opticNumbers)', {
+                .andWhere('devices.optic_number NOT IN (:...opticNumbers)', {
                     opticNumbers: ['FAB02135', 'FAB02363', 'FAB02709', 'DVAA4496'],
                 });
 
@@ -83,8 +85,36 @@ export class DiorDevicesService {
                 .take(searchPer)
                 .getManyAndCount();
 
+            const reformatDevices: DeviceForDiorT[] = devices.map((device) => {
+                const consultant = device.getConsultant();
+                return {
+                    id: device.id,
+                    optic_number: device.optic_number,
+                    serial_number: device.serial_number,
+                    docking_number: device.docking_number,
+                    wb: device.wb,
+                    cal: device.cal,
+                    refresh_date: device.refresh_date,
+                    app_version: device.app_version,
+                    app_update_date: device.app_update_date,
+                    division: device.division,
+                    use_yn: device.use_yn,
+                    lat: device.lat,
+                    lng: device.lng,
+                    created_at: new Date(device.enter_at),
+                    license_period: String(device.getLicensePeriod()),
+                    consultant: consultant
+                        ? {
+                              id: consultant.id,
+                              email: consultant.email,
+                              code: consultant.code,
+                          }
+                        : null,
+                };
+            });
+
             return {
-                data: devices,
+                data: reformatDevices,
                 total_size: totalCount,
                 current_page_size: devices.length,
                 current_page: searchPage,
