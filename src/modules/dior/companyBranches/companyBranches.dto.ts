@@ -1,5 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
-
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export class CreateBranchesDto {
     @IsString()
     email: string;
@@ -69,4 +68,10 @@ export class ExportBranchesDto {
     @IsOptional()
     @IsString()
     filter_by: string;
+}
+
+export class ImportBranchesDto {
+    @IsNotEmpty()
+    @IsString()
+    file_url: string;
 }

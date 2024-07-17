@@ -4,7 +4,13 @@ import { DiorCompanyBranchesService } from './companyBranches.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
-import { CreateBranchesDto, ExportBranchesDto, SearchBranchesDto, UpdateBranchesDto } from './companyBranches.dto';
+import {
+    CreateBranchesDto,
+    ExportBranchesDto,
+    ImportBranchesDto,
+    SearchBranchesDto,
+    UpdateBranchesDto,
+} from './companyBranches.dto';
 
 @Controller('dior/company_branches')
 export class DiorCompanyBranchesController {
@@ -30,6 +36,13 @@ export class DiorCompanyBranchesController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
+    @Post('import')
+    async importBranches(@Req() req: Request, @Body() body: ImportBranchesDto) {
+        return await this.diorCompanyBranchesService.importBranches(body);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
     @Get('export')
     async exportBranches(
         @Headers('X-CHOWIS-LOCALE') locale: string,
@@ -42,6 +55,18 @@ export class DiorCompanyBranchesController {
         res.header('Content-Type', 'text/csv');
         res.attachment('pos_list.csv');
         return res.send(resultFile);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('presign_upload_import_file')
+    async presignUploadImportFileForBranch(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Req() req: Request,
+        @Res() res: Response,
+        @Query() query: ExportBranchesDto,
+    ) {
+        const resultFile = await this.diorCompanyBranchesService.presignUploadImportFileForBranch();
     }
 
     @ApiBearerAuth()

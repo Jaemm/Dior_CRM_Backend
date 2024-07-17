@@ -1,13 +1,20 @@
 import { Request } from 'express';
 import * as argon2 from 'argon2';
 import * as csv from 'csv';
+import * as ExcelJS from 'exceljs';
 
 import { In } from 'typeorm';
 
 import { ConsultantBranchesRepository, ConsultantsRepository, ProductsRepository } from '@/src/common/repositories/crm';
 import { ConsultantBranchesForDiorT } from '@/src/common/types/entities';
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { CreateBranchesDto, ExportBranchesDto, SearchBranchesDto, UpdateBranchesDto } from './companyBranches.dto';
+import {
+    CreateBranchesDto,
+    ExportBranchesDto,
+    ImportBranchesDto,
+    SearchBranchesDto,
+    UpdateBranchesDto,
+} from './companyBranches.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { CommonService } from '@/src/common/common.service';
 import { ConsultantBranches } from '@/src/common/entities/crmEntities';
@@ -298,6 +305,61 @@ export class DiorCompanyBranchesService {
         } catch (e) {
             throw e;
         }
+    }
+
+    async importBranches(body: ImportBranchesDto) {
+        try {
+            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            const fileUrl = body.file_url;
+
+            const worksheet = await this.getWorkSheet(fileUrl);
+
+            const header = worksheet.getRow(1);
+
+            const rowCount = worksheet.rowCount + 1;
+
+            for (let i = 2; i < rowCount; i++) {
+                const row = worksheet.getRow(i);
+
+                const emailText = (<{ text: string }>row.getCell(4).value).text;
+
+                const email = emailText ? emailText : (row.getCell(4).value as string);
+
+                const hashedPassword = await argon2.hash(row.getCell(5).value as string);
+
+                const newBranch = await this.consultantBranchesRepository.create({
+                    country: row.getCell(1).value as string,
+                    code: row.getCell(2).value as string,
+                    name: row.getCell(3).value as string,
+                    email: email,
+                    password: hashedPassword,
+                    consultantCompanyId: String(diorCompanyId),
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                });
+
+                await this.consultantBranchesRepository.save(newBranch);
+            }
+
+            return {
+                message: 'Success import data',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async presignUploadImportFileForBranch() {}
+
+    /** Utils */
+
+    async getWorkSheet(fileUrl: string) {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.readFile(fileUrl);
+        const worksheet = workbook.getWorksheet(1);
+
+        return worksheet;
     }
 
     writeCSVFileForExportByBranches(branches: ConsultantBranches[]) {
