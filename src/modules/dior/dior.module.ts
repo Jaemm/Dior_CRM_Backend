@@ -34,6 +34,7 @@ import { CommonService } from '@/src/common/common.service';
 import { ProductRecommendationModule } from './productRecommendations/productRecommendations.module';
 import { DiorCountriesModule } from './countries/dior_countries.module';
 import { DiorDevicesModule } from './deivces/dior_devices.module';
+import { DiorAdminsModule } from './admins/diorAdmins.module';
 
 @Module({
     imports: [
@@ -50,6 +51,7 @@ import { DiorDevicesModule } from './deivces/dior_devices.module';
         ProductLogs,
 
         // Modules
+        DiorAdminsModule,
         DiorCountriesModule,
         DiorDevicesModule,
         ProductRecommendationModule,
