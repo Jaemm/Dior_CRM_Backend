@@ -75,3 +75,9 @@ export class ImportBranchesDto {
     @IsString()
     file_url: string;
 }
+
+export class PresignedUploadForBranchDto {
+    @IsNotEmpty()
+    @IsString()
+    filename: string;
+}

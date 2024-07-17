@@ -12,17 +12,22 @@ import {
     CreateBranchesDto,
     ExportBranchesDto,
     ImportBranchesDto,
+    PresignedUploadForBranchDto,
     SearchBranchesDto,
     UpdateBranchesDto,
 } from './companyBranches.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { CommonService } from '@/src/common/common.service';
 import { ConsultantBranches } from '@/src/common/entities/crmEntities';
+import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 
 @Injectable()
 export class DiorCompanyBranchesService {
     constructor(
         private commonService: CommonService,
+        private awsS3Service: AwsS3Service,
+
+        //repos
         private readonly consultantRepository: ConsultantsRepository,
         private readonly consultantBranchesRepository: ConsultantBranchesRepository,
         private readonly productsRepository: ProductsRepository,
@@ -350,7 +355,17 @@ export class DiorCompanyBranchesService {
         }
     }
 
-    async presignUploadImportFileForBranch() {}
+    async presignUploadImportFileForBranch(query: PresignedUploadForBranchDto) {
+        try {
+            const fileName = query.filename;
+
+            const result = await this.awsS3Service.getPresignUploadForDiorBranches(fileName);
+
+            return result;
+        } catch (e) {
+            throw e;
+        }
+    }
 
     /** Utils */
 

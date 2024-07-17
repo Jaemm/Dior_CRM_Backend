@@ -8,6 +8,7 @@ import {
     CreateBranchesDto,
     ExportBranchesDto,
     ImportBranchesDto,
+    PresignedUploadForBranchDto,
     SearchBranchesDto,
     UpdateBranchesDto,
 } from './companyBranches.dto';
@@ -63,10 +64,9 @@ export class DiorCompanyBranchesController {
     async presignUploadImportFileForBranch(
         @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
-        @Res() res: Response,
-        @Query() query: ExportBranchesDto,
+        @Query() query: PresignedUploadForBranchDto,
     ) {
-        const resultFile = await this.diorCompanyBranchesService.presignUploadImportFileForBranch();
+        return await this.diorCompanyBranchesService.presignUploadImportFileForBranch(query);
     }
 
     @ApiBearerAuth()
