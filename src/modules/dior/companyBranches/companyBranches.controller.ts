@@ -41,4 +41,11 @@ export class DiorCompanyBranchesController {
     async deleteBranch(@Param('id') branchId: string) {
         return await this.diorCompanyBranchesService.deleteBranch(branchId);
     }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Delete('delete_multiple/:ids')
+    async deleteMultipleBranches(@Param('ids') branchIds: string) {
+        return await this.diorCompanyBranchesService.deleteMultipleBranches(branchIds);
+    }
 }

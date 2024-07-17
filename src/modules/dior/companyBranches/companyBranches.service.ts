@@ -1,6 +1,8 @@
 import { Request } from 'express';
 import * as argon2 from 'argon2';
 
+import { In } from 'typeorm';
+
 import { ConsultantBranchesRepository, ConsultantsRepository, ProductsRepository } from '@/src/common/repositories/crm';
 import { ConsultantBranchesForDiorT } from '@/src/common/types/entities';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
@@ -217,6 +219,29 @@ export class DiorCompanyBranchesService {
 
             return {
                 message: 'Successfully deleted record',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async deleteMultipleBranches(branchIds: string) {
+        try {
+            const splitIds = branchIds.split(',').map((id) => String(id));
+
+            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            const branches = await this.consultantBranchesRepository.find({
+                where: {
+                    consultantCompanyId: String(diorCompanyId),
+                    id: In(splitIds),
+                },
+            });
+
+            await this.consultantBranchesRepository.remove(branches);
+
+            return {
+                message: 'Successfully deleted multiple record',
             };
         } catch (e) {
             throw e;
