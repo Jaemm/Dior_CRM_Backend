@@ -113,39 +113,3 @@ export class SearchProductRecommendationDto {
     @IsOptional()
     limit: string;
 }
-
-export class CreateBranchesDto {
-    @IsString()
-    email: string;
-
-    @IsString()
-    name: string;
-
-    @IsString()
-    code: string;
-
-    @IsString()
-    password: string;
-
-    @IsString()
-    country: string;
-}
-export class SearchBranchesDto {
-    @IsOptional()
-    search: string;
-
-    @IsOptional()
-    filter_by: string;
-
-    @IsOptional()
-    country: string;
-
-    @IsOptional()
-    page: string;
-
-    @IsOptional()
-    per: string;
-}
-/** Entity DTO */
-
-/** RESPONSE DTO */

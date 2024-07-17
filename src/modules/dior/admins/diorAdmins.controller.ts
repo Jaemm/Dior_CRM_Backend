@@ -1,9 +1,10 @@
-import { Body, Query, Param, Controller, Get, Post, Put, Delete } from '@nestjs/common';
+import { Body, Query, Param, Controller, Get, Post, Put, Delete, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { DiorAdminsService } from './diorAdmins.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
-import { CreateAdminDto, GetAdminsDto, ImportAdminsDto, UpdateAdminDto } from './diorAdmins.dto';
+import { CreateAdminDto, ExportAdminsDto, GetAdminsDto, ImportAdminsDto, UpdateAdminDto } from './diorAdmins.dto';
 
 @Controller('dior/admins')
 export class DiorAdminsController {
@@ -42,5 +43,16 @@ export class DiorAdminsController {
     @Post('import')
     async importAdmins(@Body() body: ImportAdminsDto) {
         return await this.diorAdminsService.importAdmins(body);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('export')
+    async exportAdmins(@Query() query: ExportAdminsDto, @Res() res: Response) {
+        const resultFile = await this.diorAdminsService.exportAdmins(query);
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.attachment('users_list.csv');
+        return res.send(resultFile);
     }
 }

@@ -8,10 +8,11 @@ import * as ExcelJS from 'exceljs';
 import { ConsultantsRepository } from '@/src/common/repositories/crm';
 
 import { In } from 'typeorm';
-import { CreateAdminDto, GetAdminsDto, ImportAdminsDto, UpdateAdminDto } from './diorAdmins.dto';
+import { CreateAdminDto, ExportAdminsDto, GetAdminsDto, ImportAdminsDto, UpdateAdminDto } from './diorAdmins.dto';
 import { AdminsForDiorT } from '@/src/common/types/entities/admins.type';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { String } from 'aws-sdk/clients/acm';
+import { Consultants } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class DiorAdminsService {
@@ -233,6 +234,48 @@ export class DiorAdminsService {
         } catch (e) {
             throw e;
         }
+    }
+
+    async exportAdmins(query: ExportAdminsDto) {
+        try {
+            const diorConsultant = await this.consultantsRepository.getDiorConsultant();
+
+            const adminsQuery = await this.consultantsRepository
+                .createQueryBuilder('admins')
+                .where('admins.consultant_position_id IN (:...positionId)', {
+                    positionId: [5, 6],
+                })
+                .andWhere('admins.id != :diorConsultantId', { diorConsultantId: diorConsultant.id });
+
+            if (query.search) {
+                adminsQuery.andWhere('(admins.name LIKE :search OR admins.surname LIKE :search)', {
+                    search: `%${query.search}%`,
+                });
+            }
+
+            const admins = await adminsQuery.getMany();
+
+            return await this.writeCSVFileForExportByConsultants(admins);
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    writeCSVFileForExportByConsultants(admins: Consultants[]) {
+        const header = ['First Name', 'Last Name', 'Email', 'Countries', 'Is Admin'];
+
+        const records = admins.map((u) => [u.name, u.surname, u.email, u.countries, u.consultant_position_id === 5]);
+
+        return new Promise((resolve, reject) => {
+            csv.stringify([header, ...records], (err, output) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(output);
+            });
+        });
     }
 
     async getWorkSheet(fileUrl: string) {

@@ -83,3 +83,9 @@ export class ImportAdminsDto {
     @IsString()
     file_url: string;
 }
+
+export class ExportAdminsDto {
+    @IsOptional()
+    @IsString()
+    search: string;
+}

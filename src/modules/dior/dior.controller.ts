@@ -5,13 +5,8 @@ import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { Request, query } from 'express';
 import {
-    AttributeRoutine,
-    AutomaticProductByBatchIdDto,
-    CreateBranchesDto,
     CustomerByConsultantIdDto,
     GetRecommendationSelectedDto,
-    SearchBranchesDto,
-    SearchProductRecommendationDto,
     SearchProductRecommendationGroupsDto,
     SelectProductsDto,
     createCustomerDto,
@@ -35,25 +30,6 @@ export class DiorController {
     async createCustomers(@Body() body: createCustomerDto) {
         return await this.diorService.createCustomers(body);
     }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get('company_branches')
-    async searchBranches(
-        @Req() req: Request,
-        @Query() query: SearchBranchesDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ) {
-        return await this.diorService.searchBranches(req, query, locale);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Post('company_branches')
-    async createBranches(@Req() req: Request, @Body() body: CreateBranchesDto) {
-        return await this.diorService.createBranches(req, body);
-    }
-
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('company_consultants/by_consultant')
