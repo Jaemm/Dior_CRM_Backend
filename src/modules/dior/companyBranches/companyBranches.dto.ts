@@ -38,3 +38,25 @@ export class SearchBranchesDto {
     @IsString()
     per: string;
 }
+
+export class UpdateBranchesDto {
+    @IsOptional()
+    @IsString()
+    email: string;
+
+    @IsOptional()
+    @IsString()
+    name: string;
+
+    @IsOptional()
+    @IsString()
+    code: string;
+
+    @IsOptional()
+    @IsString()
+    password: string;
+
+    @IsOptional()
+    @IsString()
+    country: string;
+}

@@ -1,9 +1,10 @@
 import { Request } from 'express';
+import * as argon2 from 'argon2';
 
 import { ConsultantBranchesRepository, ConsultantsRepository, ProductsRepository } from '@/src/common/repositories/crm';
 import { ConsultantBranchesForDiorT } from '@/src/common/types/entities';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateBranchesDto, SearchBranchesDto } from './companyBranches.dto';
+import { CreateBranchesDto, SearchBranchesDto, UpdateBranchesDto } from './companyBranches.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { CommonService } from '@/src/common/common.service';
 
@@ -16,7 +17,7 @@ export class DiorCompanyBranchesService {
         private readonly productsRepository: ProductsRepository,
     ) {}
 
-    async createBranches(req: Request, body: CreateBranchesDto) {
+    async createBranch(req: Request, body: CreateBranchesDto) {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
@@ -150,6 +151,72 @@ export class DiorCompanyBranchesService {
                 currentPage: page,
                 pageSize: branches.length,
                 totalPages: Math.ceil(total / perCondition),
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async updateBranch(branchId: string, body: UpdateBranchesDto, locale = 'en') {
+        try {
+            const { email, name, code, password, country } = body;
+
+            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            const branch = await this.consultantBranchesRepository.findOne({
+                where: {
+                    id: branchId,
+                    consultantCompanyId: String(diorCompanyId),
+                },
+            });
+
+            if (!branch) {
+                throw new NotFoundException({});
+            }
+
+            const hashedPassword = password ? await argon2.hash(password) : null;
+
+            branch.email = email ? email : branch.email;
+            branch.name = name ? name : branch.name;
+            branch.code = code ? code : branch.code;
+            branch.country = country ? country : branch.country;
+            branch.password = hashedPassword ? hashedPassword : branch.password;
+
+            const savedBranch = await this.consultantBranchesRepository.save(branch);
+
+            const reformatBranch: ConsultantBranchesForDiorT = {
+                id: Number(savedBranch.id),
+                name: savedBranch.name,
+                code: savedBranch.code,
+                email: savedBranch.email,
+                created_at: savedBranch.createdAt,
+                country: savedBranch.country,
+                password: savedBranch.password,
+                total_devices: 0,
+                last_consultation_date: null,
+            };
+
+            return reformatBranch;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async deleteBranch(branchId: string) {
+        try {
+            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            const branch = await this.consultantBranchesRepository.findOne({
+                where: {
+                    id: branchId,
+                    consultantCompanyId: String(diorCompanyId),
+                },
+            });
+
+            await this.consultantBranchesRepository.remove(branch);
+
+            return {
+                message: 'Successfully deleted record',
             };
         } catch (e) {
             throw e;
