@@ -1,11 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 
 import { ConsultantsRepository } from '@/src/common/repositories/crm';
 
 import { In } from 'typeorm';
-import { CreateAdminDto, GetAdminsDto } from './diorAdmins.dto';
+import { CreateAdminDto, GetAdminsDto, UpdateAdminDto } from './diorAdmins.dto';
 import { AdminsForDiorT } from '@/src/common/types/entities/admins.type';
+import { ErrorStatus } from '@/src/common/constants/error-status';
 
 @Injectable()
 export class DiorAdminsService {
@@ -64,7 +65,7 @@ export class DiorAdminsService {
         }
     }
 
-    async postAdmins(body: CreateAdminDto) {
+    async createAdmin(body: CreateAdminDto) {
         try {
             const { email, password, name, surname, consultant_position_id, countries, is_admin } = body;
 
@@ -80,6 +81,8 @@ export class DiorAdminsService {
                 countries: countries,
                 app_id: 88,
                 email_confirmed: true,
+                created_at: new Date(),
+                updated_at: new Date(),
             });
 
             if (is_admin) {
@@ -97,6 +100,72 @@ export class DiorAdminsService {
             };
 
             return reformatAdmin;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async updateAdminById(adminId: string, body: UpdateAdminDto, locale = 'en') {
+        try {
+            const { email, password, name, surname, consultant_position_id, countries, is_admin } = body;
+
+            const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
+
+            const admin = await this.consultantsRepository.findOne({
+                where: {
+                    consultant_company_id: diorCompanyId,
+                    id: Number(adminId),
+                },
+            });
+
+            if (!admin) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.NOT_FOUND,
+                });
+            }
+
+            admin.email = email ? email : admin.email;
+            admin.password_digest = password ? await argon2.hash(password) : admin.password_digest;
+            admin.name = name ? name : admin.name;
+            admin.surname = surname ? surname : admin.surname;
+            admin.consultant_position_id = this.getPositionId(is_admin);
+            admin.countries = countries ? countries : admin.countries;
+
+            const savedAdmin = await this.consultantsRepository.save(admin);
+
+            const reformatAdmin: AdminsForDiorT = {
+                id: savedAdmin.id,
+                email: savedAdmin.email,
+                name: savedAdmin.name,
+                surname: savedAdmin.surname,
+                consultant_position_id: savedAdmin.consultant_position_id,
+                countries: savedAdmin.countries,
+            };
+
+            return reformatAdmin;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async deleteMutipleAdmins(adminIds: string) {
+        try {
+            const adminIdList = adminIds.split(',').map((id) => Number(id));
+
+            const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
+
+            const adminList = await this.consultantsRepository.find({
+                where: {
+                    consultant_company_id: diorCompanyId,
+                    id: In(adminIdList),
+                },
+            });
+
+            await this.consultantsRepository.remove(adminList);
+
+            return {
+                message: 'Successfully deleted multiple record of users',
+            };
         } catch (e) {
             throw e;
         }

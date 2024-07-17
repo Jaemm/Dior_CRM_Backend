@@ -1,9 +1,9 @@
-import { Body, Query, Controller, Get, Post } from '@nestjs/common';
+import { Body, Query, Param, Controller, Get, Post, Put, Delete } from '@nestjs/common';
 import { DiorAdminsService } from './diorAdmins.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
-import { CreateAdminDto, GetAdminsDto } from './diorAdmins.dto';
+import { CreateAdminDto, GetAdminsDto, UpdateAdminDto } from './diorAdmins.dto';
 
 @Controller('dior/admins')
 export class DiorAdminsController {
@@ -19,7 +19,21 @@ export class DiorAdminsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post()
-    async postAdmins(@Body() body: CreateAdminDto) {
-        return await this.diorAdminsService.postAdmins(body);
+    async createAdmin(@Body() body: CreateAdminDto) {
+        return await this.diorAdminsService.createAdmin(body);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Put(':id')
+    async updateAdminById(@Param('id') adminId: string, @Body() body: UpdateAdminDto) {
+        return await this.diorAdminsService.updateAdminById(adminId, body);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Delete('delete_multiple/:ids')
+    async deleteMutipleAdmins(@Param('ids') adminIds: string) {
+        return await this.diorAdminsService.deleteMutipleAdmins(adminIds);
     }
 }

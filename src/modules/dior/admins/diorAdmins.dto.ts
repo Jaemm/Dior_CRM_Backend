@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class GetAdminsDto {
     @IsOptional()
@@ -40,10 +40,40 @@ export class CreateAdminDto {
     consultant_position_id: string;
 
     @IsNotEmpty()
-    @IsString()
+    @IsArray()
     countries: string[];
 
     @IsOptional()
+    @IsString()
+    is_admin: string | boolean;
+}
+
+export class UpdateAdminDto {
+    @IsOptional()
+    @IsString()
+    email: string;
+
+    @IsOptional()
+    @IsString()
+    password: string;
+
+    @IsOptional()
+    @IsString()
+    name: string;
+
+    @IsOptional()
+    @IsString()
+    surname: string;
+
+    @IsOptional()
+    @IsString()
+    consultant_position_id: string;
+
+    @IsOptional()
+    @IsArray()
+    countries: string[];
+
+    @IsNotEmpty()
     @IsString()
     is_admin: string | boolean;
 }
