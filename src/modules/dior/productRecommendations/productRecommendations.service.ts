@@ -29,7 +29,7 @@ import {
     ImportPicturesDto,
     ImportProductRecommendtaionDto,
     ImportTranslationsDto,
-} from './product_recommendation.dto';
+} from './productRecommendation.dto';
 import { ProductRecommendationT, ProductTranslationT } from '@/src/common/types/entities';
 import axios from 'axios';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';

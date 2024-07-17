@@ -14,7 +14,7 @@ import {
     Put,
     BadRequestException,
 } from '@nestjs/common';
-import { ProductRecommendationService } from './product_recommendations.service';
+import { ProductRecommendationService } from './productRecommendations.service';
 
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
@@ -27,7 +27,7 @@ import {
     ImportPicturesDto,
     ImportProductRecommendtaionDto,
     ImportTranslationsDto,
-} from './product_recommendation.dto';
+} from './productRecommendation.dto';
 
 @Controller('/dior/product_recommendations')
 export class ProductRecommendationController {

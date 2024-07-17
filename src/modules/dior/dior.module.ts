@@ -31,7 +31,7 @@ import {
     ProductsRepository,
 } from '@/src/common/repositories/crm';
 import { CommonService } from '@/src/common/common.service';
-import { ProductRecommendationModule } from './product_recommendations/product_recommendations.module';
+import { ProductRecommendationModule } from './productRecommendations/productRecommendations.module';
 import { DiorCountriesModule } from './countries/dior_countries.module';
 import { DiorDevicesModule } from './deivces/dior_devices.module';
 

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ProductRecommendationController } from './product_recommendations.controller';
-import { ProductRecommendationService } from './product_recommendations.service';
+import { ProductRecommendationController } from './productRecommendations.controller';
+import { ProductRecommendationService } from './productRecommendations.service';
 import {
     ConsultantsRepository,
     ConsultantCountriesRepository,
