@@ -31,3 +31,5 @@ export { ProductRecommendationSelectedRepository } from './productRecommendation
 export { ProductRecommendationGroupsRepository } from './productRecommendtaionGroups.repository';
 
 export { ProductTranslationsRepository } from './productTranslations.repository';
+
+export { ProductLogsRepository } from './productLogs.repository';

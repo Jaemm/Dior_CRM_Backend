@@ -37,3 +37,4 @@ export { ProductRecommendations } from './ProductRecommendations.entity';
 export { ProductRecommendationSelecteds } from './ProductRecommendationSelecteds.entity';
 export { ProductRecommendationGroups } from './ProductRecommendationGroups.entity';
 export { ProductTranslations } from './ProductTranslations.entity';
+export { ProductLogs } from './productLogs.entity';

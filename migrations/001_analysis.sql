@@ -39,4 +39,15 @@
 -- WHERE delivery_date < '2024-04-30';
 
 
+-- RUBY TO NODE.JS
+CREATE SEQUENCE product_logs_id_seq;
+
+CREATE TABLE product_logs (
+  id bigint primary key DEFAULT nextval('product_logs_id_seq'),
+  product_id bigint not null,
+  message varchar not null,
+  consultant_id bigint,
+  created_at date,
+  updated_at date
+)
 

@@ -142,4 +142,21 @@ export class ProductsRepository extends Repository<Products> {
 
         return deviceData;
     }
+
+    async connectReset(product: Products) {
+        product.consultant_id = null;
+        product.customer_id = null;
+        product.use_date = null;
+        product.use_time = null;
+        product.mac_address = null;
+        product.app_use_yn = null;
+
+        try {
+            await this.save(product);
+        } catch (e) {
+            return false;
+        }
+
+        return true;
+    }
 }

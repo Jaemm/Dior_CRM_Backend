@@ -5,11 +5,22 @@ import {
     ConsultantCompaniesRepository,
     ConsultantsRepository,
     DevicesRepository,
+    ProductLogsRepository,
     ProductsRepository,
 } from '@/src/common/repositories/crm';
+import { CommonService } from '@/src/common/common.service';
 
 @Module({
     controllers: [DiorDeivcesConroller],
-    providers: [DiorDevicesService, ConsultantsRepository, ProductsRepository, DevicesRepository],
+    providers: [
+        CommonService,
+
+        // Repos
+        DiorDevicesService,
+        ConsultantsRepository,
+        ProductsRepository,
+        DevicesRepository,
+        ProductLogsRepository,
+    ],
 })
 export class DiorDevicesModule {}

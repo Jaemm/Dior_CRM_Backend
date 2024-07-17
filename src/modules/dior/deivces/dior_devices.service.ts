@@ -1,24 +1,30 @@
 import { Request } from 'express';
 
-import { Injectable } from '@nestjs/common';
-import { GetDevicesDto } from './dior_devices.dto';
+import { Injectable, NotFoundException, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { GetDevicesDto, ResetConnectDto } from './dior_devices.dto';
 import {
     ConsultantCompaniesRepository,
     ConsultantsRepository,
     DevicesRepository,
+    ProductLogsRepository,
     ProductsRepository,
 } from '@/src/common/repositories/crm';
 import { Consultants } from '@/src/common/entities/crmEntities';
 
 import { In } from 'typeorm';
 import { DeviceForDiorT } from '@/src/common/types/entities';
+import { ErrorStatus } from '@/src/common/constants/error-status';
+import { CommonService } from '@/src/common/common.service';
 
 @Injectable()
 export class DiorDevicesService {
     constructor(
+        private commonService: CommonService,
+
         private readonly consultantsRespository: ConsultantsRepository,
         private readonly productsRepository: ProductsRepository,
         private readonly devicesRepository: DevicesRepository,
+        private readonly productLogsRepository: ProductLogsRepository,
     ) {}
 
     async getDevices(req: Request, query: GetDevicesDto, locale = 'en') {
@@ -120,6 +126,71 @@ export class DiorDevicesService {
                 current_page: searchPage,
                 total_pages: Math.ceil(totalCount / searchPer),
             };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async resetConnect(req: Request, body: ResetConnectDto, locale: string = 'en') {
+        try {
+            const userId = (<{ id: string }>req.user).id;
+            const { device_id } = body;
+
+            const currentConsultant = await this.consultantsRespository.getConsultantById(userId);
+
+            if (!currentConsultant) {
+                throw new UnauthorizedException({
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+                });
+            }
+
+            const productCount = await this.productsRepository.count({
+                where: {
+                    device_id: device_id,
+                },
+            });
+
+            let product;
+            if (productCount > 1) {
+                product = await this.productsRepository.findOne({
+                    where: {
+                        device_id: device_id,
+                        application_id: 88,
+                    },
+                });
+            } else {
+                product = await this.productsRepository.findOne({
+                    where: {
+                        device_id: device_id,
+                    },
+                });
+            }
+
+            if (!product) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.RECORD_NOT_FOUND,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
+                });
+            }
+
+            const result = await this.productsRepository.connectReset(product);
+            const logResult = await this.productLogsRepository.saveLogs(
+                product,
+                `done by ${currentConsultant.email}(BM) - connect reset`,
+                currentConsultant,
+            );
+
+            if (result && logResult) {
+                return {
+                    message: 'Success',
+                };
+            } else {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.CUSTOM_ERROR,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'custom_error', 'connect reset failed!'),
+                });
+            }
         } catch (e) {
             throw e;
         }

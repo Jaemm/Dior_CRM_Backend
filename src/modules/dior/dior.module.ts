@@ -15,6 +15,7 @@ import {
     ProductRecommendations,
     ProductRecommendationGroups,
     ProductRecommendationSelecteds,
+    ProductLogs,
 } from '@/src/common/entities/crmEntities';
 import {
     ConsultantsRepository,
@@ -46,6 +47,7 @@ import { DiorDevicesModule } from './deivces/dior_devices.module';
         ProductRecommendations,
         ProductRecommendationSelecteds,
         ProductRecommendationGroups,
+        ProductLogs,
 
         // Modules
         DiorCountriesModule,
