@@ -1,10 +1,10 @@
-import { Request } from 'express';
-import { Controller, Get, Query, Req, Headers, Post, Body, Put, Param, Delete } from '@nestjs/common';
+import { Request, Response } from 'express';
+import { Controller, Get, Query, Req, Res, Headers, Post, Body, Put, Param, Delete } from '@nestjs/common';
 import { DiorCompanyBranchesService } from './companyBranches.service';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
-import { CreateBranchesDto, SearchBranchesDto, UpdateBranchesDto } from './companyBranches.dto';
+import { CreateBranchesDto, ExportBranchesDto, SearchBranchesDto, UpdateBranchesDto } from './companyBranches.dto';
 
 @Controller('dior/company_branches')
 export class DiorCompanyBranchesController {
@@ -30,6 +30,29 @@ export class DiorCompanyBranchesController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
+    @Get('export')
+    async exportBranches(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Req() req: Request,
+        @Res() res: Response,
+        @Query() query: ExportBranchesDto,
+    ) {
+        const resultFile = await this.diorCompanyBranchesService.exportBranches(req, query, locale);
+
+        res.header('Content-Type', 'text/csv');
+        res.attachment('pos_list.csv');
+        return res.send(resultFile);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Delete('delete_multiple/:ids')
+    async deleteMultipleBranches(@Param('ids') branchIds: string) {
+        return await this.diorCompanyBranchesService.deleteMultipleBranches(branchIds);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
     @Put(':id')
     async updateBranch(@Param('id') branchId: string, @Body() body: UpdateBranchesDto) {
         return await this.diorCompanyBranchesService.updateBranch(branchId, body);
@@ -40,12 +63,5 @@ export class DiorCompanyBranchesController {
     @Delete(':id')
     async deleteBranch(@Param('id') branchId: string) {
         return await this.diorCompanyBranchesService.deleteBranch(branchId);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Delete('delete_multiple/:ids')
-    async deleteMultipleBranches(@Param('ids') branchIds: string) {
-        return await this.diorCompanyBranchesService.deleteMultipleBranches(branchIds);
     }
 }

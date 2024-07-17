@@ -60,3 +60,13 @@ export class UpdateBranchesDto {
     @IsString()
     country: string;
 }
+
+export class ExportBranchesDto {
+    @IsOptional()
+    @IsString()
+    search: string;
+
+    @IsOptional()
+    @IsString()
+    filter_by: string;
+}

@@ -1,14 +1,16 @@
 import { Request } from 'express';
 import * as argon2 from 'argon2';
+import * as csv from 'csv';
 
 import { In } from 'typeorm';
 
 import { ConsultantBranchesRepository, ConsultantsRepository, ProductsRepository } from '@/src/common/repositories/crm';
 import { ConsultantBranchesForDiorT } from '@/src/common/types/entities';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { CreateBranchesDto, SearchBranchesDto, UpdateBranchesDto } from './companyBranches.dto';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { CreateBranchesDto, ExportBranchesDto, SearchBranchesDto, UpdateBranchesDto } from './companyBranches.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { CommonService } from '@/src/common/common.service';
+import { ConsultantBranches } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class DiorCompanyBranchesService {
@@ -246,5 +248,72 @@ export class DiorCompanyBranchesService {
         } catch (e) {
             throw e;
         }
+    }
+
+    async exportBranches(req: Request, query: ExportBranchesDto, locale: string = 'en') {
+        try {
+            const { filter_by, search } = query;
+            const userId = (<{ id: string }>req.user).id;
+            const currentConsultant = await this.consultantRepository.getConsultantById(userId, ['consultant_branch']);
+
+            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            if (!currentConsultant) {
+                throw new UnauthorizedException({
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+                });
+            }
+
+            const branchQuery = await this.consultantBranchesRepository
+                .createQueryBuilder('branches')
+                .where('branches.consultantCompanyId = :companyId', {
+                    companyId: diorCompanyId,
+                });
+
+            if (![5, 6].includes(currentConsultant.consultant_position_id)) {
+                branchQuery.andWhere('LOWER (branches.country) = :country', {
+                    country: currentConsultant?.consultant_branch?.country?.toLocaleLowerCase(),
+                });
+            }
+
+            if (filter_by) {
+                branchQuery.andWhere('LOWER (branches.country) = :filterBy', {
+                    filterBy: filter_by.toLocaleLowerCase(),
+                });
+            }
+
+            if (search) {
+                branchQuery.andWhere(
+                    '(branches.country LIKE :search OR branches.code LIKE :search OR branches.name LIKE :search OR branches.email LIKE :search)',
+                    {
+                        search: `%${search}%`,
+                    },
+                );
+            }
+
+            const branches = await branchQuery.getMany();
+
+            return await this.writeCSVFileForExportByBranches(branches);
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    writeCSVFileForExportByBranches(branches: ConsultantBranches[]) {
+        const header = ['POS Country', 'POS Code', 'POS Name', 'Email'];
+
+        const records = branches.map((u) => [u.country, u.code, u.name, u.email]);
+
+        return new Promise((resolve, reject) => {
+            csv.stringify([header, ...records], (err, output) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(output);
+            });
+        });
     }
 }
