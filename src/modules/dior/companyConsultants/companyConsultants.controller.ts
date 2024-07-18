@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 
-import { Controller, Get, Req, Headers, Query, Param } from '@nestjs/common';
+import { Controller, Get, Req, Headers, Query, Param, Post, Body } from '@nestjs/common';
 import { DiorCompanyConsultantsService } from './companyConsultants.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
-import { GetDiorCompanyConsultantsDto } from './companyConsultants.dto';
+import { CreateDiorCompanyConsultantsDto, GetDiorCompanyConsultantsDto } from './companyConsultants.dto';
 
 @ApiTags('Dior-Company Consultants')
 @Controller('dior/company_consultants')
@@ -21,6 +21,17 @@ export class DiorCompanyConsultantsController {
         @Query() query: GetDiorCompanyConsultantsDto,
     ) {
         return await this.diorCompanyConsultantsService.getDiorCompanyConsultants(req, query, locale);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post()
+    async createDiorCompanyConsultants(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Req() req: Request,
+        @Body() body: CreateDiorCompanyConsultantsDto,
+    ) {
+        return await this.diorCompanyConsultantsService.createDiorCompanyConsultants(body, locale);
     }
 
     @ApiBearerAuth()

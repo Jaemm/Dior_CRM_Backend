@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class GetDiorCompanyConsultantsDto {
     @IsOptional()
@@ -24,4 +24,26 @@ export class GetDiorCompanyConsultantsDto {
     @IsOptional()
     @IsString()
     per: string;
+}
+
+export class CreateDiorCompanyConsultantsDto {
+    @IsNotEmpty()
+    @IsString()
+    name: string;
+
+    @IsNotEmpty()
+    @IsString()
+    code: string;
+
+    @IsNotEmpty()
+    @IsString()
+    password: string;
+
+    @IsNotEmpty()
+    @IsString()
+    consultant_branch_id: string;
+
+    @IsNotEmpty()
+    @IsString()
+    country: string;
 }

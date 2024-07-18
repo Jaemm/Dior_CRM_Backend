@@ -1,17 +1,54 @@
 import { Request } from 'express';
-import { In } from 'typeorm';
+import { In, Like } from 'typeorm';
+import * as argon2 from 'argon2';
 
 import { ConsultantsRepository } from '@/src/common/repositories/crm';
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CommonService } from '@/src/common/common.service';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { PositionsIds } from '@/src/common/enums/position.enum';
-import { GetDiorCompanyConsultantsDto } from './companyConsultants.dto';
+import { CreateDiorCompanyConsultantsDto, GetDiorCompanyConsultantsDto } from './companyConsultants.dto';
 import { ConsultantForDiorT } from '@/src/common/types/entities/consultants.type';
 
 @Injectable()
 export class DiorCompanyConsultantsService {
     constructor(private commonService: CommonService, private readonly consultantRepository: ConsultantsRepository) {}
+
+    async createDiorCompanyConsultants(body: CreateDiorCompanyConsultantsDto, locale: string = 'en') {
+        try {
+            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            const hashedPassword = await argon2.hash(body.password);
+
+            const newConsultant = this.consultantRepository.create({
+                name: body.name,
+                code: body.code,
+                password_digest: hashedPassword,
+                consultant_branch_id: Number(body.consultant_branch_id),
+                consultant_company_id: diorCompanyId,
+                country: body.country,
+                app_id: 88,
+                status: 0,
+                email: await this.generateEmailForDior(diorCompanyId),
+                created_at: new Date(),
+                updated_at: new Date(),
+            });
+
+            const savedConsultant = await this.consultantRepository.save(newConsultant);
+
+            return {
+                id: savedConsultant.id,
+                name: savedConsultant.name,
+                code: savedConsultant.code,
+                email: savedConsultant.email,
+                created_at: savedConsultant.created_at,
+                country: savedConsultant.country,
+                status: savedConsultant.convertStatus,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
 
     async getDiorCompanyConsultants(req: Request, query: GetDiorCompanyConsultantsDto, locale: string = 'en') {
         try {
@@ -230,5 +267,42 @@ export class DiorCompanyConsultantsService {
         } catch (e) {
             throw e;
         }
+    }
+
+    async generateEmailForDior(diorCompanyId: number) {
+        const diorDummyEmailsConsultants = await this.consultantRepository.find({
+            where: {
+                consultant_company_id: diorCompanyId,
+                email: Like(`%dior_dummy_emails%`),
+            },
+        });
+
+        if (!diorDummyEmailsConsultants || diorDummyEmailsConsultants.length < 1) {
+            return 'dior_dummy_emails1@chowis-test.com';
+        }
+
+        let lastEmailNumber = 0;
+
+        for (let i = 0; i < diorDummyEmailsConsultants.length; i++) {
+            const consultant = diorDummyEmailsConsultants[i];
+
+            const email = consultant.email;
+            const str1MarkerString = 'dior_dummy_emails';
+            const str2MarkerString = '@chowis-test.com';
+
+            const existEmailRegex = new RegExp(`${str1MarkerString}(.*?)${str2MarkerString}`, 'm');
+
+            const match = email.match(existEmailRegex);
+
+            const number = match ? parseInt(match[1], 10) : 0;
+
+            if (lastEmailNumber < number) {
+                lastEmailNumber = number;
+            }
+        }
+
+        const nextEmailNumber = lastEmailNumber + 1;
+
+        return `dior_dummy_emails${nextEmailNumber}@chowis-test.com`;
     }
 }

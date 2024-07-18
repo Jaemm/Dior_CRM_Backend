@@ -112,7 +112,7 @@ export class Consultants {
     'city': string | null;
 
     @Column('character varying', { name: 'country', nullable: true })
-    'country': string[] | null;
+    'country': string | null;
 
     @Column('integer', { name: 'app_id', nullable: true })
     'app_id': number | null;
@@ -320,7 +320,7 @@ export class Consultants {
     }
 
     get 'convertStatus'(): string | null {
-        if (this.status) {
+        if (this.status === 0 || this.status === 1) {
             if (this.status === 0) {
                 return 'Active';
             }

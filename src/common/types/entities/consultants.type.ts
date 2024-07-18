@@ -19,7 +19,7 @@ export type ConsultantT = {
     address: string | null;
     token: string | null;
     city: string | null;
-    country: string[] | null;
+    country: string | null;
     zip_code: string | null;
     state: string | null;
     birthdate: string | null;
