@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 
-import { Controller, Get, Req, Headers, Query, Param, Post, Body } from '@nestjs/common';
+import { Controller, Get, Req, Headers, Query, Param, Post, Body, Delete } from '@nestjs/common';
 import { DiorCompanyConsultantsService } from './companyConsultants.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -43,7 +43,7 @@ export class DiorCompanyConsultantsController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get(':id')
+    @Delete(':id')
     async deleteDiorCompanyConsultant(
         @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
@@ -54,7 +54,7 @@ export class DiorCompanyConsultantsController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('multiple_delete/:ids')
+    @Delete('delete_multiple/:ids')
     async deleteMultipleCompanyConsultants(
         @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
