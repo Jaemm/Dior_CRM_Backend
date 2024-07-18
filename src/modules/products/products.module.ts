@@ -45,8 +45,11 @@ import { ConsultantsModule } from '../consultants/consultants.module';
 import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 
-import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
-import { DevicesRepository, ProductsRepository } from '@/src/common/repositories/crm';
+import {
+    ActiveStorageAttachmentsRepository,
+    DevicesRepository,
+    ProductsRepository,
+} from '@/src/common/repositories/crm';
 
 @Module({
     imports: [
@@ -98,7 +101,7 @@ import { DevicesRepository, ProductsRepository } from '@/src/common/repositories
         CustomersModule,
     ],
     controllers: [ProductsController],
-    providers: [ProductsService, ConsultantCompanyService, ProductsRepository, DevicesRepository],
+    providers: [ProductsService, ProductsRepository, DevicesRepository, ActiveStorageAttachmentsRepository],
     exports: [ProductsService],
 })
 export class ProductsModule {

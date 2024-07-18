@@ -1,4 +1,5 @@
 export { ApplicationsRepository } from './applications.repository';
+export { ActiveStorageAttachmentsRepository } from './activeStorageAttachments.respository';
 
 export { ConsultantsRepository } from './consultant.repository';
 export { ConsultantCountriesRepository } from './consultantCountries.repository';

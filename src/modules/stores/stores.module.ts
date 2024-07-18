@@ -37,8 +37,8 @@ import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/Acti
 import { StoreController } from './stores.controller';
 import { StoreService } from './stores.service';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
-import { ConsultantCompanyModule } from '../consultantCompany/consultantCompany.module';
 import { CountriesModule } from '../countries/countries.module';
+import { ConsultantCompaniesRepository } from '@/src/common/repositories/crm';
 
 @Module({
     imports: [
@@ -81,11 +81,11 @@ import { CountriesModule } from '../countries/countries.module';
             ConsultantCountries,
             ActiveStorageAttachments,
         ]),
-        ConsultantCompanyModule,
+
         CountriesModule,
     ],
     controllers: [StoreController],
-    providers: [StoreService],
+    providers: [StoreService, ConsultantCompaniesRepository],
     exports: [StoreService],
 })
 export class StoreModule {

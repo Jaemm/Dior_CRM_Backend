@@ -1,5 +1,6 @@
 export { AdminUsers } from './AdminUsers.entity';
 export { Applications } from './Applications.entity';
+export { ActiveStorageAttachments } from './ActiveStorageAttachments.entity';
 
 export { Brands } from './Brand.entity';
 

@@ -69,7 +69,6 @@ import {
     Customers,
     ConsultantBranches,
 } from '@/src/common/entities/crmEntities';
-import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { CommonService } from 'src/common/common.service';
 import { ConsultantPositions } from '@/src/common/entities/crmEntities/ConsultantPositions.entity';
 import { CrmDataReplicationService } from '../dataReplication/consultantDataReplication/consultantDataReplication.service';
@@ -94,8 +93,10 @@ import { ErrorStatus } from '@/src/common/constants/error-status';
 import { TargetType } from '@/src/common/enums/target-type.enum';
 import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
 import {
+    ActiveStorageAttachmentsRepository,
     ApplicationsRepository,
     ConsultantBranchesRepository,
+    ConsultantCompaniesRepository,
     ConsultantCountriesRepository,
     ConsultantPositionsRepository,
     ConsultantShopsRepository,
@@ -155,7 +156,6 @@ export class ConsultantsService {
 
         private readonly authService: AuthService,
         private readonly jwtService: JwtService,
-        private readonly companies: ConsultantCompanyService,
 
         private readonly commonService: CommonService,
         private readonly dataReplication: CrmDataReplicationService,
@@ -163,6 +163,8 @@ export class ConsultantsService {
         private readonly analysisReplService: AnalysisDataReplicationService,
 
         // Repos
+        private readonly consultantCompaniesRepository: ConsultantCompaniesRepository,
+        private readonly activeStorageAttchRepository: ActiveStorageAttachmentsRepository,
         private readonly refreshTokenRepository: RefreshTokensRepository,
         private readonly notificationRepository: NotificationsRepository,
         private readonly salesConnectionRepository: SalesConnectionRepository,
@@ -655,7 +657,7 @@ export class ConsultantsService {
             });
         }
 
-        const file = await this.companies.getCompaniesFiles(consultant?.consultant_company_id ?? 1);
+        const file = await this.activeStorageAttchRepository.getCompaniesFiles(consultant?.consultant_company_id ?? 1);
 
         const attachmentObject: any = {};
         file.forEach((attachment) => {
@@ -712,7 +714,7 @@ export class ConsultantsService {
             p.expired_date = formattedDate ?? null;
             p.is_expired = p.expired_date ? new Date() > p.expired_date : false;
 
-            const files = await this.companies.getCompaniesFiles(String(p.application.id));
+            const files = await this.activeStorageAttchRepository.getCompaniesFiles(String(p.application.id));
             const attachmentObject: any = {};
             files.forEach((attachment) => {
                 const { name, blob } = attachment;
@@ -1756,7 +1758,7 @@ export class ConsultantsService {
     }
 
     async getApplicatioUrls(applicationId: number) {
-        const files = await this.companies.getCompaniesFiles(String(applicationId));
+        const files = await this.activeStorageAttchRepository.getCompaniesFiles(String(applicationId));
 
         const attachmentObject: any = {};
         files.forEach((attachment) => {
@@ -2308,9 +2310,9 @@ export class ConsultantsService {
         const { consultant_company_id: id } = data;
 
         console.log('getOneCompany', id);
-        const company: any = await this.companies.getOneCompany(Number(id) ?? null);
+        const company: any = await this.consultantCompaniesRepository.getOneCompany(Number(id) ?? null);
 
-        const file = await this.companies.getCompaniesFiles(id ?? String(1));
+        const file = await this.activeStorageAttchRepository.getCompaniesFiles(id ?? String(1));
 
         const attachmentObject: any = {};
         file.forEach((attachment) => {

@@ -3,11 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsSelectByString, ILike, Like, Repository } from 'typeorm';
 import { ConsultantShops } from '@/src/common/entities/crmEntities/ConsultantShops.entity';
 import { StoreCreateDto, StoreGetDto } from './stores.dto';
-import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { CountriesService } from '../countries/countries.service';
 import { CommonService } from '@/src/common/common.service';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
+import { ConsultantCompaniesRepository } from '@/src/common/repositories/crm';
 
 @Injectable()
 export class StoreService {
@@ -15,9 +15,10 @@ export class StoreService {
         @InjectRepository(ConsultantShops)
         private readonly storeRepository: Repository<ConsultantShops>,
 
-        private readonly companyService: ConsultantCompanyService,
         private readonly countryService: CountriesService,
         private readonly commonService: CommonService,
+
+        private readonly consultantComapniesRepository: ConsultantCompaniesRepository,
     ) {}
 
     async findOneStoreById(id: number) {
@@ -63,7 +64,7 @@ export class StoreService {
         const { name, postal_code, consultant_company_id, country_id } = body;
 
         const [consultantCompony, country] = await Promise.all([
-            this.companyService.getOneCompany(Number(consultant_company_id)),
+            this.consultantComapniesRepository.getOneCompany(Number(consultant_company_id)),
             this.countryService.findOneCountryById(Number(country_id)),
         ]);
 

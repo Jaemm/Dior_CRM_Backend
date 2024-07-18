@@ -48,9 +48,8 @@ import { SkinColorGroups } from '@/src/common/entities/crmEntities/SkinColorGrou
 
 import { AdminGroups } from '@/src/common/entities/crmEntities/AdminGroups.entity';
 
-import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/ActiveStorageAttachments.entity';
-import { ConsultantCompanyModule } from '../consultantCompany/consultantCompany.module';
+
 import { CrmDataReplicationModule } from '../dataReplication/consultantDataReplication/consultantDataReplication.module';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 import { StoreModule } from '../stores/stores.module';
@@ -78,6 +77,8 @@ import {
     SalesConnectionRepository,
     NotificationsRepository,
     RefreshTokensRepository,
+    ConsultantCompaniesRepository,
+    ActiveStorageAttachmentsRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
 
@@ -141,7 +142,6 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         ]),
         AuthModule,
 
-        ConsultantCompanyModule,
         CrmDataReplicationModule,
 
         StoreModule,
@@ -161,13 +161,14 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         ConsultantsService,
         AuthService,
         JwtService,
-        ConsultantCompanyService,
 
         // Repos
         ApplicationsRepository,
+        ActiveStorageAttachmentsRepository,
         ConsultantsRepository,
         ConsultantBranchesRepository,
         ConsultantCountriesRepository,
+        ConsultantCompaniesRepository,
         ConsultantShopsRepository,
         ConsultantStoresRepository,
         ConsultantPositionsRepository,

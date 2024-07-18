@@ -42,9 +42,7 @@ import { ConsultantPositions } from '@/src/common/entities/crmEntities/Consultan
 import { ConsultantStores } from '@/src/common/entities/crmEntities/ConsultantStores.entity';
 import { ConsultantCountries } from '@/src/common/entities/crmEntities/ConsultantCountries.entity';
 
-import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
 import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/ActiveStorageAttachments.entity';
-import { ConsultantCompanyModule } from '../consultantCompany/consultantCompany.module';
 import { CrmDataReplicationModule } from '../dataReplication/consultantDataReplication/consultantDataReplication.module';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 
@@ -115,7 +113,7 @@ import { ApplicationsRepository } from '@/src/common/repositories/crm';
             Identities,
         ]),
         AuthModule,
-        ConsultantCompanyModule,
+
         CrmDataReplicationModule,
         CustomerDataReplicationModule,
         StoreModule,
@@ -129,7 +127,6 @@ import { ApplicationsRepository } from '@/src/common/repositories/crm';
         CustomersService,
         AuthService,
         JwtService,
-        ConsultantCompanyService,
 
         CountriesService,
         EthinicitiesService,

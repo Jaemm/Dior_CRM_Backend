@@ -20,8 +20,11 @@ import { VersionEvent } from '@/src/common/enums/version-event.enum';
 import { EmailSubject } from '@/src/common/constants/email-subjects';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 
-import { ConsultantCompanyService } from '../consultantCompany/consultantCompany.service';
-import { DevicesRepository, ProductsRepository } from '@/src/common/repositories/crm';
+import {
+    ActiveStorageAttachmentsRepository,
+    DevicesRepository,
+    ProductsRepository,
+} from '@/src/common/repositories/crm';
 
 @Injectable()
 export class ProductsService {
@@ -29,12 +32,12 @@ export class ProductsService {
         @InjectRepository(Versions)
         private readonly versionsRepository: Repository<Versions>,
 
-        private readonly companies: ConsultantCompanyService,
         private readonly commonService: CommonService,
         private readonly customersService: CustomersService,
         @Inject(forwardRef(() => ConsultantsService)) private readonly consultantsService: ConsultantsService,
 
         // repos
+        private readonly activeStorageAttachRepository: ActiveStorageAttachmentsRepository,
         private readonly productsRepository: ProductsRepository,
         private readonly devicesRepository: DevicesRepository,
     ) {}
@@ -254,7 +257,7 @@ export class ProductsService {
         updatedProduct.expired_date = formattedDate ?? null;
         updatedProduct.is_expired = updatedProduct.expired_date ? new Date() > updatedProduct.expired_date : false;
 
-        const files = await this.companies.getCompaniesFiles(String(updatedProduct.application.id));
+        const files = await this.activeStorageAttachRepository.getCompaniesFiles(String(updatedProduct.application.id));
         const attachmentObject: any = {};
         files.forEach((attachment) => {
             const { name, blob } = attachment;
