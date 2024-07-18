@@ -2,11 +2,12 @@ import { Request, Response } from 'express';
 
 import { Controller, Get, Req, Headers, Query } from '@nestjs/common';
 import { DiorCompanyConsultantsService } from './companyConsultants.service';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { GetDiorCompanyConsultantsDto } from './companyConsultants.dto';
 
+@ApiTags('Dior-Company Consultants')
 @Controller('dior/company_consultants')
 export class DiorCompanyConsultantsController {
     constructor(private diorCompanyConsultantsService: DiorCompanyConsultantsService) {}

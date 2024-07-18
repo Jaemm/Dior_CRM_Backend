@@ -1,11 +1,12 @@
 import { Body, Query, Param, Controller, Get, Post, Put, Delete, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { DiorAdminsService } from './diorAdmins.service';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { CreateAdminDto, ExportAdminsDto, GetAdminsDto, ImportAdminsDto, UpdateAdminDto } from './diorAdmins.dto';
 
+@ApiTags('Dior-Admins')
 @Controller('dior/admins')
 export class DiorAdminsController {
     constructor(private diorAdminsService: DiorAdminsService) {}

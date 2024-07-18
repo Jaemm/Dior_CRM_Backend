@@ -1,11 +1,12 @@
 import { Controller, Query, Req, Res, Body, Param, Put, Get, Post, Delete } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { DiorCountriesService } from './dior_countries.service';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { CreateCountries, ExportCountriesDto, ImportCountriesDto, UpdateCountriesDto } from './dior_countries.dto';
 
+@ApiTags('Dior-Countries')
 @Controller('dior/countries')
 export class DiorCountriesController {
     constructor(private diorCountriesService: DiorCountriesService) {}

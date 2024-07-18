@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
     Controller,
     Get,
@@ -29,6 +29,7 @@ import {
     ImportTranslationsDto,
 } from './productRecommendation.dto';
 
+@ApiTags('Dior-Product Recommendtaions')
 @Controller('/dior/product_recommendations')
 export class ProductRecommendationController {
     constructor(private productRecommendationsService: ProductRecommendationService) {}

@@ -1,11 +1,12 @@
 import { Controller, Get, Headers, Query, Post, Req, Body } from '@nestjs/common';
 import { DiorDevicesService } from './dior_devices.service';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Role } from '@/src/common/enums/role.enum';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { GetDevicesDto, ResetConnectDto } from './dior_devices.dto';
 import { Request } from 'express';
 
+@ApiTags('Dior-Devices')
 @Controller('dior/devices')
 export class DiorDeivcesConroller {
     constructor(private diorDevicesService: DiorDevicesService) {}
