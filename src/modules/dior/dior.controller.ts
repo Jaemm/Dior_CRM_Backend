@@ -30,12 +30,6 @@ export class DiorController {
     async createCustomers(@Body() body: createCustomerDto) {
         return await this.diorService.createCustomers(body);
     }
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get('company_consultants/by_consultant')
-    async getBranchesByConsultantsId(@Req() req: Request, @Headers('X-CHOWIS-LOCALE') locale: string) {
-        return await this.diorService.getBranchesByConsultantsId(req, locale);
-    }
 
     @ApiBearerAuth()
     @ApiOperation({ summary: 'search product_recommendation groups by name' })

@@ -36,6 +36,7 @@ import { DiorCountriesModule } from './countries/dior_countries.module';
 import { DiorDevicesModule } from './deivces/dior_devices.module';
 import { DiorAdminsModule } from './admins/diorAdmins.module';
 import { DiorCompanyBranchesModule } from './companyBranches/companyBranches.module';
+import { DiorCompanyConsultantsModule } from './companyConsultants/companyConsultants.module';
 
 @Module({
     imports: [
@@ -55,6 +56,7 @@ import { DiorCompanyBranchesModule } from './companyBranches/companyBranches.mod
         DiorAdminsModule,
         DiorCountriesModule,
         DiorCompanyBranchesModule,
+        DiorCompanyConsultantsModule,
         DiorDevicesModule,
         ProductRecommendationModule,
     ],

@@ -319,6 +319,20 @@ export class Consultants {
         return null;
     }
 
+    get 'convertStatus'(): string | null {
+        if (this.status) {
+            if (this.status === 0) {
+                return 'Active';
+            }
+
+            if (this.status === 1) {
+                return 'Inactive';
+            }
+        }
+
+        return null;
+    }
+
     @AfterLoad()
     'afterLoad'() {
         this.id = Number(this.id);

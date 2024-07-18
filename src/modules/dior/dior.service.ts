@@ -49,63 +49,6 @@ export class DiorService {
         private prGroupsRepository: ProductRecommendationGroupsRepository,
     ) {}
 
-    /** Branches */
-    async getBranchesByConsultantsId(req: Request, locale = 'en') {
-        try {
-            const userId = (<{ id: string }>req.user).id;
-
-            const currentConsultant = await this.consultantRepository.findOne({
-                where: { id: Number(userId) },
-                relations: ['consultant_branch'],
-            });
-
-            if (!currentConsultant) {
-                throw new UnauthorizedException({
-                    result_code: ErrorStatus.UNAUTHORIZED,
-                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
-                });
-            }
-
-            const branch = currentConsultant.consultant_branch;
-
-            if (!branch) {
-                throw new NotFoundException({
-                    result_code: ErrorStatus.NOT_FOUND,
-                });
-            }
-
-            const consultantsByBranch = await this.consultantRepository
-                .createQueryBuilder('consultants')
-                .where('consultants.email != :email OR consultants.email != :email2', {
-                    email: 'ann.chowis613@gmail.com', // who is this...
-                    email2: 'ann@chowis.com', // who is this...
-                })
-                .getMany();
-
-            const data: {
-                id: number;
-                email: string;
-                code: string;
-                name: string;
-                surname: string;
-            }[] = consultantsByBranch.map((row) => {
-                return {
-                    id: row.id,
-                    email: row.email,
-                    code: row.code,
-                    name: row.name,
-                    surname: row.surname,
-                };
-            });
-
-            return {
-                data,
-            };
-        } catch (e) {
-            throw e;
-        }
-    }
-
     /** Customers */
     async getCustomers(query: CustomerByConsultantIdDto, locale = 'en') {
         try {

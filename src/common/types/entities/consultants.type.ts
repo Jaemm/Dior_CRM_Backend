@@ -49,3 +49,10 @@ export type ConsultantT = {
     consultant_shop?: ConsultantShopT | null;
     consultant_position?: ConsultantPositionsT | null;
 };
+
+export type ConsultantForDiorT = Pick<ConsultantT, 'id' | 'name' | 'code' | 'email' | 'country'> & {
+    status: string | null;
+    created_at: Date | null;
+    pos_code: string | null;
+    pos_email: string | null;
+};
