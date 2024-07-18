@@ -1,18 +1,32 @@
 import { Request } from 'express';
 import { In, Like } from 'typeorm';
 import * as argon2 from 'argon2';
+import * as csv from 'csv';
 
-import { ConsultantsRepository } from '@/src/common/repositories/crm';
+import { ConsultantsRepository, CustomersRepository } from '@/src/common/repositories/crm';
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CommonService } from '@/src/common/common.service';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { PositionsIds } from '@/src/common/enums/position.enum';
-import { CreateDiorCompanyConsultantsDto, GetDiorCompanyConsultantsDto } from './companyConsultants.dto';
+import {
+    CreateDiorCompanyConsultantsDto,
+    ExportDiorCompanyConsultantsDto,
+    GetDiorCompanyConsultantsDto,
+} from './companyConsultants.dto';
 import { ConsultantForDiorT } from '@/src/common/types/entities/consultants.type';
+import { Consultants } from '@/src/common/entities/crmEntities';
+import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
 
 @Injectable()
 export class DiorCompanyConsultantsService {
-    constructor(private commonService: CommonService, private readonly consultantRepository: ConsultantsRepository) {}
+    constructor(
+        private commonService: CommonService,
+        private analysisDataReplicationService: AnalysisDataReplicationService,
+
+        // Repos
+        private readonly customersRepository: CustomersRepository,
+        private readonly consultantRepository: ConsultantsRepository,
+    ) {}
 
     async createDiorCompanyConsultants(body: CreateDiorCompanyConsultantsDto, locale: string = 'en') {
         try {
@@ -269,6 +283,80 @@ export class DiorCompanyConsultantsService {
         }
     }
 
+    async exportDiorCompanyConsultant(req: Request, query: ExportDiorCompanyConsultantsDto, locale: string = 'en') {
+        try {
+            const { search, filter_by, filter_by2, ids } = query;
+
+            const userId = (<{ id: string }>req.user).id;
+            const currentConsultant = await this.consultantRepository.getConsultantById(userId);
+
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            if (!currentConsultant) {
+                throw new UnauthorizedException({
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+                });
+            }
+
+            const consultantQuery = await this.consultantRepository
+                .createQueryBuilder('consultants')
+                .leftJoinAndSelect('consultants.consultant_branch', 'consultant_branch')
+                .where('consultants.id != :diorConsultantId', {
+                    diorConsultantId: diorConsultant.id,
+                });
+
+            if ([5, 6].includes(currentConsultant.consultant_position_id)) {
+            } else {
+                const branch = currentConsultant.consultant_branch;
+
+                const country = branch ? branch.country : null;
+
+                consultantQuery.andWhere('LOWER (consultants.country) = :country', {
+                    country: country?.toLocaleLowerCase(),
+                });
+            }
+
+            if (filter_by) {
+                consultantQuery.andWhere('LOWER (consultants.country) = :filterBy', {
+                    filterBy: filter_by.toLocaleLowerCase(),
+                });
+            }
+
+            if (filter_by2) {
+                consultantQuery.andWhere('consultants.consultant_branch_id = :branchId', {
+                    branchId: filter_by2,
+                });
+            }
+
+            if (search) {
+                consultantQuery.andWhere(
+                    '(consultants.country LIKE :search OR consultants.code LIKE :search OR consultants.email LIKE :search)',
+                    {
+                        search: `%${search}%`,
+                    },
+                );
+            }
+
+            if (ids) {
+                const splitIds = ids.split(',');
+
+                consultantQuery.andWhere('consultants.id IN (:...ids)', {
+                    ids: splitIds,
+                });
+            }
+
+            const consultants = await consultantQuery.getMany();
+
+            return await this.createCSVFileForExportCompanyConsultant(consultants);
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    /**
+     * Utils
+     */
     async generateEmailForDior(diorCompanyId: number) {
         const diorDummyEmailsConsultants = await this.consultantRepository.find({
             where: {
@@ -304,5 +392,54 @@ export class DiorCompanyConsultantsService {
         const nextEmailNumber = lastEmailNumber + 1;
 
         return `dior_dummy_emails${nextEmailNumber}@chowis-test.com`;
+    }
+
+    async createCSVFileForExportCompanyConsultant(consultants: Consultants[]) {
+        const header = [
+            'Country',
+            'POS Code',
+            'BC Name',
+            'BC Email',
+            'Is Active',
+            'Total Consultations',
+            'Last Consultation Date',
+        ];
+
+        const asyncRecords = consultants.map(async (u) => {
+            const customers = await this.customersRepository.find({
+                select: ['id'],
+                where: {
+                    consultant_id: u.id,
+                },
+            });
+
+            const customerIds = customers.map((customer) => customer.id);
+
+            const { count, lastConsultationTime } =
+                await this.analysisDataReplicationService.getConsultationsInfoForDior(customerIds);
+
+            return [
+                u.country,
+                u.consultant_branch?.code,
+                u.name,
+                u.email,
+                u.convertStatus,
+                count,
+                lastConsultationTime,
+            ];
+        });
+
+        const records = await Promise.all(asyncRecords);
+
+        return await new Promise((resolve, reject) => {
+            csv.stringify([header, ...records], (err, output) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(output);
+            });
+        });
     }
 }

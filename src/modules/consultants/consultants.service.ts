@@ -90,8 +90,6 @@ import { ResponseMessages } from '@/src/common/constants/response-messages';
 
 import { Role } from '@/src/common/enums/role.enum';
 import { ErrorStatus } from '@/src/common/constants/error-status';
-import { TargetType } from '@/src/common/enums/target-type.enum';
-import { ErrorMessages } from '@/src/common/middleWare/exceptions/exceptionHandling/eum/errorMessages.enum';
 import {
     ActiveStorageAttachmentsRepository,
     ApplicationsRepository,
@@ -111,7 +109,6 @@ import {
     RefreshTokensRepository,
     SalesConnectionRepository,
 } from '@/src/common/repositories/crm';
-import { AnalysisRepository } from '@/src/common/repositories/analysis/analysis.repository';
 import { AnalysisDataReplicationService } from '../dataReplication/analysisDataReplication/analysisDataReplication.service';
 import {
     ConsultantBranchesT,
@@ -124,8 +121,6 @@ import {
     NotificationsT,
     SalesConnectionT,
 } from '@/src/common/types/entities';
-import { ProductsT } from '@/src/common/types/entities/products.type';
-import { LicensesT } from '@/src/common/types/entities/licenses.type';
 
 @Injectable()
 export class ConsultantsService {

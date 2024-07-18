@@ -46,6 +46,28 @@ export class AnalysisDataReplicationService {
         return rows;
     }
 
+    async getConsultationsInfoForDior(customerIds: number[]) {
+        const [diorCustomers, totalCount] = await this.diorCndpSkinRepository.findAndCount({
+            where: {
+                customerId: In(customerIds),
+            },
+            order: {
+                createdTime: 'DESC',
+            },
+        });
+
+        let lastConsultationTime = null;
+
+        if (diorCustomers && diorCustomers.length > 0) {
+            lastConsultationTime = diorCustomers[0].createdTime;
+            lastConsultationTime = lastConsultationTime ? lastConsultationTime.toISOString() : null;
+        }
+        return {
+            count: totalCount,
+            lastConsultationTime: lastConsultationTime,
+        };
+    }
+
     async getBatchId(customerId: string, appId: number) {
         const repository = this.DBRediction(appId).ohioRepos;
         const analyisData = repository.find({

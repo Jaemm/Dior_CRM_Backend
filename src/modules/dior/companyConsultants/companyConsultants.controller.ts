@@ -1,11 +1,15 @@
 import { Request, Response } from 'express';
 
-import { Controller, Get, Req, Headers, Query, Param, Post, Body, Delete } from '@nestjs/common';
+import { Controller, Get, Req, Headers, Query, Param, Post, Body, Delete, Res } from '@nestjs/common';
 import { DiorCompanyConsultantsService } from './companyConsultants.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
-import { CreateDiorCompanyConsultantsDto, GetDiorCompanyConsultantsDto } from './companyConsultants.dto';
+import {
+    CreateDiorCompanyConsultantsDto,
+    ExportDiorCompanyConsultantsDto,
+    GetDiorCompanyConsultantsDto,
+} from './companyConsultants.dto';
 
 @ApiTags('Dior-Company Consultants')
 @Controller('dior/company_consultants')
@@ -39,6 +43,22 @@ export class DiorCompanyConsultantsController {
     @Get('by_consultant')
     async getConsultantByBranchesConsultant(@Req() req: Request, @Headers('X-CHOWIS-LOCALE') locale: string) {
         return await this.diorCompanyConsultantsService.getConsultantByBranchesConsultant(req, locale);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('export')
+    async exportDiorCompanyConsultant(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Req() req: Request,
+        @Res() res: Response,
+        @Query() query: ExportDiorCompanyConsultantsDto,
+    ) {
+        const resultFile = await this.diorCompanyConsultantsService.exportDiorCompanyConsultant(req, query, locale);
+
+        res.header('Content-Type', 'text/csv');
+        res.attachment('bc_list.csv');
+        return res.send(resultFile);
     }
 
     @ApiBearerAuth()

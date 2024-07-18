@@ -47,3 +47,21 @@ export class CreateDiorCompanyConsultantsDto {
     @IsString()
     country: string;
 }
+
+export class ExportDiorCompanyConsultantsDto {
+    @IsOptional()
+    @IsString()
+    search: string;
+
+    @IsOptional()
+    @IsString()
+    ids: string;
+
+    @IsOptional()
+    @IsString()
+    filter_by: string;
+
+    @IsOptional()
+    @IsString()
+    filter_by2: string;
+}
