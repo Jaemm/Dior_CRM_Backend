@@ -12,7 +12,6 @@ import {
 } from './crm.dto';
 import { CustomersService } from '../customers/customers.service';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
-import { CountriesService } from '../countries/countries.service';
 import { ProductsService } from '../products/products.service';
 
 import { CommonService } from '@/src/common/common.service';
@@ -27,6 +26,7 @@ import {
     CustomersRepository,
     DiorCustomerConsentsRepository,
 } from '@/src/common/repositories/crm';
+import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 
 @Injectable()
 export class CRMService {
@@ -34,11 +34,12 @@ export class CRMService {
         private awsS3Service: AwsS3Service,
         private readonly customerService: CustomersService,
         private consultantsService: ConsultantsService,
-        private countriesService: CountriesService,
+
         private productService: ProductsService,
         private commonService: CommonService,
 
         // Repos
+        private readonly countriesRepository: CountriesRepository,
         private readonly customersRepository: CustomersRepository,
         private readonly consultantRepository: ConsultantsRepository,
         private readonly diorCustomerConsentsRepository: DiorCustomerConsentsRepository,
@@ -219,7 +220,7 @@ export class CRMService {
         }
 
         if (country_code) {
-            const country = await this.countriesService.findOneCountry({ country_code: country_code }, ['id']);
+            const country = await this.countriesRepository.findOneCountry({ country_code: country_code }, ['id']);
             if (country) {
                 // country_id = Number(country.id);
             }

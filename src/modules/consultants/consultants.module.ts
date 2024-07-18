@@ -52,7 +52,6 @@ import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/Acti
 
 import { CrmDataReplicationModule } from '../dataReplication/consultantDataReplication/consultantDataReplication.module';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
-import { CountriesModule } from '../countries/countries.module';
 import { SkinColorGroupsModule } from '../skinColorGroups/skinColorGroups.module';
 
 import { LicenceModule } from '../licence/licence.module';
@@ -81,6 +80,7 @@ import {
     EthnicitiesRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
+import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 
 @Module({
     imports: [
@@ -146,7 +146,6 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
 
         ConsultantsModule,
 
-        CountriesModule,
         SkinColorGroupsModule,
 
         LicenceModule,
@@ -170,6 +169,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         ConsultantShopsRepository,
         ConsultantStoresRepository,
         ConsultantPositionsRepository,
+        CountriesRepository,
         CustomersRepository,
         DevicesRepository,
         DiorCustomerConsentsRepository,

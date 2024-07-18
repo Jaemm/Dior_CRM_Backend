@@ -2,7 +2,7 @@ import { HttpStatus, Inject, Injectable, NotFoundException, UnprocessableEntityE
 import { ILike } from 'typeorm';
 import { FetchFwVersionDto, LoginSocialDto, ShopListDto, UpdateFwVersionDto } from './app.dto';
 import { CountriesListDto } from './modules/customers/customers.dto';
-import { CountriesService } from './modules/countries/countries.service';
+
 import { SkinColorGroupsService } from './modules/skinColorGroups/skinColorGroups.service';
 
 import { CustomersService } from './modules/customers/customers.service';
@@ -17,15 +17,13 @@ import {
     EthnicitiesRepository,
     GendersRepository,
 } from './common/repositories/crm';
+import { CountriesRepository } from './common/repositories/crm/countries.repository';
 
 @Injectable()
 export class AppService {
     constructor(
         @Inject(SkinColorGroupsService)
         private readonly skinColorGroups: SkinColorGroupsService,
-
-        @Inject(CountriesService)
-        private readonly countries: CountriesService,
 
         private readonly customersService: CustomersService,
         private readonly commonService: CommonService,
@@ -36,6 +34,8 @@ export class AppService {
         private readonly deviceRepository: DevicesRepository,
         private readonly gendersRepository: GendersRepository,
         private readonly consultantShopsRepository: ConsultantShopsRepository,
+
+        private readonly countriesRepository: CountriesRepository,
     ) {}
 
     async shopList(params: ShopListDto) {
@@ -102,7 +102,7 @@ export class AppService {
 
     async countriesList(filters: CountriesListDto) {
         const search = filters?.search ?? '';
-        const countries = await this.countries.findCountry({
+        const countries = await this.countriesRepository.findCountry({
             name: ILike(`${search}%`),
         });
         return countries;

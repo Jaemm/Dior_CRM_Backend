@@ -75,8 +75,6 @@ import { CrmDataReplicationService } from '../dataReplication/consultantDataRepl
 import * as fs from 'fs/promises';
 import * as handlebars from 'handlebars';
 
-import { CountriesService } from '../countries/countries.service';
-
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
 
 import { IJwt } from 'src/config/interfaces/jwt.interfaces';
@@ -121,6 +119,7 @@ import {
     NotificationsT,
     SalesConnectionT,
 } from '@/src/common/types/entities';
+import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 
 @Injectable()
 export class ConsultantsService {
@@ -144,8 +143,6 @@ export class ConsultantsService {
         private readonly licenceService: LicenceService,
         private readonly productsService: ProductsService,
 
-        private readonly countriesService: CountriesService,
-
         private readonly skinColorGroupService: SkinColorGroupsService,
 
         private readonly authService: AuthService,
@@ -157,6 +154,7 @@ export class ConsultantsService {
         private readonly analysisReplService: AnalysisDataReplicationService,
 
         // Repos
+        private readonly countriesRepository: CountriesRepository,
         private readonly consultantCompaniesRepository: ConsultantCompaniesRepository,
         private readonly activeStorageAttchRepository: ActiveStorageAttachmentsRepository,
         private readonly refreshTokenRepository: RefreshTokensRepository,
@@ -1384,7 +1382,7 @@ export class ConsultantsService {
         }
 
         if (data.country_code) {
-            const countries = await this.countriesService.findCountry({ country_code: data.country_code }, [
+            const countries = await this.countriesRepository.findCountry({ country_code: data.country_code }, [
                 'id',
                 'country_code',
                 'name',

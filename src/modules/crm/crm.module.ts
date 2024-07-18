@@ -49,7 +49,7 @@ import { CRMService } from './crm.service';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 import { CustomersModule } from '../customers/customers.module';
 import { ConsultantsModule } from '../consultants/consultants.module';
-import { CountriesModule } from '../countries/countries.module';
+
 import { ProductsModule } from '../products/products.module';
 
 import { JwtService } from '@/src/jwt/jwt.service';
@@ -59,6 +59,7 @@ import {
     CustomersRepository,
     DiorCustomerConsentsRepository,
 } from '@/src/common/repositories/crm';
+import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 
 @Module({
     imports: [
@@ -106,7 +107,7 @@ import {
         ]),
         CustomersModule,
         forwardRef(() => ConsultantsModule),
-        CountriesModule,
+
         ProductsModule,
     ],
     controllers: [CRMController],
@@ -119,6 +120,7 @@ import {
         // Repos
         CustomersRepository,
         ConsultantsRepository,
+        CountriesRepository,
         DiorCustomerConsentsRepository,
     ],
     exports: [CRMService],

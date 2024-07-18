@@ -23,7 +23,6 @@ import { ImageModule } from './modules/image/image.module';
 import config from './config/config.schema';
 import { DataReplicationModule } from './modules/dataReplication/dataReplication.module';
 import { CustomersModule } from './modules/customers/customers.module';
-import { CountriesModule } from './modules/countries/countries.module';
 
 import { SkinColorGroupsModule } from './modules/skinColorGroups/skinColorGroups.module';
 import { AppController } from './app.controller';
@@ -48,6 +47,7 @@ import {
     EthnicitiesRepository,
     GendersRepository,
 } from './common/repositories/crm';
+import { CountriesRepository } from './common/repositories/crm/countries.repository';
 
 @Module({
     imports: [
@@ -128,8 +128,6 @@ import {
 
         DataReplicationModule,
 
-        CountriesModule,
-
         SkinColorGroupsModule,
 
         ProductsModule,
@@ -137,8 +135,10 @@ import {
     ],
     controllers: [AppController],
     providers: [
-        EthnicitiesRepository,
         ConsultantShopsRepository,
+        CountriesRepository,
+        EthnicitiesRepository,
+
         DevicesRepository,
         GendersRepository,
 

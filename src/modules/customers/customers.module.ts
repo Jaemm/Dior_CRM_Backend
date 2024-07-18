@@ -46,7 +46,6 @@ import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/Acti
 import { CrmDataReplicationModule } from '../dataReplication/consultantDataReplication/consultantDataReplication.module';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 
-import { CountriesService } from '../countries/countries.service';
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
 import { CustomerDataReplicationModule } from '../dataReplication/customerDataReplication/customerDataReplication.module';
 import { LicenceModule } from '../licence/licence.module';
@@ -58,6 +57,7 @@ import { PasswordEmailDetails } from '@/src/common/entities/crmEntities/Password
 
 import { ProductRecommendations, HealthTips, Identities } from '@/src/common/entities/crmEntities';
 import { ApplicationsRepository, EthnicitiesRepository } from '@/src/common/repositories/crm';
+import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 
 @Module({
     imports: [
@@ -125,13 +125,12 @@ import { ApplicationsRepository, EthnicitiesRepository } from '@/src/common/repo
         AuthService,
         JwtService,
 
-        CountriesService,
-
         SkinColorGroupsService,
         // CustomerDataReplicationService,
 
         // Repos
         ApplicationsRepository,
+        CountriesRepository,
         EthnicitiesRepository,
     ],
     exports: [CustomersService],

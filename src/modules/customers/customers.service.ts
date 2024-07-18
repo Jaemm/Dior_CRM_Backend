@@ -29,7 +29,6 @@ import {
 
 import { IMessage } from 'src/common/interfaces/message.interface';
 import { CommonService } from 'src/common/common.service';
-import { CountriesService } from '../countries/countries.service';
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
 import { CustomerDataReplicationService } from '../dataReplication/customerDataReplication/customerDataReplication.service';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
@@ -43,6 +42,7 @@ import { ConfirmHtmlDto } from '../consultants/consultants.dto';
 import * as handlebars from 'handlebars';
 import * as fs from 'fs/promises';
 import { ApplicationsRepository, EthnicitiesRepository } from '@/src/common/repositories/crm';
+import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 
 @Injectable()
 export class CustomersService {
@@ -55,14 +55,13 @@ export class CustomersService {
 
         private readonly commonService: CommonService,
 
-        private readonly countries: CountriesService,
-
         private readonly skinColorGroups: SkinColorGroupsService,
         private readonly replicateCustomer: CustomerDataReplicationService,
         @Inject(forwardRef(() => ProductsService)) private readonly productService: ProductsService, // TODO: Resolve dependency issue // private readonly customerConsentsService: CustomerConsentsService,
 
         private readonly applicationsRepository: ApplicationsRepository,
         private readonly ethnicitiesRepository: EthnicitiesRepository,
+        private readonly countriesRepository: CountriesRepository,
     ) {}
 
     async verifyPasswordBcrypt(enteredPassword: string, bcryptHash: string): Promise<boolean> {
@@ -779,7 +778,7 @@ export class CustomersService {
         }
 
         if (customer.country_code) {
-            const countries = await this.countries.findCountry({ country_code: customer.country_code }, [
+            const countries = await this.countriesRepository.findCountry({ country_code: customer.country_code }, [
                 'id',
                 'country_code',
                 'name',
