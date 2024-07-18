@@ -60,17 +60,13 @@ import {
     Notifications,
     PasswordEmailDetails,
     Devices,
-    Products,
     ProductRecommendations,
     ConsultantCompanies,
     Identities,
     HealthTips,
-    DiorCustomerConsents,
     Customers,
-    ConsultantBranches,
 } from '@/src/common/entities/crmEntities';
 import { CommonService } from 'src/common/common.service';
-import { ConsultantPositions } from '@/src/common/entities/crmEntities/ConsultantPositions.entity';
 import { CrmDataReplicationService } from '../dataReplication/consultantDataReplication/consultantDataReplication.service';
 import * as fs from 'fs/promises';
 import * as handlebars from 'handlebars';
@@ -127,10 +123,6 @@ export class ConsultantsService {
     private readonly jwtConfig: IJwt;
 
     constructor(
-        @InjectRepository(ConsultantCompanies)
-        private readonly consultantCompanyRepository: Repository<ConsultantCompanies>,
-        @InjectRepository(ConsultantPositions)
-        private readonly position: Repository<ConsultantPositions>,
         @InjectRepository(PasswordEmailDetails)
         private readonly passwordDetailRepository: Repository<PasswordEmailDetails>,
         @InjectRepository(ProductRecommendations)
@@ -490,19 +482,6 @@ export class ConsultantsService {
         }
     }
 
-    async checkConsultantPosition(id: number) {
-        const position = await this.position.findOne({
-            where: {
-                id: id,
-            },
-            select: {
-                id: true,
-                name: true,
-            },
-        });
-        return position;
-    }
-
     async getHelthTips(req: Request, query: HealthTipsDto, locale: string = 'en') {
         try {
             const userId = (<{ id: string }>req.user).id;
@@ -551,7 +530,7 @@ export class ConsultantsService {
         const page = req.query.page ? parseInt(query.page) : 1;
         const limit = req.query.limit ? parseInt(query.limit as string) : 10;
         try {
-            const foundCompany = await this.consultantCompanyRepository.findOne({
+            const foundCompany = await this.consultantCompaniesRepository.findOne({
                 where: {
                     id: Number(companyId),
                 },
@@ -676,7 +655,9 @@ export class ConsultantsService {
 
         if (consultant?.consultant_position_id) {
             //positiom
-            consultant.consultant_position = await this.checkConsultantPosition(consultant?.consultant_position_id);
+            consultant.consultant_position = await this.consultantPositionRepository.checkConsultantPosition(
+                consultant?.consultant_position_id,
+            );
         }
 
         const products = await this.productsRepository.getCompaniesFiles(consultant?.id ?? null, Number(app_id));
@@ -2048,7 +2029,7 @@ export class ConsultantsService {
 
     public async getCompanies() {
         try {
-            const companies = await this.consultantCompanyRepository.find();
+            const companies = await this.consultantCompaniesRepository.find();
 
             const reformatCompanyList: ConsultantCompaniesT[] = companies.map((company) => {
                 const reformatCompany: ConsultantCompaniesT = {

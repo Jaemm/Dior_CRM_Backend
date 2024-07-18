@@ -16,4 +16,17 @@ export class ConsultantPositionsRepository extends Repository<ConsultantPosition
         });
         return consultantpositions;
     }
+
+    async checkConsultantPosition(id: number) {
+        const position = await this.findOne({
+            where: {
+                id: id,
+            },
+            select: {
+                id: true,
+                name: true,
+            },
+        });
+        return position;
+    }
 }
