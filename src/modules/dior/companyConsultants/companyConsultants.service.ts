@@ -186,4 +186,25 @@ export class DiorCompanyConsultantsService {
             throw e;
         }
     }
+
+    async deleteDiorCompanyConsultant(consultantId: string, locale = 'en') {
+        try {
+            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            const foundConsultants = await this.consultantRepository.find({
+                where: {
+                    id: Number(consultantId),
+                    consultant_company_id: diorCompanyId,
+                },
+            });
+
+            await this.consultantRepository.remove(foundConsultants);
+
+            return {
+                message: 'Successfully deleted record',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
 }

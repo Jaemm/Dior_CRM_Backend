@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 
-import { Controller, Get, Req, Headers, Query } from '@nestjs/common';
+import { Controller, Get, Req, Headers, Query, Param } from '@nestjs/common';
 import { DiorCompanyConsultantsService } from './companyConsultants.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -28,5 +28,16 @@ export class DiorCompanyConsultantsController {
     @Get('by_consultant')
     async getConsultantByBranchesConsultant(@Req() req: Request, @Headers('X-CHOWIS-LOCALE') locale: string) {
         return await this.diorCompanyConsultantsService.getConsultantByBranchesConsultant(req, locale);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get(':id')
+    async deleteDiorCompanyConsultant(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Req() req: Request,
+        @Param('id') consultantId: string,
+    ) {
+        return await this.diorCompanyConsultantsService.deleteDiorCompanyConsultant(consultantId, locale);
     }
 }
