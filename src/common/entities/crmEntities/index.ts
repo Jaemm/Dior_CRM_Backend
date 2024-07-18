@@ -34,6 +34,7 @@ export { Identities } from './Identities.entity';
 export { Notifications } from './Notifications.entity';
 
 export { SalesConn } from './SalesConn.entity';
+export { SkinColorGroups } from './SkinColorGroups.entity';
 
 export { PasswordEmailDetails } from './PasswordEmailDetails.entity';
 export { Products } from './Products.entity';

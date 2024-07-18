@@ -29,7 +29,6 @@ import {
 
 import { IMessage } from 'src/common/interfaces/message.interface';
 import { CommonService } from 'src/common/common.service';
-import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
 import { CustomerDataReplicationService } from '../dataReplication/customerDataReplication/customerDataReplication.service';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 import { ProductsService } from '../products/products.service';
@@ -41,7 +40,11 @@ import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ConfirmHtmlDto } from '../consultants/consultants.dto';
 import * as handlebars from 'handlebars';
 import * as fs from 'fs/promises';
-import { ApplicationsRepository, EthnicitiesRepository } from '@/src/common/repositories/crm';
+import {
+    ApplicationsRepository,
+    EthnicitiesRepository,
+    SkinColorGroupsRepository,
+} from '@/src/common/repositories/crm';
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 
 @Injectable()
@@ -55,10 +58,10 @@ export class CustomersService {
 
         private readonly commonService: CommonService,
 
-        private readonly skinColorGroups: SkinColorGroupsService,
         private readonly replicateCustomer: CustomerDataReplicationService,
         @Inject(forwardRef(() => ProductsService)) private readonly productService: ProductsService, // TODO: Resolve dependency issue // private readonly customerConsentsService: CustomerConsentsService,
 
+        private readonly skinColorGorupsRepository: SkinColorGroupsRepository,
         private readonly applicationsRepository: ApplicationsRepository,
         private readonly ethnicitiesRepository: EthnicitiesRepository,
         private readonly countriesRepository: CountriesRepository,
@@ -799,7 +802,7 @@ export class CustomersService {
         }
 
         if (customer.skin_color_group_id) {
-            promises.push(this.skinColorGroups.findOneskinColorGroups(String(customer.skin_color_group_id)));
+            promises.push(this.skinColorGorupsRepository.findOneskinColorGroups(String(customer.skin_color_group_id)));
         }
 
         if (customer.ethnicity_id) {

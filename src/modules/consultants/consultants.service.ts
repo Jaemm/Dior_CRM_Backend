@@ -75,8 +75,6 @@ import { CrmDataReplicationService } from '../dataReplication/consultantDataRepl
 import * as fs from 'fs/promises';
 import * as handlebars from 'handlebars';
 
-import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
-
 import { IJwt } from 'src/config/interfaces/jwt.interfaces';
 import { ConfigService } from '@nestjs/config';
 import { ProductsService } from '../products/products.service';
@@ -106,6 +104,7 @@ import {
     ProductsRepository,
     RefreshTokensRepository,
     SalesConnectionRepository,
+    SkinColorGroupsRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationService } from '../dataReplication/analysisDataReplication/analysisDataReplication.service';
 import {
@@ -145,8 +144,6 @@ export class ConsultantsService {
 
         private readonly productsService: ProductsService,
 
-        private readonly skinColorGroupService: SkinColorGroupsService,
-
         private readonly authService: AuthService,
         private readonly jwtService: JwtService,
 
@@ -156,6 +153,7 @@ export class ConsultantsService {
         private readonly analysisReplService: AnalysisDataReplicationService,
 
         // Repos
+        private readonly skinColorGorupsRepository: SkinColorGroupsRepository,
         private readonly countriesRepository: CountriesRepository,
         private readonly consultantCompaniesRepository: ConsultantCompaniesRepository,
         private readonly activeStorageAttchRepository: ActiveStorageAttachmentsRepository,
@@ -1378,7 +1376,7 @@ export class ConsultantsService {
         }
 
         if (data.skin_color_group_id) {
-            promises.push(this.skinColorGroupService.findOneskinColorGroups(data.skin_color_group_id));
+            promises.push(this.skinColorGorupsRepository.findOneskinColorGroups(data.skin_color_group_id));
         }
 
         if (data.ethnicity_id) {

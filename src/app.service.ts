@@ -3,8 +3,6 @@ import { ILike } from 'typeorm';
 import { FetchFwVersionDto, LoginSocialDto, ShopListDto, UpdateFwVersionDto } from './app.dto';
 import { CountriesListDto } from './modules/customers/customers.dto';
 
-import { SkinColorGroupsService } from './modules/skinColorGroups/skinColorGroups.service';
-
 import { CustomersService } from './modules/customers/customers.service';
 import { CommonService } from './common/common.service';
 import { ResponseMessages } from './common/constants/response-messages';
@@ -16,15 +14,13 @@ import {
     DevicesRepository,
     EthnicitiesRepository,
     GendersRepository,
+    SkinColorGroupsRepository,
 } from './common/repositories/crm';
 import { CountriesRepository } from './common/repositories/crm/countries.repository';
 
 @Injectable()
 export class AppService {
     constructor(
-        @Inject(SkinColorGroupsService)
-        private readonly skinColorGroups: SkinColorGroupsService,
-
         private readonly customersService: CustomersService,
         private readonly commonService: CommonService,
         private readonly productsService: ProductsService,
@@ -34,7 +30,7 @@ export class AppService {
         private readonly deviceRepository: DevicesRepository,
         private readonly gendersRepository: GendersRepository,
         private readonly consultantShopsRepository: ConsultantShopsRepository,
-
+        private readonly skinColorGroupsRepository: SkinColorGroupsRepository,
         private readonly countriesRepository: CountriesRepository,
     ) {}
 
@@ -112,7 +108,7 @@ export class AppService {
         const [ethnicities, genders, skinColorGroups] = await Promise.all([
             this.ethnicitiesRepository.findEthinicities(),
             this.gendersRepository.findGender(),
-            this.skinColorGroups.findSkinColorGroups(),
+            this.skinColorGroupsRepository.findSkinColorGroups(),
         ]);
 
         return {

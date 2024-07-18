@@ -23,6 +23,7 @@ export { RefreshTokensRepository } from './refreshToken.respository';
 export { NotificationsRepository } from './notifications.repository';
 
 export { SalesConnectionRepository } from './salesConnections.repository';
+export { SkinColorGroupsRepository } from './skinColorGroups.repository';
 
 export { ProductsRepository } from './products.repository';
 

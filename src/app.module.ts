@@ -24,7 +24,6 @@ import config from './config/config.schema';
 import { DataReplicationModule } from './modules/dataReplication/dataReplication.module';
 import { CustomersModule } from './modules/customers/customers.module';
 
-import { SkinColorGroupsModule } from './modules/skinColorGroups/skinColorGroups.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthMiddleware } from './common/middleWare/authMiddlware/auth.middleware';
@@ -46,8 +45,10 @@ import {
     DevicesRepository,
     EthnicitiesRepository,
     GendersRepository,
+    SkinColorGroupsRepository,
 } from './common/repositories/crm';
 import { CountriesRepository } from './common/repositories/crm/countries.repository';
+import { SkinColorGroups } from './common/entities/crmEntities';
 
 @Module({
     imports: [
@@ -128,8 +129,6 @@ import { CountriesRepository } from './common/repositories/crm/countries.reposit
 
         DataReplicationModule,
 
-        SkinColorGroupsModule,
-
         ProductsModule,
         CRMModule,
     ],
@@ -141,6 +140,7 @@ import { CountriesRepository } from './common/repositories/crm/countries.reposit
 
         DevicesRepository,
         GendersRepository,
+        SkinColorGroupsRepository,
 
         AppService,
         {

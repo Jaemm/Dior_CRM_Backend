@@ -52,7 +52,6 @@ import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/Acti
 
 import { CrmDataReplicationModule } from '../dataReplication/consultantDataReplication/consultantDataReplication.module';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
-import { SkinColorGroupsModule } from '../skinColorGroups/skinColorGroups.module';
 
 import { ProductsModule } from '../products/products.module';
 import { CustomersModule } from '../customers/customers.module';
@@ -77,6 +76,7 @@ import {
     ConsultantCompaniesRepository,
     ActiveStorageAttachmentsRepository,
     EthnicitiesRepository,
+    SkinColorGroupsRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
@@ -147,8 +147,6 @@ import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repos
 
         ConsultantsModule,
 
-        SkinColorGroupsModule,
-
         forwardRef(() => ProductsModule),
         CustomersModule,
         CRMModule,
@@ -179,6 +177,7 @@ import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repos
         NotificationsRepository,
         ProductsRepository,
         SalesConnectionRepository,
+        SkinColorGroupsRepository,
         LicensesRepository,
         LicenseHistoriesRepository,
     ],
