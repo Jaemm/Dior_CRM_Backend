@@ -52,7 +52,6 @@ import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/Acti
 
 import { CrmDataReplicationModule } from '../dataReplication/consultantDataReplication/consultantDataReplication.module';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
-import { StoreModule } from '../stores/stores.module';
 import { CountriesModule } from '../countries/countries.module';
 import { SkinColorGroupsModule } from '../skinColorGroups/skinColorGroups.module';
 import { EthinicitiesModule } from '../ethinicities/ethinicities.module';
@@ -144,7 +143,6 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
 
         CrmDataReplicationModule,
 
-        StoreModule,
         ConsultantsModule,
 
         CountriesModule,

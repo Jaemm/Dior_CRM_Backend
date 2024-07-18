@@ -50,7 +50,6 @@ import { CountriesService } from '../countries/countries.service';
 import { EthinicitiesService } from '../ethinicities/ethinicities.service';
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
 import { CustomerDataReplicationModule } from '../dataReplication/customerDataReplication/customerDataReplication.module';
-import { StoreModule } from '../stores/stores.module';
 import { LicenceModule } from '../licence/licence.module';
 import { ProductsModule } from '../products/products.module';
 import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
@@ -116,7 +115,6 @@ import { ApplicationsRepository } from '@/src/common/repositories/crm';
 
         CrmDataReplicationModule,
         CustomerDataReplicationModule,
-        StoreModule,
 
         LicenceModule,
         forwardRef(() => ProductsModule),

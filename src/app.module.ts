@@ -30,7 +30,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthMiddleware } from './common/middleWare/authMiddlware/auth.middleware';
 
-import { StoreModule } from './modules/stores/stores.module';
 import { ProductsModule } from './modules/products/products.module';
 import { HealthModule } from './modules/apiHealthCheck/apiHealth.module';
 import { CRMModule } from './modules/crm/crm.module';
@@ -115,7 +114,7 @@ import { ConsultantShopsRepository, DevicesRepository, GendersRepository } from 
         ConsultantsModule,
         CustomersModule,
         DiorModule,
-        StoreModule,
+
         AuthModule,
         CommonModule,
         HealthModule,
