@@ -12,6 +12,8 @@ export { DeviceT, DeviceForDiorT } from './device.typs';
 
 export { NotificationsT } from './notifications.type';
 
+export { ProductAttributesForDiorT } from './product_attributes.type';
+export { ProductAttributeTranslationsForDiorT } from './product_attribute_translations.type';
 export { ProudctRecommendationGroupsT } from './product_recommendation_groups.type';
 export { ProductRecommendationT } from './product_recommendatoin.type';
 export { ProductTranslationT } from './product_translations.type';
