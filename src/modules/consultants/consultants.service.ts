@@ -78,7 +78,6 @@ import * as handlebars from 'handlebars';
 import { CountriesService } from '../countries/countries.service';
 
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
-import { EthinicitiesService } from '../ethinicities/ethinicities.service';
 
 import { IJwt } from 'src/config/interfaces/jwt.interfaces';
 import { ConfigService } from '@nestjs/config';
@@ -103,6 +102,7 @@ import {
     CustomersRepository,
     DevicesRepository,
     DiorCustomerConsentsRepository,
+    EthnicitiesRepository,
     GendersRepository,
     NotificationsRepository,
     ProductsRepository,
@@ -147,7 +147,6 @@ export class ConsultantsService {
         private readonly countriesService: CountriesService,
 
         private readonly skinColorGroupService: SkinColorGroupsService,
-        private readonly ethinicityService: EthinicitiesService,
 
         private readonly authService: AuthService,
         private readonly jwtService: JwtService,
@@ -175,6 +174,7 @@ export class ConsultantsService {
         private readonly deviceRepository: DevicesRepository,
         private readonly productsRepository: ProductsRepository,
         private readonly diorConsentRepository: DiorCustomerConsentsRepository,
+        private readonly ethnicitiesRepository: EthnicitiesRepository,
     ) {
         this.jwtConfig = this.configService.get<IJwt>('jwt');
     }
@@ -1380,7 +1380,7 @@ export class ConsultantsService {
         }
 
         if (data.ethnicity_id) {
-            promises.push(this.ethinicityService.findOneEthinicities(data.ethnicity_id));
+            promises.push(this.ethnicitiesRepository.findOneEthinicities(data.ethnicity_id));
         }
 
         if (data.country_code) {

@@ -18,6 +18,8 @@ export { Customers } from './Customers.entity';
 export { Devices } from './Devices.entity';
 export { DiorCustomerConsents } from './DiorCustomerConsents.entity';
 
+export { Ethnicities } from './Ethnicities.entity';
+
 export { Genders } from './Genders.entity';
 
 export { HealthTips } from './HealthTips.entity';

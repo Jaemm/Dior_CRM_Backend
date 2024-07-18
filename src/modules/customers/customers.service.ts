@@ -30,7 +30,6 @@ import {
 import { IMessage } from 'src/common/interfaces/message.interface';
 import { CommonService } from 'src/common/common.service';
 import { CountriesService } from '../countries/countries.service';
-import { EthinicitiesService } from '../ethinicities/ethinicities.service';
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
 import { CustomerDataReplicationService } from '../dataReplication/customerDataReplication/customerDataReplication.service';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
@@ -43,7 +42,7 @@ import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ConfirmHtmlDto } from '../consultants/consultants.dto';
 import * as handlebars from 'handlebars';
 import * as fs from 'fs/promises';
-import { ApplicationsRepository } from '@/src/common/repositories/crm';
+import { ApplicationsRepository, EthnicitiesRepository } from '@/src/common/repositories/crm';
 
 @Injectable()
 export class CustomersService {
@@ -57,12 +56,13 @@ export class CustomersService {
         private readonly commonService: CommonService,
 
         private readonly countries: CountriesService,
-        private readonly ethnicities: EthinicitiesService,
+
         private readonly skinColorGroups: SkinColorGroupsService,
         private readonly replicateCustomer: CustomerDataReplicationService,
         @Inject(forwardRef(() => ProductsService)) private readonly productService: ProductsService, // TODO: Resolve dependency issue // private readonly customerConsentsService: CustomerConsentsService,
 
         private readonly applicationsRepository: ApplicationsRepository,
+        private readonly ethnicitiesRepository: EthnicitiesRepository,
     ) {}
 
     async verifyPasswordBcrypt(enteredPassword: string, bcryptHash: string): Promise<boolean> {
@@ -804,7 +804,7 @@ export class CustomersService {
         }
 
         if (customer.ethnicity_id) {
-            promises.push(this.ethnicities.findOneEthinicities(String(customer.ethnicity_id)));
+            promises.push(this.ethnicitiesRepository.findOneEthinicities(String(customer.ethnicity_id)));
         }
 
         const results = await Promise.all(promises);

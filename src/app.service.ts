@@ -4,21 +4,23 @@ import { FetchFwVersionDto, LoginSocialDto, ShopListDto, UpdateFwVersionDto } fr
 import { CountriesListDto } from './modules/customers/customers.dto';
 import { CountriesService } from './modules/countries/countries.service';
 import { SkinColorGroupsService } from './modules/skinColorGroups/skinColorGroups.service';
-import { EthinicitiesService } from './modules/ethinicities/ethinicities.service';
+
 import { CustomersService } from './modules/customers/customers.service';
 import { CommonService } from './common/common.service';
 import { ResponseMessages } from './common/constants/response-messages';
 import { ProductsService } from './modules/products/products.service';
 import { ErrorStatus } from './common/constants/error-status';
 import { SocialInterface } from './jwt/interfaces/token.interface';
-import { ConsultantShopsRepository, DevicesRepository, GendersRepository } from './common/repositories/crm';
+import {
+    ConsultantShopsRepository,
+    DevicesRepository,
+    EthnicitiesRepository,
+    GendersRepository,
+} from './common/repositories/crm';
 
 @Injectable()
 export class AppService {
     constructor(
-        @Inject(EthinicitiesService)
-        private readonly ethnicities: EthinicitiesService,
-
         @Inject(SkinColorGroupsService)
         private readonly skinColorGroups: SkinColorGroupsService,
 
@@ -30,6 +32,7 @@ export class AppService {
         private readonly productsService: ProductsService,
 
         //repos
+        private readonly ethnicitiesRepository: EthnicitiesRepository,
         private readonly deviceRepository: DevicesRepository,
         private readonly gendersRepository: GendersRepository,
         private readonly consultantShopsRepository: ConsultantShopsRepository,
@@ -107,7 +110,7 @@ export class AppService {
 
     async basicDetails() {
         const [ethnicities, genders, skinColorGroups] = await Promise.all([
-            this.ethnicities.findEthinicities(),
+            this.ethnicitiesRepository.findEthinicities(),
             this.gendersRepository.findGender(),
             this.skinColorGroups.findSkinColorGroups(),
         ]);

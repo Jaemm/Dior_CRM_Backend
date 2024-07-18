@@ -54,7 +54,7 @@ import { CrmDataReplicationModule } from '../dataReplication/consultantDataRepli
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 import { CountriesModule } from '../countries/countries.module';
 import { SkinColorGroupsModule } from '../skinColorGroups/skinColorGroups.module';
-import { EthinicitiesModule } from '../ethinicities/ethinicities.module';
+
 import { LicenceModule } from '../licence/licence.module';
 import { ProductsModule } from '../products/products.module';
 import { CustomersModule } from '../customers/customers.module';
@@ -78,6 +78,7 @@ import {
     RefreshTokensRepository,
     ConsultantCompaniesRepository,
     ActiveStorageAttachmentsRepository,
+    EthnicitiesRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
 
@@ -147,7 +148,6 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
 
         CountriesModule,
         SkinColorGroupsModule,
-        EthinicitiesModule,
 
         LicenceModule,
         forwardRef(() => ProductsModule),
@@ -173,6 +173,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
         CustomersRepository,
         DevicesRepository,
         DiorCustomerConsentsRepository,
+        EthnicitiesRepository,
         GendersRepository,
         RefreshTokensRepository,
         NotificationsRepository,
