@@ -48,7 +48,7 @@ import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middl
 
 import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.service';
 import { CustomerDataReplicationModule } from '../dataReplication/customerDataReplication/customerDataReplication.module';
-import { LicenceModule } from '../licence/licence.module';
+
 import { ProductsModule } from '../products/products.module';
 import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
 
@@ -115,7 +115,6 @@ import { CountriesRepository } from '@/src/common/repositories/crm/countries.rep
         CrmDataReplicationModule,
         CustomerDataReplicationModule,
 
-        LicenceModule,
         forwardRef(() => ProductsModule),
         // CustomerConsentsModule
     ],

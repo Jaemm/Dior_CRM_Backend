@@ -54,7 +54,6 @@ import { CrmDataReplicationModule } from '../dataReplication/consultantDataRepli
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 import { SkinColorGroupsModule } from '../skinColorGroups/skinColorGroups.module';
 
-import { LicenceModule } from '../licence/licence.module';
 import { ProductsModule } from '../products/products.module';
 import { CustomersModule } from '../customers/customers.module';
 import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
@@ -81,6 +80,8 @@ import {
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
+import { LicenseHistoriesRepository } from '@/src/common/repositories/crm/licenseHistories.repository';
+import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repository';
 
 @Module({
     imports: [
@@ -148,7 +149,6 @@ import { CountriesRepository } from '@/src/common/repositories/crm/countries.rep
 
         SkinColorGroupsModule,
 
-        LicenceModule,
         forwardRef(() => ProductsModule),
         CustomersModule,
         CRMModule,
@@ -179,6 +179,8 @@ import { CountriesRepository } from '@/src/common/repositories/crm/countries.rep
         NotificationsRepository,
         ProductsRepository,
         SalesConnectionRepository,
+        LicensesRepository,
+        LicenseHistoriesRepository,
     ],
     exports: [ConsultantsService],
 })

@@ -80,7 +80,7 @@ import { SkinColorGroupsService } from '../skinColorGroups/skinColorGroups.servi
 import { IJwt } from 'src/config/interfaces/jwt.interfaces';
 import { ConfigService } from '@nestjs/config';
 import { ProductsService } from '../products/products.service';
-import { LicenceService } from '../licence/licence.service';
+
 import { LicenseType } from '@/src/common/enums/license-type.enum';
 
 import { ResponseMessages } from '@/src/common/constants/response-messages';
@@ -120,6 +120,8 @@ import {
     SalesConnectionT,
 } from '@/src/common/types/entities';
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
+import { LicenseHistoriesRepository } from '@/src/common/repositories/crm/licenseHistories.repository';
+import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repository';
 
 @Injectable()
 export class ConsultantsService {
@@ -140,7 +142,7 @@ export class ConsultantsService {
         private readonly identityRepository: Repository<Identities>,
 
         private readonly configService: ConfigService,
-        private readonly licenceService: LicenceService,
+
         private readonly productsService: ProductsService,
 
         private readonly skinColorGroupService: SkinColorGroupsService,
@@ -173,6 +175,8 @@ export class ConsultantsService {
         private readonly productsRepository: ProductsRepository,
         private readonly diorConsentRepository: DiorCustomerConsentsRepository,
         private readonly ethnicitiesRepository: EthnicitiesRepository,
+        private readonly licensesRepository: LicensesRepository,
+        private readonly licenseHistoriesRepository: LicenseHistoriesRepository,
     ) {
         this.jwtConfig = this.configService.get<IJwt>('jwt');
     }
@@ -2364,7 +2368,7 @@ export class ConsultantsService {
             this.commonService.throwNotFoundError();
         }
 
-        const licenses = await this.licenceService.findLicence({ id: product.license_id });
+        const licenses = await this.licensesRepository.findLicence({ id: product.license_id });
         if (!licenses) {
             this.commonService.throwNotFoundError();
         }
@@ -2379,7 +2383,7 @@ export class ConsultantsService {
         const { optic_number, license_id } = data;
 
         const [license, devices] = await Promise.all([
-            this.licenceService.findLicence({ id: license_id }),
+            this.licensesRepository.findLicence({ id: license_id }),
             this.deviceRepository.findDevices({ optic_number }),
         ]);
 
@@ -3595,7 +3599,7 @@ export class ConsultantsService {
         let totalUpgradeCost = 0;
         let totalPaid = initialCost;
 
-        const licenseHistory = await this.licenceService.findLicenceHistory(
+        const licenseHistory = await this.licenseHistoriesRepository.findLicenceHistory(
             { licensable_id: productId, licensable_type: LicenseType.Product },
             { createdAt: { direction: 'DESC' } },
         );
@@ -3617,7 +3621,7 @@ export class ConsultantsService {
                 if (licenseHistory) {
                     // #TODO : expected_days_increase function implementation
                 }
-                const licenseHistories = await this.licenceService.findLicenceHistories({
+                const licenseHistories = await this.licenseHistoriesRepository.findLicenceHistories({
                     licensable_id: productId,
                     licensable_type: LicenseType.Product,
                     expectedExpiryDate: Not(null),
