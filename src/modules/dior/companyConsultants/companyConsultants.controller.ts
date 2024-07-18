@@ -9,6 +9,7 @@ import {
     CreateDiorCompanyConsultantsDto,
     ExportDiorCompanyConsultantsDto,
     GetDiorCompanyConsultantsDto,
+    ImportDiorCompanyConsultantsDto,
 } from './companyConsultants.dto';
 
 @ApiTags('Dior-Company Consultants')
@@ -59,6 +60,17 @@ export class DiorCompanyConsultantsController {
         res.header('Content-Type', 'text/csv');
         res.attachment('bc_list.csv');
         return res.send(resultFile);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Post('import')
+    async importDiorCompanyConsultants(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Req() req: Request,
+        @Body() body: ImportDiorCompanyConsultantsDto,
+    ) {
+        return await this.diorCompanyConsultantsService.importDiorCompanyConsultants(body, locale);
     }
 
     @ApiBearerAuth()

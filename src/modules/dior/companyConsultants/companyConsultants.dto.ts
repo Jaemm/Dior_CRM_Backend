@@ -65,3 +65,9 @@ export class ExportDiorCompanyConsultantsDto {
     @IsString()
     filter_by2: string;
 }
+
+export class ImportDiorCompanyConsultantsDto {
+    @IsNotEmpty()
+    @IsString()
+    file_url: string;
+}
