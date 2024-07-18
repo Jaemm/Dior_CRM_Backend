@@ -40,4 +40,15 @@ export class DiorCompanyConsultantsController {
     ) {
         return await this.diorCompanyConsultantsService.deleteDiorCompanyConsultant(consultantId, locale);
     }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    @Get('multiple_delete/:ids')
+    async deleteMultipleCompanyConsultants(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Req() req: Request,
+        @Param('ids') consultantIds: string,
+    ) {
+        return await this.diorCompanyConsultantsService.deleteMultipleCompanyConsultants(consultantIds, locale);
+    }
 }

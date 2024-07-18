@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { In } from 'typeorm';
 
 import { ConsultantsRepository } from '@/src/common/repositories/crm';
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
@@ -191,7 +192,7 @@ export class DiorCompanyConsultantsService {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
-            const foundConsultants = await this.consultantRepository.find({
+            const foundConsultants = await this.consultantRepository.findOne({
                 where: {
                     id: Number(consultantId),
                     consultant_company_id: diorCompanyId,
@@ -202,6 +203,29 @@ export class DiorCompanyConsultantsService {
 
             return {
                 message: 'Successfully deleted record',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async deleteMultipleCompanyConsultants(consultantIds: string, locale = 'en') {
+        try {
+            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            const removeIds = consultantIds.split(',').map((id) => Number(id));
+
+            const foundConsultants = await this.consultantRepository.findOne({
+                where: {
+                    id: In(removeIds),
+                    consultant_company_id: diorCompanyId,
+                },
+            });
+
+            await this.consultantRepository.remove(foundConsultants);
+
+            return {
+                message: 'Successfully deleted multiple record',
             };
         } catch (e) {
             throw e;
