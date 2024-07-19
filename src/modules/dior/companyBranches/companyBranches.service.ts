@@ -197,6 +197,7 @@ export class DiorCompanyBranchesService {
             branch.code = code ? code : branch.code;
             branch.country = country ? country : branch.country;
             branch.password = hashedPassword ? hashedPassword : branch.password;
+            branch.updatedAt = new Date();
 
             const savedBranch = await this.consultantBranchesRepository.save(branch);
 
