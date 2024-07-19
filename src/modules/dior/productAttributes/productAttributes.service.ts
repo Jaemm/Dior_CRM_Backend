@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import * as csv from 'csv';
+import * as ExcelJS from 'exceljs';
 
 import { In } from 'typeorm';
 import {
     CreateProductAttributeDto,
     ExportProductAttributeDataDto,
     GetProductAttributesDto,
+    ImportProductAttributeDataDto,
     UpdateProductAttributeDto,
 } from './productAttributes.dto';
 import {
@@ -289,6 +291,37 @@ export class DiorProductAttributesService {
         }
     }
 
+    async importProductAttributes(body: ImportProductAttributeDataDto) {
+        try {
+            const fileUrl = body.file_url;
+            const worksheet = await this.getWorkSheet(fileUrl);
+
+            const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
+
+            const headers = worksheet.getRow(1);
+
+            const rowCount = worksheet.rowCount + 1;
+
+            for (let i = 2; i < rowCount; i++) {
+                const row = worksheet.getRow(i);
+
+                const newProductAttribute = this.productAttributesRepository.create({
+                    typ: row.getCell(1).value.toLocaleString(),
+                    value: row.getCell(2).value.toLocaleString(),
+                    consultantCompanyId: diorCompanyId,
+                });
+
+                await this.productAttributesRepository.save(newProductAttribute);
+            }
+
+            return {
+                message: 'Success import data',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
     createCSVFileForExportProductAttribute(attributes: ProductAttributes[]) {
         const header = ['product_attribute Type', 'product_attribute Value'];
 
@@ -304,5 +337,13 @@ export class DiorProductAttributesService {
                 resolve(output);
             });
         });
+    }
+
+    async getWorkSheet(fileUrl: string) {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.readFile(fileUrl);
+        const worksheet = workbook.getWorksheet(1);
+
+        return worksheet;
     }
 }

@@ -51,8 +51,14 @@ export class UpdateProductAttributeDto {
 
 export class ExportProductAttributeDataDto {
     @IsOptional()
-    @IsString()
+    j;
     search: string;
+}
+
+export class ImportProductAttributeDataDto {
+    @IsNotEmpty()
+    @IsString()
+    file_url: string;
 }
 
 // protected

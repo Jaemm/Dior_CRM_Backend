@@ -9,6 +9,7 @@ import {
     CreateProductAttributeDto,
     ExportProductAttributeDataDto,
     GetProductAttributesDto,
+    ImportProductAttributeDataDto,
     UpdateProductAttributeDto,
 } from './productAttributes.dto';
 
@@ -29,6 +30,13 @@ export class DiorProductAttributesController {
     @Roles(Role.Consultant)
     async createProductAttributes(@Body() body: CreateProductAttributeDto) {
         return await this.diorProductAttributesService.createProductAttributes(body);
+    }
+
+    @Post('import')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async importProductAttributes(@Body() body: ImportProductAttributeDataDto) {
+        return await this.diorProductAttributesService.importProductAttributes(body);
     }
 
     @Get('export')
