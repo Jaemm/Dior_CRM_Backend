@@ -1,7 +1,10 @@
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ProudctRecommendationGroupsT, ProductRecommendationT } from '@/src/common/types/entities';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { SearchProductRecommendationGroupsDto } from './productRecommendtaionGroups.dto';
+import {
+    GetListProductRecommendationGroupsDto,
+    SearchProductRecommendationGroupsDto,
+} from './productRecommendtaionGroups.dto';
 import { ConsultantsRepository, ProductRecommendationGroupsRepository } from '@/src/common/repositories/crm';
 import { In } from 'typeorm';
 import { CommonService } from '@/src/common/common.service';
@@ -90,6 +93,47 @@ export class ProductRecommendationGroupsService {
                 current_page: searchPage,
                 total_pages: Math.ceil(totalCount / searchPer),
             };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getListProductRecommendationGroups(query: GetListProductRecommendationGroupsDto) {
+        try {
+            const { list_type, search } = query;
+
+            const listType = list_type || 'skincare';
+
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const groupsQuery = await this.prGroupsRepository.createQueryBuilder('groups');
+
+            groupsQuery
+                .where('LOWER (groups.name) ILIKE :listType', {
+                    listType: `%${listType}%`,
+                })
+                .andWhere('groups.consultantId = :consultantId', {
+                    consultantId: Number(diorConsultant.id),
+                });
+
+            if (search) {
+                groupsQuery.andWhere('groups.name ILIKE :search', {
+                    search: `%${search}%`,
+                });
+            }
+
+            const groups = await groupsQuery.getMany();
+
+            const data = groups.map((group) => {
+                return {
+                    id: group.id,
+                    name: group.name,
+                    countries: group.countries,
+                    routine: group?.name.toLocaleLowerCase().includes('makeup') ? 'makeup' : 'skincare',
+                };
+            });
+
+            return data;
         } catch (e) {
             throw e;
         }

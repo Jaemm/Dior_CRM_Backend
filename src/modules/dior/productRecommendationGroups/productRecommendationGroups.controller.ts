@@ -2,7 +2,10 @@ import { BadRequestException, Controller, Delete, Get, Param, Query, Headers } f
 import { ProductRecommendationGroupsService } from './productRecommendationGroups.service';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
-import { SearchProductRecommendationGroupsDto } from './productRecommendtaionGroups.dto';
+import {
+    GetListProductRecommendationGroupsDto,
+    SearchProductRecommendationGroupsDto,
+} from './productRecommendtaionGroups.dto';
 import { Role } from '@/src/common/enums/role.enum';
 
 @Controller('dior/product_recommendation_groups')
@@ -15,6 +18,13 @@ export class ProductRecommendationGroupsController {
     @Get()
     async getProductRecommendationGroups(@Query() query: SearchProductRecommendationGroupsDto) {
         return await this.productRecommendationGroupsService.getProductRecommendationGroups(query);
+    }
+
+    @Get('lists')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async getListProductRecommendationGroups(@Query() query: GetListProductRecommendationGroupsDto) {
+        return await this.productRecommendationGroupsService.getListProductRecommendationGroups(query);
     }
 
     @Delete('delete_multiple/:ids')

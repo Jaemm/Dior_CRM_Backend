@@ -13,3 +13,13 @@ export class SearchProductRecommendationGroupsDto {
     @IsString()
     per: string;
 }
+
+export class GetListProductRecommendationGroupsDto {
+    @IsOptional()
+    @IsString()
+    list_type: string | null;
+
+    @IsOptional()
+    @IsString()
+    search: string | null;
+}
