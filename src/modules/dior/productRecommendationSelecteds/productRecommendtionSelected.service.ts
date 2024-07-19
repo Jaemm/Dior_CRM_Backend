@@ -172,7 +172,7 @@ export class ProductRecommendationSelectedsService {
 
             const productIds = Object.keys(productSelectedGrouped).map(Number).filter(Boolean);
 
-            const productRecommendations = await this.productRecommendationRepository
+            const [productRecommendations, totalCount] = await this.productRecommendationRepository
                 .createQueryBuilder('prdouctRecommendation')
                 .leftJoinAndSelect('prdouctRecommendation.productVariants', 'productVariants')
                 .where('prdouctRecommendation.id IN (:...productIds)', {
@@ -182,7 +182,7 @@ export class ProductRecommendationSelectedsService {
                 .orderBy('prdouctRecommendation.recommendationCount', 'DESC')
                 .skip((searchPage - 1) * searchPer)
                 .take(searchPer)
-                .getMany();
+                .getManyAndCount();
 
             const promiseReformat: Promise<ProductRecommendationForDiorT>[] = productRecommendations.map(
                 async (recommendation) => {
@@ -358,8 +358,14 @@ export class ProductRecommendationSelectedsService {
                 },
             );
 
+            const data = await Promise.all(promiseReformat);
+
             return {
-                data: await Promise.all(promiseReformat),
+                data: data,
+                total_size: totalCount,
+                current_page_size: data.length,
+                current_page: searchPage,
+                total_pages: Math.ceil(totalCount / searchPer),
             };
         } catch (e) {
             throw e;
