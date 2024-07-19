@@ -54,6 +54,13 @@ export class ProductRecommendationController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
+    @Get('get_new_automatic_product_by_batch_id')
+    async getNewAutomaticProductByBatchId(@Query() query: AutomaticProductByBatchIdDto) {
+        return await this.productRecommendationsService.getNewAutomaticProductByBatchId(query);
+    }
+
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
     @Post()
     async createProductRecommendation(
         @Body() body: CreateProductRecommendationDto,

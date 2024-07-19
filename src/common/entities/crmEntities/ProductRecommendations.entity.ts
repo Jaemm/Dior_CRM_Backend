@@ -102,6 +102,28 @@ export class ProductRecommendations {
         return productWithSkinTone;
     }
 
+    getNewSkinToneFromProduct(skinTone: string) {
+        let productWithSkinTone;
+        if (!this.productVariant) {
+            const parentProduct = this;
+            productWithSkinTone = parentProduct.productVariants.find((variants) => variants.shades === skinTone);
+
+            if (!productWithSkinTone) {
+                productWithSkinTone = this;
+            }
+        } else {
+            const parentProduct = this.productVariant;
+
+            productWithSkinTone = parentProduct.productVariants.find((variants) => variants.shades === skinTone);
+
+            if (!productWithSkinTone) {
+                productWithSkinTone = parentProduct;
+            }
+        }
+
+        return productWithSkinTone;
+    }
+
     getShade() {
         if (this.productVariants && this.productVariants.length > 0) {
             return 'Seclet Shade';
