@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 export class GetProductAttributesDto {
     @IsOptional()
@@ -30,4 +31,35 @@ export class CreateProductAttributeDto {
         language: string;
         value: string;
     }[];
+}
+
+export class UpdateProductAttributeDto {
+    @IsOptional()
+    @IsString()
+    typ: string;
+
+    @IsOptional()
+    @IsString()
+    value: string;
+
+    @IsOptional()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => productTranslationsDto)
+    product_translations: productTranslationsDto[];
+}
+
+// protected
+class productTranslationsDto {
+    @IsOptional()
+    @IsString()
+    field_name?: string;
+
+    @IsOptional()
+    @IsString()
+    language?: string;
+
+    @IsOptional()
+    @IsString()
+    value?: string;
 }

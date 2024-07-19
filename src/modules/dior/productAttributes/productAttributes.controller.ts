@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Query, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Query, Delete, Param, Body, Put, Headers } from '@nestjs/common';
 import { DiorProductAttributesService } from './productAttributes.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
-import { CreateProductAttributeDto, GetProductAttributesDto } from './productAttributes.dto';
+import { CreateProductAttributeDto, GetProductAttributesDto, UpdateProductAttributeDto } from './productAttributes.dto';
 
 @ApiTags('Dior-Product Attributes')
 @Controller('dior/product_attributes')
@@ -22,6 +22,17 @@ export class DiorProductAttributesController {
     @Roles(Role.Consultant)
     async createProductAttributes(@Body() body: CreateProductAttributeDto) {
         return await this.diorProductAttributesService.createProductAttributes(body);
+    }
+
+    @Put(':id')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async updateProductAttribute(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Body() body: UpdateProductAttributeDto,
+        @Param('id') attributeId: string,
+    ) {
+        return await this.diorProductAttributesService.updateProductAttribute(attributeId, body, locale);
     }
 
     @Delete('delete_multiple/:ids')
