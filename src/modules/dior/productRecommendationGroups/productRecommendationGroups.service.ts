@@ -3,10 +3,15 @@ import { ProudctRecommendationGroupsT, ProductRecommendationT } from '@/src/comm
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { SearchProductRecommendationGroupsDto } from './productRecommendtaionGroups.dto';
 import { ConsultantsRepository, ProductRecommendationGroupsRepository } from '@/src/common/repositories/crm';
+import { In } from 'typeorm';
+import { CommonService } from '@/src/common/common.service';
 
 @Injectable()
 export class ProductRecommendationGroupsService {
     constructor(
+        private commonService: CommonService,
+
+        // Repos
         private readonly consultantRepository: ConsultantsRepository,
         private readonly prGroupsRepository: ProductRecommendationGroupsRepository,
     ) {}
@@ -84,6 +89,64 @@ export class ProductRecommendationGroupsService {
                 current_page_size: prGroups.length,
                 current_page: searchPage,
                 total_pages: Math.ceil(totalCount / searchPer),
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async deleteProductRecommendtionGroupById(groupId: string, locale = 'en') {
+        try {
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const groups = await this.prGroupsRepository.findOne({
+                where: {
+                    id: groupId,
+                    consultantId: diorConsultant.id,
+                },
+            });
+
+            if (!groups) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.RECORD_NOT_FOUND,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
+                });
+            }
+
+            await this.prGroupsRepository.remove(groups);
+
+            return {
+                message: 'Delete product group successful',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async deleteMultipleProductRecommendtionGroup(groupIds: string, locale = 'en') {
+        try {
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const splitIds = groupIds.split(',').map(Number);
+
+            const groups = await this.prGroupsRepository.find({
+                where: {
+                    consultantId: diorConsultant.id,
+                    id: In(splitIds),
+                },
+            });
+
+            if (!groups || groups.length < 1) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.RECORD_NOT_FOUND,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
+                });
+            }
+
+            await this.prGroupsRepository.remove(groups);
+
+            return {
+                message: 'Successfully deleted multiple record',
             };
         } catch (e) {
             throw e;
