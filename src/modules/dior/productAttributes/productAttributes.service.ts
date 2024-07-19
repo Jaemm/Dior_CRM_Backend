@@ -1,7 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import * as csv from 'csv';
 
 import { In } from 'typeorm';
-import { CreateProductAttributeDto, GetProductAttributesDto, UpdateProductAttributeDto } from './productAttributes.dto';
+import {
+    CreateProductAttributeDto,
+    ExportProductAttributeDataDto,
+    GetProductAttributesDto,
+    UpdateProductAttributeDto,
+} from './productAttributes.dto';
 import {
     ConsultantsRepository,
     ProductAttributeTranslationsRepository,
@@ -12,6 +18,7 @@ import { ProductAttributesForDiorT } from '@/src/common/types/entities/product_a
 import { ProductAttributeTranslationsForDiorT } from '@/src/common/types/entities';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { CommonService } from '@/src/common/common.service';
+import { ProductAttributes } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class DiorProductAttributesService {
@@ -251,5 +258,51 @@ export class DiorProductAttributesService {
         } catch (e) {
             throw e;
         }
+    }
+
+    async exportProductAttributes(query: ExportProductAttributeDataDto) {
+        try {
+            const { search } = query;
+            const diorConsultant = await this.consultantsRepository.getDiorConsultant();
+            const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
+
+            const attributeQuery = this.productAttributesRepository
+                .createQueryBuilder('attributes')
+                .where('attributes.consultantCompanyId = :companyId', {
+                    companyId: diorCompanyId,
+                })
+                .andWhere('attributes.id != :id', {
+                    id: diorConsultant.id,
+                });
+
+            if (search) {
+                attributeQuery.andWhere('(attributes.typ LIKE :search OR attributes.value LIKE :search)', {
+                    search: `%${search}%`,
+                });
+            }
+
+            const attributes = await attributeQuery.getMany();
+
+            return await this.createCSVFileForExportProductAttribute(attributes);
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    createCSVFileForExportProductAttribute(attributes: ProductAttributes[]) {
+        const header = ['product_attribute Type', 'product_attribute Value'];
+
+        const records = attributes.map((u) => [u.typ, u.value]);
+
+        return new Promise((resolve, reject) => {
+            csv.stringify([header, ...records], (err, output) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(output);
+            });
+        });
     }
 }

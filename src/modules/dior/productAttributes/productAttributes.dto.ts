@@ -49,6 +49,12 @@ export class UpdateProductAttributeDto {
     product_translations: productTranslationsDto[];
 }
 
+export class ExportProductAttributeDataDto {
+    @IsOptional()
+    @IsString()
+    search: string;
+}
+
 // protected
 class productTranslationsDto {
     @IsOptional()

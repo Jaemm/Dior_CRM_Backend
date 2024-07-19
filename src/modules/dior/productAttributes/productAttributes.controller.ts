@@ -1,9 +1,16 @@
-import { Controller, Get, Post, Query, Delete, Param, Body, Put, Headers } from '@nestjs/common';
+import { Response } from 'express';
+
+import { Controller, Res, Get, Post, Query, Delete, Param, Body, Put, Headers } from '@nestjs/common';
 import { DiorProductAttributesService } from './productAttributes.service';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
-import { CreateProductAttributeDto, GetProductAttributesDto, UpdateProductAttributeDto } from './productAttributes.dto';
+import {
+    CreateProductAttributeDto,
+    ExportProductAttributeDataDto,
+    GetProductAttributesDto,
+    UpdateProductAttributeDto,
+} from './productAttributes.dto';
 
 @ApiTags('Dior-Product Attributes')
 @Controller('dior/product_attributes')
@@ -22,6 +29,17 @@ export class DiorProductAttributesController {
     @Roles(Role.Consultant)
     async createProductAttributes(@Body() body: CreateProductAttributeDto) {
         return await this.diorProductAttributesService.createProductAttributes(body);
+    }
+
+    @Get('export')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async exportProductAttributes(@Res() res: Response, @Query() query: ExportProductAttributeDataDto) {
+        const resultFile = await this.diorProductAttributesService.exportProductAttributes(query);
+
+        res.header('Content-Type', 'text/csv');
+        res.attachment('product_attributes_list.csv');
+        return res.send(resultFile);
     }
 
     @Put(':id')
