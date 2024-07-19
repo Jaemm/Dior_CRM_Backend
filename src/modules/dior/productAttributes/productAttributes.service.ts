@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
+
+import { In } from 'typeorm';
 import { GetProductAttributesDto } from './productAttributes.dto';
 import { ConsultantsRepository, ProductAttributesRepository } from '@/src/common/repositories/crm';
 import { ProductAttributesForDiorT } from '@/src/common/types/entities/product_attributes.type';
-import { ProductAttributes } from '@/src/common/entities/crmEntities';
+
 import { ProductAttributeTranslationsForDiorT } from '@/src/common/types/entities';
 
 @Injectable()
@@ -62,6 +64,50 @@ export class DiorProductAttributesService {
                 current_page_size: reformatProductAttributeList.length,
                 current_page: searchPage,
                 total_pages: Math.ceil(totalCount / searchPer),
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async deletePrdouctAttribute(attributeId: string) {
+        try {
+            const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
+
+            const productAttributes = await this.productAttributesRepository.findOne({
+                where: {
+                    consultantCompanyId: diorCompanyId,
+                    id: attributeId,
+                },
+            });
+
+            await this.productAttributesRepository.remove(productAttributes);
+
+            return {
+                message: 'Delete product attribute successful',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async deleteMultiplePrdouctAttributes(attributeIds: string) {
+        try {
+            const splitIds = attributeIds.split(',');
+
+            const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
+
+            const productAttributes = await this.productAttributesRepository.find({
+                where: {
+                    consultantCompanyId: diorCompanyId,
+                    id: In(splitIds),
+                },
+            });
+
+            await this.productAttributesRepository.remove(productAttributes);
+
+            return {
+                message: 'Successfully deleted multiple record',
             };
         } catch (e) {
             throw e;
