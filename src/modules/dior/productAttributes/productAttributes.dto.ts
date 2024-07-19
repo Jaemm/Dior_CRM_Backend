@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class GetProductAttributesDto {
     @IsOptional()
@@ -13,4 +13,21 @@ export class GetProductAttributesDto {
     @IsOptional()
     @IsString()
     per: string;
+}
+
+export class CreateProductAttributeDto {
+    @IsNotEmpty()
+    @IsString()
+    typ: string;
+
+    @IsNotEmpty()
+    @IsString()
+    value: string;
+
+    @IsOptional()
+    product_translations: {
+        field_name: string;
+        language: string;
+        value: string;
+    }[];
 }

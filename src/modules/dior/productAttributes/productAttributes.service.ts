@@ -1,18 +1,80 @@
 import { Injectable } from '@nestjs/common';
 
 import { In } from 'typeorm';
-import { GetProductAttributesDto } from './productAttributes.dto';
-import { ConsultantsRepository, ProductAttributesRepository } from '@/src/common/repositories/crm';
+import { CreateProductAttributeDto, GetProductAttributesDto } from './productAttributes.dto';
+import {
+    ConsultantsRepository,
+    ProductAttributeTranslationsRepository,
+    ProductAttributesRepository,
+} from '@/src/common/repositories/crm';
 import { ProductAttributesForDiorT } from '@/src/common/types/entities/product_attributes.type';
 
 import { ProductAttributeTranslationsForDiorT } from '@/src/common/types/entities';
+import { fileName } from 'typeorm-model-generator/dist/src/NamingStrategy';
 
 @Injectable()
 export class DiorProductAttributesService {
     constructor(
         private readonly consultantsRepository: ConsultantsRepository,
         private readonly productAttributesRepository: ProductAttributesRepository,
+        private readonly productAttributeTranslationsRepository: ProductAttributeTranslationsRepository,
     ) {}
+
+    async createProductAttributes(body: CreateProductAttributeDto) {
+        try {
+            const { typ, value, product_translations } = body;
+
+            const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
+
+            const newProductAttribute = this.productAttributesRepository.create({
+                typ: typ,
+                value: value,
+                consultantCompanyId: diorCompanyId,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+
+            const savedProductAttribute = await this.productAttributesRepository.save(newProductAttribute);
+
+            if (product_translations && product_translations.length > 0) {
+                const promiseSaveTranslationList = product_translations.map(async (translation) => {
+                    const newProductAttributeTranslations = this.productAttributeTranslationsRepository.create({
+                        id: savedProductAttribute.id,
+                        fieldName: translation.field_name,
+                        language: translation.language,
+                        value: translation.value,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    });
+
+                    return await this.productAttributeTranslationsRepository.save(newProductAttributeTranslations);
+                });
+
+                const translationList = await Promise.all(promiseSaveTranslationList);
+                savedProductAttribute.productAttributeTranslations = translationList;
+            }
+
+            const reformatProductAttribute: ProductAttributesForDiorT = {
+                id: Number(savedProductAttribute.id),
+                typ: savedProductAttribute.typ,
+                value: savedProductAttribute.value,
+                product_attribute_translations: savedProductAttribute?.productAttributeTranslations
+                    ? savedProductAttribute.productAttributeTranslations.map((translation) => {
+                          return {
+                              id: Number(translation.id),
+                              field_name: translation.fieldName,
+                              language: translation.language,
+                              value: translation.value,
+                          };
+                      })
+                    : [],
+            };
+
+            return reformatProductAttribute;
+        } catch (e) {
+            throw e;
+        }
+    }
 
     async getProductAttributes(query: GetProductAttributesDto) {
         try {
