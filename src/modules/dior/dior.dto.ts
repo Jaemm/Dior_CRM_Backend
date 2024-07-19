@@ -52,35 +52,6 @@ export class createCustomerDto {
     @IsString()
     surname: string;
 }
-export class SelectProductsDto {
-    @IsNotEmpty()
-    batch_id: number;
-
-    @IsNotEmpty()
-    customer_id: number;
-
-    @IsNotEmpty()
-    products_selected: number[];
-}
-export class GetRecommendationSelectedDto {
-    @IsOptional()
-    customer_id: string;
-
-    @IsOptional()
-    batch_id: string;
-}
-
-export class SearchProductRecommendationGroupsDto {
-    @IsNotEmpty()
-    @IsString()
-    search: string;
-
-    @IsOptional()
-    page: string;
-
-    @IsOptional()
-    per: string;
-}
 
 export class SearchProductRecommendationDto {
     @IsOptional()
