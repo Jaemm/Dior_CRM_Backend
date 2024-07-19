@@ -62,6 +62,9 @@ export class ProductRecommendations {
     @Column('character varying', { name: 'shades', nullable: true })
     shades: string | null;
 
+    @Column('integer', { name: 'recommendation_count', nullable: true })
+    recommendationCount: number | null;
+
     @OneToMany(() => ProductRecommendationSelecteds, (prSelecteds) => prSelecteds.productRecommendation)
     prSelecteds: ProductRecommendationSelecteds[];
 

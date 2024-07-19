@@ -4,3 +4,8 @@ export type ProductTranslationT = {
     language: string | null;
     value: string | null;
 };
+
+export type ProductTranslationForDiorT = ProductTranslationT & {
+    attribute_name: string | null;
+    collection_name: string | null;
+};
