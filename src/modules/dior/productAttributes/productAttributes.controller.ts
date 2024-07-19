@@ -10,6 +10,7 @@ import {
     ExportProductAttributeDataDto,
     GetProductAttributesDto,
     ImportProductAttributeDataDto,
+    ImportProductAttributeTranslationsDataDto,
     UpdateProductAttributeDto,
 } from './productAttributes.dto';
 
@@ -37,6 +38,13 @@ export class DiorProductAttributesController {
     @Roles(Role.Consultant)
     async importProductAttributes(@Body() body: ImportProductAttributeDataDto) {
         return await this.diorProductAttributesService.importProductAttributes(body);
+    }
+
+    @Post('import_translations')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async importProductAttributeTranslations(@Body() body: ImportProductAttributeTranslationsDataDto) {
+        return await this.diorProductAttributesService.importProductAttributeTranslations(body);
     }
 
     @Get('export')

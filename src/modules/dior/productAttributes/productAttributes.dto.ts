@@ -51,7 +51,7 @@ export class UpdateProductAttributeDto {
 
 export class ExportProductAttributeDataDto {
     @IsOptional()
-    j;
+    @IsString()
     search: string;
 }
 
@@ -59,6 +59,16 @@ export class ImportProductAttributeDataDto {
     @IsNotEmpty()
     @IsString()
     file_url: string;
+}
+
+export class ImportProductAttributeTranslationsDataDto {
+    @IsNotEmpty()
+    @IsString()
+    file_url: string;
+
+    @IsNotEmpty()
+    @IsString()
+    country: string;
 }
 
 // protected

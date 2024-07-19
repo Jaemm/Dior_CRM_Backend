@@ -8,6 +8,7 @@ import {
     ExportProductAttributeDataDto,
     GetProductAttributesDto,
     ImportProductAttributeDataDto,
+    ImportProductAttributeTranslationsDataDto,
     UpdateProductAttributeDto,
 } from './productAttributes.dto';
 import {
@@ -309,9 +310,57 @@ export class DiorProductAttributesService {
                     typ: row.getCell(1).value.toLocaleString(),
                     value: row.getCell(2).value.toLocaleString(),
                     consultantCompanyId: diorCompanyId,
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                 });
 
                 await this.productAttributesRepository.save(newProductAttribute);
+            }
+
+            return {
+                message: 'Success import data',
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async importProductAttributeTranslations(body: ImportProductAttributeTranslationsDataDto) {
+        try {
+            const fileUrl = body.file_url;
+            const country = body.file_url;
+
+            const worksheet = await this.getWorkSheet(fileUrl);
+
+            const rowCount = worksheet.rowCount + 1;
+
+            const headers = worksheet.getRow(1);
+
+            for (let i = 2; i < rowCount; i++) {
+                const row = worksheet.getRow(i);
+
+                const typ = row.getCell(1).value.toLocaleString();
+                const value = row.getCell(2).value.toLocaleString();
+
+                const attribute = await this.productAttributesRepository.findOne({
+                    where: {
+                        typ: typ,
+                        value: value,
+                    },
+                });
+
+                const attributeId = attribute.id;
+
+                const newTranslations = this.productAttributeTranslationsRepository.create({
+                    fieldName: 'product_name',
+                    language: country,
+                    value: row.getCell(3).value.toLocaleString(),
+                    productAttributeId: Number(attributeId),
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                });
+
+                await this.productAttributeTranslationsRepository.save(newTranslations);
             }
 
             return {
