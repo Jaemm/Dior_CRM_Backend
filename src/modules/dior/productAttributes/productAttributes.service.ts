@@ -219,7 +219,7 @@ export class DiorProductAttributesService {
         }
     }
 
-    async deletePrdouctAttribute(attributeId: string) {
+    async deletePrdouctAttribute(attributeId: string, locale = 'en') {
         try {
             const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
 
@@ -229,6 +229,13 @@ export class DiorProductAttributesService {
                     id: attributeId,
                 },
             });
+
+            if (!productAttributes) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.RECORD_NOT_FOUND,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
+                });
+            }
 
             await this.productAttributesRepository.remove(productAttributes);
 

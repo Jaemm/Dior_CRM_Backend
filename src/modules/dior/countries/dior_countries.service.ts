@@ -7,10 +7,15 @@ import { ConsultantCountryForDiorT, ConsultantCountryT } from '@/src/common/type
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCountries, ExportCountriesDto, ImportCountriesDto, UpdateCountriesDto } from './dior_countries.dto';
 import { ConsultantCountries } from '@/src/common/entities/crmEntities';
+import { ErrorStatus } from '@/src/common/constants/error-status';
+import { CommonService } from '@/src/common/common.service';
 
 @Injectable()
 export class DiorCountriesService {
     constructor(
+        private commonSerivce: CommonService,
+
+        // Repos
         private readonly consultantRepository: ConsultantsRepository,
         private readonly consultantCountriesRepository: ConsultantCountriesRepository,
     ) {}
@@ -98,7 +103,10 @@ export class DiorCountriesService {
             });
 
             if (!country) {
-                throw new NotFoundException({});
+                throw new NotFoundException({
+                    result_code: ErrorStatus.RECORD_NOT_FOUND,
+                    error: this.commonSerivce.createLocaleErrorMessage(locale, 'record_not_found'),
+                });
             }
 
             country.name = body?.name ? body.name : country.name;

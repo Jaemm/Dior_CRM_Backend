@@ -13,10 +13,11 @@ import { AdminsForDiorT } from '@/src/common/types/entities/admins.type';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { String } from 'aws-sdk/clients/acm';
 import { Consultants } from '@/src/common/entities/crmEntities';
+import { CommonService } from '@/src/common/common.service';
 
 @Injectable()
 export class DiorAdminsService {
-    constructor(private readonly consultantsRepository: ConsultantsRepository) {}
+    constructor(private commonService: CommonService, private readonly consultantsRepository: ConsultantsRepository) {}
 
     async getAdmins(query: GetAdminsDto) {
         try {
@@ -126,7 +127,8 @@ export class DiorAdminsService {
 
             if (!admin) {
                 throw new NotFoundException({
-                    result_code: ErrorStatus.NOT_FOUND,
+                    result_code: ErrorStatus.RECORD_NOT_FOUND,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
                 });
             }
 

@@ -257,6 +257,13 @@ export class DiorCompanyConsultantsService {
                 },
             });
 
+            if (!foundConsultants) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.RECORD_NOT_FOUND,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
+                });
+            }
+
             await this.consultantRepository.remove(foundConsultants);
 
             return {

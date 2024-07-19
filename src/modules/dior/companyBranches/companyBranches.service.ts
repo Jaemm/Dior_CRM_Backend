@@ -187,7 +187,10 @@ export class DiorCompanyBranchesService {
             });
 
             if (!branch) {
-                throw new NotFoundException({});
+                throw new NotFoundException({
+                    result_code: ErrorStatus.RECORD_NOT_FOUND,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
+                });
             }
 
             const hashedPassword = password ? await argon2.hash(password) : null;
@@ -219,7 +222,7 @@ export class DiorCompanyBranchesService {
         }
     }
 
-    async deleteBranch(branchId: string) {
+    async deleteBranch(branchId: string, locale = 'en') {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
@@ -229,6 +232,13 @@ export class DiorCompanyBranchesService {
                     consultantCompanyId: String(diorCompanyId),
                 },
             });
+
+            if (!branch) {
+                throw new NotFoundException({
+                    resule_code: ErrorStatus.RECORD_NOT_FOUND,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
+                });
+            }
 
             await this.consultantBranchesRepository.remove(branch);
 
