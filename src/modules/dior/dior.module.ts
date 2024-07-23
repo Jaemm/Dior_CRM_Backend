@@ -40,6 +40,7 @@ import { DiorCompanyConsultantsModule } from './companyConsultants/companyConsul
 import { DiorProductAttributesModule } from './productAttributes/productAttributes.module';
 import { ProductRecommendationGroupsModule } from './productRecommendationGroups/productRecommendationGroups.module';
 import { ProductRecommendationSelectedsModule } from './productRecommendationSelecteds/productRecommendtionSelected.module';
+import { StatisticsModule } from './statistics/statistics.module';
 
 @Module({
     imports: [
@@ -65,6 +66,8 @@ import { ProductRecommendationSelectedsModule } from './productRecommendationSel
         ProductRecommendationModule,
         ProductRecommendationSelectedsModule,
         ProductRecommendationGroupsModule,
+
+        StatisticsModule,
     ],
     controllers: [DiorController],
     providers: [

@@ -49,6 +49,7 @@ import {
 } from './common/repositories/crm';
 import { CountriesRepository } from './common/repositories/crm/countries.repository';
 import { SkinColorGroups } from './common/entities/crmEntities';
+import { DataHubModule } from './modules/partnerdb/datahub.module';
 
 @Module({
     imports: [
@@ -116,6 +117,7 @@ import { SkinColorGroups } from './common/entities/crmEntities';
 
         //
         DatabaseModule,
+        DataHubModule,
 
         ConsultantsModule,
         CustomersModule,

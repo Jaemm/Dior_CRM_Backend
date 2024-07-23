@@ -1,8 +1,9 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, Brackets } from 'typeorm';
 import { Analysis } from '@/src/common/entities/analysisEntities/Analysis.entity';
 import { Measurements } from '@/src/common/entities/analysisEntities/Measurements.entity';
+import { Consultants } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class AnalysisDataReplicationService {
@@ -66,6 +67,55 @@ export class AnalysisDataReplicationService {
             count: totalCount,
             lastConsultationTime: lastConsultationTime,
         };
+    }
+
+    async getConsultationByConsultant(consultants: Consultants[], startDate?: string, endDate?: string) {
+        try {
+            const consultantIds = consultants.map((s) =>
+                s.id.toString().startsWith('%') ? s.id.toString() : `%${s.id.toString()}`,
+            );
+
+            const consultationQuery = await this.diorCndpSkinRepository
+                .createQueryBuilder('analysis')
+                .where("analysis.args->>'status' LIKE :status", { status: '%true%' })
+                .andWhere(
+                    new Brackets((qb) => {
+                        consultantIds.forEach((id, index) => {
+                            qb.orWhere(`analysis.args->>'consultant_id' LIKE :id${index}`, { [`id${index}`]: id });
+                        });
+                    }),
+                );
+
+            if (startDate && endDate) {
+                consultationQuery.andWhere(
+                    `analysis.created_time BETWEEN ${startDate} 00:00:00 AND ${endDate} 23:59:59`,
+                );
+            }
+
+            const consultations = await consultationQuery.getMany();
+
+            return consultations;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getConsultantions(startDate?: string, endDate?: string) {
+        try {
+            const consultationQuery = await this.diorCndpSkinRepository
+                .createQueryBuilder('analysis')
+                .where("analysis.args->>'status' LIKE '%true'");
+
+            if (startDate && endDate) {
+                consultationQuery.andWhere(`analysis.created_time BETWEEN ${startDate} AND ${endDate}`);
+            }
+
+            const consultations = await consultationQuery.getMany();
+
+            return consultations;
+        } catch (e) {
+            throw e;
+        }
     }
 
     async getBatchId(customerId: string, appId: number) {
