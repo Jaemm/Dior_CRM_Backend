@@ -49,7 +49,7 @@ import {
 } from './common/repositories/crm';
 import { CountriesRepository } from './common/repositories/crm/countries.repository';
 import { SkinColorGroups } from './common/entities/crmEntities';
-import { DataHubModule } from './modules/partnerdb/datahub.module';
+import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
 
 @Module({
     imports: [
@@ -117,7 +117,6 @@ import { DataHubModule } from './modules/partnerdb/datahub.module';
 
         //
         DatabaseModule,
-        DataHubModule,
 
         ConsultantsModule,
         CustomersModule,
@@ -132,6 +131,7 @@ import { DataHubModule } from './modules/partnerdb/datahub.module';
         DataReplicationModule,
 
         ProductsModule,
+        PartnerDbModule,
         CRMModule,
     ],
     controllers: [AppController],
