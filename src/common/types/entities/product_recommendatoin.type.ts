@@ -1,7 +1,7 @@
 import { ProductTranslationForDiorT, ProductTranslationT } from './product_translations.type';
 
 export type ProductRecommendationT = {
-    id: string | null;
+    id: number | null;
     name: string | null;
     product_type: string | null;
     description: string | null;

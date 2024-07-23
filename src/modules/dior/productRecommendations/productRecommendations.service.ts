@@ -284,7 +284,7 @@ export class ProductRecommendationService {
 
             const productVariants = foundVariants.map((variant) => {
                 return {
-                    id: variant.id,
+                    id: Number(variant.id),
                     name: variant.name,
                     product_type: variant.productType,
                     description: variant.description,
@@ -317,7 +317,7 @@ export class ProductRecommendationService {
             }
 
             const reformatProductRecommendation: ProductRecommendationT = {
-                id: foundRecommendtaion.id,
+                id: Number(foundRecommendtaion.id),
                 name: foundRecommendtaion.name,
                 product_type: foundRecommendtaion.productType,
                 description: foundRecommendtaion.description,
@@ -401,7 +401,7 @@ export class ProductRecommendationService {
 
             const productVariants = foundVariants.map((variant) => {
                 return {
-                    id: variant.id,
+                    id: Number(variant.id),
                     name: variant.name,
                     product_type: variant.productType,
                     description: variant.description,
@@ -428,7 +428,7 @@ export class ProductRecommendationService {
             }
 
             const reformatProductRecommendation: ProductRecommendationT = {
-                id: foundRecommendtaion.id,
+                id: Number(foundRecommendtaion.id),
                 name: foundRecommendtaion.name,
                 product_type: foundRecommendtaion.productType,
                 description: foundRecommendtaion.description,
@@ -540,7 +540,7 @@ export class ProductRecommendationService {
 
             const productVariants = foundVariants.map((variant) => {
                 return {
-                    id: variant.id,
+                    id: Number(variant.id),
                     name: variant.name,
                     product_type: variant.productType,
                     description: variant.description,
@@ -567,7 +567,7 @@ export class ProductRecommendationService {
             }
 
             const reformatProductRecommendation: ProductRecommendationT = {
-                id: savedProductRecommendation.id,
+                id: Number(savedProductRecommendation.id),
                 name: savedProductRecommendation.name,
                 product_type: savedProductRecommendation.productType,
                 description: savedProductRecommendation.description,

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsOptional, IsArray } from 'class-validator';
 
 export class SearchProductRecommendationGroupsDto {
     @IsNotEmpty()
@@ -22,4 +22,24 @@ export class GetListProductRecommendationGroupsDto {
     @IsOptional()
     @IsString()
     search: string | null;
+}
+
+export class CreateProductRecommendationGroupsDto {
+    @IsNotEmpty()
+    @IsString()
+    name: string;
+
+    @IsNotEmpty()
+    @IsArray()
+    locations: string[];
+
+    @IsNotEmpty()
+    @IsArray()
+    products_selected: {
+        product_recommendation_id: string;
+    }[];
+
+    @IsOptional()
+    @IsArray()
+    principal_product: string;
 }

@@ -1,8 +1,9 @@
-import { BadRequestException, Controller, Delete, Get, Param, Query, Headers } from '@nestjs/common';
+import { BadRequestException, Controller, Delete, Get, Param, Query, Headers, Post, Body } from '@nestjs/common';
 import { ProductRecommendationGroupsService } from './productRecommendationGroups.service';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import {
+    CreateProductRecommendationGroupsDto,
     GetListProductRecommendationGroupsDto,
     SearchProductRecommendationGroupsDto,
 } from './productRecommendtaionGroups.dto';
@@ -25,6 +26,13 @@ export class ProductRecommendationGroupsController {
     @Roles(Role.Consultant)
     async getListProductRecommendationGroups(@Query() query: GetListProductRecommendationGroupsDto) {
         return await this.productRecommendationGroupsService.getListProductRecommendationGroups(query);
+    }
+
+    @Post('product_recommendations_groups')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async createProductRecommendationGroups(@Body() body: CreateProductRecommendationGroupsDto) {
+        return await this.productRecommendationGroupsService.createProductRecommendationGroups(body);
     }
 
     @Delete('delete_multiple/:ids')

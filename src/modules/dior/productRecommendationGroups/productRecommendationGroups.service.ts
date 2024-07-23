@@ -1,13 +1,24 @@
 import { ErrorStatus } from '@/src/common/constants/error-status';
-import { ProudctRecommendationGroupsT, ProductRecommendationT } from '@/src/common/types/entities';
+import {
+    ProudctRecommendationGroupsT,
+    ProductRecommendationT,
+    ProudctRecommendationGroupsForDiorT,
+} from '@/src/common/types/entities';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
+    CreateProductRecommendationGroupsDto,
     GetListProductRecommendationGroupsDto,
     SearchProductRecommendationGroupsDto,
 } from './productRecommendtaionGroups.dto';
-import { ConsultantsRepository, ProductRecommendationGroupsRepository } from '@/src/common/repositories/crm';
+import {
+    ConsultantsRepository,
+    ProductRecommendationGroupsRepository,
+    ProductRecommendationRepository,
+    ProductRecommendationSelectedRepository,
+} from '@/src/common/repositories/crm';
 import { In } from 'typeorm';
 import { CommonService } from '@/src/common/common.service';
+import { ProductRecommendationSelecteds } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class ProductRecommendationGroupsService {
@@ -16,6 +27,8 @@ export class ProductRecommendationGroupsService {
 
         // Repos
         private readonly consultantRepository: ConsultantsRepository,
+        private readonly productRecommendationsRepository: ProductRecommendationRepository,
+        private readonly prSelectedRepository: ProductRecommendationSelectedRepository,
         private readonly prGroupsRepository: ProductRecommendationGroupsRepository,
     ) {}
 
@@ -59,7 +72,7 @@ export class ProductRecommendationGroupsService {
                         }
 
                         const product: ProductRecommendationT = {
-                            id: recommendation.id,
+                            id: Number(recommendation.id),
                             name: recommendation.name,
                             product_type: recommendation.productType,
                             description: recommendation.description,
@@ -192,6 +205,89 @@ export class ProductRecommendationGroupsService {
             return {
                 message: 'Successfully deleted multiple record',
             };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async createProductRecommendationGroups(body: CreateProductRecommendationGroupsDto) {
+        try {
+            const { name, locations, products_selected, principal_product } = body;
+
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const newPrGroups = this.prGroupsRepository.create({
+                name: name,
+                countries: locations,
+                consultantId: diorConsultant.id,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+
+            const savedPrGroups = await this.prGroupsRepository.save(newPrGroups);
+
+            const selectedList: ProductRecommendationSelecteds[] = [];
+            if (products_selected && products_selected.length) {
+                for (let i = 0; i < products_selected.length; i++) {
+                    const selected = products_selected[i];
+
+                    const newPrSelected = this.prSelectedRepository.create({
+                        productRecommendationGroupId: Number(savedPrGroups.id),
+                        productRecommendationId: Number(selected.product_recommendation_id),
+                        orderNumber: i + 1,
+                    });
+
+                    const updatedSelected = await this.prSelectedRepository.save(newPrSelected);
+
+                    const selectedsRecommendtaions = await this.productRecommendationsRepository.findOne({
+                        where: {
+                            id: String(updatedSelected.productRecommendationId),
+                        },
+                    });
+
+                    updatedSelected.productRecommendation = selectedsRecommendtaions;
+
+                    selectedList.push(updatedSelected);
+                }
+            }
+            savedPrGroups.prSelecteds = selectedList;
+
+            if (!principal_product) {
+                const prod = await this.prSelectedRepository.findOne({
+                    where: {
+                        productRecommendationGroupId: Number(savedPrGroups.id),
+                        productRecommendationId: Number(principal_product),
+                    },
+                });
+
+                if (prod) {
+                    prod.isPrincipal = true;
+                }
+            }
+
+            const reformatGroup: ProudctRecommendationGroupsForDiorT = {
+                id: Number(savedPrGroups.id),
+                name: savedPrGroups.name,
+                countries: savedPrGroups.countries,
+                products: savedPrGroups.prSelecteds
+                    .sort((a, b) => a.orderNumber - b.orderNumber)
+                    .map((selected) => {
+                        const product = selected.productRecommendation;
+                        return {
+                            id: Number(product.id),
+                            name: product.name,
+                            product_type: product.productType,
+                            description: product.description,
+                            link: product.link,
+                            image_url: product.imageUrl,
+                            category: product.category,
+                            routine: product.routine,
+                            is_principal: selected.isPrincipal,
+                        };
+                    }),
+            };
+
+            return reformatGroup;
         } catch (e) {
             throw e;
         }

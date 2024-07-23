@@ -6,3 +6,10 @@ export type ProudctRecommendationGroupsT = {
     countries: string[] | null;
     products: ProductRecommendationT[] | [];
 };
+
+export type ProudctRecommendationGroupsForDiorT = {
+    id: number | null;
+    name: string | null;
+    countries: string[] | null;
+    products: object[] | [];
+};
