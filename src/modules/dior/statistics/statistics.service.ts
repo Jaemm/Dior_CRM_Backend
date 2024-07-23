@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import moment from 'moment';
+import * as moment from 'moment'
 
 import { Module, UnauthorizedException, Injectable } from '@nestjs/common';
 import { GetOverAllDetailsDto, GetOverAllDto } from './statistics.dto';
@@ -378,14 +378,14 @@ export class StatisticsService {
 
                 const consultantIds = await this.consultantRepository
                     .createQueryBuilder('consultant')
-                    .where('consultant.companyId = :companyId', { companyId: diorCompanyId })
+                    .where('consultant.consultant_company_id = :companyId', { companyId: diorCompanyId })
                     .getMany()
                     .then((consultants) => consultants.map((consultant) => consultant.id));
 
                 const customers = await this.customerRepository
                     .createQueryBuilder('customer')
-                    .where('customer.consultantId IN (:...consultantIds)', { consultantIds })
-                    .andWhere('customer.createdAt BETWEEN :startDate AND :endDate', { startDate, endDate })
+                    .where('customer.consultant_id IN (:...consultantIds)', { consultantIds })
+                    .andWhere('customer.created_at BETWEEN :startDate AND :endDate', { startDate, endDate })
                     .getMany();
 
                 const consultationCount = await this.analysisDataReplicationService.getConsultationCountByCustomerId(
