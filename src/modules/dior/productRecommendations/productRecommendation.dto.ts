@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class CreateProductRecommendationDto {
     @IsString()
@@ -33,6 +33,7 @@ export class CreateProductRecommendationDto {
     @IsString()
     countries: string[];
 
+    @IsObject()
     product_translations_attributes: {
         product_recommendation_id: string;
         id: string;

@@ -28,7 +28,7 @@ export class StatisticsController {
     @Get('overall_by_date')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getOverAllByDate(@Req() req: Request) {
+    async getOverAllByDate() {
         return this.statisticsService.getOverAllByDate();
     }
 

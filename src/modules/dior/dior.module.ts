@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { forwardRef, MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { DiorController } from './dior.controller';
 import { DiorService } from './dior.service';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
