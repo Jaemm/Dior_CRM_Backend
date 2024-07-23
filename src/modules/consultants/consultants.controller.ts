@@ -287,6 +287,12 @@ export class ConsultantsController {
         return await this.consultants.generateFlatFileDior(req);
     }
 
+    @Get('confirm_email/:id')
+    async confirmEmailById(@Res() res: Response, @Param('id') id: string) {
+        const template = await this.consultants.confirmEmailById(id);
+        return res.status(200).send(template);
+    }
+
     /**
      *
      * Existing codes
@@ -331,12 +337,6 @@ export class ConsultantsController {
     @Get('confirm')
     async confirmEmail(@Res() res: Response, @Query() query: ConfirmHtmlDto): Promise<any> {
         const template = await this.consultants.confirmEmail(query);
-        return res.status(200).send(template);
-    }
-
-    @Get(':id/confirm_email.html')
-    async confirmEmailById(@Res() res: Response, @Param('id') id: string): Promise<any> {
-        const template = await this.consultants.confirmEmailById(id);
         return res.status(200).send(template);
     }
 
