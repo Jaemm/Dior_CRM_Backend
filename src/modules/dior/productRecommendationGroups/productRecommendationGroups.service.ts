@@ -227,33 +227,14 @@ export class ProductRecommendationGroupsService {
 
             const savedPrGroups = await this.prGroupsRepository.save(newPrGroups);
 
-            const selectedList: ProductRecommendationSelecteds[] = [];
-            if (products_selected && products_selected.length) {
-                for (let i = 0; i < products_selected.length; i++) {
-                    const selected = products_selected[i];
+            const selectedList: ProductRecommendationSelecteds[] = await this.createNewSelectedListForGroups(
+                savedPrGroups.id,
+                products_selected,
+            );
 
-                    const newPrSelected = this.prSelectedRepository.create({
-                        productRecommendationGroupId: Number(savedPrGroups.id),
-                        productRecommendationId: Number(selected.product_recommendation_id),
-                        orderNumber: i + 1,
-                    });
-
-                    const updatedSelected = await this.prSelectedRepository.save(newPrSelected);
-
-                    const selectedsRecommendtaions = await this.productRecommendationsRepository.findOne({
-                        where: {
-                            id: String(updatedSelected.productRecommendationId),
-                        },
-                    });
-
-                    updatedSelected.productRecommendation = selectedsRecommendtaions;
-
-                    selectedList.push(updatedSelected);
-                }
-            }
             savedPrGroups.prSelecteds = selectedList;
 
-            if (!principal_product) {
+            if (principal_product) {
                 const prod = await this.prSelectedRepository.findOne({
                     where: {
                         productRecommendationGroupId: Number(savedPrGroups.id),
