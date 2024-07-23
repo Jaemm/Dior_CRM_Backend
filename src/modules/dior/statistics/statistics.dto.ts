@@ -9,3 +9,9 @@ export class GetOverAllDto {
     @IsString()
     end_date: string;
 }
+
+export class GetOverAllDetailsDto {
+    @IsOptional()
+    @IsString()
+    type: string;
+}

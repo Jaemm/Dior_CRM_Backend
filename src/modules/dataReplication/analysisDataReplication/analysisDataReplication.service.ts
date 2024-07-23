@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, Brackets } from 'typeorm';
 import { Analysis } from '@/src/common/entities/analysisEntities/Analysis.entity';
 import { Measurements } from '@/src/common/entities/analysisEntities/Measurements.entity';
-import { Consultants } from '@/src/common/entities/crmEntities';
+import { Consultants, Customers } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class AnalysisDataReplicationService {
@@ -113,6 +113,20 @@ export class AnalysisDataReplicationService {
             const consultations = await consultationQuery.getMany();
 
             return consultations;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getConsultationCountByCustomerId(customers: Customers[]) {
+        try {
+            const consultationCount = await this.diorCndpSkinRepository.count({
+                where: {
+                    customerId: In(customers.map((c) => c.id)),
+                },
+            });
+
+            return consultationCount;
         } catch (e) {
             throw e;
         }

@@ -3,13 +3,13 @@ import { StatisticsController } from './statistic.controller';
 import { StatisticsService } from './statistics.service';
 import {
     ConsultantBranchesRepository,
+    ConsultantCountriesRepository,
     ConsultantsRepository,
     CustomersRepository,
     DevicesRepository,
     ProductsRepository,
     SalesConnectionRepository,
 } from '@/src/common/repositories/crm';
-import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
 import { AnalysisDataReplicationModule } from '../../dataReplication/analysisDataReplication/analysisDataReplication.module';
 
 @Module({
@@ -20,9 +20,11 @@ import { AnalysisDataReplicationModule } from '../../dataReplication/analysisDat
 
         // Repos
         ConsultantsRepository,
-        CustomersRepository,
-        SalesConnectionRepository,
         ConsultantBranchesRepository,
+        ConsultantCountriesRepository,
+        CustomersRepository,
+
+        SalesConnectionRepository,
         DevicesRepository,
         ProductsRepository,
     ],

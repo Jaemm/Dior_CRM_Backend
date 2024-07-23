@@ -1,9 +1,10 @@
 import { Request } from 'express';
 
 import { Module, UnauthorizedException, Injectable } from '@nestjs/common';
-import { GetOverAllDto } from './statistics.dto';
+import { GetOverAllDetailsDto, GetOverAllDto } from './statistics.dto';
 import {
     ConsultantBranchesRepository,
+    ConsultantCountriesRepository,
     ConsultantsRepository,
     CustomersRepository,
     DevicesRepository,
@@ -16,6 +17,7 @@ import { In } from 'typeorm';
 import { AnalysisDataReplicationModule } from '../../dataReplication/analysisDataReplication/analysisDataReplication.module';
 import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
 import { ConsultantBranches, Consultants, Devices } from '@/src/common/entities/crmEntities';
+import { when } from 'joi';
 
 @Injectable()
 export class StatisticsService {
@@ -23,6 +25,7 @@ export class StatisticsService {
         private analysisDataReplicationService: AnalysisDataReplicationService,
 
         // Repos
+        private readonly consultantCountriesRepository: ConsultantCountriesRepository,
         private readonly consultantRepository: ConsultantsRepository,
         private readonly customerRepository: CustomersRepository,
         private readonly salesConnRepository: SalesConnectionRepository,
@@ -237,6 +240,74 @@ export class StatisticsService {
                 total_branches: branches.length,
                 total_offline_consultations: totalSalesConnections,
             };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getOverAllDetails(req: Request, query: GetOverAllDetailsDto) {
+        try {
+            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            const consultantCountries = await this.consultantCountriesRepository.find({
+                where: {
+                    consultantCompanyId: diorCompanyId,
+                },
+            });
+
+            const data: {
+                name: string;
+                total: number;
+                branches_info: any;
+            }[] = [];
+
+            for (let i = 0; i < consultantCountries.length; i++) {
+                const country = consultantCountries[i];
+
+                const countryBranches = await this.branchesRepository.find({
+                    where: {
+                        country: country.name,
+                    },
+                });
+
+                let perCountry = 0;
+                let customerPerBranch = 0;
+                const branchesInfo = [];
+
+                for (let j = 0; j < countryBranches.length; j++) {
+                    const branch = countryBranches[j];
+
+                    const consultants = await this.consultantRepository.find({
+                        where: {
+                            consultant_branch_id: Number(branch.id),
+                        },
+                    });
+
+                    const customers = await this.customerRepository.find({
+                        where: {
+                            consultant_id: In(consultants.map((c) => c.id)),
+                        },
+                    });
+
+                    if (query.type === 'overall-consultations') {
+                        const consultationCount =
+                            await this.analysisDataReplicationService.getConsultationCountByCustomerId(customers);
+                        branchesInfo.push({
+                            name: branch.name,
+                            total: consultationCount,
+                        });
+                        perCountry = perCountry + consultationCount;
+                    }
+                }
+
+                data.push({
+                    name: country.name,
+                    total: perCountry,
+                    branches_info: branchesInfo,
+                });
+            }
+
+            return data;
         } catch (e) {
             throw e;
         }
