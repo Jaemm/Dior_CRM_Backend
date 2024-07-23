@@ -24,4 +24,11 @@ export class StatisticsController {
     async getOverAllDetails(@Req() req: Request, @Query() query: GetOverAllDetailsDto) {
         return this.statisticsService.getOverAllDetails(req, query);
     }
+
+    @Get('overall_per_country')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async getOverAllPerCountry(@Req() req: Request) {
+        return this.statisticsService.getOverAllPerCountry(req);
+    }
 }

@@ -18,6 +18,7 @@ import { AnalysisDataReplicationModule } from '../../dataReplication/analysisDat
 import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
 import { ConsultantBranches, Consultants, Devices } from '@/src/common/entities/crmEntities';
 import { when } from 'joi';
+import { count } from 'console';
 
 @Injectable()
 export class StatisticsService {
@@ -308,6 +309,55 @@ export class StatisticsService {
             }
 
             return data;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getOverAllPerCountry(req: Request) {
+        try {
+            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            const countries = await this.consultantCountriesRepository.find({
+                where: {
+                    consultantCompanyId: diorCompanyId,
+                },
+            });
+
+            const promiseDataList = countries.map(async (country) => {
+                const countryBranches = await this.branchesRepository.find({
+                    where: {
+                        country: country.name,
+                    },
+                });
+
+                const consultants = await this.consultantRepository.find({
+                    where: {
+                        consultant_branch_id: In(countryBranches.map((branch) => branch.id)),
+                    },
+                });
+
+                const [customers, customerCount] = await this.customerRepository.findAndCount({
+                    where: {
+                        consultant_id: In(consultants.map((consultant) => consultant.id)),
+                    },
+                });
+
+                const consultationCount = await this.analysisDataReplicationService.getConsultationCountByCustomerId(
+                    customers,
+                );
+
+                return {
+                    country: country.name,
+                    total_customers: customerCount,
+                    total_consultations: consultationCount,
+                    total_qr_codes: consultationCount,
+                };
+            });
+
+            return {
+                data: await Promise.all(promiseDataList),
+            };
         } catch (e) {
             throw e;
         }
