@@ -43,3 +43,23 @@ export class CreateProductRecommendationGroupsDto {
     @IsArray()
     principal_product: string;
 }
+
+export class UpdateProductRecommendationGroupDto {
+    @IsOptional()
+    @IsString()
+    name: string;
+
+    @IsOptional()
+    @IsArray()
+    locations: string[];
+
+    @IsOptional()
+    @IsArray()
+    products_selected: {
+        product_recommendation_id: string;
+    }[];
+
+    @IsOptional()
+    @IsArray()
+    principal_product: string;
+}
