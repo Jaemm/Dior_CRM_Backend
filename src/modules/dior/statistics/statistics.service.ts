@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import moment from 'moment';
 
 import { Module, UnauthorizedException, Injectable } from '@nestjs/common';
 import { GetOverAllDetailsDto, GetOverAllDto } from './statistics.dto';
@@ -358,6 +359,50 @@ export class StatisticsService {
             return {
                 data: await Promise.all(promiseDataList),
             };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getOverAllByDate() {
+        try {
+            let currentTime = moment().startOf('year');
+
+            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            const data = [];
+
+            for (let i = 0; i <= 11; i++) {
+                const startDate = currentTime.clone().startOf('month').toDate();
+                const endDate = currentTime.clone().endOf('month').toDate();
+
+                const consultantIds = await this.consultantRepository
+                    .createQueryBuilder('consultant')
+                    .where('consultant.companyId = :companyId', { companyId: diorCompanyId })
+                    .getMany()
+                    .then((consultants) => consultants.map((consultant) => consultant.id));
+
+                const customers = await this.customerRepository
+                    .createQueryBuilder('customer')
+                    .where('customer.consultantId IN (:...consultantIds)', { consultantIds })
+                    .andWhere('customer.createdAt BETWEEN :startDate AND :endDate', { startDate, endDate })
+                    .getMany();
+
+                const consultationCount = await this.analysisDataReplicationService.getConsultationCountByCustomerId(
+                    customers,
+                );
+
+                data.push({
+                    month: currentTime.format('MMMM'),
+                    total_customers: customers.length,
+                    total_consultations: consultationCount,
+                    total_qr_codes: consultationCount,
+                });
+
+                currentTime = currentTime.add(1, 'month');
+            }
+
+            return data;
         } catch (e) {
             throw e;
         }

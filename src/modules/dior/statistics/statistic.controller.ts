@@ -25,6 +25,13 @@ export class StatisticsController {
         return this.statisticsService.getOverAllDetails(req, query);
     }
 
+    @Get('overall_by_date')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async getOverAllByDate(@Req() req: Request) {
+        return this.statisticsService.getOverAllByDate();
+    }
+
     @Get('overall_per_country')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
