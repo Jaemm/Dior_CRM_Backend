@@ -22,6 +22,17 @@ export class ProductRecommendationGroupsController {
         return await this.productRecommendationGroupsService.getProductRecommendationGroups(query);
     }
 
+    @Get('get_products/:id')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async getProductById(@Param('id') groupId: string) {
+        if (!groupId) {
+            throw new BadRequestException('missing id');
+        }
+
+        return await this.productRecommendationGroupsService.getProductById(groupId);
+    }
+
     @Get('lists')
     @ApiBearerAuth()
     @Roles(Role.Consultant)

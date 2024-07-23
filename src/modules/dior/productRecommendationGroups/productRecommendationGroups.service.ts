@@ -345,6 +345,52 @@ export class ProductRecommendationGroupsService {
         }
     }
 
+    async getProductById(groupId: string) {
+        try {
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const group = await this.prGroupsRepository.findOne({
+                where: {
+                    consultantId: diorConsultant.id,
+                    id: groupId,
+                },
+                relations: ['prSelecteds', 'prSelecteds.productRecommendation'],
+            });
+
+            if (!group) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.RECORD_NOT_FOUND,
+                });
+            }
+
+            const selectedList = group.prSelecteds;
+
+            const reformatData = selectedList.map((selected) => {
+                const product = selected.productRecommendation;
+
+                if (product) {
+                    return {
+                        id: product.id,
+                        name: product.name,
+                        product_type: product.productType,
+                        description: product.description,
+                        link: product.link,
+                        image_url: product.imageUrl,
+                        category: product.category,
+                        routine: product.routine,
+                        is_principal: selected.isPrincipal,
+                    };
+                }
+
+                return null;
+            });
+
+            return reformatData;
+        } catch (e) {
+            throw e;
+        }
+    }
+
     // Utils
     async createNewSelectedListForGroups(
         groupId: string,
