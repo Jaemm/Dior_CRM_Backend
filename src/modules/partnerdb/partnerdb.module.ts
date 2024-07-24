@@ -3,6 +3,7 @@ import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import {
     ConsultantBranchesRepository,
     ConsultantsRepository,
+    CustomersRepository,
     DevicesRepository,
     SalesConnectionRepository,
 } from '@/src/common/repositories/crm';
@@ -14,6 +15,8 @@ import { PartnerDbController } from './partnerdb.controller';
     controllers: [PartnerDbController],
     providers: [
         PartnerDbService,
+
+        CustomersRepository,
         ConsultantsRepository,
         ConsultantBranchesRepository,
         DevicesRepository,

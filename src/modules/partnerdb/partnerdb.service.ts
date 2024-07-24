@@ -1,12 +1,18 @@
 import { Request } from 'express';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConsultantsRepository } from '@/src/common/repositories/crm';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConsultantsRepository, CustomersRepository } from '@/src/common/repositories/crm';
 import { ConsultantT } from '@/src/common/types/entities';
 import { ConsultantForDiorT } from '@/src/common/types/entities/consultants.type';
+import { ErrorStatus } from '@/src/common/constants/error-status';
+import { GetCustomerByConsultantDto } from './partnerdb.dto';
+import { Brackets } from 'typeorm';
 
 @Injectable()
 export class PartnerDbService {
-    constructor(private readonly consultantRepository: ConsultantsRepository) {}
+    constructor(
+        private readonly customerRepository: CustomersRepository,
+        private readonly consultantRepository: ConsultantsRepository,
+    ) {}
 
     async getConsultantById(consultantId: string) {
         try {
@@ -170,6 +176,95 @@ export class PartnerDbService {
             };
 
             return reformatConsultant;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getCustomersByConsultantId(consultantId: string, query: GetCustomerByConsultantDto) {
+        try {
+            const { search, filter_by, page, limit } = query;
+
+            const consultant = await this.consultantRepository.findBy({ id: Number(consultantId) });
+
+            if (!consultant) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.RECORD_NOT_FOUND,
+                });
+            }
+
+            const customerQuery = this.customerRepository.createQueryBuilder('customers');
+
+            if (search) {
+                customerQuery.andWhere(
+                    new Brackets((qb) => {
+                        qb.where('customer.id LIKE :search', { search: `%${search}%` })
+                            .orWhere('customer.name LIKE :search', { search: `%${search}%` })
+                            .orWhere('customer.surname LIKE :search', { search: `%${search}%` })
+                            .orWhere('customer.email LIKE :search', { search: `%${search}%` })
+                            .orWhere('customer.phone LIKE :search', { search: `%${search}%` })
+                            .orWhere('customer.country LIKE :search', { search: `%${search}%` })
+                            .orWhere('customer.gender LIKE :search', { search: `%${search}%` });
+                    }),
+                );
+            }
+
+            if (filter_by) {
+                let filterByOrder = 'ASC';
+                let filterByField = filter_by.toString();
+
+                if (filterByField.includes('-')) {
+                    filterByOrder = 'DESC';
+                    filterByField = filterByField.replace('-', '');
+                }
+
+                if (filterByField.includes('app_name')) {
+                    filterByField = 'application.name';
+                    customerQuery.leftJoin('customer.application', 'application');
+                }
+
+                customerQuery.orderBy(filterByField, filterByOrder as 'ASC' | 'DESC');
+            }
+
+            const searchPage = Number(page || 1);
+            const searchPer = Number(limit || 10);
+
+            const [customers, totalCount] = await customerQuery
+                .skip((searchPage - 1) * searchPer)
+                .take(searchPer)
+                .getManyAndCount();
+
+            const reformatCustomer = customers.map((customer) => {
+                return {
+                    id: customer.id,
+                    email: customer.email,
+                    name: customer.name,
+                    surname: customer.surname,
+                    gender: customer.gender,
+                    age: customer.age,
+                    os: customer.os,
+                    language: customer.language,
+                    phone: customer.phone,
+                    birth: customer.birth,
+                    address: customer.address,
+                    note: customer.note,
+                    push_token: customer.push_token,
+                    app_id: customer.app_id,
+                    consultant_id: customer.consultant_id,
+                    ethnicity_id: customer.ethnicity_id,
+                    skin_color_group_id: customer.skin_color_group_id,
+                    country_code: customer.country_code,
+                    created_at: customer.created_at,
+                };
+            });
+
+            return {
+                data: reformatCustomer,
+                total_count: totalCount,
+                current_page_size: reformatCustomer.length,
+                current_page: searchPage,
+                total_pages: Math.ceil(totalCount / searchPer),
+            };
         } catch (e) {
             throw e;
         }
