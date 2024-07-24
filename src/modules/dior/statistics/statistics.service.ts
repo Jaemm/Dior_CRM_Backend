@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import * as moment from 'moment'
+import * as moment from 'moment';
 
 import { Module, UnauthorizedException, Injectable } from '@nestjs/common';
 import { GetOverAllDetailsDto, GetOverAllDto } from './statistics.dto';
@@ -9,17 +9,24 @@ import {
     ConsultantsRepository,
     CustomersRepository,
     DevicesRepository,
+    ProductAttributeTranslationsRepository,
+    ProductAttributesRepository,
+    ProductRecommendationRepository,
+    ProductRecommendationSelectedRepository,
+    ProductTranslationsRepository,
     ProductsRepository,
     SalesConnectionRepository,
 } from '@/src/common/repositories/crm';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { PositionsIds } from '@/src/common/enums/position.enum';
-import { In } from 'typeorm';
+import { In, Not } from 'typeorm';
 import { AnalysisDataReplicationModule } from '../../dataReplication/analysisDataReplication/analysisDataReplication.module';
 import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
 import { ConsultantBranches, Consultants, Devices } from '@/src/common/entities/crmEntities';
 import { when } from 'joi';
 import { count } from 'console';
+import { ProductRecommendationForDiorT, ProductRecommendationVariantForDiorT } from '@/src/common/types/entities';
+import { ProductTranslationForDiorT } from '@/src/common/types/entities/product_translations.type';
 
 @Injectable()
 export class StatisticsService {
@@ -34,6 +41,13 @@ export class StatisticsService {
         private readonly branchesRepository: ConsultantBranchesRepository,
         private readonly devicesRepository: DevicesRepository,
         private readonly productRepository: ProductsRepository,
+
+        private readonly productAttributesRepository: ProductAttributesRepository,
+        private readonly productAttributeTranslationsRepository: ProductAttributeTranslationsRepository,
+        private readonly productTranslationsRepository: ProductTranslationsRepository,
+        private readonly productRecommendationRepository: ProductRecommendationRepository,
+
+        private readonly prSelectedsRepository: ProductRecommendationSelectedRepository,
     ) {}
 
     async getOverAll(req: Request, query: GetOverAllDto, locale: string = 'en') {
@@ -403,6 +417,199 @@ export class StatisticsService {
             }
 
             return data;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getMostPopularProducts() {
+        try {
+            const productSelectedGrouped = await this.prSelectedsRepository
+                .createQueryBuilder('prs')
+                .select('prs.productRecommendationId, COUNT(prs.productRecommendationId) as count')
+                .groupBy('prs.productRecommendationId')
+                .orderBy('count', 'DESC')
+                .limit(20)
+                .getRawMany();
+
+            const first20ProductIds = productSelectedGrouped.map((prs) => prs.product_recommendation_id);
+
+            const productRecommendations = await this.productRecommendationRepository.find({
+                where: {
+                    id: In(first20ProductIds),
+                },
+                relations: ['productVariants'],
+            });
+
+            console.log(productRecommendations);
+
+            const reformatPromise: Promise<any>[] = productRecommendations.map(async (recommendations) => {
+                const shades = recommendations.getShade();
+
+                let refRecommendation;
+                let name: string | null = null;
+                let collectionShades: string[] | null = [];
+                let productTranslations: ProductTranslationForDiorT[] = [];
+                let categoryTranslations: any[] = [];
+                let collectionTranslations: any[] = [];
+                let productVariants: ProductRecommendationVariantForDiorT[] = [];
+                if (recommendations.productRecommendationId) {
+                    refRecommendation = await this.productRecommendationRepository.findOne({
+                        where: {
+                            id: String(recommendations.productRecommendationId),
+                        },
+                    });
+
+                    name = refRecommendation.name;
+                }
+
+                // collection shades
+                const recommShadeList = await this.productRecommendationRepository.find({
+                    select: ['shades'],
+                    where: {
+                        collection: recommendations.collection,
+                        shades: Not(null),
+                    },
+                });
+                collectionShades = recommShadeList.map((recomm) => recomm.shades);
+                // collection_shades END
+
+                // product translations START
+                if (refRecommendation || recommendations) {
+                    const oneOfRecomm = refRecommendation || recommendations;
+
+                    const translations = await this.productTranslationsRepository.findBy({
+                        productRecommendationId: oneOfRecomm.id,
+                    });
+
+                    const promiseTranslations = translations.map(async (t) => {
+                        const recomm = await this.productRecommendationRepository.findOneBy({
+                            id: t.productRecommendationId,
+                        });
+
+                        const category = recomm.category;
+                        const collection = recomm.collection;
+
+                        const categoryAttribute = await this.productAttributesRepository.findOneBy({
+                            value: category,
+                        });
+
+                        const collectionAttribute = await this.productAttributesRepository.findOneBy({
+                            value: collection,
+                        });
+
+                        const attributeName = categoryAttribute
+                            ? (
+                                  await this.productAttributeTranslationsRepository.findOne({
+                                      where: {
+                                          productAttributeId: Number(categoryAttribute.id),
+                                          language: t.language,
+                                      },
+                                  })
+                              )?.value
+                            : null;
+                        const collectionName = collectionAttribute
+                            ? (
+                                  await this.productAttributeTranslationsRepository.findOne({
+                                      where: {
+                                          productAttributeId: Number(collectionAttribute.id),
+                                          language: t.language,
+                                      },
+                                  })
+                              )?.value
+                            : null;
+
+                        return {
+                            id: Number(t.id),
+                            field_name: t.fieldName,
+                            language: t.language,
+                            value: t.value,
+                            attribute_name: attributeName,
+                            collection_name: collectionName,
+                        };
+                    });
+
+                    productTranslations = await Promise.all(promiseTranslations);
+                }
+                // product translations END
+
+                categoryTranslations = (
+                    await this.productAttributesRepository.findOne({
+                        where: {
+                            typ: 'Category',
+                            value: recommendations.category,
+                        },
+                        relations: ['productAttributeTranslations'],
+                    })
+                ).productAttributeTranslations.map((t) => {
+                    return {
+                        id: Number(t.id),
+                        field_name: t.fieldName,
+                        language: t.language,
+                        value: t.value,
+                    };
+                });
+
+                collectionTranslations = (
+                    await this.productAttributesRepository.findOne({
+                        where: {
+                            typ: 'Collection',
+                            value: recommendations.category,
+                        },
+                        relations: ['productAttributeTranslations'],
+                    })
+                )?.productAttributeTranslations.map((t) => {
+                    return {
+                        id: Number(t.id),
+                        field_name: t.fieldName,
+                        language: t.language,
+                        value: t.value,
+                    };
+                });
+
+                productVariants = recommendations.productVariants
+                    ? recommendations.productVariants.map((variants) => {
+                          return {
+                              id: Number(variants.id),
+                              name: variants.name,
+                              product_type: variants.productType,
+                              description: variants.description,
+                              link: variants.link,
+                              image_url: variants.imageUrl,
+                              code: variants.code,
+                              routine: variants.routine,
+                              collection: variants.collection,
+                              category: variants.category,
+                              countries: variants.countries,
+                              product_recommendation_id: variants.productRecommendationId,
+                              shades: variants.shades,
+                          };
+                      })
+                    : [];
+
+                return {
+                    id: recommendations.id,
+                    product_type: recommendations.productType,
+                    description: recommendations.description,
+                    link: recommendations.link,
+                    image_url: recommendations.imageUrl,
+                    code: recommendations.code,
+                    routine: recommendations.routine,
+                    collection: recommendations.collection,
+                    category: recommendations.category,
+                    countries: recommendations.countries,
+                    product_recommendation_id: recommendations.productRecommendationId,
+                    name: name,
+                    shades: shades,
+                    collection_shades: collectionShades,
+                    product_translations: productTranslations,
+                    category_translations: categoryTranslations,
+                    collection_translations: collectionTranslations,
+                    product_variants: productVariants,
+                };
+            });
+
+            return await Promise.all(reformatPromise);
         } catch (e) {
             throw e;
         }

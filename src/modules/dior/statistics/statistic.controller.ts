@@ -38,4 +38,11 @@ export class StatisticsController {
     async getOverAllPerCountry(@Req() req: Request) {
         return this.statisticsService.getOverAllPerCountry(req);
     }
+
+    @Get('most_popular_products')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async getMostPopularProducts(@Req() req: Request) {
+        return this.statisticsService.getMostPopularProducts();
+    }
 }

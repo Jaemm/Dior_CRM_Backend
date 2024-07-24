@@ -7,6 +7,11 @@ import {
     ConsultantsRepository,
     CustomersRepository,
     DevicesRepository,
+    ProductAttributeTranslationsRepository,
+    ProductAttributesRepository,
+    ProductRecommendationRepository,
+    ProductRecommendationSelectedRepository,
+    ProductTranslationsRepository,
     ProductsRepository,
     SalesConnectionRepository,
 } from '@/src/common/repositories/crm';
@@ -27,6 +32,12 @@ import { AnalysisDataReplicationModule } from '../../dataReplication/analysisDat
         SalesConnectionRepository,
         DevicesRepository,
         ProductsRepository,
+
+        ProductAttributesRepository,
+        ProductAttributeTranslationsRepository,
+        ProductTranslationsRepository,
+        ProductRecommendationRepository,
+        ProductRecommendationSelectedRepository,
     ],
 })
 export class StatisticsModule {}
