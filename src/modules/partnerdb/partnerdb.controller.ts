@@ -1,15 +1,22 @@
 import { Request } from 'express';
-import { Body, Controller, Get, Param, Query, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req, Headers } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { PartnerDbService } from './partnerdb.service';
-import { GetCustomerByConsultantDto } from './partnerdb.dto';
+import { GetCustomerByConsultantDto, LoginDiorConsultantDto } from './partnerdb.dto';
 
 @ApiTags('PartnerDB')
 @Controller('partnerdb')
 export class PartnerDbController {
     constructor(private partnerdbService: PartnerDbService) {}
+
+    @Post('consultants/dior_login')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async loginDiorConsultant(@Body() body: LoginDiorConsultantDto, @Headers('X-CHOWIS-LOCALE') locale?: string) {
+        return await this.partnerdbService.loginDiorConsultant(body, locale);
+    }
 
     @Get('consultants/:id/customers')
     @ApiBearerAuth()

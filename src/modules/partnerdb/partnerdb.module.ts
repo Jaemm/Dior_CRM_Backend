@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 
 import {
+    ApplicationsRepository,
     ConsultantBranchesRepository,
     ConsultantsRepository,
     CustomersRepository,
@@ -10,12 +11,21 @@ import {
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 import { PartnerDbService } from './partnerdb.service';
 import { PartnerDbController } from './partnerdb.controller';
+import { AuthService } from '../auth/auth.service';
+import { ConsultantsService } from '../consultants/consultants.service';
+import { JwtService } from '@/src/jwt/jwt.service';
+import { ConsultantsModule } from '../consultants/consultants.module';
 
 @Module({
+    imports: [ConsultantsModule],
     controllers: [PartnerDbController],
     providers: [
         PartnerDbService,
+        AuthService,
+        JwtService,
 
+        // Repos
+        ApplicationsRepository,
         CustomersRepository,
         ConsultantsRepository,
         ConsultantBranchesRepository,

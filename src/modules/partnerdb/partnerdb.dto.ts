@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class GetCustomerByConsultantDto {
     @IsOptional()
@@ -16,4 +16,18 @@ export class GetCustomerByConsultantDto {
     @IsOptional()
     @IsString()
     limit: string;
+}
+
+export class LoginDiorConsultantDto {
+    @IsOptional()
+    @IsString()
+    app_id: string;
+
+    @IsNotEmpty()
+    @IsString()
+    email: string;
+
+    @IsNotEmpty()
+    @IsString()
+    password: string;
 }

@@ -9,6 +9,23 @@ export class ConsultantsRepository extends Repository<Consultants> {
         super(Consultants, dataSource.createEntityManager());
     }
 
+    async getConsultantEmailAndAppId(email: string, app_id?: string) {
+        const query = this.createQueryBuilder('consultants')
+            .leftJoinAndSelect('consultants.products', 'products')
+            .leftJoinAndSelect('products.device', 'devices')
+            .leftJoinAndSelect('products.application', 'applications')
+            .leftJoinAndSelect('consultants.consultant_licenses', 'consultantLicenses')
+            .leftJoinAndSelect('consultantLicenses.licenses', 'license')
+            .leftJoinAndSelect('consultants.application', 'application')
+            .andWhere('consultants.email = :email', { email: email });
+
+        if (app_id) {
+            query.andWhere('consultants.app_id = :appId', { appId: app_id });
+        }
+
+        return await query.getOne();
+    }
+
     async getConsultantById(consultantId: number | string, relations?: string[]) {
         const numberedId = Number(consultantId);
         const query: { where: object; relations: any[] } = {

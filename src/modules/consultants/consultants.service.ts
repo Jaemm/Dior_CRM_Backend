@@ -97,6 +97,7 @@ import {
     EthnicitiesRepository,
     GendersRepository,
     NotificationsRepository,
+    PasswordEmailDetailsRepository,
     ProductsRepository,
     RefreshTokensRepository,
     SalesConnectionRepository,
@@ -123,8 +124,6 @@ export class ConsultantsService {
     private readonly jwtConfig: IJwt;
 
     constructor(
-        @InjectRepository(PasswordEmailDetails)
-        private readonly passwordDetailRepository: Repository<PasswordEmailDetails>,
         @InjectRepository(ProductRecommendations)
         private readonly productRecommendationsRepository: Repository<ProductRecommendations>,
         @InjectRepository(HealthTips)
@@ -167,6 +166,8 @@ export class ConsultantsService {
         private readonly ethnicitiesRepository: EthnicitiesRepository,
         private readonly licensesRepository: LicensesRepository,
         private readonly licenseHistoriesRepository: LicenseHistoriesRepository,
+
+        private readonly passwordDetailRepository: PasswordEmailDetailsRepository,
     ) {
         this.jwtConfig = this.configService.get<IJwt>('jwt');
     }

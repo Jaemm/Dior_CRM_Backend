@@ -30,6 +30,8 @@ export { ProductsRepository } from './products.repository';
 export { ProductAttributesRepository } from './productAttributes.respository';
 export { ProductAttributeTranslationsRepository } from './productAttributeTranslations.repository';
 
+export { PasswordEmailDetailsRepository } from './passwordEmailDetails.repository';
+
 export { ProductRecommendationRepository } from './productRecommendation.repository';
 export { ProductRecommendationSelectedRepository } from './productRecommendationSelected.repository';
 export { ProductRecommendationGroupsRepository } from './productRecommendtaionGroups.repository';
