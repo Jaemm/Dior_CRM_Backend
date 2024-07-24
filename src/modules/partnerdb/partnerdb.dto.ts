@@ -31,3 +31,13 @@ export class LoginDiorConsultantDto {
     @IsString()
     password: string;
 }
+
+export class ResetPasswordDto {
+    @IsOptional()
+    @IsString()
+    app_id: string;
+
+    @IsNotEmpty()
+    @IsString()
+    email: string;
+}

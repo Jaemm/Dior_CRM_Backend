@@ -2,12 +2,22 @@ import { Request } from 'express';
 import * as argon2 from 'argon2';
 import bcrypt from 'bcrypt';
 
-import { Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { ApplicationsRepository, ConsultantsRepository, CustomersRepository } from '@/src/common/repositories/crm';
-import { ConsultantT } from '@/src/common/types/entities';
-import { ConsultantForDiorT } from '@/src/common/types/entities/consultants.type';
+import {
+    BadRequestException,
+    Injectable,
+    InternalServerErrorException,
+    NotFoundException,
+    UnauthorizedException,
+} from '@nestjs/common';
+import {
+    ApplicationsRepository,
+    ConsultantsRepository,
+    CustomersRepository,
+    PasswordEmailDetailsRepository,
+} from '@/src/common/repositories/crm';
+
 import { ErrorStatus } from '@/src/common/constants/error-status';
-import { GetCustomerByConsultantDto, LoginDiorConsultantDto } from './partnerdb.dto';
+import { GetCustomerByConsultantDto, LoginDiorConsultantDto, ResetPasswordDto } from './partnerdb.dto';
 import { Brackets, In } from 'typeorm';
 import { ConsultantsService } from '../consultants/consultants.service';
 import { CommonService } from '@/src/common/common.service';
@@ -25,6 +35,7 @@ export class PartnerDbService {
         private readonly applicationRepository: ApplicationsRepository,
         private readonly customerRepository: CustomersRepository,
         private readonly consultantRepository: ConsultantsRepository,
+        private readonly passwordEmailDetailsRepository: PasswordEmailDetailsRepository,
     ) {}
 
     async getConsultantById(consultantId: string) {
@@ -398,6 +409,77 @@ export class PartnerDbService {
                 consultant_country: consultant.country || consultant?.consultant_branch?.country,
                 countries: consultant?.countries || [],
             };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async resetPassword(body: ResetPasswordDto, locale: string = 'en') {
+        try {
+            const { app_id, email } = body;
+
+            let consultant;
+
+            if (app_id) {
+                consultant = await this.consultantRepository.findOne({
+                    where: {
+                        email: email,
+                        app_id: Number(app_id),
+                    },
+                });
+            } else {
+                consultant = await this.consultantRepository.findOne({
+                    where: {
+                        email: email,
+                    },
+                });
+            }
+
+            if (!consultant) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.CUSTOM_ERROR,
+                    error: this.commonService.createLocaleErrorMessage(
+                        locale,
+                        'custom_error',
+                        'Please enter a valid email address.',
+                    ),
+                });
+            }
+
+            const MAXIMUM_REQUEST_PASSWORD_RESET = 5;
+
+            const oneHourCount = await this.passwordEmailDetailsRepository.countingPassingOneHourTry(email);
+
+            if (oneHourCount >= MAXIMUM_REQUEST_PASSWORD_RESET) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.CUSTOM_ERROR,
+                    error: 'You have reached maximum limit of reset password request!',
+                });
+            }
+
+            await this.passwordEmailDetailsRepository.save({
+                email: email,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+
+            const password = this.commonService.generateRandomPassword(12);
+            const hashedPassword = await argon2.hash(password);
+
+            await this.consultantRepository.updateConsultant(consultant.id, { password_digest: hashedPassword });
+
+            const subject = await this.commonService.translate('password_recovery_subject', locale);
+
+            await this.commonService.sendEmail({
+                to: consultant.email,
+                subject: subject,
+                templateName: 'password-recovery',
+                templateContext: {
+                    password: password,
+                },
+            });
+
+            return this.commonService.generateMessage('Success!');
         } catch (e) {
             throw e;
         }
