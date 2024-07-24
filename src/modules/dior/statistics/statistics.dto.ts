@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class GetOverAllDto {
     @IsOptional()
@@ -14,4 +14,18 @@ export class GetOverAllDetailsDto {
     @IsOptional()
     @IsString()
     type: string;
+}
+
+export class GetStatDetailsDto {
+    @IsOptional()
+    @IsString()
+    start_date: string;
+
+    @IsOptional()
+    @IsString()
+    end_date: string;
+
+    @IsOptional()
+    @IsString()
+    stat_type: string;
 }

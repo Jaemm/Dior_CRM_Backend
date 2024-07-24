@@ -4,6 +4,7 @@ import { Repository, In, Brackets } from 'typeorm';
 import { Analysis } from '@/src/common/entities/analysisEntities/Analysis.entity';
 import { Measurements } from '@/src/common/entities/analysisEntities/Measurements.entity';
 import { Consultants, Customers } from '@/src/common/entities/crmEntities';
+import { count } from 'console';
 
 @Injectable()
 export class AnalysisDataReplicationService {
@@ -107,12 +108,56 @@ export class AnalysisDataReplicationService {
                 .where("analysis.args->>'status' LIKE '%true'");
 
             if (startDate && endDate) {
-                consultationQuery.andWhere(`analysis.created_time BETWEEN ${startDate} AND ${endDate}`);
+                consultationQuery.andWhere(
+                    `analysis.created_time BETWEEN ${startDate} 00:00:00 AND ${endDate} 23:59:59`,
+                );
             }
 
             const consultations = await consultationQuery.getMany();
 
             return consultations;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getConsultantIds(startDate?: string, endDate?: string): Promise<any> {
+        try {
+            const consultantQuery = await this.diorCndpSkinRepository
+                .createQueryBuilder('analysis')
+                .select("analysis.args-> 'consultant_id' ", 'consultantId')
+                .where("analysis.args->>'status' LIKE '%true'");
+
+            if (startDate && endDate) {
+                consultantQuery.andWhere(`analysis.created_time BETWEEN ${startDate} 00:00:00 AND ${endDate} 23:59:59`);
+            }
+
+            const consultants = await consultantQuery.getRawMany();
+
+            return consultants;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getConsultantCounts(consultantIds?: string[], startDate?: string, endDate?: string) {
+        try {
+            const countQuery = this.diorCndpSkinRepository
+                .createQueryBuilder('analysis')
+                .where("(analysis.args->>'status' LIKE '%true')");
+
+            if (startDate && endDate) {
+                countQuery.andWhere(`(analysis.create_time BETWEEN ${startDate} 00:00:00 AND ${endDate} 23:59:59)`);
+            }
+
+            if (consultantIds && consultantIds.length > 0) {
+                for (let i = 0; i < consultantIds.length; i++) {
+                    const consultantId = consultantIds[i];
+                    countQuery.andWhere(`(analysis.args->>'consultant_id' LIKE '${consultantId})'`);
+                }
+            }
+
+            return await countQuery.getCount();
         } catch (e) {
             throw e;
         }

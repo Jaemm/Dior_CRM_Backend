@@ -24,4 +24,29 @@ export class CustomersRepository extends Repository<Customers> {
 
         return customers;
     }
+
+    async countValidCustomersPerCountry(country?: string, startDate?: string, endDate?: string) {
+        const countQuery = await this.createQueryBuilder('customers').leftJoinAndSelect(
+            'customers.consultant',
+            'consultant',
+        );
+
+        if (!country || country === 'null') {
+            countQuery
+                .andWhere('(consultant.country IS NULL AND customers.email IS NULL)')
+                .orWhere('(consultant.country IS NULL AND customers.email IS NOT NULL)');
+        } else {
+            countQuery
+                .andWhere(`(LOWER(consultant.country) = '${country.toLocaleLowerCase()}' AND customers.email IS NULL)`)
+                .orWhere(
+                    `(LOWER(consultant.country) = '${country.toLocaleLowerCase()}' AND customers.email IS NOT NULL)`,
+                );
+        }
+
+        if (startDate && endDate) {
+            countQuery.andWhere(`customers.created_at BETWEEN ${startDate} AND ${endDate}`);
+        }
+
+        return await countQuery.getCount();
+    }
 }
