@@ -61,3 +61,9 @@ export class GetAnalysisHistoryByBatchIdDto {
     @IsString()
     analysis_type: 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair';
 }
+
+export class GetHydrationSebumByBatchIdDto {
+    @IsNotEmpty()
+    @IsString()
+    analysis_type: 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair';
+}

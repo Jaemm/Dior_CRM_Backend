@@ -8,6 +8,7 @@ import {
     GetAnalysisHistoriesDto,
     GetAnalysisHistoryByBatchIdDto,
     GetCustomerByConsultantDto,
+    GetHydrationSebumByBatchIdDto,
     LoginDiorConsultantDto,
     ResetPasswordDto,
 } from './partnerdb.dto';
@@ -72,5 +73,18 @@ export class PartnerDbController {
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         return await this.partnerdbService.getAnalysisHistoriesByBatchId(req, customerId, batchId, query, locale);
+    }
+
+    @Get('customers/:id/analysis_histories/:batch_id/hydration_sebum')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async getHydrationSebumByBatchId(
+        @Req() req: Request,
+        @Param('id') customerId: string,
+        @Param('batch_id') batchId: string,
+        @Query() query: GetHydrationSebumByBatchIdDto,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
+    ) {
+        return await this.partnerdbService.getHydrationSebumByBatchId(req, customerId, batchId, query, locale);
     }
 }

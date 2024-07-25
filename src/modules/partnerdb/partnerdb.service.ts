@@ -25,6 +25,7 @@ import {
     GetAnalysisHistoriesDto,
     GetAnalysisHistoryByBatchIdDto,
     GetCustomerByConsultantDto,
+    GetHydrationSebumByBatchIdDto,
     LoginDiorConsultantDto,
     ResetPasswordDto,
 } from './partnerdb.dto';
@@ -549,6 +550,37 @@ export class PartnerDbService {
         }
     }
 
+    async getHydrationSebumByBatchId(
+        req: Request,
+        customerId: string,
+        batchId: string,
+        query: GetHydrationSebumByBatchIdDto,
+        locale = 'en',
+    ) {
+        try {
+            const { analysis_type: analysisType } = query;
+
+            const requestHeaders = req.headers;
+
+            const authorization = requestHeaders?.authorization;
+
+            const bearerToken = authorization.startsWith('Bearer') ? authorization : null;
+
+            let result: any;
+
+            if (['cndpskin', 'cndphair', 'ffa', 'hh', 'cmaskin', 'cmahair'].includes(analysisType)) {
+                const type = analysisType as 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair';
+                result = await this.analysisHydrationSebumByBatchId(type, batchId, bearerToken);
+            }
+
+            return {
+                data: result,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
     async analysisHistoryRequest(
         analysisType: 'CNDP Skin' | 'CNDP Hair' | 'FFA' | 'HH' | 'CMA Skin' | 'CMA Hair',
         customerId: string,
@@ -617,6 +649,46 @@ export class PartnerDbService {
             hh: `${baseUrl}/cndphh/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
             cmaskin: `${baseUrl}/cmaskin/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
             cmahair: `${baseUrl}/cmahair/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
+        };
+
+        const requestUrl = requestUrlObj[analysisType];
+
+        const response = await axios.get(requestUrl, {
+            headers: {
+                Authorization: bearerToken,
+            },
+        });
+
+        return response.data || [];
+    }
+
+    async analysisHydrationSebumByBatchId(
+        analysisType: 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair',
+        batchId: string,
+        bearerToken: string,
+    ): Promise<any[]> {
+        const urlObj = {
+            cndpskin: process.env['CNDP_SKIN_ANALYSIS_URL'],
+            cndphair: process.env['CNDP_HAIR_ANALYSIS_URL'],
+            ffa: process.env['FFA_ANALYSIS_URL'],
+            hh: process.env['HH_ANALYSIS_URL'],
+            cmaskin: process.env['CMA_SKIN_ANALYSIS_URL'],
+            cmahair: process.env['CMA_HAIR_ANALYSIS_URL'],
+        };
+
+        const baseUrl = urlObj[analysisType];
+
+        if (!baseUrl) {
+            return null;
+        }
+
+        const requestUrlObj = {
+            cndpskin: `${baseUrl}/cndpskin/hydration-sebum?batch_id=${batchId}`,
+            cndphair: `${baseUrl}/cndphair/hydration-sebum?batch_id=${batchId}`,
+            ffa: `${baseUrl}/ffa/hydration-sebum?batch_id=${batchId}`,
+            hh: `${baseUrl}/cndphh/hydration-sebum?batch_id=${batchId}`,
+            cmaskin: `${baseUrl}/cmaskin/hydration-sebum?batch_id=${batchId}`,
+            cmahair: `${baseUrl}/cmahair/hydration-sebum?batch_id=${batchId}`,
         };
 
         const requestUrl = requestUrlObj[analysisType];
