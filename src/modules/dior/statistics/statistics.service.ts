@@ -2,7 +2,13 @@ import { Request } from 'express';
 import * as moment from 'moment';
 
 import { Module, UnauthorizedException, Injectable, BadRequestException } from '@nestjs/common';
-import { GetInfographStatDetails, GetOverAllDetailsDto, GetOverAllDto, GetStatDetailsDto } from './statistics.dto';
+import {
+    GetInfographStatDetails,
+    GetOverAllDetailsDto,
+    GetOverAllDto,
+    GetStatDetailsCountryWiseDto,
+    GetStatDetailsDto,
+} from './statistics.dto';
 import {
     ConsultantBranchesRepository,
     ConsultantCountriesRepository,
@@ -1027,7 +1033,6 @@ export class StatisticsService {
 
                 consultants = await consultantQuery.getMany();
             }
-
             let data = [];
             if (stat_type === 'stores') {
                 let branches = [];
@@ -1156,6 +1161,115 @@ export class StatisticsService {
                 });
 
                 data = clientsNewArr;
+            }
+
+            return data;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getStatDetailsCountryWise(req: Request, query: GetStatDetailsCountryWiseDto, locale = 'en') {
+        try {
+            const { stat_type, country_name, start_date, end_date } = query;
+
+            if (!stat_type || !country_name) {
+                const message = !stat_type ? 'The stat_type does not exist.' : 'The country_name missing.';
+                throw new BadRequestException({
+                    result_code: ErrorStatus.CUSTOM_ERROR,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'custom_error', message),
+                });
+            }
+
+            let data: any;
+
+            if (stat_type === 'stores') {
+                let storesQuery = this.consultantBranchesRepository
+                    .createQueryBuilder('consultant_branch')
+                    .select([
+                        'consultant_branch.name AS pos_name',
+                        'consultant_branch.code AS pos_code',
+                        'COUNT(*) AS total_count',
+                    ])
+                    .innerJoin('consultant_branch.consultants', 'consultant')
+                    .where('LOWER(consultant.country) = LOWER(:country_name)', { country_name });
+
+                if (start_date && end_date) {
+                    storesQuery = storesQuery.andWhere(
+                        'consultant_branch.createdAt BETWEEN :start_date AND :end_date',
+                        { start_date, end_date },
+                    );
+                }
+
+                storesQuery = storesQuery.groupBy('consultant_branch.name, consultant_branch.code');
+
+                const storesResult = await storesQuery.getRawMany();
+                data = storesResult.map((row) => ({
+                    pos_name: row.pos_name,
+                    pos_code: row.pos_code,
+                    total_count: row.total_count,
+                }));
+            } else if (stat_type === 'devices') {
+                data = [];
+            } else if (stat_type === 'consultations') {
+                let consultationsQuery = this.consultantRepository
+                    .createQueryBuilder('consultant')
+                    .select('DISTINCT(consultant.id)', 'id')
+                    .where('LOWER(consultant.country) = LOWER(:country_name)', { country_name });
+
+                const consultantIds = await consultationsQuery.getRawMany();
+
+                const consultationsResult =
+                    await this.analysisDataReplicationService.getConsultationForStatDetailsCountryWise(
+                        consultantIds,
+                        start_date,
+                        end_date,
+                    );
+
+                const newConsultationArr = await Promise.all(
+                    consultationsResult.map(async (obj: any) => {
+                        const branch = await this.consultantRepository.findOne({
+                            where: {
+                                id: obj.consultant_id,
+                            },
+                            relations: ['consultant_branch'],
+                        });
+                        return {
+                            pos_name: branch.consultant_branch.name,
+                            pos_code: branch.consultant_branch.code,
+                            total_count: obj.total_count,
+                        };
+                    }),
+                );
+
+                data = newConsultationArr;
+            } else if (stat_type === 'clients') {
+                let clientsQuery = this.customerRepository
+                    .createQueryBuilder('customer')
+                    .select([
+                        'consultant_branch.name AS pos_name',
+                        'consultant_branch.code AS pos_code',
+                        'COUNT(*) AS total_count',
+                    ])
+                    .innerJoin('customer.consultant', 'consultant')
+                    .innerJoin('consultant.consultantBranch', 'consultant_branch')
+                    .where('LOWER(consultant.country) = LOWER(:country_name)', { country_name });
+
+                if (start_date && end_date) {
+                    clientsQuery = clientsQuery.andWhere('customer.createdAt BETWEEN :start_date AND :end_date', {
+                        start_date,
+                        end_date,
+                    });
+                }
+
+                clientsQuery = clientsQuery.groupBy('consultant_branch.name, consultant_branch.code');
+
+                const clientsResult = await clientsQuery.getRawMany();
+                data = clientsResult.map((row: any) => ({
+                    pos_name: row.pos_name,
+                    pos_code: row.pos_code,
+                    total_count: row.total_count,
+                }));
             }
 
             return data;

@@ -199,6 +199,27 @@ export class AnalysisDataReplicationService {
         return await this.diorCndpSkinRepository.query(consultationQuery);
     }
 
+    async getConsultationForStatDetailsCountryWise(consultantIds: Consultants[], startDate: string, endDate: string) {
+        const consultantIdArray = consultantIds.map((row) =>
+            row.id.toString().startsWith('%') ? row.id.toString() : '%' + row.id.toString(),
+        );
+
+        let consultationConditions = `args->>'status' LIKE '%true' AND (args->>'consultant_id') LIKE ANY (array[${consultantIdArray
+            .map((id) => `'${id}'`)
+            .join(',')}])`;
+
+        if (startDate && endDate) {
+            consultationConditions += ` AND created_at BETWEEN '${startDate}' AND '${endDate}'`;
+        }
+
+        return await this.diorCndpSkinRepository
+            .createQueryBuilder('analysis')
+            .select(["args->>'consultant_id' AS consultant_id", 'COUNT(*) AS total_count'])
+            .where(consultationConditions)
+            .groupBy("args->>'consultant_id'")
+            .getRawMany();
+    }
+
     async getBatchId(customerId: string, appId: number) {
         const repository = this.DBRediction(appId).ohioRepos;
         const analyisData = repository.find({

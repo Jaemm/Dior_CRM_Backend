@@ -43,3 +43,21 @@ export class GetInfographStatDetails {
     @IsString()
     stat_type: string;
 }
+
+export class GetStatDetailsCountryWiseDto {
+    @IsOptional()
+    @IsString()
+    stat_type: string;
+
+    @IsOptional()
+    @IsString()
+    country_name: string;
+
+    @IsOptional()
+    @IsString()
+    start_date: string;
+
+    @IsOptional()
+    @IsString()
+    end_date: string;
+}
