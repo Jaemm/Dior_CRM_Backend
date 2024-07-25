@@ -7,6 +7,7 @@ import {
     CustomersRepository,
     DevicesRepository,
     PasswordEmailDetailsRepository,
+    ProductsRepository,
     SalesConnectionRepository,
 } from '@/src/common/repositories/crm';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
@@ -33,6 +34,7 @@ import { ConsultantsModule } from '../consultants/consultants.module';
         DevicesRepository,
         SalesConnectionRepository,
         PasswordEmailDetailsRepository,
+        ProductsRepository,
     ],
 })
 export class PartnerDbModule {

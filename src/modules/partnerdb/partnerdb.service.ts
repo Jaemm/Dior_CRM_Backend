@@ -1,6 +1,8 @@
 import { Request } from 'express';
 import * as argon2 from 'argon2';
 import bcrypt from 'bcrypt';
+import axios from 'axios';
+import _ from 'lodash';
 
 import {
     BadRequestException,
@@ -13,17 +15,26 @@ import {
     ApplicationsRepository,
     ConsultantsRepository,
     CustomersRepository,
+    DevicesRepository,
     PasswordEmailDetailsRepository,
+    ProductsRepository,
 } from '@/src/common/repositories/crm';
 
 import { ErrorStatus } from '@/src/common/constants/error-status';
-import { GetCustomerByConsultantDto, LoginDiorConsultantDto, ResetPasswordDto } from './partnerdb.dto';
+import {
+    GetAnalysisHistoriesDto,
+    GetAnalysisHistoryByBatchIdDto,
+    GetCustomerByConsultantDto,
+    LoginDiorConsultantDto,
+    ResetPasswordDto,
+} from './partnerdb.dto';
 import { Brackets, In } from 'typeorm';
 import { ConsultantsService } from '../consultants/consultants.service';
 import { CommonService } from '@/src/common/common.service';
 import { PositionsIds } from '@/src/common/enums/position.enum';
 import { Role } from '@/src/common/enums/role.enum';
 import { AuthService } from '../auth/auth.service';
+import { Applications, Devices } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class PartnerDbService {
@@ -35,6 +46,7 @@ export class PartnerDbService {
         private readonly applicationRepository: ApplicationsRepository,
         private readonly customerRepository: CustomersRepository,
         private readonly consultantRepository: ConsultantsRepository,
+        private readonly productsRepository: ProductsRepository,
         private readonly passwordEmailDetailsRepository: PasswordEmailDetailsRepository,
     ) {}
 
@@ -412,6 +424,210 @@ export class PartnerDbService {
         } catch (e) {
             throw e;
         }
+    }
+
+    async getAnalysisHistories(req: Request, customerId: string, query: GetAnalysisHistoriesDto, locale = 'en') {
+        try {
+            const { filter_by: filterBy } = query;
+
+            const requestHeaders = req.headers;
+
+            const authorization = requestHeaders?.authorization;
+
+            const bearerToken = authorization.startsWith('Bearer') ? authorization : null;
+
+            if (!bearerToken) {
+                throw new UnauthorizedException({
+                    result_code: ErrorStatus.UNAUTHORIZED,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+                });
+            }
+
+            const customer = await this.customerRepository.findOne({
+                where: {
+                    id: Number(customerId),
+                },
+                relations: ['consultant'],
+            });
+
+            if (!customer) {
+                throw new NotFoundException({});
+            }
+
+            const consultant = customer?.consultant;
+
+            let application: Applications;
+            let device: Devices;
+            if (customer?.app_id) {
+                application = await this.applicationRepository.findByEntitiesAppId(customer);
+                device = await this.productsRepository.findProductsDeviceByEntityAndAppId(customer);
+            } else if (consultant?.app_id) {
+                application = await this.applicationRepository.findByEntitiesAppId(consultant);
+                device = await this.productsRepository.findProductsDeviceByEntityAndAppId(consultant);
+            }
+
+            // const data = [];
+
+            const analysisTypeList = application?.analysis_type || [];
+
+            const analysisHistoryRequestPromise = analysisTypeList.map(async (analysisType) => {
+                let result: any;
+
+                if (['CNDP Skin', 'CNDP Hair', 'FFA', 'HH', 'CMA Skin', 'CMA Hair'].includes(analysisType)) {
+                    const type = analysisType as 'CNDP Skin' | 'CNDP Hair' | 'FFA' | 'HH' | 'CMA Skin' | 'CMA Hair';
+                    result = await this.analysisHistoryRequest(type, customerId, bearerToken);
+                }
+
+                if (result) {
+                    result = {
+                        data: result?.data || [],
+                        device_id: device?.optic_number,
+                        analysis_type: analysisType,
+                        service_name: application?.name,
+                    };
+                }
+
+                return result;
+            });
+
+            const data = await Promise.all(analysisHistoryRequestPromise);
+
+            let filteredData = data;
+
+            if (filterBy) {
+                let filterByOrder = 'ASC';
+                let filterByField = filterBy;
+
+                if (filterBy.includes('-')) {
+                    filterByOrder = 'DESC';
+                    filterByField = filterBy.replace('-', '');
+                }
+
+                console.log(`filter_by_order => ${filterByOrder}`);
+
+                if (filterByOrder === 'DESC') {
+                    filteredData = _.orderBy(filteredData, [filterByField], ['desc']);
+                } else {
+                    filteredData = _.orderBy(filteredData, [filterByField], ['asc']);
+                }
+            }
+
+            return filteredData;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getAnalysisHistoriesByBatchId(
+        req: Request,
+        customerId: string,
+        batchId: string,
+        query: GetAnalysisHistoryByBatchIdDto,
+        locale = 'en',
+    ) {
+        try {
+            const { analysis_type: analysisType } = query;
+
+            const requestHeaders = req.headers;
+
+            const authorization = requestHeaders?.authorization;
+
+            const bearerToken = authorization.startsWith('Bearer') ? authorization : null;
+
+            let result: any;
+
+            if (['cndpskin', 'cndphair', 'ffa', 'hh', 'cmaskin', 'cmahair'].includes(analysisType)) {
+                const type = analysisType as 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair';
+                result = await this.analysisHistoryRequestByBatchId(type, customerId, batchId, bearerToken);
+            }
+
+            return {
+                data: result,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async analysisHistoryRequest(
+        analysisType: 'CNDP Skin' | 'CNDP Hair' | 'FFA' | 'HH' | 'CMA Skin' | 'CMA Hair',
+        customerId: string,
+        bearerToken: string,
+    ): Promise<any[]> {
+        const urlObj = {
+            'CNDP Skin': process.env['CNDP_SKIN_ANALYSIS_URL'],
+            'CNDP Hair': process.env['CNDP_HAIR_ANALYSIS_URL'],
+            'FFA': process.env['FFA_ANALYSIS_URL'],
+            'HH': process.env['HH_ANALYSIS_URL'],
+            'CMA Skin': process.env['CMA_SKIN_ANALYSIS_URL'],
+            'CMA Hair': process.env['CMA_HAIR_ANALYSIS_URL'],
+        };
+
+        const baseUrl = urlObj[analysisType];
+
+        if (!baseUrl) {
+            return null;
+        }
+
+        const requestUrlObj = {
+            'CNDP Skin': `${baseUrl}/cndpskin/${customerId}/analysis-history?page=1&limit=25`,
+            'CNDP Hair': `${baseUrl}/cndphair/${customerId}/analysis-history?page=1&limit=25`,
+            'FFA': `${baseUrl}/ffa/${customerId}/analysis-history?page=1&limit=25`,
+            'HH': `${baseUrl}/cndphh/${customerId}/analysis-history`,
+            'CMA Skin': `${baseUrl}/cmaskin/${customerId}/analysis-history`,
+            'CMA Hair': `${baseUrl}/cmahair/${customerId}/analysis-history`,
+        };
+
+        const requestUrl = requestUrlObj[analysisType];
+
+        const response = await axios.get(requestUrl, {
+            headers: {
+                Authorization: bearerToken,
+            },
+        });
+
+        return response.data || [];
+    }
+
+    async analysisHistoryRequestByBatchId(
+        analysisType: 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair',
+        customerId: string,
+        batchId: string,
+        bearerToken: string,
+    ): Promise<any[]> {
+        const urlObj = {
+            cndpskin: process.env['CNDP_SKIN_ANALYSIS_URL'],
+            cndphair: process.env['CNDP_HAIR_ANALYSIS_URL'],
+            ffa: process.env['FFA_ANALYSIS_URL'],
+            hh: process.env['HH_ANALYSIS_URL'],
+            cmaskin: process.env['CMA_SKIN_ANALYSIS_URL'],
+            cmahair: process.env['CMA_HAIR_ANALYSIS_URL'],
+        };
+
+        const baseUrl = urlObj[analysisType];
+
+        if (!baseUrl) {
+            return null;
+        }
+
+        const requestUrlObj = {
+            cndpskin: `${baseUrl}/cndpskin/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
+            cndphair: `${baseUrl}/cndphair/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
+            ffa: `${baseUrl}/ffa/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
+            hh: `${baseUrl}/cndphh/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
+            cmaskin: `${baseUrl}/cmaskin/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
+            cmahair: `${baseUrl}/cmahair/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
+        };
+
+        const requestUrl = requestUrlObj[analysisType];
+
+        const response = await axios.get(requestUrl, {
+            headers: {
+                Authorization: bearerToken,
+            },
+        });
+
+        return response.data || [];
     }
 
     async resetPassword(body: ResetPasswordDto, locale: string = 'en') {

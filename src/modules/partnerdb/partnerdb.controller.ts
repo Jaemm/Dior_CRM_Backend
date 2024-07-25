@@ -4,7 +4,13 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { PartnerDbService } from './partnerdb.service';
-import { GetCustomerByConsultantDto, LoginDiorConsultantDto, ResetPasswordDto } from './partnerdb.dto';
+import {
+    GetAnalysisHistoriesDto,
+    GetAnalysisHistoryByBatchIdDto,
+    GetCustomerByConsultantDto,
+    LoginDiorConsultantDto,
+    ResetPasswordDto,
+} from './partnerdb.dto';
 
 @ApiTags('PartnerDB')
 @Controller('partnerdb')
@@ -37,5 +43,34 @@ export class PartnerDbController {
     @Roles(Role.Consultant)
     async getConsultantById(@Param('id') consultantId: string) {
         return await this.partnerdbService.getConsultantById(consultantId);
+    }
+
+    /**
+     * Customers
+     */
+
+    @Get('customers/:id/analysis_histories')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async getAnalysisHistories(
+        @Req() req: Request,
+        @Param('id') customerId: string,
+        @Query() query: GetAnalysisHistoriesDto,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
+    ) {
+        return await this.partnerdbService.getAnalysisHistories(req, customerId, query, locale);
+    }
+
+    @Get('customers/:id/analysis_histories/:batch_id')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async getAnalysisHistoriesByBatchId(
+        @Req() req: Request,
+        @Param('id') customerId: string,
+        @Param('batch_id') batchId: string,
+        @Query() query: GetAnalysisHistoryByBatchIdDto,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
+    ) {
+        return await this.partnerdbService.getAnalysisHistoriesByBatchId(req, customerId, batchId, query, locale);
     }
 }

@@ -1,11 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository, FindOptionsSelect } from 'typeorm';
-import { Applications } from '@/src/common/entities/crmEntities';
+import { Applications, Consultants, Customers } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class ApplicationsRepository extends Repository<Applications> {
     constructor(dataSource: DataSource) {
         super(Applications, dataSource.createEntityManager());
+    }
+
+    async findByEntitiesAppId(entity: Customers | Consultants) {
+        return await this.findOne({
+            where: {
+                id: entity.app_id,
+            },
+        });
     }
 
     async findOneApplication(id: number) {

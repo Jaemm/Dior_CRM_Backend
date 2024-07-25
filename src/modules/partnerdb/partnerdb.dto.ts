@@ -41,3 +41,23 @@ export class ResetPasswordDto {
     @IsString()
     email: string;
 }
+
+export class GetAnalysisHistoriesDto {
+    @IsOptional()
+    @IsString()
+    filter_by: string;
+
+    @IsOptional()
+    @IsString()
+    page: string;
+
+    @IsOptional()
+    @IsString()
+    limit: string;
+}
+
+export class GetAnalysisHistoryByBatchIdDto {
+    @IsNotEmpty()
+    @IsString()
+    analysis_type: 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair';
+}

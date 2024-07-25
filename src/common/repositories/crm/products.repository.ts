@@ -1,11 +1,38 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { Products } from '@/src/common/entities/crmEntities';
+import { Consultants, Customers, Devices, Products } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class ProductsRepository extends Repository<Products> {
     constructor(dataSource: DataSource) {
         super(Products, dataSource.createEntityManager());
+    }
+
+    async findProductsDeviceByEntityAndAppId(entity: Customers | Consultants) {
+        let device: Devices;
+
+        if (entity instanceof Customers) {
+            const products = await this.findOne({
+                where: {
+                    customer_id: entity.id,
+                    application_id: entity.app_id,
+                },
+                relations: ['device'],
+            });
+            device = products?.device;
+            return device;
+        }
+
+        const products = await this.findOne({
+            where: {
+                consultant_id: entity.id,
+                application_id: entity.app_id,
+            },
+            relations: ['device'],
+        });
+        device = products?.device;
+
+        return device;
     }
 
     async getNewOpticNumbersCountByBranch(branchId: number | string) {
