@@ -2,7 +2,7 @@ import { Request } from 'express';
 import * as moment from 'moment';
 
 import { Module, UnauthorizedException, Injectable, BadRequestException } from '@nestjs/common';
-import { GetOverAllDetailsDto, GetOverAllDto, GetStatDetailsDto } from './statistics.dto';
+import { GetInfographStatDetails, GetOverAllDetailsDto, GetOverAllDto, GetStatDetailsDto } from './statistics.dto';
 import {
     ConsultantBranchesRepository,
     ConsultantCountriesRepository,
@@ -27,10 +27,12 @@ import { when } from 'joi';
 import { count } from 'console';
 import { ProductRecommendationForDiorT, ProductRecommendationVariantForDiorT } from '@/src/common/types/entities';
 import { ProductTranslationForDiorT } from '@/src/common/types/entities/product_translations.type';
+import { CommonService } from '@/src/common/common.service';
 
 @Injectable()
 export class StatisticsService {
     constructor(
+        private commonService: CommonService,
         private analysisDataReplicationService: AnalysisDataReplicationService,
 
         // Repos
@@ -966,6 +968,194 @@ export class StatisticsService {
                     total_count: totalClients,
                     data: jsonData,
                 };
+            }
+
+            return data;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getInfographStatDetails(req: Request, query: GetInfographStatDetails, locale = 'en') {
+        try {
+            let type = 'day';
+
+            const { start_date, end_date, stat_type } = query;
+
+            if (!stat_type) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.CUSTOM_ERROR,
+                    error: this.commonService.createLocaleErrorMessage(
+                        locale,
+                        'custom_error',
+                        'The stat_type does not exist.',
+                    ),
+                });
+            }
+
+            const userId = (<{ id: string }>req.user).id;
+            const currentConsultant = await this.consultantRepository.getConsultantById(Number(userId), [
+                'consultant_branch',
+            ]);
+            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+
+            let consultants;
+            let branches;
+
+            const consultantQuery = this.consultantRepository
+                .createQueryBuilder('consultants')
+                .where('consultants.consultant_company_id = :companyId', {
+                    companyId: diorCompanyId,
+                });
+
+            if (PositionsIds.ADMIN === Number(currentConsultant.consultant_position_id)) {
+                consultantQuery.andWhere('LOWER (consultants.country) IN (:...countries)', {
+                    countries: currentConsultant.countries.map((country) => country.toLocaleLowerCase()),
+                });
+
+                consultants = await consultantQuery.getMany();
+
+                branches = await this.consultantBranchesRepository.find({
+                    where: {
+                        id: In(consultants.map((c) => String(c.consultant_branch_id))),
+                    },
+                });
+            } else if (PositionsIds.BRAND_MANAGER === Number(currentConsultant.consultant_position_id)) {
+                consultantQuery.andWhere('LOWER (consultants.country) = :country', {
+                    country: currentConsultant?.consultant_branch?.country,
+                });
+
+                consultants = await consultantQuery.getMany();
+            }
+
+            let data = [];
+            if (stat_type === 'stores') {
+                let branches = [];
+                if ([6, 4].includes(currentConsultant.consultant_position_id)) {
+                    branches = await this.consultantBranchesRepository
+                        .createQueryBuilder('branch')
+                        .where('branch.id IN (:...ids)', {
+                            ids: consultants.map((c) => c.consultant_branch_id).filter((v, i, a) => a.indexOf(v) === i),
+                        })
+                        .getMany();
+                } else if (currentConsultant.consultant_position_id === 5) {
+                    branches = await this.consultantBranchesRepository
+                        .createQueryBuilder('branch')
+                        .where('branch.consultantCompanyId = :companyId', { companyId: diorCompanyId })
+                        .getMany();
+                }
+
+                let query = `SELECT jsonb_agg(jsonb_build_object(created_date, user_counts)) AS result 
+                             FROM (SELECT created_date, jsonb_object_agg(country_name, user_count) AS user_counts 
+                                   FROM (SELECT DATE(consultant_branches.created_at) AS created_date, 
+                                                consultant_branches.country AS country_name, 
+                                                COUNT(*) AS user_count 
+                                         FROM consultant_branches 
+                                         WHERE consultant_branches.country IS NOT NULL`;
+
+                if (start_date && end_date) {
+                    query += ` AND consultant_branches.created_at BETWEEN '${start_date} 00:00:00' AND '${end_date} 23:59:59'`;
+                }
+
+                query += ` GROUP BY DATE(consultant_branches.created_at), consultant_branches.country) AS subquery 
+                          GROUP BY created_date 
+                          ORDER BY created_date DESC) AS final_sub_query`;
+
+                const arr = await this.consultantBranchesRepository.query(query);
+
+                // console.log(arr);
+
+                // return;
+                data = arr.length > 0 ? arr[0].result : [];
+                const newArr: any = [];
+
+                data.forEach((d: any) => {
+                    const newJson = { date: Object.keys(d)[0], country_details: [] as any };
+                    const cA = newJson.country_details;
+
+                    Object.keys(d[Object.keys(d)[0]]).forEach((country) => {
+                        const json = { country_name: country, value: d[Object.keys(d)[0]][country] };
+                        cA.push(json);
+                    });
+
+                    newArr.push(newJson);
+                });
+
+                data = newArr;
+            } else if (stat_type === 'devices') {
+                data = [];
+            } else if (stat_type === 'consultations') {
+                let result = await this.analysisDataReplicationService.getConsultantForInfographStatDetails(
+                    start_date,
+                    end_date,
+                );
+
+                const consultantIds = result
+                    .map((res: any) => res.consultant_id)
+                    .filter((v: any, i: any, a: any) => a.indexOf(v) === i);
+                const days = result.map((val: any) => val.day);
+
+                let finalQuery = `SELECT consultant_ids.id AS consultant_id, c.country, COUNT(*) AS id_count, consultant_ids.days 
+                        FROM (SELECT UNNEST($1::int[]) AS id, UNNEST($2::text[]) AS days) AS consultant_ids 
+                        INNER JOIN consultants c ON c.id = consultant_ids.id 
+                        GROUP BY consultant_ids.id, c.country, consultant_ids.days 
+                        ORDER BY consultant_id`;
+
+                result = await this.consultantRepository.query(finalQuery, [consultantIds, days]);
+
+                const groupedResult: any = {};
+                result.forEach((item: any) => {
+                    const { days, country, id_count } = item;
+                    if (!groupedResult[days]) groupedResult[days] = {};
+                    if (!groupedResult[days][country]) groupedResult[days][country] = 0;
+                    groupedResult[days][country] += parseInt(id_count, 10);
+                });
+
+                const formattedResult = Object.keys(groupedResult).map((date) => ({
+                    date,
+                    country_details: Object.keys(groupedResult[date]).map((country) => ({
+                        country_name: country,
+                        value: groupedResult[date][country],
+                    })),
+                }));
+
+                return formattedResult.sort((a, b) => moment(b.date).diff(moment(a.date)));
+            } else if (stat_type === 'clients') {
+                let clientsQuery = `SELECT jsonb_agg(jsonb_build_object(created_date, user_counts)) AS result 
+                          FROM (SELECT created_date, jsonb_object_agg(country_name, user_count) AS user_counts 
+                                FROM (SELECT DATE(customers.createdAt) AS created_date, 
+                                             consultants.country AS country_name, 
+                                             COUNT(*) AS user_count 
+                                      FROM customers 
+                                      LEFT JOIN consultants ON customers.consultantId = consultants.id 
+                                      WHERE consultants.country IS NOT NULL`;
+
+                if (start_date && end_date) {
+                    clientsQuery += ` AND customers.createdAt BETWEEN '${start_date}' AND '${end_date}'`;
+                }
+
+                clientsQuery += ` GROUP BY DATE(customers.createdAt), consultants.country) AS subquery 
+                       GROUP BY created_date 
+                       ORDER BY created_date DESC) AS final_sub_query`;
+
+                const clientsArr = await this.customerRepository.query(clientsQuery);
+
+                data = clientsArr.length > 0 ? clientsArr[0].result : [];
+                const clientsNewArr: any = [];
+
+                data.forEach((d: any) => {
+                    const newJson = { date: Object.keys(d)[0], country_details: [] as any };
+                    const cA = newJson.country_details;
+
+                    Object.keys(d[Object.keys(d)[0]]).forEach((country) => {
+                        const json = { country_name: country, value: d[Object.keys(d)[0]][country] };
+                        cA.push(json);
+                    });
+
+                    clientsNewArr.push(newJson);
+                });
+
+                data = clientsNewArr;
             }
 
             return data;

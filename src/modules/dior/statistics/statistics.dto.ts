@@ -29,3 +29,17 @@ export class GetStatDetailsDto {
     @IsString()
     stat_type: string;
 }
+
+export class GetInfographStatDetails {
+    @IsOptional()
+    @IsString()
+    start_date: string;
+
+    @IsOptional()
+    @IsString()
+    end_date: string;
+
+    @IsOptional()
+    @IsString()
+    stat_type: string;
+}

@@ -4,7 +4,7 @@ import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { Controller, Get, Query, Req, Headers } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { GetOverAllDetailsDto, GetOverAllDto, GetStatDetailsDto } from './statistics.dto';
+import { GetInfographStatDetails, GetOverAllDetailsDto, GetOverAllDto, GetStatDetailsDto } from './statistics.dto';
 import { StatisticsService } from './statistics.service';
 
 @Controller('dior/statistics')
@@ -55,5 +55,16 @@ export class StatisticsController {
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         return this.statisticsService.getStatDetails(req, query, locale);
+    }
+
+    @Get('infograph_stat_details')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async getInfographStatDetails(
+        @Req() req: Request,
+        @Query() query: GetInfographStatDetails,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
+    ) {
+        return this.statisticsService.getInfographStatDetails(req, query, locale);
     }
 }

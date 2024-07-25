@@ -1,3 +1,4 @@
+import * as moment from 'moment';
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, Brackets } from 'typeorm';
@@ -140,6 +141,8 @@ export class AnalysisDataReplicationService {
         }
     }
 
+    ///////
+
     async getConsultantCounts(consultantIds?: string[], startDate?: string, endDate?: string) {
         try {
             const countQuery = this.diorCndpSkinRepository
@@ -175,6 +178,25 @@ export class AnalysisDataReplicationService {
         } catch (e) {
             throw e;
         }
+    }
+
+    async getConsultantForInfographStatDetails(startDate?: string, endDate?: string) {
+        let consultationQuery = `SELECT DATE(analysis.createdAt) AS day, args->>'consultant_id' AS consultant_id 
+                               FROM analysis 
+                               WHERE (args->>'status' like '%true')`;
+
+        if (startDate && endDate) {
+            consultationQuery += ` AND analysis.createdAt BETWEEN '${startDate}' AND '${endDate}'`;
+        } else {
+            consultationQuery += ` AND analysis.createdAt BETWEEN '${moment()
+                .subtract(6, 'months')
+                .format('YYYY-MM-DD')}' AND '${moment().format('YYYY-MM-DD')}'`;
+        }
+
+        consultationQuery += ` GROUP BY day, consultant_id 
+                             ORDER BY day`;
+
+        return await this.diorCndpSkinRepository.query(consultationQuery);
     }
 
     async getBatchId(customerId: string, appId: number) {
