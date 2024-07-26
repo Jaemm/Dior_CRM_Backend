@@ -124,6 +124,20 @@ export class CommonService {
         return { id: v4(), message };
     }
 
+    async justSendMail(to: string, subject: string, batchId: string) {
+        try {
+            const mailOptions: Mail.Options = {
+                from: process.env.EMAIL_USER,
+                to,
+                subject,
+            };
+
+            await this.mailTransporter.sendMail(mailOptions);
+        } catch (e) {
+            throw e;
+        }
+    }
+
     async sendEmail({ to, subject, templateName, templateContext }: IEmailParams) {
         try {
             const templatePath = `${process.env.PUBLIC_FILE}/email-templates/${templateName}.hbs`;

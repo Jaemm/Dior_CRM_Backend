@@ -40,6 +40,18 @@ export class CustomerByConsultantIdDto {
     email?: string;
 }
 
+export class SendWebResultDto {
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    email: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    batch_id: string;
+}
+
 export class CreateCustomerDto {
     @ApiProperty()
     @IsNotEmpty()

@@ -23,7 +23,7 @@ import {
 
 import { Request } from 'express';
 
-import { CustomerByConsultantIdDto, CreateCustomerDto } from './dior.dto';
+import { CustomerByConsultantIdDto, CreateCustomerDto, SendWebResultDto } from './dior.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ProductTranslations } from '@/src/common/entities/crmEntities';
 import { CommonService } from '@/src/common/common.service';
@@ -164,6 +164,27 @@ export class DiorService {
             };
 
             return reformatCustomer;
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async sendWebResult(body: SendWebResultDto, locale: string = 'en') {
+        try {
+            const { email, batch_id } = body;
+
+            if (!email || !batch_id) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.CUSTOM_ERROR,
+                    error: this.commonService.createLocaleErrorMessage(
+                        locale,
+                        'custom_error',
+                        'Batch ID and email is missing!',
+                    ),
+                });
+            }
+
+            await this.commonService.justSendMail(email, 'Dior Skin Analyzer Consultation Results', batch_id);
         } catch (e) {
             throw e;
         }
