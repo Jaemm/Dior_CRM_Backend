@@ -282,6 +282,37 @@ export class CRMService {
     async updateCustomer(consultantId: number, customerId: number, data: UpdateCrmCustomersDto) {
         // let country_id = data.country_id;
 
+        const {
+            email,
+            social,
+            social_id,
+            name,
+            os,
+            language,
+            phone,
+            birth,
+            address,
+            note,
+            app_id,
+            company_id,
+            consultant_id,
+            surname,
+            gender,
+            skin_condition,
+            skin_color_group_id,
+            ethnicity_id,
+            state,
+            zip_code,
+            country_code,
+            is_active,
+            notes,
+            image_url,
+            status,
+            phone_country_code,
+            ipos_consent_url,
+            external_id,
+        } = data;
+
         const consultant = await this.consultantRepository.findOne({
             where: {
                 id: consultantId,
@@ -302,8 +333,36 @@ export class CRMService {
             });
         }
 
-        const mergeData = await this.customersRepository.merge(customer, data);
-        await this.customersRepository.save(mergeData);
+        customer.email = email ? email : customer.email;
+        customer.social = social ? social : customer.social;
+        customer.social_id = social_id ? social_id : customer.social_id;
+        customer.os = os ? os : customer.os;
+        customer.language = language ? language : customer.language;
+        customer.name = name ? name : customer.name;
+        customer.phone = phone ? phone : customer.phone;
+        customer.birth = birth ? birth : customer.birth;
+        customer.address = address ? address : customer.address;
+        customer.note = note ? note : customer.note;
+        customer.app_id = app_id ? app_id : customer.app_id;
+        customer.company_id = company_id ? company_id : customer.company_id;
+        customer.consultant_id = consultant_id ? consultant_id : customer.consultant_id;
+        customer.surname = surname ? surname : customer.surname;
+        customer.gender = gender ? gender : customer.gender;
+        customer.skin_condition = skin_condition ? skin_condition : customer.skin_condition;
+        customer.skin_color_group_id = skin_color_group_id ? skin_color_group_id : customer.skin_color_group_id;
+        customer.ethnicity_id = ethnicity_id ? ethnicity_id : customer.ethnicity_id;
+        customer.state = state ? state : customer.state;
+        customer.zip_code = zip_code ? zip_code : customer.zip_code;
+        customer.country_code = country_code ? country_code : customer.country_code;
+        customer.is_active = is_active ? is_active : customer.is_active;
+        customer.notes = notes ? notes : customer.notes;
+        customer.image_url = image_url ? image_url : customer.image_url;
+        customer.status = status ? status : customer.status;
+        customer.phone_country_code = phone_country_code ? phone_country_code : customer.phone_country_code;
+        customer.ipos_consent_url = ipos_consent_url ? ipos_consent_url : customer.ipos_consent_url;
+        customer.external_id = external_id ? external_id : customer.external_id;
+
+        await this.customersRepository.save(customer);
 
         const updatedCustomer = await this.customersRepository.findOne({
             where: { id: customerId },
