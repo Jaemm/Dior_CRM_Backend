@@ -1,4 +1,10 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+    BadRequestException,
+    ConflictException,
+    Injectable,
+    NotFoundException,
+    UnauthorizedException,
+} from '@nestjs/common';
 import { In } from 'typeorm';
 
 import { ConsultantsService } from '../consultants/consultants.service';
@@ -90,7 +96,7 @@ export class CRMService {
         }
     }
 
-    async getCustomerById(consultantId: number, customerId: number) {
+    async getCustomerById(consultantId: number, customerId: number, locale: string = 'en') {
         const selection = {
             customers: {
                 id: true,
@@ -121,22 +127,25 @@ export class CRMService {
         const consultant = await this.consultantsService.getConsultant({ id: consultantId }, selection, ['customers']);
 
         if (!consultant) {
-            this.commonService.throwNotFoundError();
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.UNAUTHORIZED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'unathorized'),
+            });
         }
 
-        const customer = consultant.customers.find((customer: any) => customer.id == customerId);
+        const customer = consultant.customers.find((customer: any) => customer.id === customerId);
 
         if (!customer) {
             throw new NotFoundException({
-                result_code: ErrorStatus.NOT_FOUND,
-                error: ResponseMessages.CrmCustomerNotFound,
+                result_code: ErrorStatus.CUSTOMER_NOT_FOUND,
+                error: this.commonService.createLocaleErrorMessage(locale, 'crm_customer_not_found'),
             });
         }
 
         return customer;
     }
 
-    async deleteCustomer(consultantId: number, customerId: number) {
+    async deleteCustomer(consultantId: number, customerId: number, locale: string = 'en') {
         const consultant = await this.consultantRepository.findOne({
             where: {
                 id: consultantId,
@@ -152,8 +161,8 @@ export class CRMService {
 
         if (!customer) {
             throw new NotFoundException({
-                result_code: ErrorStatus.NOT_FOUND,
-                error: ResponseMessages.CrmCustomerNotFound,
+                result_code: ErrorStatus.CUSTOMER_NOT_FOUND,
+                error: this.commonService.createLocaleErrorMessage(locale, 'crm_customer_not_found'),
             });
         }
 

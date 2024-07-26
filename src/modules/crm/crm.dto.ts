@@ -1,5 +1,5 @@
 import { IsNumberOrString } from '@/src/common/validators/number-or-string.validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsArray, IsNotEmpty, IsOptional, IsString, Validate } from 'class-validator';
 
 export class CRMDto {
@@ -123,141 +123,282 @@ export class GetCustomerDto {
     search: string;
 }
 
-export class UpdateCrmCustomersDto {
+export class CreateCrmCustomerDto {
     @ApiProperty()
-    @IsOptional()
-    email: string;
-
-    @ApiProperty()
-    @IsOptional()
-    social: string;
-
-    @ApiProperty()
-    @IsOptional()
-    social_id: string;
-
-    @ApiProperty()
-    @IsOptional()
-    name: string;
-
-    @ApiProperty()
-    @IsOptional()
-    os: string;
-
-    @ApiProperty()
-    @IsOptional()
-    language: string;
-
-    @ApiProperty()
-    @IsOptional()
-    phone: string;
-
-    @ApiProperty()
-    @IsOptional()
-    birth: string;
-
-    @ApiProperty()
-    @IsOptional()
-    address: string;
-
-    @ApiProperty()
-    @IsOptional()
-    note: string;
-
-    @ApiProperty()
-    @IsOptional()
-    @Validate(IsNumberOrString)
-    app_id: number;
-
-    @ApiProperty()
-    @IsOptional()
-    @Validate(IsNumberOrString)
-    company_id: number;
-
-    @ApiProperty()
-    @IsOptional()
+    @IsNotEmpty()
     @Validate(IsNumberOrString)
     consultant_id: number;
 
     @ApiProperty()
     @IsOptional()
+    @IsString()
+    email: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    phone: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    app_id: number;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    social: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    social_id: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    name: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    os: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    language: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    birth: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    address: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    note: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    company_id: number;
+
+    @ApiPropertyOptional()
+    @IsOptional()
     surname: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     gender: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @Validate(IsNumberOrString)
     age: number;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @Validate(IsNumberOrString)
     skin_condition: number;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @Validate(IsNumberOrString)
     skin_color_group_id: number;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @Validate(IsNumberOrString)
     ethnicity_id: number;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     city: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     state: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     zip_code: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     country: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     notes: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @Validate(IsNumberOrString)
     is_active: number;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     image_url: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @Validate(IsNumberOrString)
     status: number;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     phone_country_code: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     ipos_consent_url: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     without_ipos_consent_url: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     external_id: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
+    @IsOptional()
+    country_code: string;
+}
+
+export class UpdateCrmCustomersDto {
+    @ApiPropertyOptional()
+    @IsOptional()
+    email: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    social: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    social_id: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    name: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    os: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    language: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    phone: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    birth: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    address: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    note: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    app_id: number;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    company_id: number;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    consultant_id: number;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    surname: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    gender: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    age: number;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    skin_condition: number;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    skin_color_group_id: number;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    ethnicity_id: number;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    city: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    state: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    zip_code: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    country: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    notes: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    is_active: number;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    image_url: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @Validate(IsNumberOrString)
+    status: number;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    phone_country_code: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    ipos_consent_url: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    without_ipos_consent_url: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    external_id: string;
+
+    @ApiPropertyOptional()
     @IsOptional()
     country_code: string;
 }

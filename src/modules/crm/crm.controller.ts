@@ -13,10 +13,11 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { CRMService } from './crm.service';
 import { Response, Request } from 'express';
 import {
+    CreateCrmCustomerDto,
     CustomerSyncDto,
     GetByEmailDto,
     GetCustomerDto,
@@ -38,30 +39,32 @@ export class CRMController {
     /**
      * For Consultant
      */
+    @Get('customers')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('customers')
     async getCustomers(@Req() req: Request, @Query() query: GetCustomerDto) {
         const userId = Number((<{ id: string }>req['user']).id);
 
         return await this.crmService.getCustomer(userId, query);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Post('customers')
+    @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @Roles(Role.Consultant)
     async createCustomer(
         @Req() req: Request,
-        @Body() body: UpdateCrmCustomersDto,
+        @Body() body: CreateCrmCustomerDto,
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         const userId = Number((<{ id: string }>req['user']).id);
         return await this.crmService.createCustomer(userId, body, locale);
     }
 
+    @Get('customers/get_by_email')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('customers/get_by_email')
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async getCustomerByEmail(
         @Req() req: Request,
         @Query() query: GetByEmailDto,
@@ -71,8 +74,9 @@ export class CRMController {
         return await this.crmService.getByEmail(userId, query, locale);
     }
 
-    @Roles(Role.Consultant)
     @Post('customers/presign_upload_consent_form')
+    @Roles(Role.Consultant)
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async presignUploadConsentForm(
         @Body() body: PresignedUploadDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
@@ -102,12 +106,17 @@ export class CRMController {
         return await this.crmService.syncCustomer(consultantId, token, body);
     }
 
+    @Get('customers/:id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('customers/:id')
-    async getCustomerById(@Req() req: Request, @Param('id') customerId: string): Promise<any> {
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    async getCustomerById(
+        @Req() req: Request,
+        @Param('id') customerId: string,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
+    ): Promise<any> {
         const consultantId = Number((<{ id: string }>req['user']).id);
-        return await this.crmService.getCustomerById(consultantId, Number(customerId));
+        return await this.crmService.getCustomerById(consultantId, Number(customerId), locale);
     }
 
     @ApiBearerAuth()
@@ -123,12 +132,17 @@ export class CRMController {
         return await this.crmService.updateCustomer(consultantId, Number(customerId), body);
     }
 
+    @Delete('customers/:id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Delete('customers/:id')
-    async deleteCustomer(@Req() req: Request, @Param('id') customerId: string): Promise<any> {
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    async deleteCustomer(
+        @Req() req: Request,
+        @Param('id') customerId: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ): Promise<any> {
         const consultantId = Number((<{ id: string }>req['user']).id);
-        return await this.crmService.deleteCustomer(consultantId, Number(customerId));
+        return await this.crmService.deleteCustomer(consultantId, Number(customerId), locale);
     }
     /** END */
 }
