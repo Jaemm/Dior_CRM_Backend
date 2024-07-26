@@ -1,6 +1,6 @@
 import { BadRequestException, Controller, Delete, Get, Param, Query, Headers, Post, Body, Put } from '@nestjs/common';
 import { ProductRecommendationGroupsService } from './productRecommendationGroups.service';
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import {
     CreateProductRecommendationGroupsDto,
@@ -10,6 +10,7 @@ import {
 } from './productRecommendtaionGroups.dto';
 import { Role } from '@/src/common/enums/role.enum';
 
+@ApiTags('Dior-Product Recommendation Groups')
 @Controller('dior/product_recommendation_groups')
 export class ProductRecommendationGroupsController {
     constructor(private productRecommendationGroupsService: ProductRecommendationGroupsService) {}

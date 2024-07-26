@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Headers, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { Response, Request } from 'express';
 
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeController, ApiTags } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { FetchFwVersionDto, LoginDto, LoginSocialDto, ShopListDto, UpdateFwVersionDto } from './app.dto';
 import { AuthMiddleware } from './common/middleWare/authMiddlware/auth.middleware';
@@ -11,6 +11,7 @@ import { Roles } from './common/decorators/roles.decorator';
 import { Role } from './common/enums/role.enum';
 import { GoogleOauthGuard } from './common/guards/google.guard';
 
+@ApiExcludeController()
 @ApiTags('App')
 @Controller()
 export class AppController {

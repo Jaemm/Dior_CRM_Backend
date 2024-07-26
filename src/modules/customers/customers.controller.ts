@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Headers, Inject, Post, Put, Query, Req, 
 import { Response, Request } from 'express';
 import { CustomersService } from './customers.service';
 
-import { ApiBearerAuth, ApiHeader, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeController, ApiExcludeEndpoint, ApiHeader, ApiQuery, ApiTags } from '@nestjs/swagger';
 import {
     ChangePasswordCustomerDto,
     CustomersDto,
@@ -23,6 +23,7 @@ import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { ConfirmHtmlDto } from '../consultants/consultants.dto';
 
+@ApiExcludeController()
 @ApiTags('Customers')
 @ApiHeader({
     name: 'X-CHOWIS-TOKEN',

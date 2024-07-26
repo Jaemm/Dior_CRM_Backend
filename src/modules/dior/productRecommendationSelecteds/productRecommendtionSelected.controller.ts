@@ -7,8 +7,9 @@ import {
 } from './productRecommendtionSelected.dto';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Dior-Product Recommendation Selecteds')
 @Controller('dior/product_recommendation_selecteds')
 export class ProductRecommendationSelectedsController {
     constructor(private readonly productRecommendationSelectedsService: ProductRecommendationSelectedsService) {}

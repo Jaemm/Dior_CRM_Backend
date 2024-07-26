@@ -1,11 +1,12 @@
 import { BadRequestException, Body, Controller, Get, Headers, HttpStatus, Post, Query, Req, Res } from '@nestjs/common';
 import { Response, Request } from 'express';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeController, ApiTags } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 import { ProductsEnterDto, ProductsFetchDto } from './products.dto';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 
+@ApiExcludeController()
 @ApiTags('Products')
 @Controller('products')
 export class ProductsController {
