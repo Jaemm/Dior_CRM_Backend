@@ -19,67 +19,81 @@ export class ConsultantDto {
     // })
     password: string;
 
-    // @ApiProperty()
-    // @IsString()
+    @ApiProperty()
+    @IsString()
     confirmPassword: string;
 }
-export class UpdateConsultantRubyDto {
+
+export class LoginConsultantDto {
     @ApiProperty()
+    @IsString()
+    email: string;
+
+    @ApiProperty()
+    @Validate(IsNumberOrString)
+    app_id: string | number;
+
+    @ApiProperty()
+    @IsString()
+    password: string;
+}
+export class UpdateConsultantRubyDto {
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     email: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     password: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     phone: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     name: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     surname: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     phone_country_code: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     language: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     os: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     address: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     country_code: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     app_id: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     consultant_shop_id: string;
@@ -332,26 +346,44 @@ export function singleStringToArray(value: string | string[]): string[] {
 }
 
 export class GetConsultantDto {
+    @ApiProperty({
+        required: false,
+    })
     @IsString()
     @IsOptional()
     company_ids: string;
 
+    @ApiProperty({
+        required: false,
+    })
     @IsString()
     @IsOptional()
     branch_ids: string;
 
+    @ApiProperty({
+        required: false,
+    })
     @IsString()
     @IsOptional()
     shop_ids: string;
 
+    @ApiProperty({
+        required: false,
+    })
     @IsString()
     @IsOptional()
     position_ids: string;
 
+    @ApiProperty({
+        required: false,
+    })
     @IsString()
     @IsOptional()
     country_ids: string;
 
+    @ApiProperty({
+        required: false,
+    })
     @IsString()
     @IsOptional()
     store_ids: string;
@@ -375,10 +407,12 @@ export class ChangeEmailDto {
 
 export class PasswordDto {
     @ApiProperty()
+    @IsNotEmpty()
     @IsString()
     email: string;
 
     @ApiProperty()
+    @IsNotEmpty()
     @Validate(IsNumberOrString)
     app_id: string;
 }
@@ -386,10 +420,12 @@ export class PasswordDto {
 export class PasswrodChangeDto {
     @ApiProperty()
     @IsString()
+    @IsNotEmpty()
     password: string;
 
     @ApiProperty()
     @IsString()
+    @IsNotEmpty()
     new_password: string;
 }
 
@@ -553,41 +589,53 @@ export class LoginSocialDto {
 
     @ApiProperty()
     @Validate(IsNumberOrString)
-    app_id: string;
+    app_id: number;
 
     @ApiProperty()
     @IsString()
     email: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @IsString()
-    name: string;
+    name?: string;
 }
 
 export class CreateSalesConnectionDto {
+    @ApiProperty()
     @IsString()
     @IsOptional()
     consultant_id: string;
 
+    @ApiProperty()
     @IsString()
     @IsOptional()
     batch_id: string;
 
+    @ApiProperty()
     @IsString()
     @IsOptional()
     country_name: string;
 }
 
 export class FetchSalesConnectionDto {
+    @ApiProperty({
+        required: false,
+    })
     @IsString()
     @IsOptional()
     start_date: string | null;
 
+    @ApiProperty({
+        required: false,
+    })
     @IsString()
     @IsOptional()
     end_date: string | null;
 
+    @ApiProperty({
+        required: false,
+    })
     @IsString()
     @IsOptional()
     country_name: string | null;
@@ -596,6 +644,7 @@ export class FetchSalesConnectionDto {
 export class LoginPhoneDto {
     @ApiProperty()
     @IsString()
+    @IsNotEmpty()
     phone: string;
 }
 
@@ -674,31 +723,33 @@ export class NotificationTestDto {
 
 export class EnterProductDto {
     @ApiProperty()
-    @IsOptional()
+    @IsNotEmpty()
+    @IsString()
     optic_number: string;
 
     @ApiProperty()
-    @IsOptional()
+    @IsNotEmpty()
+    @IsString()
     password: string;
 
     @ApiProperty()
     @Validate(IsNumberOrString)
-    @IsOptional()
-    application_id: string;
+    @IsNotEmpty()
+    application_id: string | number;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     mac_address: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     first_use_date: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     lat: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     lng: string;
 }

@@ -53,6 +53,7 @@ import {
     HealthTipsByCompanyDto,
     CreateSalesConnectionDto,
     FetchSalesConnectionDto,
+    LoginConsultantDto,
 } from '@/src/modules/consultants/consultants.dto';
 
 import {
@@ -861,7 +862,7 @@ export class ConsultantsService {
         };
     }
 
-    async loginRuby(data: ConsultantDto, locale: string = 'en') {
+    async loginRuby(data: LoginConsultantDto, locale: string = 'en') {
         try {
             const { app_id, password, email } = data;
             const consultant: Consultants = await this.validateUser(email, Number(app_id), password);
@@ -2317,13 +2318,16 @@ export class ConsultantsService {
         return company;
     }
 
-    public async deleteAccount(userId: number, reason: string = '') {
+    public async deleteAccount(userId: number, reason: string = '', locale = 'en') {
         const consultant = await this.consultantsRepository.findOne({
             where: { id: userId },
         });
 
         if (!consultant) {
-            this.commonService.throwNotFoundError();
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.UNAUTHORIZED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+            });
         }
 
         await this.consultantsRepository.delete(userId);
@@ -2682,7 +2686,7 @@ export class ConsultantsService {
         let customers: Customers;
 
         if (consultant.customers) {
-            customers = consultant.customers.find((customer: any) => customer.phone == phone);
+            customers = consultant.customers.find((customer: any) => customer.phone === phone);
         }
 
         if (!customers) {
