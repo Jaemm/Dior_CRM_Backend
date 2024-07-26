@@ -43,10 +43,10 @@ export class UpdateConsultantRubyDto {
     @IsOptional()
     email: string;
 
-    @ApiPropertyOptional()
-    @IsString()
-    @IsOptional()
-    password: string;
+    // @ApiPropertyOptional()
+    // @IsString()
+    // @IsOptional()
+    // password: string;
 
     @ApiPropertyOptional()
     @IsString()

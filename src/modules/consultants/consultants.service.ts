@@ -416,12 +416,27 @@ export class ConsultantsService {
 
     public async updateConsultantRuby(req: Request, body: UpdateConsultantRubyDto, locale: string = 'en') {
         try {
+            const {
+                email,
+                phone,
+                name,
+                surname,
+                phone_country_code,
+                language,
+                os,
+                address,
+                country_code,
+                app_id,
+                consultant_shop_id,
+            } = body;
+
             const userId = (<{ id: string }>req['user']).id;
 
             const currentConsultant = await this.consultantsRepository.findOne({
                 where: {
                     id: Number(userId),
                 },
+                relations: ['country_details'],
             });
 
             if (!currentConsultant) {
@@ -431,7 +446,23 @@ export class ConsultantsService {
                 });
             }
 
-            Object.assign(currentConsultant, body);
+            if (currentConsultant.country_details) {
+                currentConsultant.country_details.code = country_code
+                    ? country_code
+                    : currentConsultant.country_details.code;
+            }
+
+            currentConsultant.email = email ? email : currentConsultant.email;
+            currentConsultant.phone = phone ? phone : currentConsultant.phone;
+            currentConsultant.name = name ? name : currentConsultant.name;
+            currentConsultant.surname = surname ? surname : currentConsultant.surname;
+            currentConsultant.address = address ? address : currentConsultant.address;
+            currentConsultant.language = language ? language : currentConsultant.language;
+            currentConsultant.os = os ? os : currentConsultant.os;
+            currentConsultant.app_id = app_id ? Number(app_id) : currentConsultant.app_id;
+            currentConsultant.consultant_shop_id = consultant_shop_id
+                ? Number(consultant_shop_id)
+                : currentConsultant.consultant_shop_id;
 
             await this.consultantsRepository.save(currentConsultant);
 
