@@ -114,7 +114,7 @@ export class ConsultantsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('create_sale_connection')
-    async createSalesConnection(@Body() body: CreateSalesConnectionDto, @Headers('X-CHOWIS_LOCALE') locale: string) {
+    async createSalesConnection(@Body() body: CreateSalesConnectionDto, @Headers('X-CHOWIS-LOCALE') locale: string) {
         return await this.consultants.createSalesConnection(body, locale);
     }
 
