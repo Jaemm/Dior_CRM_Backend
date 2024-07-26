@@ -2,7 +2,7 @@ import { Response } from 'express';
 
 import { Controller, Res, Get, Post, Query, Delete, Param, Body, Put, Headers } from '@nestjs/common';
 import { DiorProductAttributesService } from './productAttributes.service';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import {
@@ -60,6 +60,7 @@ export class DiorProductAttributesController {
 
     @Put(':id')
     @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async updateProductAttribute(
         @Headers('X-CHOWIS-LOCALE') locale: string,

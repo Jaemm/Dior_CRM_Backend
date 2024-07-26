@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { Controller, Get, Query, Req, Res, Headers, Post, Body, Put, Param, Delete } from '@nestjs/common';
 import { DiorCompanyBranchesService } from './companyBranches.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import {
@@ -18,16 +18,17 @@ import {
 export class DiorCompanyBranchesController {
     constructor(private diorCompanyBranchesService: DiorCompanyBranchesService) {}
 
+    @Post()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Post()
     async createBranch(@Req() req: Request, @Body() body: CreateBranchesDto) {
         return await this.diorCompanyBranchesService.createBranch(req, body);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get()
+    @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @Roles(Role.Consultant)
     async searchBranches(
         @Req() req: Request,
         @Query() query: SearchBranchesDto,
@@ -36,16 +37,17 @@ export class DiorCompanyBranchesController {
         return await this.diorCompanyBranchesService.searchBranches(req, query, locale);
     }
 
+    @Post('import')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Post('import')
     async importBranches(@Req() req: Request, @Body() body: ImportBranchesDto) {
         return await this.diorCompanyBranchesService.importBranches(body);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get('export')
+    @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @Roles(Role.Consultant)
     async exportBranches(
         @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
@@ -59,13 +61,14 @@ export class DiorCompanyBranchesController {
         return res.send(resultFile);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get('presign_upload_import_file')
+    @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @Roles(Role.Consultant)
     async presignUploadImportFileForBranch(
-        @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
         @Query() query: PresignedUploadForBranchDto,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         return await this.diorCompanyBranchesService.presignUploadImportFileForBranch(query);
     }

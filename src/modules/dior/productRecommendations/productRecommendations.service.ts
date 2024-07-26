@@ -29,6 +29,7 @@ import {
     ImportPicturesDto,
     ImportProductRecommendtaionDto,
     ImportTranslationsDto,
+    UpdateProductRecommendationDto,
 } from './productRecommendation.dto';
 import { ProductRecommendationT, ProductTranslationT } from '@/src/common/types/entities';
 import axios from 'axios';
@@ -339,7 +340,7 @@ export class ProductRecommendationService {
     }
 
     async updateProductRecommendationById(
-        body: CreateProductRecommendationDto,
+        body: UpdateProductRecommendationDto,
         recommendationId: string,
         locale = 'en',
     ) {

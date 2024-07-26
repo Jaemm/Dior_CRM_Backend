@@ -1,6 +1,6 @@
 import { BadRequestException, Controller, Delete, Get, Param, Query, Headers, Post, Body, Put } from '@nestjs/common';
 import { ProductRecommendationGroupsService } from './productRecommendationGroups.service';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import {
     CreateProductRecommendationGroupsDto,
@@ -50,6 +50,7 @@ export class ProductRecommendationGroupsController {
 
     @Put(':id')
     @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async updateProductRecommendationGroups(
         @Headers('X-CHOWIS-LOCALE') locale: string,

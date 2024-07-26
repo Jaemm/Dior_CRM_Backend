@@ -23,7 +23,7 @@ import {
 
 import { Request } from 'express';
 
-import { CustomerByConsultantIdDto, createCustomerDto } from './dior.dto';
+import { CustomerByConsultantIdDto, CreateCustomerDto } from './dior.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { ProductTranslations } from '@/src/common/entities/crmEntities';
 import { CommonService } from '@/src/common/common.service';
@@ -105,7 +105,7 @@ export class DiorService {
         }
     }
 
-    async createCustomers(body: createCustomerDto) {
+    async createCustomers(body: CreateCustomerDto) {
         try {
             const { email, consultant_id, name, external_id, surname } = body;
 

@@ -1,7 +1,7 @@
 import { Controller, Query, Req, Res, Body, Param, Put, Get, Post, Delete } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { DiorCountriesService } from './dior_countries.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { CreateCountries, ExportCountriesDto, ImportCountriesDto, UpdateCountriesDto } from './dior_countries.dto';
@@ -11,44 +11,45 @@ import { CreateCountries, ExportCountriesDto, ImportCountriesDto, UpdateCountrie
 export class DiorCountriesController {
     constructor(private diorCountriesService: DiorCountriesService) {}
 
+    @Get()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get()
+    @ApiQuery({ name: 'search', required: false })
     async getCountries(@Req() req: Request, @Query('search') search?: string) {
         return await this.diorCountriesService.getCountries(search);
     }
 
+    @Post()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Post()
     async createCountries(@Body() body: CreateCountries) {
         return await this.diorCountriesService.createCountries(body);
     }
 
+    @Put(':id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Put(':id')
     async updateCountries(@Param('id') countryId: string, @Body() body: UpdateCountriesDto) {
         return await this.diorCountriesService.updateCountries(countryId, body);
     }
 
+    @Delete('delete_multiple/:ids')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Delete('delete_multiple/:ids')
     async deleteMultipleCountries(@Param('ids') countryIds: string) {
         return await this.diorCountriesService.deleteMultipleCountries(countryIds);
     }
 
+    @Delete(':id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Delete(':id')
     async deleteCountryById(@Param('id') countryId: string) {
         return await this.diorCountriesService.deleteCountryById(countryId);
     }
 
+    @Get('export')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('export')
     async exportCountries(@Req() req: Request, @Res() res: Response, @Query() query: ExportCountriesDto) {
         const resultFile = await this.diorCountriesService.exportCountries(query);
 

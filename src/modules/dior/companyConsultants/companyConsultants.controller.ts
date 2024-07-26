@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 
 import { Controller, Get, Req, Headers, Query, Param, Post, Body, Delete, Res } from '@nestjs/common';
 import { DiorCompanyConsultantsService } from './companyConsultants.service';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import {
@@ -17,9 +17,10 @@ import {
 export class DiorCompanyConsultantsController {
     constructor(private diorCompanyConsultantsService: DiorCompanyConsultantsService) {}
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get()
+    @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @Roles(Role.Consultant)
     async getDiorCompanyConsultants(
         @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
@@ -28,9 +29,10 @@ export class DiorCompanyConsultantsController {
         return await this.diorCompanyConsultantsService.getDiorCompanyConsultants(req, query, locale);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Post()
+    @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @Roles(Role.Consultant)
     async createDiorCompanyConsultants(
         @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
@@ -39,21 +41,23 @@ export class DiorCompanyConsultantsController {
         return await this.diorCompanyConsultantsService.createDiorCompanyConsultants(body, locale);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get('by_consultant')
-    async getConsultantByBranchesConsultant(@Req() req: Request, @Headers('X-CHOWIS-LOCALE') locale: string) {
+    @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @Roles(Role.Consultant)
+    async getConsultantByBranchesConsultant(@Req() req: Request, @Headers('X-CHOWIS-LOCALE') locale?: string) {
         return await this.diorCompanyConsultantsService.getConsultantByBranchesConsultant(req, locale);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get('export')
+    @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @Roles(Role.Consultant)
     async exportDiorCompanyConsultant(
-        @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
         @Res() res: Response,
         @Query() query: ExportDiorCompanyConsultantsDto,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         const resultFile = await this.diorCompanyConsultantsService.exportDiorCompanyConsultant(req, query, locale);
 
@@ -62,9 +66,10 @@ export class DiorCompanyConsultantsController {
         return res.send(resultFile);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Post('import')
+    @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @Roles(Role.Consultant)
     async importDiorCompanyConsultants(
         @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
@@ -73,9 +78,10 @@ export class DiorCompanyConsultantsController {
         return await this.diorCompanyConsultantsService.importDiorCompanyConsultants(body, locale);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Delete(':id')
+    @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @Roles(Role.Consultant)
     async deleteDiorCompanyConsultant(
         @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
@@ -84,9 +90,10 @@ export class DiorCompanyConsultantsController {
         return await this.diorCompanyConsultantsService.deleteDiorCompanyConsultant(consultantId, locale);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Delete('delete_multiple/:ids')
+    @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @Roles(Role.Consultant)
     async deleteMultipleCompanyConsultants(
         @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,

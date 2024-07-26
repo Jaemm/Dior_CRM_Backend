@@ -3,7 +3,7 @@ import { Request } from 'express';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { Controller, Get, Query, Req, Headers } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import {
     GetInfographStatDetails,
     GetOverAllDetailsDto,
@@ -56,16 +56,13 @@ export class StatisticsController {
     @Get('stat_details')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getStatDetails(
-        @Req() req: Request,
-        @Query() query: GetStatDetailsDto,
-        @Headers('X-CHOWIS-LOCALE') locale?: string,
-    ) {
-        return this.statisticsService.getStatDetails(req, query, locale);
+    async getStatDetails(@Req() req: Request, @Query() query: GetStatDetailsDto) {
+        return this.statisticsService.getStatDetails(req, query);
     }
 
     @Get('infograph_stat_details')
     @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getInfographStatDetails(
         @Req() req: Request,
@@ -77,6 +74,7 @@ export class StatisticsController {
 
     @Get('get_stat_details_country_wise')
     @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getStatDetailsCountryWise(
         @Req() req: Request,

@@ -1,6 +1,6 @@
 import { Request } from 'express';
 import { Body, Controller, Get, Param, Post, Query, Req, Headers } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { PartnerDbService } from './partnerdb.service';
@@ -20,6 +20,7 @@ export class PartnerDbController {
 
     @Post('consultants/dior_login')
     @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async loginDiorConsultant(@Body() body: LoginDiorConsultantDto, @Headers('X-CHOWIS-LOCALE') locale?: string) {
         return await this.partnerdbService.loginDiorConsultant(body, locale);
@@ -27,6 +28,7 @@ export class PartnerDbController {
 
     @Post('consultants/password')
     @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async resetPassword(@Body() body: ResetPasswordDto, @Headers('X-CHOWIS-LOCALE') locale?: string) {
         return await this.partnerdbService.resetPassword(body, locale);
@@ -52,6 +54,7 @@ export class PartnerDbController {
 
     @Get('customers/:id/analysis_histories')
     @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getAnalysisHistories(
         @Req() req: Request,
@@ -64,6 +67,7 @@ export class PartnerDbController {
 
     @Get('customers/:id/analysis_histories/:batch_id')
     @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getAnalysisHistoriesByBatchId(
         @Req() req: Request,
@@ -77,6 +81,7 @@ export class PartnerDbController {
 
     @Get('customers/:id/analysis_histories/:batch_id/hydration_sebum')
     @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getHydrationSebumByBatchId(
         @Req() req: Request,

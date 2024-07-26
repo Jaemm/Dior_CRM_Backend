@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiHeader, ApiQuery, ApiTags } from '@nestjs/swagger';
 import {
     Controller,
     Get,
@@ -27,6 +27,7 @@ import {
     ImportPicturesDto,
     ImportProductRecommendtaionDto,
     ImportTranslationsDto,
+    UpdateProductRecommendationDto,
 } from './productRecommendation.dto';
 
 @ApiTags('Dior-Product Recommendtaions')
@@ -34,9 +35,10 @@ import {
 export class ProductRecommendationController {
     constructor(private productRecommendationsService: ProductRecommendationService) {}
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get()
+    @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @Roles(Role.Consultant)
     async getProductRecommendation(
         @Req() req: Request,
         @Query() query: SearchProductRecommendationDto,
@@ -45,76 +47,74 @@ export class ProductRecommendationController {
         return await this.productRecommendationsService.getProductRecommendation(req, query, locale);
     }
 
+    @Post()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
+    async createProductRecommendation(@Body() body: CreateProductRecommendationDto) {
+        return await this.productRecommendationsService.createProductRecommendation(body);
+    }
+
     @Get('get_automatic_product_by_batch_id')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
     async getAutomaticProductByBatchId(@Query() query: AutomaticProductByBatchIdDto) {
         return await this.productRecommendationsService.getAutomaticProductByBatchId(query);
     }
 
+    @Get('get_new_automatic_product_by_batch_id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('get_new_automatic_product_by_batch_id')
     async getNewAutomaticProductByBatchId(@Query() query: AutomaticProductByBatchIdDto) {
         return await this.productRecommendationsService.getNewAutomaticProductByBatchId(query);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Post()
-    async createProductRecommendation(
-        @Body() body: CreateProductRecommendationDto,
-        @Headers('X-CHOWIS-LOCALE')
-        locale: string,
-    ) {
-        return await this.productRecommendationsService.createProductRecommendation(body);
-    }
-
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get('get_collection')
+    @ApiBearerAuth()
+    @ApiQuery({ name: 'routine', enum: ['Makeup', 'Skincare'] })
+    @Roles(Role.Consultant)
     async getRecommendationsCollection(@Query('routine') routine?: AttributeRoutine) {
         return await this.productRecommendationsService.getRecommendationsCollection(routine);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get('get_category')
+    @ApiBearerAuth()
+    @ApiQuery({ name: 'routine', enum: ['Makeup', 'Skincare'] })
+    @Roles(Role.Consultant)
     async getRecommendationsCategories(@Query('routine') routine?: AttributeRoutine) {
         return await this.productRecommendationsService.getRecommendationsCategories(routine);
     }
 
+    @Post('import')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Post('import')
     async importProductRecommendtaion(@Body() body: ImportProductRecommendtaionDto) {
         return await this.productRecommendationsService.importProductRecommendtaion(body);
     }
 
+    @Post('import_translations')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Post('import_translations ')
     async importProductTranslations(@Body() body: ImportTranslationsDto) {
         return await this.productRecommendationsService.importProductTranslations(body);
     }
 
+    @Post('import_countries')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Post('import_countries ')
     async importCountries(@Body() body: ImportCountriesDto) {
         return await this.productRecommendationsService.importCountries(body);
     }
 
+    @Post('import_pictures')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Post('import_pictures ')
     async importPictures(@Body() body: ImportPicturesDto) {
         return await this.productRecommendationsService.importPictures(body);
     }
 
+    @Get('export')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('export')
     async exportRecommendation(@Req() req: Request, @Res() res: Response, @Query() query: ExportRecommendtaionsDto) {
         const resultFile = await this.productRecommendationsService.exportRecommendation(req, query);
 
@@ -123,16 +123,16 @@ export class ProductRecommendationController {
         return res.send(resultFile);
     }
 
+    @Get('get_axis')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('get_axis')
     async getAxis() {
         return await this.productRecommendationsService.getAxis();
     }
 
+    @Get('presign_upload')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('presign_upload')
     async getPresignUpload(@Query() query: GetPresignUploadDto) {
         if (!query.filename) {
             throw new BadRequestException({
@@ -143,9 +143,10 @@ export class ProductRecommendationController {
         return await this.productRecommendationsService.getPresignUpload(query);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Get(':id')
+    @ApiBearerAuth()
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @Roles(Role.Consultant)
     async getProductRecommendationById(
         @Req() req: Request,
         @Param('id') recommendandationId: string,
@@ -154,44 +155,28 @@ export class ProductRecommendationController {
         return await this.productRecommendationsService.getProductRecommendationById(recommendandationId, locale);
     }
 
+    @Put(':id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Put(':id')
     async updateProductRecommendationById(
         @Req() req: Request,
         @Param('id') recommendandationId: string,
-        @Body() body: CreateProductRecommendationDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Body() body: UpdateProductRecommendationDto,
     ) {
-        return await this.productRecommendationsService.updateProductRecommendationById(
-            body,
-            recommendandationId,
-            locale,
-        );
+        return await this.productRecommendationsService.updateProductRecommendationById(body, recommendandationId);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     @Delete('delete_multiple/:ids')
-    async deleteMultipleProductRecommendationByIds(
-        @Req() req: Request,
-        @Param('ids') recommendandationIds: string,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ) {
-        return await this.productRecommendationsService.deleteMultipleProductRecommendationByIds(
-            recommendandationIds,
-            locale,
-        );
-    }
-
     @ApiBearerAuth()
     @Roles(Role.Consultant)
+    async deleteMultipleProductRecommendationByIds(@Req() req: Request, @Param('ids') recommendandationIds: string) {
+        return await this.productRecommendationsService.deleteMultipleProductRecommendationByIds(recommendandationIds);
+    }
+
     @Delete(':id')
-    async deleteProductRecommendationById(
-        @Req() req: Request,
-        @Param('id') recommendandationId: string,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ) {
-        return await this.productRecommendationsService.deleteProductRecommendationById(recommendandationId, locale);
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async deleteProductRecommendationById(@Req() req: Request, @Param('id') recommendandationId: string) {
+        return await this.productRecommendationsService.deleteProductRecommendationById(recommendandationId);
     }
 }

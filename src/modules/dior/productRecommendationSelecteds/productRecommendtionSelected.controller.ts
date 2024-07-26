@@ -14,23 +14,23 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 export class ProductRecommendationSelectedsController {
     constructor(private readonly productRecommendationSelectedsService: ProductRecommendationSelectedsService) {}
 
+    @Get()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get()
     async getProductRecommendationSelecteds(@Query() query: GetRecommendationSelectedDto) {
         return await this.productRecommendationSelectedsService.getProductRecommendationSelecteds(query);
     }
 
+    @Post()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Post()
     async selectProducts(@Body() body: SelectProductsDto) {
         return await this.productRecommendationSelectedsService.selectProducts(body);
     }
 
+    @Get('lists')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @Get('lists')
     async getListOfRecommendationSelected(@Query() query: GetListOfRecommendationListDto) {
         return await this.productRecommendationSelectedsService.getListOfRecommendationSelected(query);
     }

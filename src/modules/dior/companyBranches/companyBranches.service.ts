@@ -49,6 +49,7 @@ export class DiorCompanyBranchesService {
                 name,
                 password,
                 country,
+                code,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             });
