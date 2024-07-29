@@ -31,4 +31,11 @@ export class Licenses {
     afterLoad() {
         this.id = Number(this.id);
     }
+
+    get getBasicInfo() {
+        return {
+            id: this.id,
+            name: this.name,
+        };
+    }
 }

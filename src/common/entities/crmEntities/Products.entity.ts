@@ -119,4 +119,21 @@ export class Products {
     afterLoad() {
         this.id = Number(this.id);
     }
+
+    get getBasicInfo() {
+        return {
+            id: this.id,
+            first_use_date: this.first_use_date,
+            use_date: this.use_date,
+            use_time: this.use_time,
+            mac_address: this.mac_address,
+            app_use_yn: this.app_use_yn,
+            license_period: this.license_period,
+            created_at: this.created_at,
+            is_expired: this.getIsExpired,
+            device: this.device ? this.device.getBasicInfo : null,
+            license: this.license ? this.license.getBasicInfo : null,
+            application: this.application ? this.application.getBasicInfo : null,
+        };
+    }
 }

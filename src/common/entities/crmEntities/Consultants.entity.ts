@@ -294,12 +294,13 @@ export class Consultants {
             store: this.consultant_store || null,
             optic_number: this.getOpticNumbers,
             password_update_needed: this.password_update_needed,
-            products: this.getProducts,
+            products: this.products && this.products.length > 0 ? this.products.map((p) => p.getBasicInfo) : [],
             consultant_company: this.consultant_company ? this.consultant_company.getCompaniesInfo : null,
             consultant_position: this.getPosition,
         };
     }
 
+    // Deprecated
     get 'getProducts'(): object {
         if (this.products) {
             return this.products;

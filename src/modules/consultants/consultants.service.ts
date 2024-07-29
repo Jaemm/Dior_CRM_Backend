@@ -2579,10 +2579,17 @@ export class ConsultantsService {
 
             await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
 
+            const loginConsultant = await this.consultantsRepository.findOne({
+                where: {
+                    id: consultant.id,
+                },
+                relations: ['products', 'products.device', 'consultant_company', 'consultant_position'],
+            });
+
             return {
                 token: accessToken,
                 refresh_token: refreshToken,
-                ...consultant.getConsultantsInfo,
+                ...loginConsultant.getConsultantsInfo,
             };
         } catch (e) {
             throw e;

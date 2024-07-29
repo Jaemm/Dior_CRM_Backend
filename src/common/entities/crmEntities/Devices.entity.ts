@@ -164,6 +164,25 @@ export class Devices {
         this.id = Number(this.id);
     }
 
+    get getBasicInfo() {
+        return {
+            id: this.id,
+            optic_number: this.optic_number,
+            serial_number: this.serial_number,
+            docking_number: this.docking_number,
+            wb: this.wb,
+            cal: this.cal,
+            refresh_date: this.refresh_date,
+            app_version: this.app_version,
+            app_update_date: this.app_update_date,
+            division: this.division,
+            use_yn: this.use_yn,
+            lat: this.lat,
+            lng: this.lng,
+            // consultant_company?: ConsultantCompaniesT | null;
+        };
+    }
+
     getLicensePeriod() {
         if (this.products && this.products.length > 0) {
             return this.products[0].license_period;
