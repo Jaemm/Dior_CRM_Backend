@@ -114,7 +114,7 @@ export class ConsultantsRepository extends Repository<Consultants> {
             where: [
                 { app_id: app_id, email },
                 {
-                    app_id: null,
+                    app_id: Equal(null),
                     email,
                 },
             ],

@@ -261,6 +261,45 @@ export class Consultants {
     @JoinColumn([{ name: 'consultant_company_id', referencedColumnName: 'id' }])
     'consultant_company': ConsultantCompanies;
 
+    get 'getConsultantsInfo'() {
+        return {
+            id: this.id,
+            email: this.email,
+            name: this.name,
+            surname: this.surname,
+            gender: this.gender,
+            os: this.os,
+            language: this.language,
+            phone: this.phone,
+            address: this.address,
+            city: this.city,
+            country: this.country,
+            zip_code: this.zip_code,
+            state: this.state,
+            birthdate: this.birthdate,
+            note: this.note,
+            push_token: this.push_token,
+            memo: this.memo,
+            app_id: this.app_id,
+            company_name: this.company_name,
+            company_address: this.company_address,
+            branch: this.branch,
+            position: this.position,
+            skin_color_group_id: this.skin_color_group_id,
+            ethnicity_id: this.ethnicity_id,
+            callback_url: this.callback_url,
+            code: this.code,
+            social: this.social,
+            country_code: this.country_details?.code || null,
+            store: this.consultant_store || null,
+            optic_number: this.getOpticNumbers,
+            password_update_needed: this.password_update_needed,
+            products: this.getProducts,
+            consultant_company: this.consultant_company ? this.consultant_company.getCompaniesInfo : null,
+            consultant_position: this.getPosition,
+        };
+    }
+
     get 'getProducts'(): object {
         if (this.products) {
             return this.products;

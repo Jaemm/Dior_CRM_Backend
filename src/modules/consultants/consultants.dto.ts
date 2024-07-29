@@ -94,7 +94,7 @@ export class UpdateConsultantRubyDto {
     country_code: string;
 
     @ApiPropertyOptional()
-    @IsString()
+    @Validate(IsNumberOrString)
     @IsOptional()
     app_id: string;
 
