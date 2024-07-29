@@ -496,7 +496,6 @@ export class ConsultantsService {
                 where: {
                     id: Number(userId),
                 },
-                relations: ['consultant_company', 'consultant_company.healthTips'],
             });
 
             if (!currentConsultant) {
@@ -506,8 +505,17 @@ export class ConsultantsService {
                 });
             }
 
-            let healthTips = currentConsultant.consultant_company.healthTips ?? [];
-            let totalCount;
+            const consultantsApplications = await this.applicationsRepository.findOne({
+                where: {
+                    id: appId,
+                    consultant_company_id: currentConsultant.consultant_company_id,
+                },
+
+                relations: ['consultantCompany', 'consultantCompany.healthTips'],
+            });
+
+            let healthTips: HealthTips[] = consultantsApplications.consultantCompany.healthTips ?? [];
+            let totalCount = 0;
 
             if (appId) {
                 const queryBuilder = this.healthTipsRespository.createQueryBuilder('healthTip');
@@ -521,6 +529,10 @@ export class ConsultantsService {
 
             return {
                 data: healthTips,
+                total_size: totalCount,
+                current_page_size: healthTips.length,
+                current_page: page,
+                total_pages: Math.ceil(totalCount / limit),
             };
         } catch (e) {
             throw e;
