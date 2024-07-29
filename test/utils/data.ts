@@ -26,9 +26,9 @@ export const customerRubyRegisterData = {
 };
 
 export const consultantLoginData = {
-    email: 'paul@chowistest.com',
-    password: 'Production2024@',
-    app_id: 44,
+    email: 'e2e_test@chowistest.com',
+    password: 'e2e_test@',
+    app_id: 88,
 };
 
 export const consultantUpdateData = {
