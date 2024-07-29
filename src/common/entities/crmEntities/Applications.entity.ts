@@ -114,7 +114,7 @@ export class Applications {
         return {
             id: this.id,
             name: this.name,
-            apk_url: this.apk_url,
+            apk_url: this.apk_url || '',
             version: this.version,
             group_name: this.group_name,
             regist_date: this.regist_date,
@@ -124,7 +124,7 @@ export class Applications {
             android_app_url: this.android_app_url,
             ios_app_url: this.ios_app_url,
             is_old: this.is_old,
-            // app_icon: this.app,
+            app_icon: '',
         };
     }
 }

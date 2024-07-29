@@ -179,7 +179,7 @@ export class Devices {
             use_yn: this.use_yn,
             lat: this.lat,
             lng: this.lng,
-            // consultant_company?: ConsultantCompaniesT | null;
+            consultant_company: this.consultant_company ? this.consultant_company.getBasicInfo : null,
         };
     }
 

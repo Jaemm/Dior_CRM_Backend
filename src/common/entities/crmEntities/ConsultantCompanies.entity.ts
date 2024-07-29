@@ -112,7 +112,7 @@ export class ConsultantCompanies {
         this.id = Number(this.id);
     }
 
-    get getCompaniesInfo() {
+    get getBasicInfo() {
         return {
             id: this.id,
             name: this.name,

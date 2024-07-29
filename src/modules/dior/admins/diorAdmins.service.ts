@@ -26,7 +26,10 @@ export class DiorAdminsService {
 
             const adminsQuery = await this.consultantsRepository
                 .createQueryBuilder('consultants')
-                .where('consultants.consultant_position_id IN (:...positionIds)', { positionIds: [5, 6] })
+                .where('consultants.consultant_company = :companyId', {
+                    companyId: diorConsultant.consultant_company_id,
+                })
+                .andWhere('consultants.consultant_position_id IN (:...positionIds)', { positionIds: [5, 6] })
                 .andWhere('consultants.id != :consultantId', { consultantId: diorConsultant.id });
 
             if (search) {
@@ -62,10 +65,10 @@ export class DiorAdminsService {
 
             return {
                 data: reformatAdminList,
-                total_size: totalCount,
-                current_page_size: reformatAdminList.length,
-                current_page: searchPage,
-                total_pages: Math.ceil(totalCount / searchPer),
+                // total_size: totalCount,
+                // current_page_size: reformatAdminList.length,
+                // current_page: searchPage,
+                // total_pages: Math.ceil(totalCount / searchPer),
             };
         } catch (e) {
             throw e;
