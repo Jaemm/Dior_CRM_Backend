@@ -19,8 +19,8 @@ export class ConsultantDto {
     // })
     password: string;
 
-    @ApiProperty()
-    @IsString()
+    // @ApiProperty()
+    // @IsString()
     confirmPassword: string;
 }
 
