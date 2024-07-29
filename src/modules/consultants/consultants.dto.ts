@@ -51,6 +51,11 @@ export class UpdateConsultantRubyDto {
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
+    birthdate: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
     phone: string;
 
     @ApiPropertyOptional()

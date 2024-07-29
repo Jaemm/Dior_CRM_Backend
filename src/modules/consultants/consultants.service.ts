@@ -422,6 +422,7 @@ export class ConsultantsService {
                 name,
                 surname,
                 phone_country_code,
+                birthdate,
                 language,
                 os,
                 address,
@@ -456,6 +457,7 @@ export class ConsultantsService {
             currentConsultant.phone = phone ? phone : currentConsultant.phone;
             currentConsultant.name = name ? name : currentConsultant.name;
             currentConsultant.surname = surname ? surname : currentConsultant.surname;
+            currentConsultant.birthdate = birthdate ? birthdate : currentConsultant.birthdate;
             currentConsultant.address = address ? address : currentConsultant.address;
             currentConsultant.language = language ? language : currentConsultant.language;
             currentConsultant.os = os ? os : currentConsultant.os;

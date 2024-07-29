@@ -47,6 +47,10 @@ export class AuthMiddleware implements NestMiddleware {
 
             console.log(decoded);
 
+            if (!(<{ id: string }>req.user).id) {
+                (<{ id: string }>req.user).id = (<{ consultant_id: string }>req.user).consultant_id;
+            }
+
             // return decoded;
             // Do further verification or processing if needed
             next();
