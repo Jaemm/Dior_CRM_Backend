@@ -336,7 +336,7 @@ export class Consultants {
     get 'getSerialNumbers'(): string[] | null {
         if (this.products && this.products.length > 0) {
             // Map each product's serial_number to an array
-            return this.products.map((product) => product.device.serial_number);
+            return this.products.map((product) => product.device?.serial_number);
         }
         return [];
     }

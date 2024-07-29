@@ -1940,7 +1940,7 @@ export class ConsultantsService {
                 analysis: results,
             };
 
-            const url = currentConsultant.consultant_company?.data_exchange_url;
+            const url = currentConsultant?.consultant_company?.data_exchange_url || null;
 
             let returnMessage: string;
             if (url) {
@@ -1968,6 +1968,7 @@ export class ConsultantsService {
                 };
             }
         } catch (e) {
+            console.log(e);
             return e.response;
         }
     }
