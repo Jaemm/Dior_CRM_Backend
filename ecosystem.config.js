@@ -3,7 +3,7 @@
 module.exports = {
     apps: [
         {
-            name: 'new-crm-nodejs',
+            name: 'new-dior-crm',
             script: './dist/main.js', // cluster mode run with node only, not npm
             args: 'restart',
             exec_mode: 'cluster', // default fork

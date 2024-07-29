@@ -4,12 +4,24 @@ import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { json } from 'body-parser';
+import * as fs from 'fs';
 
 async function bootstrap() {
     const SSL = process.env.SSL;
     const HOSTNAME = process.env.HOSTNAME;
+    const isSSL = process.env.SSL === 'true';
 
-    let httpsOptions = null;
+    let httpsOptions = {};
+
+    if (isSSL) {
+        const keyPath = process.env.SSL_KEY_PATH || '';
+        const certPath = process.env.SSL_CERT_PATH || '';
+
+        httpsOptions = {
+            key: fs.readFileSync(keyPath),
+            cert: fs.readFileSync(certPath),
+        };
+    }
 
     const app = await NestFactory.create(AppModule, {
         httpsOptions,
@@ -27,11 +39,7 @@ async function bootstrap() {
         const config = new DocumentBuilder()
             .setTitle('Chowis User management and Login V1/API')
             .setDescription('Chowis User management and Login V1/API')
-            .setDescription(
-                `<b>Production</b>: https://crm.chowis.cloud/v1/api <br>
-                <b>Stagging</b>: https://crm-staging.chowis.cloud/v1/api <br>
-                <b>China</b>: https://crm.chowis.cn/v1/api`,
-            )
+            .setDescription(`<b>Stagging</b>: https://staging.chowis.cloud:8083/v1/api <br>`)
             .setVersion('1.0.0')
             .addBearerAuth({
                 type: 'http',
