@@ -36,13 +36,13 @@ describe('Consultants Module ( E2E )', () => {
             .auth(localToken, {
                 type: 'bearer',
             })
-            .send(consultantLoginData)
+            .send()
             .expect(200);
 
         const rubyResponse = await request(rubyUrl)
             .get('/consultants/me')
             .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
-            .send(consultantLoginData)
+            .send()
             .expect(200);
 
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
@@ -57,10 +57,79 @@ describe('Consultants Module ( E2E )', () => {
             })
             .send(consultantUpdateData)
             .expect(200);
+
         const rubyResponse = await request(rubyUrl)
             .put('/consultants/update')
             .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send(consultantUpdateData)
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
+    test('consultants/request_callback_url (POST)', async () => {
+        const localResponse = await request(localUrl)
+            .put('/consultants/update')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send({
+                batch_ids: [
+                    {
+                        analysis_type: 'CNDP Skin',
+                        batch_id: 43818,
+                    },
+                ],
+            })
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .put('/consultants/update')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send({
+                batch_ids: [
+                    {
+                        analysis_type: 'CNDP Skin',
+                        batch_id: 43818,
+                    },
+                ],
+            })
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
+    test('consultants/products/enter (POST)', async () => {
+        const localResponse = await request(localUrl)
+            .post('/consultants/products/enter')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send({
+                optic_number: 'FC101490',
+                password: 'CH7950',
+                application_id: 88,
+                mac_address: 'CNDV3UC-N4-00010',
+                first_use_date: '2022-02-02',
+                lat: '37.564',
+                lng: '26.6963',
+            })
+            .expect(201);
+
+        const rubyResponse = await request(rubyUrl)
+            .post('/consultants/products/enter')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send({
+                optic_number: 'FC101490',
+                password: 'CH7950',
+                application_id: 88,
+                mac_address: 'CNDV3UC-N4-00010',
+                first_use_date: '2022-02-02',
+                lat: '37.564',
+                lng: '26.6963',
+            })
             .expect(200);
 
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
