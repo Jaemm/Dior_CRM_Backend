@@ -240,4 +240,23 @@ describe('Consultants Module ( E2E )', () => {
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
         expect(missingFields).toEqual([]);
     });
+
+    test('consultants/fetch_sales_connection (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/consultants/fetch_sales_connection')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/consultants/fetch_sales_connection')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
 });
