@@ -70,7 +70,7 @@ describe('Consultants Module ( E2E )', () => {
 
     test('consultants/request_callback_url (POST)', async () => {
         const localResponse = await request(localUrl)
-            .put('/consultants/update')
+            .post('/consultants/request_callback_url')
             .auth(localToken, {
                 type: 'bearer',
             })
@@ -82,10 +82,10 @@ describe('Consultants Module ( E2E )', () => {
                     },
                 ],
             })
-            .expect(200);
+            .expect(201);
 
         const rubyResponse = await request(rubyUrl)
-            .put('/consultants/update')
+            .post('/consultants/request_callback_url')
             .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send({
                 batch_ids: [
@@ -99,7 +99,7 @@ describe('Consultants Module ( E2E )', () => {
 
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
         expect(missingFields).toEqual([]);
-    });
+    }, 50000);
 
     test('consultants/products/enter (POST)', async () => {
         const localResponse = await request(localUrl)
@@ -130,6 +130,63 @@ describe('Consultants Module ( E2E )', () => {
                 lat: '37.564',
                 lng: '26.6963',
             })
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
+    test('consultants/notifications (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/consultants/notifications')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/consultants/notifications')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
+    test('consultants/product_recommendations (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/consultants/product_recommendations')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/consultants/product_recommendations')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
+    test('consultants/health_tips (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/consultants/health_tips')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/consultants/health_tips')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
             .expect(200);
 
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
