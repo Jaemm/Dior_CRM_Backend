@@ -505,27 +505,20 @@ export class ConsultantsService {
                 });
             }
 
-            const consultantsApplications = await this.applicationsRepository.findOne({
-                where: {
-                    id: appId,
-                    consultant_company_id: currentConsultant.consultant_company_id,
-                },
-
-                relations: ['consultantCompany', 'consultantCompany.healthTips'],
-            });
-
-            let healthTips: HealthTips[] = consultantsApplications.consultantCompany.healthTips ?? [];
-            let totalCount = 0;
+            const healthTipQuery = this.healthTipsRespository
+                .createQueryBuilder('healthTip')
+                .where('healthTip.consultantCompanyId = :companyId', {
+                    companyId: currentConsultant.consultant_company_id,
+                });
 
             if (appId) {
-                const queryBuilder = this.healthTipsRespository.createQueryBuilder('healthTip');
-                queryBuilder.where(`healthTip.appId = :appId`, { appId });
-
-                [healthTips, totalCount] = await queryBuilder
-                    .take(limit)
-                    .skip((page - 1) * limit)
-                    .getManyAndCount();
+                healthTipQuery.andWhere(`healthTip.appId = :appId`, { appId });
             }
+
+            const [healthTips, totalCount] = await healthTipQuery
+                .take(limit)
+                .skip((page - 1) * limit)
+                .getManyAndCount();
 
             return {
                 data: healthTips,
@@ -545,28 +538,27 @@ export class ConsultantsService {
         const page = req.query.page ? parseInt(query.page) : 1;
         const limit = req.query.limit ? parseInt(query.limit as string) : 10;
         try {
-            const foundCompany = await this.consultantCompaniesRepository.findOne({
-                where: {
-                    id: Number(companyId),
-                },
-                relations: ['healthTips'],
-            });
-
-            let healthTips = foundCompany?.healthTips ?? [];
-            let totalCount;
+            const healthTipQuery = this.healthTipsRespository
+                .createQueryBuilder('healthTip')
+                .where('healthTip.consultantCompanyId = :companyId', {
+                    companyId,
+                });
 
             if (appId) {
-                const queryBuilder = this.healthTipsRespository.createQueryBuilder('healthTip');
-                queryBuilder.where(`healthTip.appId = :appId`, { appId });
-
-                [healthTips, totalCount] = await queryBuilder
-                    .take(limit)
-                    .skip((page - 1) * limit)
-                    .getManyAndCount();
+                healthTipQuery.andWhere(`healthTip.appId = :appId`, { appId });
             }
+
+            const [healthTips, totalCount] = await healthTipQuery
+                .take(limit)
+                .skip((page - 1) * limit)
+                .getManyAndCount();
 
             return {
                 data: healthTips,
+                total_size: totalCount,
+                current_page_size: healthTips.length,
+                current_page: page,
+                total_pages: Math.ceil(totalCount / limit),
             };
         } catch (e) {
             throw e;

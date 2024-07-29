@@ -192,4 +192,23 @@ describe('Consultants Module ( E2E )', () => {
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
         expect(missingFields).toEqual([]);
     });
+
+    test('consultants/by_company?company_id=213&app_id=88 (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/consultants/health_tips/by_company?company_id=213&app_id=88')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/consultants/health_tips/by_company?company_id=213&app_id=88')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
 });
