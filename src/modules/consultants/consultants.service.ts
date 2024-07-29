@@ -2515,9 +2515,12 @@ export class ConsultantsService {
                     relations: ['identities'],
                 });
                 if (consultant) {
-                    identity = consultant.identities.find(
-                        (id) => id.socialId === social_id && id.socialProvider === social_provider,
-                    );
+                    identity = await this.identityRepository.findOne({
+                        where: {
+                            socialId: social_id,
+                            socialProvider: social_provider,
+                        },
+                    });
                 }
             }
 

@@ -211,4 +211,33 @@ describe('Consultants Module ( E2E )', () => {
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
         expect(missingFields).toEqual([]);
     });
+
+    test('consultants/login/social (POST)', async () => {
+        const localResponse = await request(localUrl)
+            .post('/consultants/login/social')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send({
+                app_id: 88,
+                email: 'e2e_test@chowistest.com',
+                social_provider: 'twitter',
+                social_id: 'abc1234',
+            })
+            .expect(201);
+
+        const rubyResponse = await request(rubyUrl)
+            .post('/consultants/login/social')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send({
+                app_id: 88,
+                email: 'e2e_test@chowistest.com',
+                social_provider: 'twitter',
+                social_id: 'abc1234',
+            })
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
 });
