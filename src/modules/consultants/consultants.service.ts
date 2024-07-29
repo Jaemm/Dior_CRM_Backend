@@ -2669,8 +2669,10 @@ export class ConsultantsService {
 
             return {
                 data: productRecommendations,
-                currentPage: page,
-                totalPages: Math.ceil(total / limit),
+                total_size: total,
+                current_page: page,
+                current_page_size: productRecommendations.length,
+                total_pages: Math.ceil(total / limit),
             };
         } catch (e) {
             throw e;
