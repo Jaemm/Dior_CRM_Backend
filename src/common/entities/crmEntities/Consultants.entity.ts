@@ -303,8 +303,8 @@ export class Consultants {
     }
 
     get 'getStoreName'(): string | null {
-        if (this.consultant_shop) {
-            return this.consultant_shop.name;
+        if (this.consultant_store) {
+            return this.consultant_store.name;
         }
         return null;
     }

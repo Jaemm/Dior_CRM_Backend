@@ -86,11 +86,7 @@ export class ConsultantsController {
     @Post()
     @ApiOperation({ summary: 'signup consultant' })
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
-    async createConsultant(
-        @Res() res: Response,
-        @Body() body: ConsultantDto,
-        @Headers('X-CHOWIS-LOCALE') locale?: string,
-    ) {
+    async createConsultant(@Body() body: ConsultantDto, @Headers('X-CHOWIS-LOCALE') locale?: string) {
         return await this.consultants.signUpRuby(body, locale);
     }
 
