@@ -11,7 +11,7 @@ async function bootstrap() {
     const HOSTNAME = process.env.HOSTNAME;
     const isSSL = process.env.SSL === 'true';
 
-    let httpsOptions = {};
+    let httpsOptions = null;
 
     if (isSSL) {
         const keyPath = process.env.SSL_KEY_PATH || '';
