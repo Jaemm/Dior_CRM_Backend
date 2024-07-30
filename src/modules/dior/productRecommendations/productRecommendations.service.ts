@@ -20,7 +20,7 @@ import { AttributeRoutine, AutomaticProductByBatchIdDto, SearchProductRecommenda
 import { CommonService } from '@/src/common/common.service';
 import { ProductAttributes, ProductRecommendations } from '@/src/common/entities/crmEntities';
 import { Not, In, Equal } from 'typeorm';
-import { AutomaticProductDiorGenerator } from '../automatic-product-dior-generator';
+import { AutomaticProductDiorGenerator } from './automaticProductDiorGenerator';
 import {
     CreateProductRecommendationDto,
     ExportRecommendtaionsDto,
@@ -616,30 +616,24 @@ export class ProductRecommendationService {
                 throw new NotFoundException();
             }
 
-            const market = await this.consultantCountriesRepository
-                .createQueryBuilder('contries')
-                .where('Lower(contries.name) = :name', { name: query.market.toLocaleLowerCase() })
-                .getOne();
-
-            if (!market) {
-                throw new NotFoundException();
-            }
-
-            const recommended = market.defaultRecommendation.toLocaleLowerCase();
-
             const generatorCreateParameter = {
-                dior_consultant: diorConsultant,
-                skin_tone: query.skin_tone,
-                routine_recommendation: query.routine_recommendation,
+                diorConsultant: diorConsultant,
+                skinTone: query.skin_tone,
+                routineRecommendation: query.routine_recommendation,
                 market: query.market,
-                recommended: recommended,
                 answers: query.answers,
                 old: true,
             };
 
+            const repositories = {
+                consultantCountriesRepository: this.consultantCountriesRepository,
+                productRecommendationsRepository: this.productRecommendationRepository,
+                prGroupsRepository: this.prGroupsRepository,
+            };
+
             const automaticProductDiorGenerator = new AutomaticProductDiorGenerator(
                 generatorCreateParameter,
-                this.prGroupsRepository,
+                repositories,
             );
 
             const psSelecteds = await automaticProductDiorGenerator.questionAnswers();

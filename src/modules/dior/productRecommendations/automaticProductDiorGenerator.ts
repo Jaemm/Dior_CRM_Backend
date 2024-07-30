@@ -1,0 +1,669 @@
+import { Consultants, ProductRecommendationSelecteds, ProductRecommendations } from '@/src/common/entities/crmEntities';
+import {
+    ConsultantCountriesRepository,
+    ProductRecommendationGroupsRepository,
+    ProductRecommendationRepository,
+} from '@/src/common/repositories/crm';
+import { when } from 'joi';
+import { In } from 'typeorm';
+
+type ResultJson = {
+    id: number;
+    question: string;
+    answers: string[];
+};
+
+export class AutomaticProductDiorGenerator {
+    newRoutineRecommendation = 500 as const;
+
+    diorConsultant: Consultants;
+    productRecommendations: ProductRecommendations[];
+    skinTone: string;
+    routineRecommendation: string;
+    market: string;
+    answers: string;
+    old: string;
+
+    consultantCountriesRepository: ConsultantCountriesRepository;
+    productRecommendationsRepository: ProductRecommendationRepository;
+    prGroupsRepository: ProductRecommendationGroupsRepository;
+
+    constructor(
+        params: {
+            diorConsultant: Consultants;
+            skinTone: string;
+            routineRecommendation: string;
+            market: string;
+            answers: string;
+            old: boolean;
+        },
+        repositories: {
+            consultantCountriesRepository: ConsultantCountriesRepository;
+            productRecommendationsRepository: ProductRecommendationRepository;
+            prGroupsRepository: ProductRecommendationGroupsRepository;
+        },
+    ) {
+        this.diorConsultant = params.diorConsultant;
+        this.productRecommendations = params?.diorConsultant?.productRecommendations || null;
+        this.skinTone = params.skinTone;
+        this.routineRecommendation = params.routineRecommendation;
+        this.market = params.market;
+        this.answers = params.answers;
+        this.old = params.old;
+
+        this.consultantCountriesRepository = repositories.consultantCountriesRepository;
+        this.productRecommendationsRepository = repositories.productRecommendationsRepository;
+        this.prGroupsRepository = repositories.prGroupsRepository;
+    }
+
+    async questionAnswers() {
+        const data = [
+            {
+                question: "Select client's age group",
+                answers: [
+                    { code: 'A', answer_text: 'under 20' },
+                    { code: 'B', answer_text: '20 to 30' },
+                    { code: 'C', answer_text: '30 to 40' },
+                    { code: 'D', answer_text: '40 to 50' },
+                    { code: 'E', answer_text: '50 to 60' },
+                    { code: 'F', answer_text: 'over 60' },
+                ],
+            },
+            {
+                question: 'What are your main skin concerns?',
+                answers: [
+                    { code: 'A', answer_text: 'wrinkles & fines lines' },
+                    { code: 'B', answer_text: 'lack of firmness' },
+                    { code: 'C', answer_text: 'dark spots' },
+                    { code: 'D', answer_text: 'lack of radiance' },
+                    { code: 'E', answer_text: 'open pores' },
+                    { code: 'F', answer_text: 'dryness' },
+                ],
+            },
+            {
+                question: 'Have you ever tried premium skincare?',
+                answers: [
+                    { code: 'A', answer_text: 'Yes, I use premium skincare.' },
+                    { code: 'B', answer_text: "I'd like to try Dior premium skincare." },
+                    { code: 'C', answer_text: "No, I'm not interested." },
+                ],
+            },
+            {
+                question: 'What foundation FINISH are you looking for?',
+                answers: [
+                    { code: 'A', answer_text: 'Matte Finish' },
+                    { code: 'B', answer_text: 'Glow Finish' },
+                ],
+            },
+            {
+                question: 'What foundation COVERAGE are you looking for?',
+                answers: [
+                    { code: 'A', answer_text: 'Light' },
+                    { code: 'B', answer_text: 'Medium' },
+                    { code: 'C', answer_text: 'Full' },
+                ],
+            },
+            {
+                question: 'What foundation TEXTURE are you looking for?',
+                answers: [
+                    { code: 'A', answer_text: 'Fluid' },
+                    { code: 'B', answer_text: 'Compact' },
+                    { code: 'C', answer_text: 'Cushion' },
+                ],
+            },
+        ];
+
+        const answerArray = this.answers.split(',');
+
+        const result = answerArray.map((answer, i) => {
+            const ans = answer.split('');
+            const json = {
+                id: i + 1,
+                question: data[i]['question'],
+                answers: [''],
+            };
+
+            if (ans.length === 1) {
+                const tempAnswer = data[i]['answers'].find((eachAnswer) => (eachAnswer.code = answer));
+                const answerText = tempAnswer ? tempAnswer['answer_text'] : '';
+
+                json.answers = [answerText];
+            } else {
+                const arr: string[] = [];
+                ans.forEach((a) => {
+                    const tempAnswer = data[i]['answers'].find((eachAnswer) => (eachAnswer.code = a));
+                    const answerText = tempAnswer ? tempAnswer['answer_text'] : '';
+                    arr.push(answerText);
+                });
+                json.answers = arr;
+            }
+
+            return json;
+        });
+
+        const foundMarket = await this.consultantCountriesRepository
+            .createQueryBuilder('country')
+            .where('LOWER(country.name) = :market', {
+                market: this.market.toLocaleLowerCase(),
+            })
+            .getOne();
+
+        const market = foundMarket?.name;
+
+        const recommanded = foundMarket.defaultRecommendation;
+
+        let product: ProductRecommendationSelecteds[];
+        if (market.toLocaleLowerCase() === 'japan') {
+            product = await this.getProductsFromMarketJapan(result);
+        } else if (recommanded.includes('western')) {
+            product = await this.getProductsFromMarketWestern(result);
+        } else {
+            // Default from asia
+            product = await this.getProductsFromMarketAsia(result);
+        }
+
+        return product;
+    }
+
+    async getProductsFromMarketJapan(result: ResultJson[]) {
+        const products = [];
+
+        //  skincare japan
+        const premium = ['Yes, I use premium skincare.', "I'd like to try Dior premium skincare."];
+        const drynessDarkSpot = ['dryness', 'dark spots'];
+        const nonPremium = ["No, I'm not interested."];
+
+        const noDrynessDarkSpot = !result[1]['answers'].some((x) => drynessDarkSpot.includes(x));
+        const isPremium = result[2]['answers']
+            .filter((answer) => premium.includes(answer))
+            .every((x) => result[2]['answers'].includes(x));
+        const isNonPremium = result[2]['answers']
+            .filter((x) => nonPremium.includes(x))
+            .every((x) => result[2]['answers'].includes(x));
+
+        let skincareProducts: ProductRecommendationSelecteds[];
+        const addSkinCareRoutineForJapan = async (routine: number) => {
+            skincareProducts = await this.getSkinCareRoutine(routine, 'japan skincare');
+        };
+
+        if (noDrynessDarkSpot && isPremium) await addSkinCareRoutineForJapan(2);
+
+        if (result[1].answers.includes('dryness') && isPremium) await addSkinCareRoutineForJapan(1);
+
+        if (result[1].answers.includes('dark spots') && isPremium) await addSkinCareRoutineForJapan(3);
+
+        ///
+
+        if (noDrynessDarkSpot && isNonPremium) await addSkinCareRoutineForJapan(5);
+
+        if (result[1]['answers'].includes('dryness') && isNonPremium) await addSkinCareRoutineForJapan(4);
+
+        if (result[1]['answers'].includes('dark spots') && isNonPremium) await addSkinCareRoutineForJapan(6);
+
+        products.push(skincareProducts);
+
+        const finishType = result[3]['answers'];
+        const coverage = result[4]['answers'];
+        const form = result[5]['answers'];
+
+        const addMakeupRoutine = async (routineId: number) => {
+            products.push(await this.getMakeupRoutine(routineId, 'japan makeup'));
+        };
+
+        /////
+        if (isPremium) {
+            if (finishType.includes('Matte Finish')) {
+                if (coverage.includes('Light')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(10);
+                    if (form.includes('Compact')) addMakeupRoutine(11); // it's routine 11. but ruby code 10
+                    if (form.includes('Cushion')) addMakeupRoutine(3);
+                }
+
+                if (coverage.includes('Medium')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(1);
+                    if (form.includes('Compact')) addMakeupRoutine(3);
+                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                }
+
+                if (coverage.includes('Full')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(1);
+                    if (form.includes('Compact')) addMakeupRoutine(11);
+                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                }
+            }
+
+            if (finishType.includes('Glow Finish')) {
+                if (coverage.includes('Light')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(6);
+                    if (form.includes('Compact')) addMakeupRoutine(4);
+                    if (form.includes('Cushion')) addMakeupRoutine(13);
+                }
+
+                if (coverage.includes('Medium')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(2);
+                    if (form.includes('Compact')) addMakeupRoutine(9);
+                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                }
+
+                if (coverage.includes('Full')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(8);
+                    if (form.includes('Compact')) addMakeupRoutine(9);
+                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                }
+            }
+        } else {
+            if (finishType.includes('Matte Finish')) {
+                if (coverage.includes('Light')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(10);
+                    if (form.includes('Compact')) addMakeupRoutine(11);
+                    if (form.includes('Cushion')) addMakeupRoutine(3);
+                }
+
+                if (coverage.includes('Medium')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(1);
+                    if (form.includes('Compact')) addMakeupRoutine(3);
+                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                }
+
+                if (coverage.includes('Full')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(1);
+                    if (form.includes('Compact')) addMakeupRoutine(12);
+                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                }
+            }
+
+            if (finishType.includes('Glow Finish')) {
+                if (coverage.includes('Light')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(6);
+                    if (form.includes('Compact')) addMakeupRoutine(4);
+                    if (form.includes('Cushion')) addMakeupRoutine(13);
+                }
+
+                if (coverage.includes('Medium')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(2);
+                    if (form.includes('Compact')) addMakeupRoutine(4);
+                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                }
+
+                if (coverage.includes('Full')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(2);
+                    if (form.includes('Compact')) addMakeupRoutine(9);
+                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                }
+            }
+        }
+        return products.flat();
+    }
+
+    async getProductsFromMarketWestern(result: ResultJson[]) {
+        const products = [];
+
+        const premium = ['Yes, I use premium skincare.', "I'd like to try Dior premium skincare."];
+        const nonPremium = ["No, I'm not interested."];
+
+        const noDryness = !result[1]['answers'].includes('dryness');
+        const isPremium = result[2]['answers']
+            .filter((answer) => premium.includes(answer))
+            .every((x) => result[2]['answers'].includes(x));
+
+        const isNonPremium = result[2]['answers']
+            .filter((x) => nonPremium.includes(x))
+            .every((x) => result[2]['answers'].includes(x));
+
+        let skincareProducts: ProductRecommendationSelecteds[];
+        const addSkincareRoutine = async (routine: number) => {
+            skincareProducts = await this.getSkinCareRoutine(routine, 'western skincare');
+        };
+
+        if (noDryness && isPremium) addSkincareRoutine(2);
+
+        if (!noDryness && isPremium) addSkincareRoutine(1);
+
+        if (noDryness && isNonPremium) addSkincareRoutine(3);
+
+        if (!noDryness && isNonPremium) addSkincareRoutine(4);
+
+        products.push(skincareProducts);
+
+        const finishType = result[3]['answers'];
+        const coverage = result[4]['answers'];
+        const form = result[5]['answers'];
+
+        const addMakeupRoutine = async (routine: number) => {
+            products.push(await this.getMakeupRoutine(routine, 'western makeup'));
+        };
+
+        if (isPremium) {
+            if (finishType.includes('Matte Finish')) {
+                if (coverage.includes('Light')) {
+                    if (form.includes('Fluid')) {
+                        await addMakeupRoutine(9);
+                    }
+
+                    if (form.includes('Cushion')) {
+                        await addMakeupRoutine(4);
+                    }
+                }
+
+                if (coverage.includes('Medium')) {
+                    if (form.includes('Fluid')) {
+                        await addMakeupRoutine(1);
+                    }
+
+                    if (form.includes('Cushion')) {
+                        await addMakeupRoutine(4);
+                    }
+                }
+
+                if (coverage.includes('Full')) {
+                    if (form.includes('Fluid')) {
+                        await addMakeupRoutine(1);
+                    }
+
+                    if (form.includes('Cushion')) {
+                        await addMakeupRoutine(10);
+                    }
+                }
+            }
+
+            if (finishType.includes('Glow Finish')) {
+                if (coverage.includes('Light')) {
+                    if (form.includes('Fluid')) {
+                        await addMakeupRoutine(3);
+                    }
+
+                    if (form.includes('Cushion')) {
+                        await addMakeupRoutine(5);
+                    }
+                }
+
+                if (coverage.includes('Medium')) {
+                    if (form.includes('Fluid')) {
+                        await addMakeupRoutine(2);
+                    }
+
+                    if (form.includes('Cushion')) {
+                        await addMakeupRoutine(8);
+                    }
+                }
+
+                if (coverage.includes('Full')) {
+                    if (form.includes('Fluid')) {
+                        await addMakeupRoutine(7);
+                    }
+
+                    if (form.includes('Cushion')) {
+                        await addMakeupRoutine(8);
+                    }
+                }
+            }
+        } else {
+            if (finishType.includes('Matte Finish')) {
+                if (coverage.includes('Light')) {
+                    if (form.includes('Fluid')) {
+                        await addMakeupRoutine(9);
+                    }
+
+                    if (form.includes('Cushion')) {
+                        await addMakeupRoutine(4);
+                    }
+                }
+
+                if (coverage.includes('Medium')) {
+                    if (form.includes('Fluid')) {
+                        await addMakeupRoutine(1);
+                    }
+
+                    if (form.includes('Cushion')) {
+                        await addMakeupRoutine(4);
+                    }
+                }
+
+                if (coverage.includes('Full')) {
+                    if (form.includes('Fluid')) {
+                        await addMakeupRoutine(1);
+                    }
+
+                    if (form.includes('Cushion')) {
+                        await addMakeupRoutine(10);
+                    }
+                }
+            }
+
+            if (finishType.includes('Glow Finish')) {
+                if (coverage.includes('Light')) {
+                    if (form.includes('Fluid')) {
+                        await addMakeupRoutine(3);
+                    }
+
+                    if (form.includes('Cushion')) {
+                        await addMakeupRoutine(5);
+                    }
+                }
+
+                if (coverage.includes('Medium')) {
+                    if (form.includes('Fluid')) {
+                        await addMakeupRoutine(2);
+                    }
+
+                    if (form.includes('Cushion')) {
+                        await addMakeupRoutine(5);
+                    }
+                }
+
+                if (coverage.includes('Full')) {
+                    if (form.includes('Fluid')) {
+                        await addMakeupRoutine(2);
+                    }
+
+                    if (form.includes('Cushion')) {
+                        await addMakeupRoutine(8);
+                    }
+                }
+            }
+        }
+
+        return products.flat();
+    }
+
+    async getProductsFromMarketAsia(result: ResultJson[]) {
+        const products: ProductRecommendationSelecteds[][] = [];
+
+        //  skincare japan
+        const premium = ['Yes, I use premium skincare.', "I'd like to try Dior premium skincare."];
+        const drynessDarkSpot = ['dryness', 'dark spots'];
+        const nonPremium = ["No, I'm not interested."];
+
+        const darkSpotWrinkles = ['dark spots', 'wrinkles & fines lines'];
+        const darkSpotFirmness = ['dark spots', 'lack of firmness'];
+
+        const isAnswer1Count1 = result[1]['answers'].length === 1;
+        const isDryness = result[1]['answers'].includes('dryness');
+        const isDarkspots = result[1]['answers'].includes('dark spots');
+
+        const isDarkSpotWrinkles = result[1]['answers'].every((x) => darkSpotWrinkles.includes(x));
+        const isDarkSpotFirmness = result[1]['answers'].every((x) => darkSpotFirmness.includes(x));
+
+        const isPremium = result[2]['answers']
+            .filter((x) => premium.includes(x))
+            .every((x) => result[2]['answers'].includes(x));
+
+        const isNonPremium = result[2]['answers']
+            .filter((x) => nonPremium.includes(x))
+            .every((x) => result[2]['answers'].includes(x));
+
+        let skincareProducts;
+        const addSkincareRoutineForAsia = async (routine: number) => {
+            skincareProducts = await this.getSkinCareRoutine(routine, 'asia skincare');
+        };
+
+        if (isAnswer1Count1 && isDryness && isPremium) addSkincareRoutineForAsia(1);
+        else if (isAnswer1Count1 && isDarkspots && isPremium) addSkincareRoutineForAsia(3);
+        else if (isPremium) addSkincareRoutineForAsia(2);
+
+        if (isAnswer1Count1 && isDarkspots && isNonPremium) addSkincareRoutineForAsia(7);
+        else if ((isDarkSpotFirmness && isNonPremium) || (isDarkSpotWrinkles && isNonPremium))
+            addSkincareRoutineForAsia(6);
+        else if (isAnswer1Count1 && isDryness && isNonPremium) addSkincareRoutineForAsia(4);
+        else if (isNonPremium) addSkincareRoutineForAsia(5);
+
+        products.push(skincareProducts);
+
+        const finishType = result[3]['answers'];
+        const coverage = result[4]['answers'];
+        const form = result[5]['answers'];
+
+        const addMakeupRoutine = async (routine: number) => {
+            products.push(await this.getMakeupRoutine(routine, 'asia makeup'));
+        };
+
+        if (isPremium) {
+            if (finishType.includes('Matte Finish')) {
+                if (coverage.includes('Light')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(10);
+                    if (form.includes('Compact')) addMakeupRoutine(11);
+                    if (form.includes('Cushion')) addMakeupRoutine(3);
+                }
+
+                if (coverage.includes('Medium')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(1);
+                    if (form.includes('Compact')) addMakeupRoutine(3);
+                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                }
+
+                if (coverage.includes('Full')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(1);
+                    if (form.includes('Compact')) addMakeupRoutine(12);
+                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                }
+            }
+
+            if (finishType.includes('Glow Finish')) {
+                if (coverage.includes('Light')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(6);
+                    if (form.includes('Compact')) addMakeupRoutine(4);
+                    if (form.includes('Cushion')) addMakeupRoutine(13);
+                }
+
+                if (coverage.includes('Medium')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(2);
+                    if (form.includes('Compact')) addMakeupRoutine(9);
+                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                }
+
+                if (coverage.includes('Full')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(8);
+                    if (form.includes('Compact')) addMakeupRoutine(9);
+                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                }
+            }
+        } else {
+            if (finishType.includes('Matte Finish')) {
+                if (coverage.includes('Light')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(10);
+                    if (form.includes('Compact')) addMakeupRoutine(11);
+                    if (form.includes('Cushion')) addMakeupRoutine(3);
+                }
+
+                if (coverage.includes('Medium')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(1);
+                    if (form.includes('Compact')) addMakeupRoutine(3);
+                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                }
+
+                if (coverage.includes('Full')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(1);
+                    if (form.includes('Compact')) addMakeupRoutine(12);
+                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                }
+            }
+
+            if (finishType.includes('Glow Finish')) {
+                if (coverage.includes('Light')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(6);
+                    if (form.includes('Compact')) addMakeupRoutine(4);
+                    if (form.includes('Cushion')) addMakeupRoutine(13);
+                }
+
+                if (coverage.includes('Medium')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(2);
+                    if (form.includes('Compact')) addMakeupRoutine(4);
+                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                }
+
+                if (coverage.includes('Full')) {
+                    if (form.includes('Fluid')) addMakeupRoutine(2);
+                    if (form.includes('Compact')) addMakeupRoutine(9);
+                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                }
+            }
+        }
+
+        return products.flat();
+    }
+
+    async getSkinCareRoutine(routine: number, name: string): Promise<ProductRecommendationSelecteds[]> {
+        const skincareProducts: ProductRecommendationSelecteds[] = [];
+
+        const group = await this.prGroupsRepository.getGroupByNameAndRoutine(routine, name);
+
+        if (group) {
+            for (let i = 0; i < this.newRoutineRecommendation; i++) {
+                const prs = group.prSelecteds[0];
+
+                if (prs && prs.productRecommendationId) {
+                    skincareProducts.push(prs);
+                }
+            }
+        }
+
+        return skincareProducts;
+    }
+
+    async getMakeupRoutine(routine: number, name: string) {
+        const makeupProducts = [];
+
+        const group = await this.prGroupsRepository.getGroupByNameAndRoutine(routine, name);
+
+        if (group) {
+            if (this.old) {
+                for (let i = 0; i < this.newRoutineRecommendation; i++) {
+                    const prs = group.prSelecteds[i];
+
+                    if (prs && prs.productRecommendationId) {
+                        makeupProducts.push(prs);
+                    }
+                }
+            } else {
+                const principalProduct = group.prSelecteds.find((select) => select.isPrincipal === true);
+
+                if (principalProduct) {
+                    const principalRecommendation = principalProduct?.productRecommendation;
+
+                    const variants = principalRecommendation?.productVariants;
+
+                    const variantsIds = variants ? variants.map((v) => v.id) : [];
+
+                    const variantsMatchedSkintone = await this.productRecommendationsRepository.find({
+                        where: {
+                            id: In(variantsIds),
+                            shades: this.skinTone,
+                        },
+                    });
+
+                    if (variantsMatchedSkintone.length > 0 && principalRecommendation.isMarketMatch(this.market)) {
+                        for (let i = 0; i < this.newRoutineRecommendation; i++) {
+                            const prs = group.prSelecteds[i];
+
+                            if (prs && prs.productRecommendationId) {
+                                makeupProducts.push(prs);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return makeupProducts;
+    }
+}
