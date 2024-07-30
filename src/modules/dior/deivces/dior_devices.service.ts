@@ -46,11 +46,11 @@ export class DiorDevicesService {
                 });
             } else if ([6].includes(positionId)) {
                 consultantsQuery.andWhere('LOWER (consultants.country) IN (:...countries)', {
-                    countries: currentConsultant.countries.map((country) => country.toLocaleLowerCase()),
+                    countries: currentConsultant?.countries.map((country) => country.toLocaleLowerCase()),
                 });
             } else {
                 consultantsQuery.andWhere('LOWER (consultants.country) = :country', {
-                    country: currentConsultant.consultant_branch.country.toLocaleLowerCase(),
+                    country: currentConsultant?.consultant_branch?.country.toLocaleLowerCase(),
                 });
             }
 
@@ -67,15 +67,19 @@ export class DiorDevicesService {
             const deviceQuery = await this.devicesRepository
                 .createQueryBuilder('devices')
                 .leftJoinAndSelect('devices.products', 'products')
-                .where('devices.id IN (:...deviceIds)', {
-                    deviceIds: products.map((row) => row.device_id),
-                })
+                .leftJoinAndSelect('products.consultant', 'consultant')
                 .orWhere('devices.consultant_company_id = :companyId', {
                     companyId: diorConsultant.consultant_company_id,
                 })
                 .andWhere('devices.optic_number NOT IN (:...opticNumbers)', {
                     opticNumbers: ['FAB02135', 'FAB02363', 'FAB02709', 'DVAA4496'],
                 });
+
+            if (products.length > 0) {
+                deviceQuery.where('devices.id IN (:...deviceIds)', {
+                    deviceIds: products.map((row) => row.device_id),
+                });
+            }
 
             if (query.search) {
                 deviceQuery.andWhere('devices.optic_number LIKE :search', {
@@ -84,7 +88,7 @@ export class DiorDevicesService {
             }
 
             const searchPage = Number(query?.page || 1);
-            const searchPer = Number(query?.limit || 10);
+            const searchPer = Number(query?.limit || 25);
 
             const [devices, totalCount] = await deviceQuery
                 .skip((searchPage - 1) * searchPer)
@@ -115,7 +119,7 @@ export class DiorDevicesService {
                               email: consultant.email,
                               code: consultant.code,
                           }
-                        : null,
+                        : undefined,
                 };
             });
 
