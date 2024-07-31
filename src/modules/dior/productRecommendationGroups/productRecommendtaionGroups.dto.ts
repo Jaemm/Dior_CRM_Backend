@@ -3,7 +3,7 @@ import { IsNotEmpty, IsString, IsOptional, IsArray } from 'class-validator';
 
 export class SearchProductRecommendationGroupsDto {
     @ApiPropertyOptional()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     search: string;
 

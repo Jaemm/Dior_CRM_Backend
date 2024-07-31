@@ -143,10 +143,11 @@ export class AnalysisDataReplicationService {
 
     ///////
 
-    async getConsultantCounts(consultantIds?: string[], startDate?: string, endDate?: string) {
+    async getConsultantCountsForStatDetails(consultantIds?: string[], startDate?: string, endDate?: string) {
         try {
             const countQuery = this.diorCndpSkinRepository
                 .createQueryBuilder('analysis')
+                .select('COUNT(batch_id)', 'cnt')
                 .where("(analysis.args->>'status' LIKE '%true')");
 
             if (startDate && endDate) {
@@ -156,7 +157,7 @@ export class AnalysisDataReplicationService {
             if (consultantIds && consultantIds.length > 0) {
                 for (let i = 0; i < consultantIds.length; i++) {
                     const consultantId = consultantIds[i];
-                    countQuery.andWhere(`(analysis.args->>'consultant_id' LIKE '${consultantId})'`);
+                    countQuery.andWhere(`(analysis.args->>'consultant_id' LIKE '${consultantId}')`);
                 }
             }
 
