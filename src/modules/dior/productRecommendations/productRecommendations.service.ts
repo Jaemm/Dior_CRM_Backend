@@ -87,7 +87,8 @@ export class ProductRecommendationService {
 
             const prQuery = this.productRecommendationRepository
                 .createQueryBuilder('productRecommendation')
-                .where('productRecommendation.productRecommendationId IS NULL');
+                .where('productRecommendation.productRecommendationId IS NULL')
+                .leftJoinAndSelect('productRecommendation.productVariants', 'productVariants');
 
             if (request_origin && request_origin === 'dior_bo') {
                 prQuery.andWhere('productRecommendation.consultantId = :diorConsultantId', {
@@ -160,8 +161,9 @@ export class ProductRecommendationService {
                 });
             }
 
-            const searchPage = Number(page || 1);
-            const searchLimit = Number(limit || 30);
+            if (page && limit) {
+                prQuery.skip((Number(page) - 1) * Number(limit)).take(Number(limit));
+            }
 
             const [data, totalCount] = await prQuery
                 // .leftJoinAndSelect(
@@ -169,9 +171,9 @@ export class ProductRecommendationService {
                 //     'productTranslations',
                 //     'productRecommendation.id = CAST(productTranslations.product_recommendation_id AS integer)',
                 // )
-                .skip((searchPage - 1) * searchLimit)
-                .take(searchLimit)
+
                 .getManyAndCount();
+            console.log(await prQuery.getRawOne());
 
             const result = data.map(async (d) => {
                 const returnFormat = {
@@ -192,7 +194,7 @@ export class ProductRecommendationService {
                     product_translations: [] as any[],
                     category_translations: [] as any[],
                     collection_translations: [] as any[],
-                    product_variants: [] as any[],
+                    product_variants: d.getVariants,
                 };
 
                 d.productTranslations = await this.productTranslationsRepository.find({
@@ -256,12 +258,23 @@ export class ProductRecommendationService {
                 return returnFormat;
             });
 
+            let total_size;
+            let current_page_size;
+            let current_page;
+            let total_pages;
+            if (page && limit) {
+                total_size = totalCount;
+                current_page_size = data.length;
+                current_page = Number(page);
+                total_pages = Math.ceil(totalCount / Number(limit));
+            }
+
             return {
                 data: await Promise.all(result),
-                total_size: totalCount,
-                current_page_size: data.length,
-                current_page: searchPage,
-                total_pages: Math.ceil(totalCount / searchLimit),
+                total_size,
+                current_page_size,
+                current_page,
+                total_pages,
             };
         } catch (e) {
             throw e;
