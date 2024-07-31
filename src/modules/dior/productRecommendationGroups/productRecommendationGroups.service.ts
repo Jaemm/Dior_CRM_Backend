@@ -48,14 +48,17 @@ export class ProductRecommendationGroupsService {
 
             const prGroupsQuery = this.prGroupsRepository
                 .createQueryBuilder('prGroups')
-                .where('prGroups.name ILIKE :search', {
-                    search: `%${search}%`,
-                })
                 .leftJoinAndSelect('prGroups.prSelecteds', 'prSelecteds')
                 .leftJoinAndSelect('prSelecteds.productRecommendation', 'productRecommendation');
 
+            if (search && search !== '') {
+                prGroupsQuery.andWhere('prGroups.name ILIKE :search', {
+                    search: `%${search}%`,
+                });
+            }
+
             const searchPage = Number(page || 1);
-            const searchPer = Number(per || 10);
+            const searchPer = Number(per || 25);
 
             const [prGroups, totalCount] = await prGroupsQuery
                 .skip((searchPage - 1) * searchPage)
