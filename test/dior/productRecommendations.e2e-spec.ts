@@ -59,4 +59,27 @@ describe('Dior - Product Recommendations Module (e2e)', () => {
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
         expect(missingFields).toEqual([]);
     });
+
+    test('dior/product_recommendations/get_new_automatic_product_by_batch_id (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get(
+                '/dior/product_recommendations/get_new_automatic_product_by_batch_id?answers=B%2CC%2CB%2CA%2CB%2CB&batch_id=69950&market=Korea&routine_recommendation=5&skin_tone=0.5N',
+            )
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get(
+                '/dior/product_recommendations/get_new_automatic_product_by_batch_id?answers=B%2CC%2CB%2CA%2CB%2CB&batch_id=69950&market=Korea&routine_recommendation=5&skin_tone=0.5N',
+            )
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
 });
