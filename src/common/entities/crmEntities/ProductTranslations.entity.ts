@@ -36,8 +36,8 @@ export class ProductTranslations {
         return {
             id: this.id,
             field_name: this.fieldName,
-            languag: this.language,
-            val: this.value,
+            language: this.language,
+            value: this.value,
         };
     }
 }

@@ -109,7 +109,7 @@ export class ProductRecommendations {
     get getVariants() {
         let variants: any[] = [];
         if (this.productVariants && this.productVariants.length > 0) {
-            variants = this.productVariants.map((v) => {
+            variants = this.productVariants.reverse().map((v) => {
                 return {
                     id: v.id,
                     name: v.name,

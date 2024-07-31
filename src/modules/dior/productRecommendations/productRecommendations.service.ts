@@ -646,12 +646,13 @@ export class ProductRecommendationService {
                     const isPrincipal = productRecommendationSelected.isPrincipal;
                     const shades = recommendation.getShade();
                     const collectionShades = (
-                        await this.productRecommendationRepository.find({
-                            where: {
+                        await this.productRecommendationRepository
+                            .createQueryBuilder('pr')
+                            .where('pr.collection = :collection', {
                                 collection: recommendation.collection,
-                                shades: Not(Equal(null)),
-                            },
-                        })
+                            })
+                            .andWhere('pr.shades IS NOT NULL')
+                            .getMany()
                     ).map((collection) => collection.shades);
 
                     const categoryTranslations = await this.productAttributesRepository.getTranslationsByType(
@@ -728,8 +729,8 @@ export class ProductRecommendationService {
 
                         return {
                             ...t.getBasicInfo,
-                            attribute_name: attributeName,
-                            collection_name: collectionName,
+                            attribute_name: attributeName || null,
+                            collection_name: collectionName || null,
                         };
                     });
 
@@ -764,30 +765,24 @@ export class ProductRecommendationService {
                 throw new NotFoundException();
             }
 
-            const market = await this.consultantCountriesRepository
-                .createQueryBuilder('contries')
-                .where('Lower(contries.name) = :name', { name: query.market.toLocaleLowerCase() })
-                .getOne();
-
-            if (!market) {
-                throw new NotFoundException();
-            }
-
-            const recommended = market.defaultRecommendation.toLocaleLowerCase();
-
             const generatorCreateParameter = {
-                dior_consultant: diorConsultant,
-                skin_tone: query.skin_tone,
-                routine_recommendation: query.routine_recommendation,
+                diorConsultant: diorConsultant,
+                skinTone: query.skin_tone,
+                routineRecommendation: query.routine_recommendation,
                 market: query.market,
-                recommended: recommended,
                 answers: query.answers,
                 old: true,
             };
 
+            const repositories = {
+                consultantCountriesRepository: this.consultantCountriesRepository,
+                productRecommendationsRepository: this.productRecommendationRepository,
+                prGroupsRepository: this.prGroupsRepository,
+            };
+
             const automaticProductDiorGenerator = new AutomaticProductDiorGenerator(
                 generatorCreateParameter,
-                this.prGroupsRepository,
+                repositories,
             );
 
             const psSelecteds = await automaticProductDiorGenerator.questionAnswers();

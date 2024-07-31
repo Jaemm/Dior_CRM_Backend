@@ -22,7 +22,7 @@ export class AutomaticProductDiorGenerator {
     routineRecommendation: string;
     market: string;
     answers: string;
-    old: string;
+    old: boolean;
 
     consultantCountriesRepository: ConsultantCountriesRepository;
     productRecommendationsRepository: ProductRecommendationRepository;
@@ -124,14 +124,14 @@ export class AutomaticProductDiorGenerator {
             };
 
             if (ans.length === 1) {
-                const tempAnswer = data[i]['answers'].find((eachAnswer) => (eachAnswer.code = answer));
+                const tempAnswer = data[i]['answers'].find((eachAnswer) => eachAnswer.code === answer);
                 const answerText = tempAnswer ? tempAnswer['answer_text'] : '';
 
                 json.answers = [answerText];
             } else {
                 const arr: string[] = [];
                 ans.forEach((a) => {
-                    const tempAnswer = data[i]['answers'].find((eachAnswer) => (eachAnswer.code = a));
+                    const tempAnswer = data[i]['answers'].find((eachAnswer) => eachAnswer.code === a);
                     const answerText = tempAnswer ? tempAnswer['answer_text'] : '';
                     arr.push(answerText);
                 });
@@ -174,12 +174,12 @@ export class AutomaticProductDiorGenerator {
         const nonPremium = ["No, I'm not interested."];
 
         const noDrynessDarkSpot = !result[1]['answers'].some((x) => drynessDarkSpot.includes(x));
-        const isPremium = result[2]['answers']
-            .filter((answer) => premium.includes(answer))
-            .every((x) => result[2]['answers'].includes(x));
-        const isNonPremium = result[2]['answers']
-            .filter((x) => nonPremium.includes(x))
-            .every((x) => result[2]['answers'].includes(x));
+
+        const isPremium =
+            result[2]['answers'].filter((x) => premium.includes(x)).length === result[2]['answers'].length;
+
+        const isNonPremium =
+            result[2]['answers'].filter((x) => nonPremium.includes(x)).length === result[2]['answers'].length;
 
         let skincareProducts: ProductRecommendationSelecteds[];
         const addSkinCareRoutineForJapan = async (routine: number) => {
@@ -215,40 +215,40 @@ export class AutomaticProductDiorGenerator {
             if (finishType.includes('Matte Finish')) {
                 if (coverage.includes('Light')) {
                     if (form.includes('Fluid')) addMakeupRoutine(10);
-                    if (form.includes('Compact')) addMakeupRoutine(11); // it's routine 11. but ruby code 10
+                    if (form.includes('Compact')) addMakeupRoutine(10); // it's routine 11. but ruby code 10
                     if (form.includes('Cushion')) addMakeupRoutine(3);
                 }
 
                 if (coverage.includes('Medium')) {
                     if (form.includes('Fluid')) addMakeupRoutine(1);
-                    if (form.includes('Compact')) addMakeupRoutine(3);
-                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                    if (form.includes('Compact')) addMakeupRoutine(5);
+                    if (form.includes('Cushion')) addMakeupRoutine(3);
                 }
 
                 if (coverage.includes('Full')) {
                     if (form.includes('Fluid')) addMakeupRoutine(1);
-                    if (form.includes('Compact')) addMakeupRoutine(11);
-                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                    if (form.includes('Compact')) addMakeupRoutine(5);
+                    if (form.includes('Cushion')) addMakeupRoutine(11);
                 }
             }
 
             if (finishType.includes('Glow Finish')) {
                 if (coverage.includes('Light')) {
                     if (form.includes('Fluid')) addMakeupRoutine(6);
-                    if (form.includes('Compact')) addMakeupRoutine(4);
-                    if (form.includes('Cushion')) addMakeupRoutine(13);
+                    if (form.includes('Compact')) addMakeupRoutine(13);
+                    if (form.includes('Cushion')) addMakeupRoutine(4);
                 }
 
                 if (coverage.includes('Medium')) {
                     if (form.includes('Fluid')) addMakeupRoutine(2);
-                    if (form.includes('Compact')) addMakeupRoutine(9);
-                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                    if (form.includes('Compact')) addMakeupRoutine(7);
+                    if (form.includes('Cushion')) addMakeupRoutine(9);
                 }
 
                 if (coverage.includes('Full')) {
                     if (form.includes('Fluid')) addMakeupRoutine(8);
-                    if (form.includes('Compact')) addMakeupRoutine(9);
-                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                    if (form.includes('Compact')) addMakeupRoutine(7);
+                    if (form.includes('Cushion')) addMakeupRoutine(9);
                 }
             }
         } else {
@@ -261,37 +261,38 @@ export class AutomaticProductDiorGenerator {
 
                 if (coverage.includes('Medium')) {
                     if (form.includes('Fluid')) addMakeupRoutine(1);
-                    if (form.includes('Compact')) addMakeupRoutine(3);
-                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                    if (form.includes('Compact')) addMakeupRoutine(5);
+                    if (form.includes('Cushion')) addMakeupRoutine(3);
                 }
 
                 if (coverage.includes('Full')) {
                     if (form.includes('Fluid')) addMakeupRoutine(1);
-                    if (form.includes('Compact')) addMakeupRoutine(12);
-                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                    if (form.includes('Compact')) addMakeupRoutine(5);
+                    if (form.includes('Cushion')) addMakeupRoutine(12);
                 }
             }
 
             if (finishType.includes('Glow Finish')) {
                 if (coverage.includes('Light')) {
                     if (form.includes('Fluid')) addMakeupRoutine(6);
-                    if (form.includes('Compact')) addMakeupRoutine(4);
-                    if (form.includes('Cushion')) addMakeupRoutine(13);
+                    if (form.includes('Compact')) addMakeupRoutine(13);
+                    if (form.includes('Cushion')) addMakeupRoutine(4);
                 }
 
                 if (coverage.includes('Medium')) {
                     if (form.includes('Fluid')) addMakeupRoutine(2);
-                    if (form.includes('Compact')) addMakeupRoutine(4);
-                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                    if (form.includes('Compact')) addMakeupRoutine(7);
+                    if (form.includes('Cushion')) addMakeupRoutine(4);
                 }
 
                 if (coverage.includes('Full')) {
                     if (form.includes('Fluid')) addMakeupRoutine(2);
-                    if (form.includes('Compact')) addMakeupRoutine(9);
-                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                    if (form.includes('Compact')) addMakeupRoutine(7);
+                    if (form.includes('Cushion')) addMakeupRoutine(9);
                 }
             }
         }
+
         return products.flat();
     }
 
@@ -302,13 +303,12 @@ export class AutomaticProductDiorGenerator {
         const nonPremium = ["No, I'm not interested."];
 
         const noDryness = !result[1]['answers'].includes('dryness');
-        const isPremium = result[2]['answers']
-            .filter((answer) => premium.includes(answer))
-            .every((x) => result[2]['answers'].includes(x));
 
-        const isNonPremium = result[2]['answers']
-            .filter((x) => nonPremium.includes(x))
-            .every((x) => result[2]['answers'].includes(x));
+        const isPremium =
+            result[2]['answers'].filter((x) => premium.includes(x)).length === result[2]['answers'].length;
+
+        const isNonPremium =
+            result[2]['answers'].filter((x) => nonPremium.includes(x)).length === result[2]['answers'].length;
 
         let skincareProducts: ProductRecommendationSelecteds[];
         const addSkincareRoutine = async (routine: number) => {
@@ -484,28 +484,26 @@ export class AutomaticProductDiorGenerator {
         const isDarkSpotWrinkles = result[1]['answers'].every((x) => darkSpotWrinkles.includes(x));
         const isDarkSpotFirmness = result[1]['answers'].every((x) => darkSpotFirmness.includes(x));
 
-        const isPremium = result[2]['answers']
-            .filter((x) => premium.includes(x))
-            .every((x) => result[2]['answers'].includes(x));
+        const isPremium =
+            result[2]['answers'].filter((x) => premium.includes(x)).length === result[2]['answers'].length;
 
-        const isNonPremium = result[2]['answers']
-            .filter((x) => nonPremium.includes(x))
-            .every((x) => result[2]['answers'].includes(x));
+        const isNonPremium =
+            result[2]['answers'].filter((x) => nonPremium.includes(x)).length === result[2]['answers'].length;
 
         let skincareProducts;
         const addSkincareRoutineForAsia = async (routine: number) => {
             skincareProducts = await this.getSkinCareRoutine(routine, 'asia skincare');
         };
 
-        if (isAnswer1Count1 && isDryness && isPremium) addSkincareRoutineForAsia(1);
-        else if (isAnswer1Count1 && isDarkspots && isPremium) addSkincareRoutineForAsia(3);
-        else if (isPremium) addSkincareRoutineForAsia(2);
+        if (isAnswer1Count1 && isDryness && isPremium) await addSkincareRoutineForAsia(1);
+        else if (isAnswer1Count1 && isDarkspots && isPremium) await addSkincareRoutineForAsia(3);
+        else if (isPremium) await addSkincareRoutineForAsia(2);
 
-        if (isAnswer1Count1 && isDarkspots && isNonPremium) addSkincareRoutineForAsia(7);
+        if (isAnswer1Count1 && isDarkspots && isNonPremium) await addSkincareRoutineForAsia(7);
         else if ((isDarkSpotFirmness && isNonPremium) || (isDarkSpotWrinkles && isNonPremium))
-            addSkincareRoutineForAsia(6);
-        else if (isAnswer1Count1 && isDryness && isNonPremium) addSkincareRoutineForAsia(4);
-        else if (isNonPremium) addSkincareRoutineForAsia(5);
+            await addSkincareRoutineForAsia(6);
+        else if (isAnswer1Count1 && isDryness && isNonPremium) await addSkincareRoutineForAsia(4);
+        else if (isNonPremium) await addSkincareRoutineForAsia(5);
 
         products.push(skincareProducts);
 
@@ -520,81 +518,81 @@ export class AutomaticProductDiorGenerator {
         if (isPremium) {
             if (finishType.includes('Matte Finish')) {
                 if (coverage.includes('Light')) {
-                    if (form.includes('Fluid')) addMakeupRoutine(10);
-                    if (form.includes('Compact')) addMakeupRoutine(11);
-                    if (form.includes('Cushion')) addMakeupRoutine(3);
+                    if (form.includes('Fluid')) await addMakeupRoutine(10);
+                    if (form.includes('Compact')) await addMakeupRoutine(11);
+                    if (form.includes('Cushion')) await addMakeupRoutine(3);
                 }
 
                 if (coverage.includes('Medium')) {
-                    if (form.includes('Fluid')) addMakeupRoutine(1);
-                    if (form.includes('Compact')) addMakeupRoutine(3);
-                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                    if (form.includes('Fluid')) await addMakeupRoutine(1);
+                    if (form.includes('Compact')) await addMakeupRoutine(5);
+                    if (form.includes('Cushion')) await addMakeupRoutine(3);
                 }
 
                 if (coverage.includes('Full')) {
-                    if (form.includes('Fluid')) addMakeupRoutine(1);
-                    if (form.includes('Compact')) addMakeupRoutine(12);
-                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                    if (form.includes('Fluid')) await addMakeupRoutine(1);
+                    if (form.includes('Compact')) await addMakeupRoutine(5);
+                    if (form.includes('Cushion')) await addMakeupRoutine(12);
                 }
             }
 
             if (finishType.includes('Glow Finish')) {
                 if (coverage.includes('Light')) {
-                    if (form.includes('Fluid')) addMakeupRoutine(6);
-                    if (form.includes('Compact')) addMakeupRoutine(4);
-                    if (form.includes('Cushion')) addMakeupRoutine(13);
+                    if (form.includes('Fluid')) await addMakeupRoutine(6);
+                    if (form.includes('Cushion')) await addMakeupRoutine(4);
+                    if (form.includes('Compact')) await addMakeupRoutine(13);
                 }
 
                 if (coverage.includes('Medium')) {
-                    if (form.includes('Fluid')) addMakeupRoutine(2);
-                    if (form.includes('Compact')) addMakeupRoutine(9);
-                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                    if (form.includes('Fluid')) await addMakeupRoutine(2);
+                    if (form.includes('Cushion')) await addMakeupRoutine(9);
+                    if (form.includes('Compact')) await addMakeupRoutine(7);
                 }
 
                 if (coverage.includes('Full')) {
-                    if (form.includes('Fluid')) addMakeupRoutine(8);
-                    if (form.includes('Compact')) addMakeupRoutine(9);
-                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                    if (form.includes('Fluid')) await addMakeupRoutine(8);
+                    if (form.includes('Cushion')) await addMakeupRoutine(9);
+                    if (form.includes('Compact')) await addMakeupRoutine(7);
                 }
             }
         } else {
             if (finishType.includes('Matte Finish')) {
                 if (coverage.includes('Light')) {
-                    if (form.includes('Fluid')) addMakeupRoutine(10);
-                    if (form.includes('Compact')) addMakeupRoutine(11);
-                    if (form.includes('Cushion')) addMakeupRoutine(3);
+                    if (form.includes('Fluid')) await addMakeupRoutine(10);
+                    if (form.includes('Compact')) await addMakeupRoutine(11);
+                    if (form.includes('Cushion')) await addMakeupRoutine(3);
                 }
 
                 if (coverage.includes('Medium')) {
-                    if (form.includes('Fluid')) addMakeupRoutine(1);
-                    if (form.includes('Compact')) addMakeupRoutine(3);
-                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                    if (form.includes('Fluid')) await addMakeupRoutine(1);
+                    if (form.includes('Compact')) await addMakeupRoutine(5);
+                    if (form.includes('Cushion')) await addMakeupRoutine(3);
                 }
 
                 if (coverage.includes('Full')) {
-                    if (form.includes('Fluid')) addMakeupRoutine(1);
-                    if (form.includes('Compact')) addMakeupRoutine(12);
-                    if (form.includes('Cushion')) addMakeupRoutine(5);
+                    if (form.includes('Fluid')) await addMakeupRoutine(1);
+                    if (form.includes('Compact')) await addMakeupRoutine(5);
+                    if (form.includes('Cushion')) await addMakeupRoutine(12);
                 }
             }
 
             if (finishType.includes('Glow Finish')) {
                 if (coverage.includes('Light')) {
-                    if (form.includes('Fluid')) addMakeupRoutine(6);
-                    if (form.includes('Compact')) addMakeupRoutine(4);
-                    if (form.includes('Cushion')) addMakeupRoutine(13);
+                    if (form.includes('Fluid')) await addMakeupRoutine(6);
+                    if (form.includes('Compact')) await addMakeupRoutine(13);
+                    if (form.includes('Cushion')) await addMakeupRoutine(4);
                 }
 
                 if (coverage.includes('Medium')) {
-                    if (form.includes('Fluid')) addMakeupRoutine(2);
-                    if (form.includes('Compact')) addMakeupRoutine(4);
-                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                    if (form.includes('Fluid')) await addMakeupRoutine(2);
+                    if (form.includes('Compact')) await addMakeupRoutine(7);
+                    if (form.includes('Cushion')) await addMakeupRoutine(4);
                 }
 
                 if (coverage.includes('Full')) {
-                    if (form.includes('Fluid')) addMakeupRoutine(2);
-                    if (form.includes('Compact')) addMakeupRoutine(9);
-                    if (form.includes('Cushion')) addMakeupRoutine(7);
+                    if (form.includes('Fluid')) await addMakeupRoutine(2);
+                    if (form.includes('Compact')) await addMakeupRoutine(7);
+                    if (form.includes('Cushion')) await addMakeupRoutine(9);
                 }
             }
         }
@@ -609,7 +607,7 @@ export class AutomaticProductDiorGenerator {
 
         if (group) {
             for (let i = 0; i < this.newRoutineRecommendation; i++) {
-                const prs = group.prSelecteds[0];
+                const prs = group.prSelecteds[i];
 
                 if (prs && prs.productRecommendationId) {
                     skincareProducts.push(prs);
