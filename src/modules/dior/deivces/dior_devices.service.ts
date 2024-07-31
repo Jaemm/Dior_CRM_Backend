@@ -9,7 +9,7 @@ import {
     ProductLogsRepository,
     ProductsRepository,
 } from '@/src/common/repositories/crm';
-import { Consultants } from '@/src/common/entities/crmEntities';
+import { Consultants, Devices } from '@/src/common/entities/crmEntities';
 
 import { In } from 'typeorm';
 import { DeviceForDiorT } from '@/src/common/types/entities';
@@ -64,6 +64,17 @@ export class DiorDevicesService {
                 },
             });
 
+            let devices: Devices[];
+
+            if (products.length > 0) {
+                devices = await this.devicesRepository.find({
+                    where: {
+                        id: In(products.map((row) => row.device_id)),
+                    },
+                });
+            }
+            let totalCount = devices.length;
+
             const deviceQuery = await this.devicesRepository
                 .createQueryBuilder('devices')
                 .leftJoinAndSelect('devices.products', 'products')
@@ -75,12 +86,6 @@ export class DiorDevicesService {
                     opticNumbers: ['FAB02135', 'FAB02363', 'FAB02709', 'DVAA4496'],
                 });
 
-            if (products.length > 0) {
-                deviceQuery.where('devices.id IN (:...deviceIds)', {
-                    deviceIds: products.map((row) => row.device_id),
-                });
-            }
-
             if (query.search) {
                 deviceQuery.andWhere('devices.optic_number LIKE :search', {
                     search: `%${query.search}%`,
@@ -90,7 +95,7 @@ export class DiorDevicesService {
             const searchPage = Number(query?.page || 1);
             const searchPer = Number(query?.limit || 25);
 
-            const [devices, totalCount] = await deviceQuery
+            [devices, totalCount] = await deviceQuery
                 .skip((searchPage - 1) * searchPer)
                 .take(searchPer)
                 .getManyAndCount();
