@@ -15,6 +15,8 @@ export class ConsultantsRepository extends Repository<Consultants> {
             .leftJoinAndSelect('products.device', 'devices')
             .leftJoinAndSelect('products.application', 'applications')
             .leftJoinAndSelect('consultants.consultant_licenses', 'consultantLicenses')
+            .leftJoinAndSelect('consultants.consultant_position', 'consultantPositions')
+            .leftJoinAndSelect('consultants.consultant_company', 'consultantCompanies')
             .leftJoinAndSelect('consultantLicenses.licenses', 'license')
             .andWhere('consultants.email = :email', { email: email });
 
