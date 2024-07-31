@@ -41,10 +41,16 @@ export class PartnerDbModule {
     configure(consumer: MiddlewareConsumer) {
         consumer
             .apply(AuthMiddleware)
-            .exclude({
-                path: 'partnerdb/consultants/dior_login',
-                method: RequestMethod.POST,
-            })
+            .exclude(
+                {
+                    path: 'partnerdb/consultants/dior_login',
+                    method: RequestMethod.POST,
+                },
+                {
+                    path: 'partnerdb/consultants/password',
+                    method: RequestMethod.POST,
+                },
+            )
             .forRoutes({
                 path: 'partnerdb/*',
                 method: RequestMethod.ALL,
