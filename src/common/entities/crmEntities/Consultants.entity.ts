@@ -20,6 +20,7 @@ import { Identities } from './Identities.entity';
 import { ProductRecommendations } from './ProductRecommendations.entity';
 import { ConsultantStores } from './ConsultantStores.entity';
 import { ConsultantLicenses } from './ConsultantLicenses.entity';
+import { Applications } from './Applications.entity';
 
 @Index('index_consultants_on_email_and_app_id', ['app_id', 'email'], {
     unique: true,

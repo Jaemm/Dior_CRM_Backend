@@ -1023,6 +1023,8 @@ export class ConsultantsService {
                 relations: [
                     'products',
                     'products.device',
+                    'products.license',
+                    'products.application',
                     'country_details',
                     'consultant_position',
                     'consultant_company',

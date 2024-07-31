@@ -3,6 +3,7 @@ import { ConsultantApplications } from './ConsultantApplications.entity';
 import { CustomerApplications } from './CustomerApplications.entity';
 import { Products } from './Products.entity';
 import { ConsultantCompanies } from './ConsultantCompanies.entity';
+import { Consultants } from './Consultants.entity';
 
 @Index('index_applications_on_analysis_type', ['analysis_type'], {})
 @Index('index_applications_on_consultant_company_id', ['consultant_company_id'], {})
