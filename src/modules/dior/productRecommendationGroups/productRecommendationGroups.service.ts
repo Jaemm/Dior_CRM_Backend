@@ -230,12 +230,19 @@ export class ProductRecommendationGroupsService {
 
             const savedPrGroups = await this.prGroupsRepository.save(newPrGroups);
 
-            const selectedList: ProductRecommendationSelecteds[] = await this.createNewSelectedListForGroups(
-                savedPrGroups.id,
-                products_selected,
-            );
+            if (products_selected && products_selected.length > 0) {
+                const newPrSelectedList = products_selected.map((productId, index) => {
+                    return this.prSelectedRepository.create({
+                        productRecommendationGroupId: Number(savedPrGroups.id),
+                        productRecommendationId: productId,
+                        orderNumber: index + 1,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    });
+                });
 
-            savedPrGroups.prSelecteds = selectedList;
+                await this.prSelectedRepository.save(newPrSelectedList);
+            }
 
             if (principal_product) {
                 const prod = await this.prSelectedRepository.findOne({
@@ -248,31 +255,19 @@ export class ProductRecommendationGroupsService {
                 if (prod) {
                     prod.isPrincipal = true;
                 }
+
+                await this.prSelectedRepository.save(prod);
             }
 
-            const reformatGroup: ProudctRecommendationGroupsForDiorT = {
-                id: Number(savedPrGroups.id),
-                name: savedPrGroups.name,
-                countries: savedPrGroups.countries,
-                products: savedPrGroups.prSelecteds
-                    .sort((a, b) => a.orderNumber - b.orderNumber)
-                    .map((selected) => {
-                        const product = selected.productRecommendation;
-                        return {
-                            id: Number(product.id),
-                            name: product.name,
-                            product_type: product.productType,
-                            description: product.description,
-                            link: product.link,
-                            image_url: product.imageUrl,
-                            category: product.category,
-                            routine: product.routine,
-                            is_principal: selected.isPrincipal,
-                        };
-                    }),
-            };
+            const groupForResponse = await this.prGroupsRepository.findOne({
+                where: {
+                    id: savedPrGroups.id,
+                    consultantId: diorConsultant.id,
+                },
+                relations: ['prSelecteds', 'prSelecteds.productRecommendation'],
+            });
 
-            return reformatGroup;
+            return groupForResponse.getBasicInfo;
         } catch (e) {
             throw e;
         }
@@ -281,10 +276,14 @@ export class ProductRecommendationGroupsService {
     async updateProductRecommendationGroups(groupId: string, body: UpdateProductRecommendationGroupDto, locale = 'en') {
         const { name, locations, products_selected, principal_product } = body;
         try {
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
             const group = await this.prGroupsRepository.findOne({
                 where: {
                     id: groupId,
+                    consultantId: diorConsultant.id,
                 },
+                relations: ['prSelecteds'],
             });
 
             if (!group) {
@@ -299,50 +298,47 @@ export class ProductRecommendationGroupsService {
 
             await this.prGroupsRepository.save(group);
 
-            if (principal_product && principal_product.length > 0) {
-                const selectedList = await this.createNewSelectedListForGroups(group.id, products_selected);
+            if (group.prSelecteds && group.prSelecteds.length > 0) {
+                await this.prSelectedRepository.remove(group.prSelecteds);
+            }
 
-                group.prSelecteds = selectedList;
+            if (products_selected && products_selected.length > 0) {
+                const newPrSelectedList = products_selected.map((productId, index) => {
+                    return this.prSelectedRepository.create({
+                        productRecommendationGroupId: Number(group.id),
+                        productRecommendationId: productId,
+                        orderNumber: index + 1,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    });
+                });
+
+                await this.prSelectedRepository.save(newPrSelectedList);
             }
 
             if (principal_product) {
                 const prod = await this.prSelectedRepository.findOne({
                     where: {
                         productRecommendationGroupId: Number(group.id),
-                        productRecommendationId: Number(principal_product),
+                        productRecommendationId: principal_product,
                     },
                 });
 
                 if (prod) {
                     prod.isPrincipal = true;
-
                     await this.prSelectedRepository.save(prod);
                 }
             }
 
-            const reformatGroup: ProudctRecommendationGroupsForDiorT = {
-                id: Number(group.id),
-                name: group.name,
-                countries: group.countries,
-                products: group.prSelecteds
-                    .sort((a, b) => a.orderNumber - b.orderNumber)
-                    .map((selected) => {
-                        const product = selected.productRecommendation;
-                        return {
-                            id: Number(product.id),
-                            name: product.name,
-                            product_type: product.productType,
-                            description: product.description,
-                            link: product.link,
-                            image_url: product.imageUrl,
-                            category: product.category,
-                            routine: product.routine,
-                            is_principal: selected.isPrincipal,
-                        };
-                    }),
-            };
+            const groupForResponse = await this.prGroupsRepository.findOne({
+                where: {
+                    id: group.id,
+                    consultantId: diorConsultant.id,
+                },
+                relations: ['prSelecteds', 'prSelecteds.productRecommendation'],
+            });
 
-            return reformatGroup;
+            return groupForResponse.getBasicInfo;
         } catch (e) {
             throw e;
         }
@@ -392,38 +388,5 @@ export class ProductRecommendationGroupsService {
         } catch (e) {
             throw e;
         }
-    }
-
-    // Utils
-    async createNewSelectedListForGroups(
-        groupId: string,
-        productsSelected: { product_recommendation_id: string }[] = null,
-    ) {
-        const selectedList: ProductRecommendationSelecteds[] = [];
-        if (productsSelected && productsSelected.length) {
-            for (let i = 0; i < productsSelected.length; i++) {
-                const selected = productsSelected[i];
-
-                const newPrSelected = this.prSelectedRepository.create({
-                    productRecommendationGroupId: Number(groupId),
-                    productRecommendationId: Number(selected.product_recommendation_id),
-                    orderNumber: i + 1,
-                });
-
-                const updatedSelected = await this.prSelectedRepository.save(newPrSelected);
-
-                const selectedsRecommendtaions = await this.productRecommendationsRepository.findOne({
-                    where: {
-                        id: String(updatedSelected.productRecommendationId),
-                    },
-                });
-
-                updatedSelected.productRecommendation = selectedsRecommendtaions;
-
-                selectedList.push(updatedSelected);
-            }
-        }
-
-        return selectedList;
     }
 }

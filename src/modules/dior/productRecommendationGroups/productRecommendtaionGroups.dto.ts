@@ -37,27 +37,19 @@ export class CreateProductRecommendationGroupsDto {
     name: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsArray()
     locations: string[];
 
-    @ApiProperty({
-        default: [
-            {
-                product_recommendation_id: '1',
-            },
-        ],
-    })
-    @IsNotEmpty()
+    @ApiProperty()
+    @IsOptional()
     @IsArray()
-    products_selected: {
-        product_recommendation_id: string;
-    }[];
+    products_selected: number[];
 
     @ApiPropertyOptional()
     @IsOptional()
     @IsArray()
-    principal_product: string;
+    principal_product: number;
 }
 
 export class UpdateProductRecommendationGroupDto {
@@ -71,21 +63,16 @@ export class UpdateProductRecommendationGroupDto {
     @IsArray()
     locations: string[];
 
-    @ApiPropertyOptional({
-        default: [
-            {
-                product_recommendation_id: '1',
-            },
-        ],
-    })
+    @ApiPropertyOptional()
     @IsOptional()
     @IsArray()
-    products_selected: {
-        product_recommendation_id: string;
-    }[];
+    products_selected: number[];
 
     @ApiPropertyOptional()
     @IsOptional()
     @IsArray()
-    principal_product: string;
+    principal_product: number;
+}
+function IsNumberArray(): (target: CreateProductRecommendationGroupsDto, propertyKey: 'products_selected') => void {
+    throw new Error('Function not implemented.');
 }
