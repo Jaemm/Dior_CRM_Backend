@@ -324,7 +324,7 @@ export class StatisticsService {
                         perCountry = perCountry + consultationCount;
                     }
                 }
-
+                //
                 data.push({
                     name: country.name,
                     total: perCountry,

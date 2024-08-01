@@ -91,7 +91,9 @@ export class ConsultantsController {
         @Body() body: ConsultantDto,
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
-        return await this.consultants.signUpRuby(body, locale);
+        const consultant = await this.consultants.signUpRuby(body, locale);
+
+        return res.status(200).send(consultant);
     }
 
     @ApiBearerAuth()

@@ -3,7 +3,6 @@ import { AppModule } from './app.module';
 import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { json } from 'body-parser';
 import * as fs from 'fs';
 
 async function bootstrap() {
@@ -11,7 +10,7 @@ async function bootstrap() {
     const HOSTNAME = process.env.HOSTNAME;
     const isSSL = process.env.SSL === 'true';
 
-    let httpsOptions = {};
+    let httpsOptions = null;
 
     if (isSSL) {
         const keyPath = process.env.SSL_KEY_PATH || '';
@@ -22,15 +21,14 @@ async function bootstrap() {
             cert: fs.readFileSync(certPath),
         };
     }
-
     const app = await NestFactory.create(AppModule, {
         httpsOptions,
         rawBody: true,
-        snapshot: true,
         logger: ['log', 'error', 'warn', 'debug', 'verbose'],
     });
 
     const port = Number(process.env.PORT) || 3100;
+    console.log(`Configured Port: ${port}`);
 
     app.setGlobalPrefix('/v1/api');
 
@@ -54,31 +52,17 @@ async function bootstrap() {
         SwaggerModule.setup('docs', app, document);
     }
 
-    app.use(cookieParser());
-
-    app.use(json({ limit: '50mb' }));
-
-    app.useGlobalPipes(
-        new ValidationPipe({
-            whitelist: true,
-            transform: true,
-            exceptionFactory: (e) => {
-                console.error(e);
-                const errors = e.map((err) => {
-                    return Object.values(err.constraints);
-                });
-
-                return new BadRequestException(errors.flat(Infinity));
-            },
-        }),
-    );
-
     app.enableCors();
-    await app.listen(port, () => {
+
+    // await app.listen(port);
+
+    await app.listen(port, async () => {
         const protocol = SSL === 'true' ? 'https' : 'http';
         const address = protocol + '://' + (SSL === 'true' ? HOSTNAME : '0.0.0.0') + ':' + port;
         Logger.log('Listening at ' + address);
     });
+
+    console.log(`Application is running on: ${await app.getUrl()}`);
 }
 
 bootstrap();

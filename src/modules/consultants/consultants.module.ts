@@ -49,8 +49,6 @@ import { SkinColorGroups } from '@/src/common/entities/crmEntities/SkinColorGrou
 import { AdminGroups } from '@/src/common/entities/crmEntities/AdminGroups.entity';
 
 import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/ActiveStorageAttachments.entity';
-
-import { CrmDataReplicationModule } from '../dataReplication/consultantDataReplication/consultantDataReplication.module';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 
 import { ProductsModule } from '../products/products.module';
@@ -143,11 +141,7 @@ import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repos
             Versions,
         ]),
         AuthModule,
-
-        CrmDataReplicationModule,
-
         ConsultantsModule,
-
         forwardRef(() => ProductsModule),
         CustomersModule,
         CRMModule,

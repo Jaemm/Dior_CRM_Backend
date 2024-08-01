@@ -43,10 +43,7 @@ import { ConsultantStores } from '@/src/common/entities/crmEntities/ConsultantSt
 import { ConsultantCountries } from '@/src/common/entities/crmEntities/ConsultantCountries.entity';
 
 import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/ActiveStorageAttachments.entity';
-import { CrmDataReplicationModule } from '../dataReplication/consultantDataReplication/consultantDataReplication.module';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
-
-import { CustomerDataReplicationModule } from '../dataReplication/customerDataReplication/customerDataReplication.module';
 
 import { ProductsModule } from '../products/products.module';
 import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
@@ -114,9 +111,6 @@ import { CountriesRepository } from '@/src/common/repositories/crm/countries.rep
             Identities,
         ]),
         AuthModule,
-
-        CrmDataReplicationModule,
-        CustomerDataReplicationModule,
 
         forwardRef(() => ProductsModule),
         // CustomerConsentsModule
