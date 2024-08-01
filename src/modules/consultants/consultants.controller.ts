@@ -80,7 +80,7 @@ export class ConsultantsController {
     @Roles(Role.Consultant)
     @Get()
     async getConsultants(@Res() res: Response, @Query() query: GetConsultantDto) {
-        const consultnat = this.consultants.getConsultants(query);
+        const consultnat = await this.consultants.getConsultants(query);
         return res.status(200).send(consultnat);
     }
 
@@ -173,7 +173,7 @@ export class ConsultantsController {
     @Roles(Role.Consultant)
     @ApiBearerAuth()
     async getConsultantAboutMe(@Req() req: Request, @Res() res: Response, @Headers('X-CHOWIS-LOCALE') locale: string) {
-        const consultant = this.consultants.getConsultantAboutMe(req, locale);
+        const consultant = await this.consultants.getConsultantAboutMe(req, locale);
         return res.status(200).send(consultant);
     }
 
@@ -205,7 +205,7 @@ export class ConsultantsController {
         @Body() body: UpdateConsultantRubyDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
-        const updateResult = this.consultants.updateConsultantRuby(req, body, locale);
+        const updateResult = await this.consultants.updateConsultantRuby(req, body, locale);
         res.status(200).send(updateResult);
     }
 
@@ -330,7 +330,7 @@ export class ConsultantsController {
         @Query() query: HealthTipsDto,
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
-        const healthTips = this.consultants.getHelthTips(req, query, locale);
+        const healthTips = await this.consultants.getHelthTips(req, query, locale);
         return res.status(200).send(healthTips);
     }
 
