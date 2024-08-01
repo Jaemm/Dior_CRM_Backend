@@ -18,22 +18,22 @@ describe('Dior - Product Recommendation Selecteds (e2e)', () => {
         localToken = localResponse.body.token;
     });
 
-    // test('dior/product_recommendation_groups/list (GET)', async () => {
-    //     const localResponse = await request(localUrl)
-    //         .get('/dior/product_recommendation_groups/list')
-    //         .auth(localToken, {
-    //             type: 'bearer',
-    //         })
-    //         .send()
-    //         .expect(200);
+    test('dior/product_recommendation_selecteds (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/dior/product_recommendation_selecteds?batch_id=2768&customer_id=5047')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
 
-    //     const rubyResponse = await request(rubyUrl)
-    //         .get('/dior/product_recommendation_groups/list')
-    //         .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
-    //         .send()
-    //         .expect(200);
+        const rubyResponse = await request(rubyUrl)
+            .get('/dior/product_recommendation_selecteds/?batch_id=2768&customer_id=5047')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
 
-    //     const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
-    //     expect(missingFields).toEqual([]);
-    // });
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
 });
