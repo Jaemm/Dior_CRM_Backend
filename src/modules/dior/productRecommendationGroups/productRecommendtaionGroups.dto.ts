@@ -38,17 +38,14 @@ export class CreateProductRecommendationGroupsDto {
 
     @ApiProperty()
     @IsOptional()
-    @IsArray()
     locations: (string | null)[];
 
     @ApiProperty()
     @IsOptional()
-    @IsArray()
     products_selected: (number | null)[];
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsArray()
     principal_product: number;
 }
 
@@ -60,17 +57,14 @@ export class UpdateProductRecommendationGroupDto {
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsArray()
     locations: (string | null)[];
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsArray()
     products_selected: (number | null)[];
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsArray()
     principal_product: number;
 }
 function IsNumberArray(): (target: CreateProductRecommendationGroupsDto, propertyKey: 'products_selected') => void {
