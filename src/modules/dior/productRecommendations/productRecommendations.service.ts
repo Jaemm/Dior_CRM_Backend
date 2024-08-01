@@ -382,12 +382,13 @@ export class ProductRecommendationService {
 
             await this.productRecommendationRepository.save(foundRecommendtaion);
 
-            const foundProductTranslations = await this.productTranslationsRepository.findBy({
-                productRecommendationId: foundRecommendtaion.id,
-            });
-
-            await this.productTranslationsRepository.remove(foundProductTranslations);
             if (product_translations) {
+                const foundProductTranslations = await this.productTranslationsRepository.findBy({
+                    productRecommendationId: foundRecommendtaion.id,
+                });
+
+                await this.productTranslationsRepository.remove(foundProductTranslations);
+
                 const productTranslationList = product_translations.map((translations) => {
                     const newTranslations = this.productTranslationsRepository.create({
                         productRecommendationId: foundRecommendtaion.id,
@@ -402,6 +403,60 @@ export class ProductRecommendationService {
                 });
                 const translations = await this.productTranslationsRepository.save(productTranslationList);
                 foundRecommendtaion.productTranslations = translations;
+            }
+
+            if (category_translations) {
+                const attribute = await this.productAttributesRepository.findOne({
+                    where: {
+                        typ: 'Category',
+                        value: foundRecommendtaion.category,
+                    },
+                    relations: ['productAttributeTranslations'],
+                });
+
+                const paTranslations = attribute.productAttributeTranslations;
+
+                await this.paTranslationsRepository.remove(paTranslations);
+
+                const newCategories = category_translations.map((cTranslations) => {
+                    return this.paTranslationsRepository.create({
+                        fieldName: cTranslations.field_name,
+                        language: cTranslations.language,
+                        value: cTranslations.value,
+                        productAttributeId: Number(attribute.id),
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    });
+                });
+
+                await this.paTranslationsRepository.save(newCategories);
+            }
+
+            if (collection_translations) {
+                const attribute = await this.productAttributesRepository.findOne({
+                    where: {
+                        typ: 'Collection',
+                        value: foundRecommendtaion.collection,
+                    },
+                    relations: ['productAttributeTranslations'],
+                });
+
+                const paTranslations = attribute.productAttributeTranslations;
+
+                await this.paTranslationsRepository.remove(paTranslations);
+
+                const newCategories = category_translations.map((cTranslations) => {
+                    return this.paTranslationsRepository.create({
+                        fieldName: cTranslations.field_name,
+                        language: cTranslations.language,
+                        value: cTranslations.value,
+                        productAttributeId: Number(attribute.id),
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    });
+                });
+
+                await this.paTranslationsRepository.save(newCategories);
             }
 
             const foundVariants = await this.productRecommendationRepository.find({
