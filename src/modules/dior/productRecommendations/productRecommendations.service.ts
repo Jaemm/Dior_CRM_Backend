@@ -286,23 +286,7 @@ export class ProductRecommendationService {
                 throw new NotFoundException({});
             }
 
-            const foundVariants = foundRecommendtaion.productVariants || [];
-
-            const productVariants = foundVariants.map((variant) => {
-                return {
-                    id: Number(variant.id),
-                    name: variant.name,
-                    product_type: variant.productType,
-                    description: variant.description,
-                    link: variant.link,
-                    image_url: variant.imageUrl,
-                    category: variant.category,
-                    routine: variant.routine,
-                    code: variant.code,
-                    collection: variant.collection,
-                    shades: variant.shades,
-                };
-            });
+            const productVariants = foundRecommendtaion.getVariants;
 
             const foundProductTranslations = await this.productTranslationsRepository.find({
                 where: {
@@ -322,7 +306,7 @@ export class ProductRecommendationService {
                 });
             }
 
-            const reformatProductRecommendation: ProductRecommendationT = {
+            const reformatProductRecommendation = {
                 id: Number(foundRecommendtaion.id),
                 name: foundRecommendtaion.name,
                 product_type: foundRecommendtaion.productType,
@@ -330,6 +314,8 @@ export class ProductRecommendationService {
                 link: foundRecommendtaion.link,
                 image_url: foundRecommendtaion.imageUrl,
                 category: foundRecommendtaion.category,
+                countries: foundRecommendtaion.countries,
+                product_recommendation_id: foundRecommendtaion.productRecommendationId,
                 routine: foundRecommendtaion.routine,
                 code: foundRecommendtaion.code,
                 collection: foundRecommendtaion.collection,
