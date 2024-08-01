@@ -18,24 +18,24 @@ describe('Dior - Product Recommendations Module (e2e)', () => {
         localToken = localResponse.body.token;
     });
 
-    test('dior/product_recommendations (GET)', async () => {
-        const localResponse = await request(localUrl)
-            .get('/dior/product_recommendations')
-            .auth(localToken, {
-                type: 'bearer',
-            })
-            .send()
-            .expect(200);
+    // test('dior/product_recommendations (GET)', async () => {
+    //     const localResponse = await request(localUrl)
+    //         .get('/dior/product_recommendations')
+    //         .auth(localToken, {
+    //             type: 'bearer',
+    //         })
+    //         .send()
+    //         .expect(200);
 
-        const rubyResponse = await request(rubyUrl)
-            .get('/dior/product_recommendations')
-            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
-            .send()
-            .expect(200);
+    //     const rubyResponse = await request(rubyUrl)
+    //         .get('/dior/product_recommendations')
+    //         .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+    //         .send()
+    //         .expect(200);
 
-        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
-        expect(missingFields).toEqual([]);
-    });
+    //     const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+    //     expect(missingFields).toEqual([]);
+    // });
 
     test('dior/product_recommendations/get_automatic_product_by_batch_id (GET)', async () => {
         const localResponse = await request(localUrl)

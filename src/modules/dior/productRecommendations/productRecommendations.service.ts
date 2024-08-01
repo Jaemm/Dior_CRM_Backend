@@ -165,15 +165,7 @@ export class ProductRecommendationService {
                 prQuery.skip((Number(page) - 1) * Number(limit)).take(Number(limit));
             }
 
-            const [data, totalCount] = await prQuery
-                // .leftJoinAndSelect(
-                //     ProductTranslations,
-                //     'productTranslations',
-                //     'productRecommendation.id = CAST(productTranslations.product_recommendation_id AS integer)',
-                // )
-
-                .getManyAndCount();
-            console.log(await prQuery.getRawOne());
+            const [data, totalCount] = await prQuery.getManyAndCount();
 
             const result = data.map(async (d) => {
                 const returnFormat = {
