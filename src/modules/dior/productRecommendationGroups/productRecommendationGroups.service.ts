@@ -66,7 +66,9 @@ export class ProductRecommendationGroupsService {
                 .getManyAndCount();
 
             const reformatGroups: ProudctRecommendationGroupsT[] = prGroups.map((group) => {
-                const products = group?.prSelecteds
+                const selectedList = group?.prSelecteds || [];
+
+                const products = selectedList
                     .sort((a, b) => a.orderNumber - b.orderNumber)
                     .map((selected) => {
                         const recommendation = selected?.productRecommendation;
@@ -75,23 +77,25 @@ export class ProductRecommendationGroupsService {
                             return null;
                         }
 
-                        const product: ProductRecommendationT = {
-                            id: Number(recommendation.id),
-                            name: recommendation.name,
-                            product_type: recommendation.productType,
-                            description: recommendation.description,
-                            link: recommendation.link,
-                            image_url: recommendation.imageUrl,
-                            category: recommendation.category,
-                            routine: recommendation.routine,
-                            code: recommendation.code,
-                            collection: recommendation.collection,
-                            is_principal: selected.isPrincipal,
-                        };
+                        const product: ProductRecommendationT = recommendation
+                            ? {
+                                  id: Number(recommendation.id),
+                                  name: recommendation.name,
+                                  product_type: recommendation.productType,
+                                  description: recommendation.description,
+                                  link: recommendation.link,
+                                  image_url: recommendation.imageUrl,
+                                  category: recommendation.category,
+                                  routine: recommendation.routine,
+                                  code: recommendation.code,
+                                  collection: recommendation.collection,
+                                  is_principal: selected.isPrincipal,
+                              }
+                            : null;
 
                         return product;
                     })
-                    .filter((product) => product !== null);
+                    .filter(Boolean);
 
                 const reformatGroup: ProudctRecommendationGroupsT = {
                     id: Number(group.id),
@@ -150,7 +154,9 @@ export class ProductRecommendationGroupsService {
                 };
             });
 
-            return data;
+            return {
+                data,
+            };
         } catch (e) {
             throw e;
         }

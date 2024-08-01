@@ -34,7 +34,7 @@ export class ProductRecommendationGroupsController {
         return await this.productRecommendationGroupsService.getProductById(groupId);
     }
 
-    @Get('lists')
+    @Get('list')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     async getListProductRecommendationGroups(@Query() query: GetListProductRecommendationGroupsDto) {
