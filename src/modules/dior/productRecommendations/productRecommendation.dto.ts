@@ -87,32 +87,25 @@ export class UpdateProductRecommendationDto {
     @ApiPropertyOptional()
     @IsOptional()
     @IsString()
-    shades: string;
+    category: string;
 
-    @ApiPropertyOptional()
+    @ApiPropertyOptional({
+        default: [
+            {
+                id: 0,
+                field_name: '',
+                language: '',
+                value: '',
+            },
+        ],
+    })
     @IsOptional()
-    @IsString()
-    product_type: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    name: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    description: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    link: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    image_url: string;
+    category_translations: {
+        id: number;
+        field_name: string;
+        language: string;
+        value: string;
+    }[];
 
     @ApiPropertyOptional()
     @IsOptional()
@@ -122,12 +115,64 @@ export class UpdateProductRecommendationDto {
     @ApiPropertyOptional()
     @IsOptional()
     @IsString()
-    category: string;
+    collection: string;
 
     @ApiPropertyOptional()
     @IsOptional()
     @IsString()
-    routine: string;
+    shades: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    collection_shades: string[];
+
+    @ApiPropertyOptional({
+        default: [
+            {
+                id: 0,
+                field_name: '',
+                language: '',
+                value: '',
+            },
+        ],
+    })
+    @IsOptional()
+    collection_translations: {
+        id: number;
+        field_name: string;
+        language: string;
+        value: string;
+    }[];
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    countries: string[];
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    description: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    image_url: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    link: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    name: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    product_type: string;
 
     @ApiPropertyOptional()
     @IsOptional()
@@ -137,30 +182,23 @@ export class UpdateProductRecommendationDto {
     @ApiPropertyOptional()
     @IsOptional()
     @IsString()
-    collection: string;
+    routine: string;
 
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    countries: string[];
-
-    @ApiProperty({
+    @ApiPropertyOptional({
         default: [
             {
-                product_recommendation_id: '',
-                id: '',
+                id: 0,
                 field_name: '',
-                language: '',
+                lanugae: '',
                 value: '',
             },
         ],
     })
-    @IsArray()
-    product_translations_attributes: {
-        product_recommendation_id: string;
-        id: string;
+    @IsOptional()
+    product_translations: {
+        id: number;
         field_name: string;
-        language: string;
+        lanugae: string;
         value: string;
     }[];
 }

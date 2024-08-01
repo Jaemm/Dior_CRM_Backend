@@ -159,7 +159,6 @@ export class ProductRecommendationController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     async updateProductRecommendationById(
-        @Req() req: Request,
         @Param('id') recommendandationId: string,
         @Body() body: UpdateProductRecommendationDto,
     ) {

@@ -335,6 +335,25 @@ export class ProductRecommendationService {
         recommendationId: string,
         locale = 'en',
     ) {
+        const {
+            category,
+            category_translations,
+            code,
+            collection,
+            shades,
+            collection_shades,
+            collection_translations,
+            countries,
+            description,
+            image_url,
+            link,
+            name,
+            product_type,
+            product_recommendation_id,
+            routine,
+            product_translations,
+        } = body;
+
         try {
             const foundRecommendtaion = await this.productRecommendationRepository.findOneBy({ id: recommendationId });
 
@@ -345,18 +364,20 @@ export class ProductRecommendationService {
                 });
             }
 
-            foundRecommendtaion.productType = body.product_type ? body.product_type : foundRecommendtaion.productType;
-            foundRecommendtaion.name = body.name ? body.name : foundRecommendtaion.name;
-            foundRecommendtaion.description = body.description ? body.description : foundRecommendtaion.description;
-            foundRecommendtaion.link = body.link ? body.link : foundRecommendtaion.link;
-            foundRecommendtaion.imageUrl = body.image_url ? body.image_url : foundRecommendtaion.imageUrl;
-            foundRecommendtaion.code = body.code ? body.code : foundRecommendtaion.code;
-            foundRecommendtaion.category = body.category ? body.category : foundRecommendtaion.category;
-            foundRecommendtaion.productRecommendationId = body.product_recommendation_id
-                ? Number(body.product_recommendation_id)
+            foundRecommendtaion.productType = product_type ? product_type : foundRecommendtaion.productType;
+            foundRecommendtaion.name = name ? name : foundRecommendtaion.name;
+            foundRecommendtaion.description = description ? description : foundRecommendtaion.description;
+            foundRecommendtaion.link = link ? link : foundRecommendtaion.link;
+            foundRecommendtaion.imageUrl = image_url ? image_url : foundRecommendtaion.imageUrl;
+            foundRecommendtaion.code = code ? code : foundRecommendtaion.code;
+            foundRecommendtaion.category = category ? category : foundRecommendtaion.category;
+            foundRecommendtaion.productRecommendationId = product_recommendation_id
+                ? Number(product_recommendation_id)
                 : foundRecommendtaion.productRecommendationId;
-            foundRecommendtaion.collection = body.collection ? body.collection : foundRecommendtaion.collection;
-            foundRecommendtaion.countries = body.countries ? body.countries : foundRecommendtaion.countries;
+            foundRecommendtaion.collection = collection ? collection : foundRecommendtaion.collection;
+            foundRecommendtaion.countries = countries ? countries : foundRecommendtaion.countries;
+            foundRecommendtaion.shades = shades ? shades : foundRecommendtaion.shades;
+            foundRecommendtaion.routine = routine ? routine : foundRecommendtaion.routine;
             foundRecommendtaion.updatedAt = new Date();
 
             await this.productRecommendationRepository.save(foundRecommendtaion);
@@ -366,21 +387,20 @@ export class ProductRecommendationService {
             });
 
             await this.productTranslationsRepository.remove(foundProductTranslations);
-
-            if (body.product_translations_attributes) {
-                const productTranslationList = body.product_translations_attributes.map(async (translations) => {
+            if (product_translations) {
+                const productTranslationList = product_translations.map((translations) => {
                     const newTranslations = this.productTranslationsRepository.create({
                         productRecommendationId: foundRecommendtaion.id,
                         fieldName: translations.field_name,
-                        language: translations.field_name,
+                        language: translations.lanugae,
                         value: translations.value,
                         createdAt: new Date(),
                         updatedAt: new Date(),
                     });
-                    return await this.productTranslationsRepository.save(newTranslations);
-                });
 
-                const translations = await Promise.all(productTranslationList);
+                    return newTranslations;
+                });
+                const translations = await this.productTranslationsRepository.save(productTranslationList);
                 foundRecommendtaion.productTranslations = translations;
             }
 
