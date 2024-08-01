@@ -39,12 +39,12 @@ export class CreateProductRecommendationGroupsDto {
     @ApiProperty()
     @IsOptional()
     @IsArray()
-    locations: string[];
+    locations: (string | null)[];
 
     @ApiProperty()
     @IsOptional()
     @IsArray()
-    products_selected: number[];
+    products_selected: (number | null)[];
 
     @ApiPropertyOptional()
     @IsOptional()
@@ -61,12 +61,12 @@ export class UpdateProductRecommendationGroupDto {
     @ApiPropertyOptional()
     @IsOptional()
     @IsArray()
-    locations: string[];
+    locations: (string | null)[];
 
     @ApiPropertyOptional()
     @IsOptional()
     @IsArray()
-    products_selected: number[];
+    products_selected: (number | null)[];
 
     @ApiPropertyOptional()
     @IsOptional()
