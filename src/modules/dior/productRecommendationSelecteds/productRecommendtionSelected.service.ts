@@ -34,12 +34,12 @@ export class ProductRecommendationSelectedsService {
                 .createQueryBuilder('prSelected')
                 .where('prSelected.customer_id = :customerId', { customerId: Number(customer_id) })
                 .orderBy('order_number')
-                .leftJoinAndSelect('prSelected.productRecommendation', 'productRecommendation')
-                .leftJoinAndSelect(
-                    ProductTranslations,
-                    'productTranslations',
-                    'CAST(productTranslations.product_recommendation_id AS bigint) = productRecommendation.id',
-                );
+                .leftJoinAndSelect('prSelected.productRecommendation', 'productRecommendation');
+            // .leftJoinAndSelect(
+            //     ProductTranslations,
+            //     'productTranslations',
+            //     'CAST(productTranslations.product_recommendation_id AS bigint) = productRecommendation.id',
+            // );
 
             if (customer_id && batch_id) {
                 prsQuery.andWhere('prSelected.batch_id = :batchId', { batchId: batch_id });
@@ -64,7 +64,7 @@ export class ProductRecommendationSelectedsService {
                             id: String(product.productRecommendationId),
                         },
                         relations: ['productTranslations'],
-                    });
+                    }); //.....
                 }
 
                 const productInfo = {

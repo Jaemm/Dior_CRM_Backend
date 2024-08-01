@@ -14,13 +14,6 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 export class ProductRecommendationSelectedsController {
     constructor(private readonly productRecommendationSelectedsService: ProductRecommendationSelectedsService) {}
 
-    @Get()
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    async getProductRecommendationSelecteds(@Query() query: GetRecommendationSelectedDto) {
-        return await this.productRecommendationSelectedsService.getProductRecommendationSelecteds(query);
-    }
-
     @Post()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
@@ -33,5 +26,12 @@ export class ProductRecommendationSelectedsController {
     @Roles(Role.Consultant)
     async getListOfRecommendationSelected(@Query() query: GetListOfRecommendationListDto) {
         return await this.productRecommendationSelectedsService.getListOfRecommendationSelected(query);
+    }
+
+    @Get()
+    @ApiBearerAuth()
+    // @Roles(Role.Consultant)
+    async getProductRecommendationSelecteds(@Query() query: GetRecommendationSelectedDto) {
+        return await this.productRecommendationSelectedsService.getProductRecommendationSelecteds(query);
     }
 }

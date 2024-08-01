@@ -63,9 +63,9 @@ import { StatisticsModule } from './statistics/statistics.module';
         DiorCompanyConsultantsModule,
         DiorDevicesModule,
         DiorProductAttributesModule,
-        ProductRecommendationModule,
         ProductRecommendationSelectedsModule,
         ProductRecommendationGroupsModule,
+        ProductRecommendationModule,
 
         StatisticsModule,
     ],

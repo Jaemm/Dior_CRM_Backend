@@ -20,7 +20,7 @@ export class SelectProductsDto {
 
 export class GetRecommendationSelectedDto {
     @ApiPropertyOptional()
-    @IsOptional()
+    @IsNotEmpty()
     @IsString()
     customer_id: string;
 
