@@ -420,6 +420,7 @@ export class ConsultantsService {
                 name,
                 surname,
                 phone_country_code,
+                birthdate,
                 language,
                 os,
                 address,
@@ -454,6 +455,7 @@ export class ConsultantsService {
             currentConsultant.phone = phone ? phone : currentConsultant.phone;
             currentConsultant.name = name ? name : currentConsultant.name;
             currentConsultant.surname = surname ? surname : currentConsultant.surname;
+            currentConsultant.birthdate = birthdate ? birthdate : currentConsultant.birthdate;
             currentConsultant.address = address ? address : currentConsultant.address;
             currentConsultant.language = language ? language : currentConsultant.language;
             currentConsultant.os = os ? os : currentConsultant.os;
@@ -468,45 +470,13 @@ export class ConsultantsService {
                 where: {
                     id: currentConsultant.id,
                 },
-                relations: ['products', 'country_details', 'consultant_position'],
+                relations: ['products', 'country_details', 'consultant_position', 'consultant_company'],
             });
 
             return {
-                id: updatedConsultant.id,
-                email: updatedConsultant.email,
-                name: updatedConsultant.name,
-                surname: updatedConsultant.surname,
-                gender: updatedConsultant.gender,
-                os: updatedConsultant.os,
-                language: updatedConsultant.language,
-                phone: updatedConsultant.phone,
-                address: updatedConsultant.address,
-                city: updatedConsultant.city,
-                country: updatedConsultant.country,
-                zip_code: updatedConsultant.zip_code,
-                state: updatedConsultant.state,
-                birthdate: updatedConsultant.birthdate,
-                note: updatedConsultant.note,
-                push_token: updatedConsultant.push_token,
-                memo: updatedConsultant.memo,
-                app_id: updatedConsultant.app_id,
-                company_name: updatedConsultant.company_name,
-                company_address: updatedConsultant.company_address,
-                branch: updatedConsultant.branch,
-                position: updatedConsultant.position,
-                skin_color_group_id: updatedConsultant.skin_color_group_id,
-                ethnicity_id: updatedConsultant.ethnicity_id,
-                callback_url: updatedConsultant.callback_url,
-                code: updatedConsultant.code,
+                ...updatedConsultant.getConsultantsInfo,
                 token: updatedConsultant.token,
                 refresh_token: null as null,
-                social: updatedConsultant.social,
-                country_code: updatedConsultant.getContryCode,
-                store: updatedConsultant.getStoreName,
-                optic_number: updatedConsultant.getOpticNumbers,
-                password_update_needed: updatedConsultant.password_update_needed,
-                products: updatedConsultant.getProducts,
-                consultant_position: updatedConsultant.getPosition,
             };
         } catch (e) {
             throw e;
@@ -524,7 +494,6 @@ export class ConsultantsService {
                 where: {
                     id: Number(userId),
                 },
-                relations: ['consultant_company', 'consultant_company.healthTips'],
             });
 
             if (!currentConsultant) {
@@ -534,21 +503,27 @@ export class ConsultantsService {
                 });
             }
 
-            let healthTips = currentConsultant.consultant_company.healthTips ?? [];
-            let totalCount;
+            const healthTipQuery = this.healthTipsRespository
+                .createQueryBuilder('healthTip')
+                .where('healthTip.consultantCompanyId = :companyId', {
+                    companyId: currentConsultant.consultant_company_id,
+                });
 
             if (appId) {
-                const queryBuilder = this.healthTipsRespository.createQueryBuilder('healthTip');
-                queryBuilder.where(`healthTip.appId = :appId`, { appId });
-
-                [healthTips, totalCount] = await queryBuilder
-                    .take(limit)
-                    .skip((page - 1) * limit)
-                    .getManyAndCount();
+                healthTipQuery.andWhere(`healthTip.appId = :appId`, { appId });
             }
+
+            const [healthTips, totalCount] = await healthTipQuery
+                .take(limit)
+                .skip((page - 1) * limit)
+                .getManyAndCount();
 
             return {
                 data: healthTips,
+                total_size: totalCount,
+                current_page_size: healthTips.length,
+                current_page: page,
+                total_pages: Math.ceil(totalCount / limit),
             };
         } catch (e) {
             throw e;
@@ -561,28 +536,27 @@ export class ConsultantsService {
         const page = req.query.page ? parseInt(query.page) : 1;
         const limit = req.query.limit ? parseInt(query.limit as string) : 10;
         try {
-            const foundCompany = await this.consultantCompaniesRepository.findOne({
-                where: {
-                    id: Number(companyId),
-                },
-                relations: ['healthTips'],
-            });
-
-            let healthTips = foundCompany?.healthTips ?? [];
-            let totalCount;
+            const healthTipQuery = this.healthTipsRespository
+                .createQueryBuilder('healthTip')
+                .where('healthTip.consultantCompanyId = :companyId', {
+                    companyId,
+                });
 
             if (appId) {
-                const queryBuilder = this.healthTipsRespository.createQueryBuilder('healthTip');
-                queryBuilder.where(`healthTip.appId = :appId`, { appId });
-
-                [healthTips, totalCount] = await queryBuilder
-                    .take(limit)
-                    .skip((page - 1) * limit)
-                    .getManyAndCount();
+                healthTipQuery.andWhere(`healthTip.appId = :appId`, { appId });
             }
+
+            const [healthTips, totalCount] = await healthTipQuery
+                .take(limit)
+                .skip((page - 1) * limit)
+                .getManyAndCount();
 
             return {
                 data: healthTips,
+                total_size: totalCount,
+                current_page_size: healthTips.length,
+                current_page: page,
+                total_pages: Math.ceil(totalCount / limit),
             };
         } catch (e) {
             throw e;
@@ -905,41 +879,9 @@ export class ConsultantsService {
         await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
 
         return {
-            id: consultant.id,
-            email: consultant.email,
-            name: consultant.name,
-            surname: consultant.surname,
-            gender: consultant.gender,
-            os: consultant.os,
-            language: consultant.language,
-            phone: consultant.phone,
-            address: consultant.address,
-            city: consultant.city,
-            country: consultant.country,
-            zip_code: consultant.zip_code,
-            state: consultant.state,
-            birthdate: consultant.birthdate,
-            note: consultant.note,
-            push_token: consultant.push_token,
-            memo: consultant.memo,
-            app_id: consultant.app_id,
-            company_name: consultant.company_name,
-            company_address: consultant.company_address,
-            branch: consultant.branch,
-            position: consultant.position,
-            skin_color_group_id: consultant.skin_color_group_id,
-            ethnicity_id: consultant.ethnicity_id,
-            callback_url: consultant.callback_url,
-            code: consultant.code,
             token: accessToken,
             refresh_token: refreshToken,
-            social: consultant.social,
-            country_code: consultant.country_details?.code || null,
-            store: consultant.consultant_shop,
-            optic_number: consultant.products[0]?.device.optic_number || ([] as any[]),
-            password_update_needed: consultant.password_update_needed,
-            products: consultant.products,
-            consultant_position: consultant?.consultant_position || null,
+            ...consultant.getConsultantsInfo,
         };
     }
 
@@ -1057,7 +999,15 @@ export class ConsultantsService {
                 where: {
                     id: currentUserID,
                 },
-                relations: ['products', 'products.device', 'country_details', 'consultant_position'],
+                relations: [
+                    'products',
+                    'products.device',
+                    'products.license',
+                    'products.application',
+                    'country_details',
+                    'consultant_position',
+                    'consultant_company',
+                ],
             });
 
             if (!consultants) {
@@ -1068,41 +1018,9 @@ export class ConsultantsService {
             }
 
             return {
-                id: consultants.id,
-                email: consultants.email,
-                name: consultants.name,
-                surname: consultants.surname,
-                gender: consultants.gender,
-                os: consultants.os,
-                language: consultants.language,
-                phone: consultants.phone,
-                address: consultants.address,
-                city: consultants.city,
-                country: consultants.country,
-                zip_code: consultants.zip_code,
-                state: consultants.state,
-                birthdate: consultants.birthdate,
-                note: consultants.note,
-                push_token: consultants.push_token,
-                memo: consultants.memo,
-                app_id: consultants.app_id,
-                company_name: consultants.company_name,
-                company_address: consultants.company_address,
-                branch: consultants.branch,
-                position: consultants.position,
-                skin_color_group_id: consultants.skin_color_group_id,
-                ethnicity_id: consultants.ethnicity_id,
-                callback_url: consultants.callback_url,
-                code: consultants.code,
+                ...consultants.getConsultantsInfo,
                 token: consultants.token,
                 refresh_token: null as null,
-                social: consultants.social,
-                country_code: consultants.country_details?.code,
-                store: consultants.consultant_shop,
-                optic_number: consultants.products[0]?.device.optic_number || ([] as any[]),
-                password_update_needed: consultants.password_update_needed,
-                products: consultants.products,
-                consultant_position: consultants.consultant_position,
             };
         } catch (e) {
             throw e;
@@ -2007,7 +1925,7 @@ export class ConsultantsService {
                 analysis: results,
             };
 
-            const url = currentConsultant.consultant_company?.data_exchange_url;
+            const url = currentConsultant?.consultant_company?.data_exchange_url || null;
 
             let returnMessage: string;
             if (url) {
@@ -2035,6 +1953,7 @@ export class ConsultantsService {
                 };
             }
         } catch (e) {
+            console.log(e);
             return e.response;
         }
     }
@@ -2554,36 +2473,36 @@ export class ConsultantsService {
             if (social_provider === 'apple') {
                 if (email && app_id) {
                     consultant = await this.consultantsRepository.findOne({
-                        where: { app_id: Number(app_id), email: email },
+                        where: { app_id, email },
+                        relations: ['identities'],
                     });
                     identity = await this.identityRepository.findOne({
                         where: {
-                            metaType: 'Consultant',
                             socialId: social_id,
                             socialProvider: social_provider,
+                            metaId: consultant.id,
                         },
                     });
                 } else {
                     identity = await this.identityRepository.findOne({
-                        where: {
-                            metaType: 'Consultant',
-                            socialId: social_id,
-                            socialProvider: social_provider,
-                        },
+                        where: { socialId: social_id, socialProvider: social_provider },
+                        relations: ['consultant'],
                     });
                     consultant = identity?.consultants;
                 }
             } else {
                 consultant = await this.consultantsRepository.findOne({
-                    where: { app_id: Number(app_id), email: email },
+                    where: { app_id, email },
                     relations: ['identities'],
                 });
-
-                identity = consultant?.identities.find(
-                    (consulatntsIdentity) =>
-                        consulatntsIdentity.socialId === social_id &&
-                        consulatntsIdentity.socialProvider === social_provider,
-                );
+                if (consultant) {
+                    identity = await this.identityRepository.findOne({
+                        where: {
+                            socialId: social_id,
+                            socialProvider: social_provider,
+                        },
+                    });
+                }
             }
 
             if (consultant && identity) {
@@ -2593,6 +2512,8 @@ export class ConsultantsService {
                     socialProvider: social_provider,
                     metaId: consultant.id,
                     metaType: 'Consultant',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                 });
                 await this.identityRepository.save(identity);
             } else {
@@ -2601,6 +2522,8 @@ export class ConsultantsService {
                         name: name,
                         app_id: Number(app_id),
                         email: email,
+                        created_at: new Date(),
+                        updated_at: new Date(),
                     });
                     consultant = await this.consultantsRepository.save(newConsultant);
                     const newIdentity = this.identityRepository.create({
@@ -2608,6 +2531,8 @@ export class ConsultantsService {
                         socialProvider: social_provider,
                         metaId: consultant.id,
                         metaType: 'consultant',
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
                     });
                     try {
                         identity = await this.identityRepository.save(newIdentity);
@@ -2635,45 +2560,17 @@ export class ConsultantsService {
 
             await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
 
+            const loginConsultant = await this.consultantsRepository.findOne({
+                where: {
+                    id: consultant.id,
+                },
+                relations: ['products', 'products.device', 'consultant_company', 'consultant_position'],
+            });
+
             return {
-                id: consultant.id,
-                email: consultant.email,
                 token: accessToken,
                 refresh_token: refreshToken,
-                name: consultant.name,
-                surname: consultant.surname,
-                // phone_country_code: consultant.phone_country_code,
-                os: consultant.os,
-                language: consultant.language,
-                phone: consultant.phone,
-                address: consultant.address,
-                city: consultant.city,
-                zip_code: consultant.zip_code,
-                state: consultant.state,
-                note: consultant.note,
-                push_token: consultant.push_token,
-                memo: consultant.memo,
-                app_id: consultant.app_id,
-                company_name: consultant.company_name,
-                company_address: consultant.company_address,
-                branch: consultant.branch,
-                position: consultant.position,
-                skin_color_group_id: consultant.skin_color_group_id,
-                ethnicity_id: consultant.ethnicity_id,
-                callback_url: consultant.callback_url,
-                code: consultant.code,
-                // country_id: consultant?.country_id ? Number(consultant?.country_id) : null,
-                country: consultant.country_details?.name ?? null,
-                gender: consultant.gender,
-                social: consultant.social,
-                country_code: consultant.getContryCode,
-                store: consultant.consultant_shop?.name ?? null,
-                consultant_shop: consultant.consultant_shop,
-                country_details: consultant.country_details,
-                optic_number: consultant.getOpticNumbers,
-                products: consultant.products,
-                consultant_company: consultant.consultant_company,
-                consultant_position: consultant.consultant_position,
+                ...loginConsultant.getConsultantsInfo,
             };
         } catch (e) {
             throw e;
@@ -2735,8 +2632,10 @@ export class ConsultantsService {
 
             return {
                 data: productRecommendations,
-                currentPage: page,
-                totalPages: Math.ceil(total / limit),
+                total_size: total,
+                current_page: page,
+                current_page_size: productRecommendations.length,
+                total_pages: Math.ceil(total / limit),
             };
         } catch (e) {
             throw e;

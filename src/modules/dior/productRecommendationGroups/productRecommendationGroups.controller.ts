@@ -41,7 +41,7 @@ export class ProductRecommendationGroupsController {
         return await this.productRecommendationGroupsService.getListProductRecommendationGroups(query);
     }
 
-    @Post('product_recommendations_groups')
+    @Post()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     async createProductRecommendationGroups(@Body() body: CreateProductRecommendationGroupsDto) {

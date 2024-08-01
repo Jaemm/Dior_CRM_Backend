@@ -19,9 +19,7 @@ export class PartnerDbController {
     constructor(private partnerdbService: PartnerDbService) {}
 
     @Post('consultants/dior_login')
-    @ApiBearerAuth()
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
-    @Roles(Role.Consultant)
     async loginDiorConsultant(@Body() body: LoginDiorConsultantDto, @Headers('X-CHOWIS-LOCALE') locale?: string) {
         return await this.partnerdbService.loginDiorConsultant(body, locale);
     }

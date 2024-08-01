@@ -3,6 +3,7 @@ import { ConsultantApplications } from './ConsultantApplications.entity';
 import { CustomerApplications } from './CustomerApplications.entity';
 import { Products } from './Products.entity';
 import { ConsultantCompanies } from './ConsultantCompanies.entity';
+import { Consultants } from './Consultants.entity';
 
 @Index('index_applications_on_analysis_type', ['analysis_type'], {})
 @Index('index_applications_on_consultant_company_id', ['consultant_company_id'], {})
@@ -108,5 +109,23 @@ export class Applications {
     @AfterLoad()
     afterLoad() {
         this.id = Number(this.id);
+    }
+
+    get getBasicInfo() {
+        return {
+            id: this.id,
+            name: this.name,
+            apk_url: this.apk_url || '',
+            version: this.version,
+            group_name: this.group_name,
+            regist_date: this.regist_date,
+            description: this.description,
+            ios_version: this.ios_version,
+            android_version: this.android_version,
+            android_app_url: this.android_app_url,
+            ios_app_url: this.ios_app_url,
+            is_old: this.is_old,
+            app_icon: '',
+        };
     }
 }

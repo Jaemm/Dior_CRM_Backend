@@ -19,8 +19,8 @@ export class ConsultantDto {
     // })
     password: string;
 
-    @ApiProperty()
-    @IsString()
+    // @ApiProperty()
+    // @IsString()
     confirmPassword: string;
 }
 
@@ -47,6 +47,11 @@ export class UpdateConsultantRubyDto {
     // @IsString()
     // @IsOptional()
     // password: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    birthdate: string;
 
     @ApiPropertyOptional()
     @IsString()
@@ -89,7 +94,7 @@ export class UpdateConsultantRubyDto {
     country_code: string;
 
     @ApiPropertyOptional()
-    @IsString()
+    @Validate(IsNumberOrString)
     @IsOptional()
     app_id: string;
 

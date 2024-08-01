@@ -31,4 +31,13 @@ export class ProductTranslations {
     @ManyToOne(() => ProductRecommendations, (recommendations) => recommendations.productTranslations)
     @JoinColumn([{ name: 'product_recommendation_id', referencedColumnName: 'id' }])
     productRecommendations: ProductRecommendations;
+
+    get getBasicInfo() {
+        return {
+            id: this.id,
+            field_name: this.fieldName,
+            language: this.language,
+            value: this.value,
+        };
+    }
 }

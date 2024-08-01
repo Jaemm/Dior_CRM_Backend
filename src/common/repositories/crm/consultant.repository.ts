@@ -15,8 +15,9 @@ export class ConsultantsRepository extends Repository<Consultants> {
             .leftJoinAndSelect('products.device', 'devices')
             .leftJoinAndSelect('products.application', 'applications')
             .leftJoinAndSelect('consultants.consultant_licenses', 'consultantLicenses')
+            .leftJoinAndSelect('consultants.consultant_position', 'consultantPositions')
+            .leftJoinAndSelect('consultants.consultant_company', 'consultantCompanies')
             .leftJoinAndSelect('consultantLicenses.licenses', 'license')
-            .leftJoinAndSelect('consultants.application', 'application')
             .andWhere('consultants.email = :email', { email: email });
 
         if (app_id) {
@@ -111,7 +112,13 @@ export class ConsultantsRepository extends Repository<Consultants> {
 
     async findConsultant(app_id: number, email: string) {
         const consultant = await this.findOne({
-            where: { app_id: app_id, email },
+            where: [
+                { app_id: app_id, email },
+                {
+                    app_id: Equal(null),
+                    email,
+                },
+            ],
             relations: [
                 'consultant_shop',
                 'country_details',

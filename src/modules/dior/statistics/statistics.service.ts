@@ -34,6 +34,7 @@ import { count } from 'console';
 import { ProductRecommendationForDiorT, ProductRecommendationVariantForDiorT } from '@/src/common/types/entities';
 import { ProductTranslationForDiorT } from '@/src/common/types/entities/product_translations.type';
 import { CommonService } from '@/src/common/common.service';
+import { start } from 'repl';
 
 @Injectable()
 export class StatisticsService {
@@ -843,13 +844,23 @@ export class StatisticsService {
                         String(c.id).startsWith('%') ? `${c.id}` : `%${c.id}`,
                     );
 
-                    const count = await this.analysisDataReplicationService.getConsultantCounts(consultantIdList);
+                    let count = 0;
 
-                    console.log(count);
+                    if (consultantIdList && consultantIdList.length > 0) {
+                        count = await this.analysisDataReplicationService.getConsultantCountsForStatDetails(
+                            consultantIdList,
+                            start_date,
+                            end_date,
+                        );
+                    }
 
                     jsonData[country] = count;
                 }
-                const totalConusltation = await this.analysisDataReplicationService.getConsultantCounts();
+                const totalConusltation = await this.analysisDataReplicationService.getConsultantCountsForStatDetails(
+                    null,
+                    start_date,
+                    end_date,
+                );
 
                 data = {
                     total_count: totalConusltation,
