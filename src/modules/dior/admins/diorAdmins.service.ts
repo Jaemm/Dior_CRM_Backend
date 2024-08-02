@@ -140,7 +140,7 @@ export class DiorAdminsService {
             admin.name = name ? name : admin.name;
             admin.surname = surname ? surname : admin.surname;
             admin.consultant_position_id = this.getPositionId(is_admin);
-            admin.countries = countries ? countries : admin.countries;
+            admin.countries = countries && countries.length > 0 ? countries : admin.countries;
             admin.updated_at = new Date();
 
             const savedAdmin = await this.consultantsRepository.save(admin);

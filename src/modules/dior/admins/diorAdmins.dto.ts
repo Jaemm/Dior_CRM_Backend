@@ -26,32 +26,26 @@ export class GetAdminsDto {
 export class CreateAdminDto {
     @ApiProperty()
     @IsNotEmpty()
-    @IsString()
     email: string;
 
     @ApiProperty()
     @IsNotEmpty()
-    @IsString()
     password: string;
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
     name: string;
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
     surname: string;
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
     consultant_position_id: string;
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsArray()
     countries: string[];
 
     @ApiPropertyOptional({
@@ -59,39 +53,32 @@ export class CreateAdminDto {
         default: true,
     })
     @IsOptional()
-    @IsString()
     is_admin: string | boolean;
 }
 
 export class UpdateAdminDto {
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
     email: string;
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
     password: string;
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
     name: string;
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
     surname: string;
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
     consultant_position_id: string;
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsArray()
     countries: string[];
 
     @ApiPropertyOptional({
@@ -99,7 +86,6 @@ export class UpdateAdminDto {
         default: true,
     })
     @IsOptional()
-    @IsString()
     is_admin: string | boolean;
 }
 
