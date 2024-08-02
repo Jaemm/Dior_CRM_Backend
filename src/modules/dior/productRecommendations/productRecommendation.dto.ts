@@ -64,8 +64,7 @@ export class CreateProductRecommendationDto {
     @ApiProperty({
         default: [
             {
-                product_recommendation_id: '',
-                id: '',
+                product_recommendation_id: 0,
                 field_name: '',
                 language: '',
                 value: '',
@@ -73,9 +72,8 @@ export class CreateProductRecommendationDto {
         ],
     })
     @IsOptional()
-    product_translations_attributes: {
-        product_recommendation_id: string;
-        id: string;
+    product_translations: {
+        product_recommendation_id: number;
         field_name: string;
         language: string;
         value: string;
