@@ -571,7 +571,7 @@ export class ProductRecommendationService {
                 code: body.code,
                 category: body.category,
                 routine: body.routine,
-                productRecommendationId: Number(body.product_recommendation_id),
+                productRecommendationId: Number(body.product_recommendation_id) || null,
                 collection: body.collection,
                 countries: body.countries,
                 createdAt: new Date(),
@@ -582,12 +582,12 @@ export class ProductRecommendationService {
                 newProductRecommendation,
             );
 
-            if (body.product_translations_attributes) {
-                const productTranslationList = body.product_translations_attributes.map(async (translations) => {
+            if (body.product_translations) {
+                const productTranslationList = body.product_translations.map(async (translations) => {
                     const newTranslations = this.productTranslationsRepository.create({
                         productRecommendationId: savedProductRecommendation.id,
                         fieldName: translations.field_name,
-                        language: translations.field_name,
+                        language: translations.language,
                         value: translations.value,
                         createdAt: new Date(),
                         updatedAt: new Date(),
