@@ -202,7 +202,7 @@ export class DiorCountriesService {
     async importCountries(body: ImportCountriesDto) {
         const { file_url } = body;
         try {
-            const worksheet = await this.getWorkSheet(file_url);
+            const worksheet = await this.commonSerivce.getWorkSheet(file_url);
 
             const headers = worksheet.getRow(1);
 
@@ -250,13 +250,5 @@ export class DiorCountriesService {
                 resolve(output);
             });
         });
-    }
-
-    async getWorkSheet(fileUrl: string) {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(fileUrl);
-        const worksheet = workbook.getWorksheet(1);
-
-        return worksheet;
     }
 }

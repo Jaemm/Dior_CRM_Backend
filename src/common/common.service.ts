@@ -19,6 +19,7 @@ import { IMessage } from './interfaces/message.interface';
 import { IEmailParams } from './interfaces/email-params.interface';
 import { ErrorStatus } from './constants/error-status';
 import { ResponseMessages } from './constants/response-messages';
+import * as ExcelJS from 'exceljs';
 import { join } from 'path';
 
 @Injectable()
@@ -309,5 +310,21 @@ export class CommonService {
         }
 
         return errorMessage;
+    }
+
+    async getWorkSheet(fileUrl: string) {
+        try {
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.readFile(fileUrl);
+
+            const worksheet = workbook.getWorksheet(1);
+
+            return worksheet;
+        } catch (e) {
+            throw new BadRequestException({
+                result_code: ErrorStatus.INVALID_REQUEST,
+                error: this.createLocaleErrorMessage('en', 'invalid_request', `cannot detect ${fileUrl}`),
+            });
+        }
     }
 }

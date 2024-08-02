@@ -302,7 +302,7 @@ export class DiorProductAttributesService {
     async importProductAttributes(body: ImportProductAttributeDataDto) {
         try {
             const fileUrl = body.file_url;
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheet(fileUrl);
 
             const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
 
@@ -337,7 +337,7 @@ export class DiorProductAttributesService {
             const fileUrl = body.file_url;
             const country = body.file_url;
 
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheet(fileUrl);
 
             const rowCount = worksheet.rowCount + 1;
 
@@ -393,13 +393,5 @@ export class DiorProductAttributesService {
                 resolve(output);
             });
         });
-    }
-
-    async getWorkSheet(fileUrl: string) {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(fileUrl);
-        const worksheet = workbook.getWorksheet(1);
-
-        return worksheet;
     }
 }

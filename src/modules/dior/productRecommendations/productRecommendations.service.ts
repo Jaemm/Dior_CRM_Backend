@@ -1008,7 +1008,7 @@ export class ProductRecommendationService {
 
             const fileUrl = body.file_url;
 
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheet(fileUrl);
 
             const rowCount = worksheet.rowCount + 1;
 
@@ -1055,7 +1055,7 @@ export class ProductRecommendationService {
             const fileUrl = body.file_url;
             const country = body.country;
 
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheet(fileUrl);
 
             const headers = worksheet.getRow(1);
 
@@ -1103,7 +1103,7 @@ export class ProductRecommendationService {
             const fileUrl = body.file_url;
             const country = body.country;
 
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheet(fileUrl);
 
             const headers = worksheet.getRow(1);
             const rowCount = worksheet.rowCount + 1;
@@ -1306,13 +1306,6 @@ export class ProductRecommendationService {
      * Utils
      *
      * */
-    async getWorkSheet(fileUrl: string) {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(fileUrl);
-        const worksheet = workbook.getWorksheet(1);
-
-        return worksheet;
-    }
 
     writeCSVFileForExportByTranslations(recommendations: ProductRecommendations[]) {
         const header = ['Product Code', 'Language', 'Value'];

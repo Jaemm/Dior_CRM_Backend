@@ -330,7 +330,7 @@ export class DiorCompanyBranchesService {
 
             const fileUrl = body.file_url;
 
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheet(fileUrl);
 
             const header = worksheet.getRow(1);
 
@@ -388,15 +388,6 @@ export class DiorCompanyBranchesService {
     }
 
     /** Utils */
-
-    async getWorkSheet(fileUrl: string) {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(fileUrl);
-        const worksheet = workbook.getWorksheet(1);
-
-        return worksheet;
-    }
-
     writeCSVFileForExportByBranches(branches: ConsultantBranches[]) {
         const header = ['POS Country', 'POS Code', 'POS Name', 'Email'];
 

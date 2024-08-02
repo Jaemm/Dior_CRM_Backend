@@ -371,7 +371,7 @@ export class DiorCompanyConsultantsService {
     async importDiorCompanyConsultants(body: ImportDiorCompanyConsultantsDto, locale: string = 'en') {
         try {
             const fileUrl = body.file_url;
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheet(fileUrl);
 
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
@@ -496,21 +496,5 @@ export class DiorCompanyConsultantsService {
                 resolve(output);
             });
         });
-    }
-
-    async getWorkSheet(fileUrl: string) {
-        try {
-            const workbook = new ExcelJS.Workbook();
-            await workbook.xlsx.readFile(fileUrl);
-
-            const worksheet = workbook.getWorksheet(1);
-
-            return worksheet;
-        } catch (e) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.INVALID_REQUEST,
-                error: this.commonService.createLocaleErrorMessage('en', 'invalid_request', `cannot detect ${fileUrl}`),
-            });
-        }
     }
 }

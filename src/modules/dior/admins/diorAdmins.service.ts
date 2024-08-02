@@ -197,7 +197,7 @@ export class DiorAdminsService {
                 });
             }
 
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheet(fileUrl);
 
             const headers = worksheet.getRow(1);
 
@@ -282,14 +282,6 @@ export class DiorAdminsService {
                 resolve(output);
             });
         });
-    }
-
-    async getWorkSheet(fileUrl: string) {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(fileUrl);
-        const worksheet = workbook.getWorksheet(1);
-
-        return worksheet;
     }
 
     getPositionId(isAdmin: string | boolean) {
