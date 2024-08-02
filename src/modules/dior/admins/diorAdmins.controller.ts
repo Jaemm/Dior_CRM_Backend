@@ -28,8 +28,9 @@ export class DiorAdminsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Put(':id')
-    async updateAdminById(@Param('id') adminId: string, @Body() body: UpdateAdminDto) {
-        return await this.diorAdminsService.updateAdminById(adminId, body);
+    async updateAdminById(@Res() res: Response, @Param('id') adminId: string, @Body() body: UpdateAdminDto) {
+        const updatedAdmin = await this.diorAdminsService.updateAdminById(adminId, body);
+        return res.status(200).send(updatedAdmin);
     }
 
     @ApiBearerAuth()

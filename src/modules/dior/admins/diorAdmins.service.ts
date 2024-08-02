@@ -81,24 +81,37 @@ export class DiorAdminsService {
 
             const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
 
-            const newAdmin = this.consultantsRepository.create({
-                email: email,
-                name: name,
-                password_digest: await argon2.hash(password),
-                surname: surname,
-                consultant_company_id: diorCompanyId,
-                consultant_position_id: consultant_position_id,
-                countries: countries,
-                app_id: 88,
-                email_confirmed: true,
-                created_at: new Date(),
-                updated_at: new Date(),
-            });
+            const existConsultant = await this.consultantsRepository.findByEmail(email);
+
+            let adminUser: Consultants;
+            if (existConsultant) {
+                adminUser = existConsultant;
+                adminUser.consultant_position_id = consultant_position_id;
+
+                adminUser.password_digest = password ? await argon2.hash(password) : existConsultant.password_digest;
+                adminUser.name = name ? name : adminUser.name;
+                adminUser.surname = surname ? surname : adminUser.surname;
+                adminUser.countries = countries ? countries : adminUser.countries;
+            } else {
+                adminUser = this.consultantsRepository.create({
+                    email: email,
+                    name: name,
+                    password_digest: await argon2.hash(password),
+                    surname: surname,
+                    consultant_company_id: diorCompanyId,
+                    consultant_position_id: consultant_position_id,
+                    countries: countries,
+                    app_id: 88,
+                    email_confirmed: true,
+                    created_at: new Date(),
+                    updated_at: new Date(),
+                });
+            }
 
             if (is_admin) {
-                newAdmin.consultant_position_id = this.getPositionId(is_admin);
+                adminUser.consultant_position_id = this.getPositionId(is_admin);
             }
-            const savedAdmin = await this.consultantsRepository.save(newAdmin);
+            const savedAdmin = await this.consultantsRepository.save(adminUser);
 
             const reformatAdmin: AdminsForDiorT = {
                 id: savedAdmin.id,
