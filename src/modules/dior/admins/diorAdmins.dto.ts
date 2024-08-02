@@ -42,7 +42,7 @@ export class CreateAdminDto {
 
     @ApiPropertyOptional()
     @IsOptional()
-    consultant_position_id: string;
+    consultant_position_id: number;
 
     @ApiPropertyOptional()
     @IsOptional()
@@ -75,7 +75,7 @@ export class UpdateAdminDto {
 
     @ApiPropertyOptional()
     @IsOptional()
-    consultant_position_id: string;
+    consultant_position_id: number;
 
     @ApiPropertyOptional()
     @IsOptional()

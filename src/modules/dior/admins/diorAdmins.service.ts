@@ -87,7 +87,7 @@ export class DiorAdminsService {
                 password_digest: await argon2.hash(password),
                 surname: surname,
                 consultant_company_id: diorCompanyId,
-                consultant_position_id: Number(consultant_position_id),
+                consultant_position_id: consultant_position_id,
                 countries: countries,
                 app_id: 88,
                 email_confirmed: true,
