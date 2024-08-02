@@ -1,14 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class CreateProductRecommendationDto {
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     shades: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     product_type: string;
 
@@ -18,48 +18,47 @@ export class CreateProductRecommendationDto {
     name: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     description: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     link: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     image_url: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     code: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     category: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     routine: string;
 
     @ApiProperty()
-    @IsNotEmpty()
-    @IsString()
-    product_recommendation_id: string;
+    @IsOptional()
+    @IsNumber()
+    product_recommendation_id: number;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     collection: string;
 
     @ApiProperty()
-    @IsNotEmpty()
-    @IsString()
+    @IsOptional()
     countries: string[];
 
     @ApiProperty({
@@ -73,7 +72,7 @@ export class CreateProductRecommendationDto {
             },
         ],
     })
-    @IsArray()
+    @IsOptional()
     product_translations_attributes: {
         product_recommendation_id: string;
         id: string;
@@ -183,7 +182,7 @@ export class UpdateProductRecommendationDto {
             {
                 // id: 0,
                 field_name: '',
-                lanugae: '',
+                language: '',
                 value: '',
             },
         ],
@@ -192,7 +191,7 @@ export class UpdateProductRecommendationDto {
     product_translations: {
         // id: number;
         field_name: string;
-        lanugae: string;
+        language: string;
         value: string;
     }[];
 }

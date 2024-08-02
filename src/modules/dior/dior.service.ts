@@ -209,6 +209,10 @@ export class DiorService {
                 createdAt: new Date(),
                 updatedAt: new Date(),
             });
+            // ('http://localhost:3100/image/277c7a2f-9236-4759-8d54-3aed0d402506');
+            // 1. param -> 277c7a2f-9236-4759-8d54-3aed0d402506
+            // 2. DB check -->  ext
+            // 3. s3 -> key + .ext
 
             console.log(newPresign);
         } catch (e) {

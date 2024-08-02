@@ -393,7 +393,7 @@ export class ProductRecommendationService {
                     const newTranslations = this.productTranslationsRepository.create({
                         productRecommendationId: foundRecommendtaion.id,
                         fieldName: translations.field_name,
-                        language: translations.lanugae,
+                        language: translations.language,
                         value: translations.value,
                         createdAt: new Date(),
                         updatedAt: new Date(),
