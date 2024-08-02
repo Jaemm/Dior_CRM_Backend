@@ -36,6 +36,7 @@ import { PositionsIds } from '@/src/common/enums/position.enum';
 import { Role } from '@/src/common/enums/role.enum';
 import { AuthService } from '../auth/auth.service';
 import { Applications, Devices } from '@/src/common/entities/crmEntities';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class PartnerDbService {
@@ -768,6 +769,52 @@ export class PartnerDbService {
             });
 
             return this.commonService.generateMessage('Success!');
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getCustomerById(customerId: string, locale: string = 'en') {
+        try {
+            const customer = await this.customerRepository.findOne({
+                where: {
+                    id: Number(customerId),
+                },
+            });
+
+            if (!customer) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.CUSTOMER_NOT_FOUND,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'crm_customer_not_found'),
+                });
+            }
+
+            return {
+                id: customer.id,
+                external_id: customer.external_id,
+                email: customer.email,
+                name: customer.name,
+                surname: customer.surname,
+                os: customer.os,
+                language: customer.language,
+                phone: customer.phone,
+                birth: customer.birth,
+                address: customer.address,
+                city: customer.city,
+                state: customer.state,
+                zip_code: customer.zip_code,
+                country: customer.country,
+                notes: customer.notes,
+                push_token: customer.push_token,
+                app_id: customer.app_id,
+                company_id: customer.company_id,
+                consultant_id: customer.consultant_id,
+                skin_color_group_id: customer.skin_color_group_id,
+                ethnicity_id: customer.ethnicity_id,
+                gender: customer.gender,
+                sign_in_count: customer.sign_in_count,
+                image_url: customer.image_url,
+            };
         } catch (e) {
             throw e;
         }

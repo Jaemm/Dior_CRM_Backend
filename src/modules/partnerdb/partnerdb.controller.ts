@@ -1,5 +1,5 @@
-import { Request } from 'express';
-import { Body, Controller, Get, Param, Post, Query, Req, Headers } from '@nestjs/common';
+import { Request, Response } from 'express';
+import { Body, Controller, Get, Param, Post, Query, Req, Headers, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
@@ -89,5 +89,17 @@ export class PartnerDbController {
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         return await this.partnerdbService.getHydrationSebumByBatchId(req, customerId, batchId, query, locale);
+    }
+
+    @Get('customers/:id')
+    @ApiBearerAuth()
+    async getCustomerById(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Res() res: Response,
+        @Param('id') customerId: string,
+    ) {
+        const customer = await this.partnerdbService.getCustomerById(customerId, locale);
+
+        return res.status(200).send(customer);
     }
 }
