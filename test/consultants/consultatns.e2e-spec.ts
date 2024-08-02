@@ -82,7 +82,7 @@ describe('Consultants Module ( E2E )', () => {
                     },
                 ],
             })
-            .expect(201);
+            .expect(200);
 
         const rubyResponse = await request(rubyUrl)
             .post('/consultants/request_callback_url')
@@ -116,7 +116,7 @@ describe('Consultants Module ( E2E )', () => {
                 lat: '37.564',
                 lng: '26.6963',
             })
-            .expect(201);
+            .expect(200);
 
         const rubyResponse = await request(rubyUrl)
             .post('/consultants/products/enter')
@@ -224,7 +224,7 @@ describe('Consultants Module ( E2E )', () => {
                 social_provider: 'twitter',
                 social_id: 'abc1234',
             })
-            .expect(201);
+            .expect(200);
 
         const rubyResponse = await request(rubyUrl)
             .post('/consultants/login/social')
