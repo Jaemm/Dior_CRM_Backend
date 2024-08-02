@@ -75,7 +75,7 @@ export class CRMController {
     }
 
     @Post('customers/presign_upload_consent_form')
-    @Roles(Role.Consultant)
+    // @Roles(Role.Consultant)
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async presignUploadConsentForm(
         @Body() body: PresignedUploadDto,

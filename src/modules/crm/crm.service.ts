@@ -610,14 +610,25 @@ export class CRMService {
                 });
             }
 
-            const result = await this.awsS3Service.getPresignedUploadForCRM({
-                fileName: file_name,
-                consentType: consent_type,
-                customerId: customer_id,
-                file: file,
-            });
+            const limit = 8 * 1024 * 1024;
+            const prefix = `uploads/images/customers/consents/${consent_type}/${customer_id}`;
 
-            return { result };
+            let result;
+
+            if (file) {
+                result = await this.awsS3Service.getPresignUpload(prefix, file_name, {
+                    acl: 'public-read',
+                    limit,
+                    file,
+                });
+            } else {
+                result = await this.awsS3Service.getPresignUpload(prefix, file_name, {
+                    acl: 'public-read',
+                    limit,
+                });
+            }
+
+            return result;
         } catch (e) {
             throw e;
         }

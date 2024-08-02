@@ -1287,14 +1287,15 @@ export class ProductRecommendationService {
 
             const { filename } = query;
 
-            const result = await this.awsS3Service.getPresignUploadForDiorProductRecommendation(
-                filename,
-                diorConsultant.id,
-            );
+            const prefix = `uploads/images/product_recommendations/${diorConsultant.id}`;
 
-            return {
-                result,
-            };
+            const limit = 8 * 1024 * 1024;
+            const result = await this.awsS3Service.getPresignUpload(prefix, filename, {
+                acl: 'public-read',
+                limit: limit,
+            });
+
+            return result;
         } catch (e) {
             throw e;
         }

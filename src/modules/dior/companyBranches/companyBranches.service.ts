@@ -371,7 +371,15 @@ export class DiorCompanyBranchesService {
         try {
             const fileName = query.filename;
 
-            const result = await this.awsS3Service.getPresignUploadForDiorBranches(fileName);
+            // const result = await this.awsS3Service.getPresignUploadForDiorBranches(fileName);
+
+            const prefix = `uploads/images/dior/import_company_branches`;
+
+            const limit = 8 * 1024 * 1024;
+            const result = await this.awsS3Service.getPresignUpload(prefix, fileName, {
+                acl: 'public-read',
+                limit: limit,
+            });
 
             return result;
         } catch (e) {
