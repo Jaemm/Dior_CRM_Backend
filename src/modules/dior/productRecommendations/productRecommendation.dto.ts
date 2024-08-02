@@ -142,7 +142,6 @@ export class UpdateProductRecommendationDto {
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
     countries: string[];
 
     @ApiPropertyOptional()
@@ -172,8 +171,7 @@ export class UpdateProductRecommendationDto {
 
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
-    product_recommendation_id: string;
+    product_recommendation_id: number;
 
     @ApiPropertyOptional()
     @IsOptional()
