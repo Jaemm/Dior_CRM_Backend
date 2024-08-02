@@ -29,6 +29,7 @@ import {
     ProductRecommendationSelectedRepository,
     ProductTranslationsRepository,
     ProductsRepository,
+    PresignRepository,
 } from '@/src/common/repositories/crm';
 import { CommonService } from '@/src/common/common.service';
 import { ProductRecommendationModule } from './productRecommendations/productRecommendations.module';
@@ -41,6 +42,7 @@ import { DiorProductAttributesModule } from './productAttributes/productAttribut
 import { ProductRecommendationGroupsModule } from './productRecommendationGroups/productRecommendationGroups.module';
 import { ProductRecommendationSelectedsModule } from './productRecommendationSelecteds/productRecommendtionSelected.module';
 import { StatisticsModule } from './statistics/statistics.module';
+import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 
 @Module({
     imports: [
@@ -73,6 +75,7 @@ import { StatisticsModule } from './statistics/statistics.module';
     providers: [
         DiorService,
         CommonService,
+        AwsS3Service,
 
         // Repositories
         ProductsRepository,
@@ -86,6 +89,8 @@ import { StatisticsModule } from './statistics/statistics.module';
         ProductRecommendationSelectedRepository,
         ProductRecommendationGroupsRepository,
         ProductTranslationsRepository,
+
+        PresignRepository,
     ],
 })
 export class DiorModule {

@@ -1,0 +1,25 @@
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity('presign')
+export class Presign {
+    @PrimaryGeneratedColumn({ type: 'bigint', name: 'id' })
+    id: number;
+
+    @Column({ name: 'hash', type: 'character varying' })
+    key: string;
+
+    @Column({ name: 'url', type: 'character varying' })
+    url: string;
+
+    @Column({ name: 'file_extension', type: 'character varying' })
+    fileExtension: string;
+
+    @Column({ name: 'file_name', type: 'character varying' })
+    fileName: string;
+
+    @Column({ name: 'created_at', type: 'timestamp with time zone' })
+    createdAt: Date;
+
+    @Column({ name: 'updated_at', type: 'timestamp with time zone' })
+    updatedAt: Date;
+}

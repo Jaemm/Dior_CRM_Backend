@@ -13,6 +13,31 @@ import { NotFoundException } from '@nestjs/common/exceptions';
 export class AwsS3Service {
     constructor(private readonly configService: ConfigService) {}
 
+    async uploadFileNew(fileContent: Buffer, hash: string, prefix: string) {
+        if (this.configService.get('REGION') === 'CHINA') {
+            // return await this.uploadImageTencent(fileContent, fileName);
+        }
+
+        const key = `${prefix}/${hash}`;
+
+        const s3 = new S3();
+        const params = {
+            Bucket: this.configService.get('AWS_BUCKET_NAME'),
+            Key: key,
+            Body: fileContent,
+            // ACL: 'public-read',
+        };
+
+        return new Promise((resolve, reject) => {
+            s3.upload(params, (err: unknown, data: ManagedUpload.SendData) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(data);
+            });
+        });
+    }
+
     async getPresignUpload(
         prefix: string,
         fileName: string,

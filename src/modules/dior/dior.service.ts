@@ -1,45 +1,31 @@
-import { Injectable } from '@nestjs/common';
+import * as path from 'path';
+import { v4 as uuid } from 'uuid';
 
-import {
-    NotFoundException,
-    BadRequestException,
-    ConflictException,
-    UnauthorizedException,
-} from '@nestjs/common/exceptions';
+import { ConsoleLogger, Injectable } from '@nestjs/common';
+import { NotFoundException, BadRequestException, ConflictException } from '@nestjs/common/exceptions';
 
-import {
-    ConsultantsRepository,
-    ConsultantCountriesRepository,
-    ConsultantBranchesRepository,
-    CustomersRepository,
-    ProductAttributesRepository,
-    ProductRecommendationRepository,
-    ProductRecommendationSelectedRepository,
-    ProductRecommendationGroupsRepository,
-    ProductAttributeTranslationsRepository,
-    ProductTranslationsRepository,
-    ProductsRepository,
-} from '@/src/common/repositories/crm';
+import { ConsultantsRepository, CustomersRepository, PresignRepository } from '@/src/common/repositories/crm';
 
 import { Request } from 'express';
 
 import { CustomerByConsultantIdDto, CreateCustomerDto, SendWebResultDto } from './dior.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
-import { ProductTranslations } from '@/src/common/entities/crmEntities';
+
 import { CommonService } from '@/src/common/common.service';
 import { CustomersT } from '@/src/common/types/entities';
+import { fileName } from 'typeorm-model-generator/dist/src/NamingStrategy';
+import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 
 @Injectable()
 export class DiorService {
     constructor(
         private commonService: CommonService,
+        private awsS3Service: AwsS3Service,
 
         // Repos
         private consultantRepository: ConsultantsRepository,
         private customersRepository: CustomersRepository,
-        private productAttributesRepository: ProductAttributesRepository,
-        private productRecommendationRepository: ProductRecommendationRepository,
-        private prSelectedRepository: ProductRecommendationSelectedRepository,
+        private presignRepository: PresignRepository,
     ) {}
 
     /** Customers */
@@ -185,6 +171,46 @@ export class DiorService {
             }
 
             await this.commonService.justSendMail(email, 'Dior Skin Analyzer Consultation Results', batch_id);
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async fileUpload(file: Express.Multer.File) {
+        try {
+            const { originalname, mimetype, buffer } = file;
+
+            const allowdMimeTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg'];
+
+            const isAllowedFileType = allowdMimeTypes.includes(mimetype);
+
+            if (!isAllowedFileType) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.INVALID_REQUEST,
+                    error: 'file type',
+                });
+            }
+
+            const hash = uuid();
+
+            const fileExtension = path.extname(originalname);
+
+            const prefix = 'upload/test';
+
+            const uploadData: any = await this.awsS3Service.uploadFileNew(buffer, hash, prefix);
+
+            const { Location: uploadedurl } = uploadData;
+
+            const newPresign = this.presignRepository.create({
+                key: hash,
+                fileName: originalname,
+                fileExtension: fileExtension,
+                url: uploadedurl,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+
+            console.log(newPresign);
         } catch (e) {
             throw e;
         }

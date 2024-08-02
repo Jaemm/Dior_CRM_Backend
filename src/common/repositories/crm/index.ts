@@ -25,12 +25,12 @@ export { NotificationsRepository } from './notifications.repository';
 export { SalesConnectionRepository } from './salesConnections.repository';
 export { SkinColorGroupsRepository } from './skinColorGroups.repository';
 
+export { PasswordEmailDetailsRepository } from './passwordEmailDetails.repository';
+
 export { ProductsRepository } from './products.repository';
 
 export { ProductAttributesRepository } from './productAttributes.respository';
 export { ProductAttributeTranslationsRepository } from './productAttributeTranslations.repository';
-
-export { PasswordEmailDetailsRepository } from './passwordEmailDetails.repository';
 
 export { ProductRecommendationRepository } from './productRecommendation.repository';
 export { ProductRecommendationSelectedRepository } from './productRecommendationSelected.repository';
@@ -39,3 +39,5 @@ export { ProductRecommendationGroupsRepository } from './productRecommendtaionGr
 export { ProductTranslationsRepository } from './productTranslations.repository';
 
 export { ProductLogsRepository } from './productLogs.repository';
+
+export { PresignRepository } from './presign.repository';

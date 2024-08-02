@@ -50,4 +50,15 @@ CREATE TABLE product_logs (
   created_at date,
   updated_at date
 )
+---
+CREATE SEQUENCE presign_id_seq;
 
+CREATE TABLE presign (
+  id bigint primary key DEFAULT nextval('product_logs_id_seq'),
+  key varchar not null,
+  url varchar not null,
+  file_extension varchar not null,
+  file_name varchar not null,
+  created_at date,
+  updated_at date
+)
