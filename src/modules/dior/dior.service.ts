@@ -15,12 +15,14 @@ import { CommonService } from '@/src/common/common.service';
 import { CustomersT } from '@/src/common/types/entities';
 import { fileName } from 'typeorm-model-generator/dist/src/NamingStrategy';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DiorService {
     constructor(
         private commonService: CommonService,
         private awsS3Service: AwsS3Service,
+        private configService: ConfigService,
 
         // Repos
         private consultantRepository: ConsultantsRepository,
@@ -195,17 +197,27 @@ export class DiorService {
 
             const fileExtension = path.extname(originalname);
 
-            const prefix = 'upload/test';
+            const keyForS3 = `${hash}/${fileExtension}`;
 
-            const uploadData: any = await this.awsS3Service.uploadFileNew(buffer, hash, prefix);
+            const prefix = 'upload';
+
+            const uploadData: any = await this.awsS3Service.uploadFileNew(buffer, keyForS3, prefix);
 
             const { Location: uploadedurl } = uploadData;
+
+            const createFileUrl = (key: string) => {
+                const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
+
+                const url = `${baseUrl}/v1/api/dior/file/${key}`;
+
+                return url;
+            };
 
             const newPresign = this.presignRepository.create({
                 key: hash,
                 fileName: originalname,
                 fileExtension: fileExtension,
-                url: uploadedurl,
+                url: createFileUrl(hash),
                 createdAt: new Date(),
                 updatedAt: new Date(),
             });
