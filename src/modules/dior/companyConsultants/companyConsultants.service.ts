@@ -9,7 +9,7 @@ import {
     ConsultantsRepository,
     CustomersRepository,
 } from '@/src/common/repositories/crm';
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CommonService } from '@/src/common/common.service';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { PositionsIds } from '@/src/common/enums/position.enum';
@@ -499,11 +499,18 @@ export class DiorCompanyConsultantsService {
     }
 
     async getWorkSheet(fileUrl: string) {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(fileUrl);
+        try {
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.readFile(fileUrl);
 
-        const worksheet = workbook.getWorksheet(1);
+            const worksheet = workbook.getWorksheet(1);
 
-        return worksheet;
+            return worksheet;
+        } catch (e) {
+            throw new BadRequestException({
+                result_code: ErrorStatus.INVALID_REQUEST,
+                error: this.commonService.createLocaleErrorMessage('en', 'invalid_request', `cannot detect ${fileUrl}`),
+            });
+        }
     }
 }

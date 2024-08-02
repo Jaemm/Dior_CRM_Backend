@@ -27,7 +27,6 @@ export class PartnerDbController {
     @Post('consultants/password')
     @ApiBearerAuth()
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
-    @Roles(Role.Consultant)
     async resetPassword(@Body() body: ResetPasswordDto, @Headers('X-CHOWIS-LOCALE') locale?: string) {
         return await this.partnerdbService.resetPassword(body, locale);
     }
