@@ -42,10 +42,11 @@ export class CRMController {
     @Get('customers')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getCustomers(@Req() req: Request, @Query() query: GetCustomerDto) {
+    async getCustomers(@Req() req: Request, @Res() res: Response, @Query() query: GetCustomerDto) {
         const userId = Number((<{ id: string }>req['user']).id);
 
-        return await this.crmService.getCustomer(userId, query);
+        const customer = await this.crmService.getCustomer(userId, query);
+        return res.status(200).send(customer);
     }
 
     @Post('customers')
@@ -54,11 +55,14 @@ export class CRMController {
     @Roles(Role.Consultant)
     async createCustomer(
         @Req() req: Request,
+        @Res() res: Response,
         @Body() body: CreateCrmCustomerDto,
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         const userId = Number((<{ id: string }>req['user']).id);
-        return await this.crmService.createCustomer(userId, body, locale);
+
+        const result = await this.crmService.createCustomer(userId, body, locale);
+        return res.status(200).send(result);
     }
 
     @Get('customers/get_by_email')
@@ -67,33 +71,39 @@ export class CRMController {
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async getCustomerByEmail(
         @Req() req: Request,
+        @Res() res: Response,
         @Query() query: GetByEmailDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
         const userId = Number((<{ id: string }>req['user']).id);
-        return await this.crmService.getByEmail(userId, query, locale);
+
+        const result = await this.crmService.getByEmail(userId, query, locale);
+        return res.status(200).send(result);
     }
 
     @Post('customers/presign_upload_consent_form')
     // @Roles(Role.Consultant)
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async presignUploadConsentForm(
+        @Res() res: Response,
         @Body() body: PresignedUploadDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
-        return await this.crmService.presignedUpload(body, locale);
+        const urls = await this.crmService.presignedUpload(body, locale);
+        return res.status(200).send(urls);
     }
 
     @Roles(Role.Consultant)
     @Put('customers/update_consent_form')
-    async updateConsentForm(@Body() body: UpdateConsentForm): Promise<any> {
-        return await this.crmService.updateConsentForm(body);
+    async updateConsentForm(@Res() res: Response, @Body() body: UpdateConsentForm): Promise<any> {
+        const result = await this.crmService.updateConsentForm(body);
+        return res.status(200).send(result);
     }
 
     @ApiBearerAuth()
     @Post('customers/sync')
     @Roles(Role.Consultant)
-    async syncCustomers(@Req() req: Request, @Body() body: CustomerSyncDto): Promise<any> {
+    async syncCustomers(@Req() req: Request, @Res() res: Response, @Body() body: CustomerSyncDto): Promise<any> {
         const token = this.jwtService.getTokenFromRequest(req);
 
         if (!token) {
@@ -103,7 +113,9 @@ export class CRMController {
             });
         }
         const consultantId = Number((<{ id: string }>req['user']).id);
-        return await this.crmService.syncCustomer(consultantId, token, body);
+
+        const result = await this.crmService.syncCustomer(consultantId, token, body);
+        return res.status(200).send(result);
     }
 
     @Get('customers/:id')
@@ -112,11 +124,14 @@ export class CRMController {
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async getCustomerById(
         @Req() req: Request,
+        @Res() res: Response,
         @Param('id') customerId: string,
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ): Promise<any> {
         const consultantId = Number((<{ id: string }>req['user']).id);
-        return await this.crmService.getCustomerById(consultantId, Number(customerId), locale);
+
+        const customer = await this.crmService.getCustomerById(consultantId, Number(customerId), locale);
+        return res.status(200).send(customer);
     }
 
     @ApiBearerAuth()
@@ -124,12 +139,14 @@ export class CRMController {
     @Put('customers/:id')
     async updateConsultantCustomer(
         @Req() req: Request,
+        @Res() res: Response,
         @Param('id') customerId: string,
         @Body() body: UpdateCrmCustomersDto,
     ): Promise<any> {
         const consultantId = Number((<{ id: string }>req['user']).id);
-        console.log(consultantId);
-        return await this.crmService.updateCustomer(consultantId, Number(customerId), body);
+
+        const updatedCustomer = await this.crmService.updateCustomer(consultantId, Number(customerId), body);
+        return res.status(200).send(updatedCustomer);
     }
 
     @Delete('customers/:id')
@@ -138,11 +155,14 @@ export class CRMController {
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async deleteCustomer(
         @Req() req: Request,
+        @Res() res: Response,
         @Param('id') customerId: string,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
         const consultantId = Number((<{ id: string }>req['user']).id);
-        return await this.crmService.deleteCustomer(consultantId, Number(customerId), locale);
+
+        const result = await this.crmService.deleteCustomer(consultantId, Number(customerId), locale);
+        return res.status(200).send(result);
     }
     /** END */
 }
