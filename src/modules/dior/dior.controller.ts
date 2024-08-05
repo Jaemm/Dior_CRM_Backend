@@ -1,4 +1,6 @@
+import { Request, Response } from 'express';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
     Controller,
     Get,
@@ -13,12 +15,11 @@ import {
     UploadedFile,
     Param,
 } from '@nestjs/common';
+
 import { DiorService } from './dior.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
-import { Request, Response } from 'express';
 import { CustomerByConsultantIdDto, CreateCustomerDto, SendWebResultDto } from './dior.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Dior')
 @Controller('dior')
@@ -29,23 +30,34 @@ export class DiorController {
     @ApiBearerAuth()
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
-    async getCustomers(@Query() query: CustomerByConsultantIdDto, @Headers('X-CHOWIS-LOCALE') locale: string) {
-        return await this.diorService.getCustomers(query, locale);
+    async getCustomers(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Res() res: Response,
+        @Query() query: CustomerByConsultantIdDto,
+    ) {
+        const customers = await this.diorService.getCustomers(query, locale);
+        return res.status(200).send(customers);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('customers')
-    async createCustomers(@Body() body: CreateCustomerDto) {
-        return await this.diorService.createCustomers(body);
+    async createCustomers(@Res() res: Response, @Body() body: CreateCustomerDto) {
+        const result = await this.diorService.createCustomers(body);
+        return res.status(200).send(result);
     }
 
     @Post('send-web-result')
     @ApiBearerAuth()
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
-    async sendWebResult(@Body() body: SendWebResultDto, @Headers('X-CHOWIS-LOCALE') locale?: string) {
-        return await this.diorService.sendWebResult(body, locale);
+    async sendWebResult(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Res() res: Response,
+        @Body() body: SendWebResultDto,
+    ) {
+        const result = await this.diorService.sendWebResult(body, locale);
+        return res.status(200).send(result);
     }
 
     @Get('file/:hash')

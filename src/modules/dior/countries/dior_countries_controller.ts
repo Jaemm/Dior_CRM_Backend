@@ -15,42 +15,47 @@ export class DiorCountriesController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @ApiQuery({ name: 'search', required: false })
-    async getCountries(@Req() req: Request, @Query('search') search?: string) {
-        return await this.diorCountriesService.getCountries(search);
+    async getCountries(@Res() res: Response, @Query('search') search?: string) {
+        const countries = await this.diorCountriesService.getCountries(search);
+        return res.status(200).send(countries);
     }
 
     @Post()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async createCountries(@Body() body: CreateCountries) {
-        return await this.diorCountriesService.createCountries(body);
+    async createCountries(@Res() res: Response, @Body() body: CreateCountries) {
+        const result = await this.diorCountriesService.createCountries(body);
+        return res.status(200).send(result);
     }
 
     @Put(':id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async updateCountries(@Param('id') countryId: string, @Body() body: UpdateCountriesDto) {
-        return await this.diorCountriesService.updateCountries(countryId, body);
+    async updateCountries(@Res() res: Response, @Param('id') countryId: string, @Body() body: UpdateCountriesDto) {
+        const countries = await this.diorCountriesService.updateCountries(countryId, body);
+        return res.status(200).send(countries);
     }
 
     @Delete('delete_multiple/:ids')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async deleteMultipleCountries(@Param('ids') countryIds: string) {
-        return await this.diorCountriesService.deleteMultipleCountries(countryIds);
+    async deleteMultipleCountries(@Res() res: Response, @Param('ids') countryIds: string) {
+        const result = await this.diorCountriesService.deleteMultipleCountries(countryIds);
+        return res.status(200).send(result);
     }
 
     @Delete(':id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async deleteCountryById(@Param('id') countryId: string) {
-        return await this.diorCountriesService.deleteCountryById(countryId);
+    async deleteCountryById(@Res() res: Response, @Param('id') countryId: string) {
+        const result = await this.diorCountriesService.deleteCountryById(countryId);
+        return res.status(200).send(result);
     }
 
     @Get('export')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async exportCountries(@Req() req: Request, @Res() res: Response, @Query() query: ExportCountriesDto) {
+    async exportCountries(@Res() res: Response, @Query() query: ExportCountriesDto) {
         const resultFile = await this.diorCountriesService.exportCountries(query);
 
         res.header('Content-Type', 'text/csv');
@@ -61,7 +66,8 @@ export class DiorCountriesController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('import')
-    async importCountries(@Req() req: Request, @Body() body: ImportCountriesDto) {
-        return await this.diorCountriesService.importCountries(body);
+    async importCountries(@Res() res: Response, @Body() body: ImportCountriesDto) {
+        const result = await this.diorCountriesService.importCountries(body);
+        return res.status(200).send(result);
     }
 }

@@ -24,9 +24,11 @@ export class DiorCompanyConsultantsController {
     async getDiorCompanyConsultants(
         @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
+        @Res() res: Response,
         @Query() query: GetDiorCompanyConsultantsDto,
     ) {
-        return await this.diorCompanyConsultantsService.getDiorCompanyConsultants(req, query, locale);
+        const consultants = await this.diorCompanyConsultantsService.getDiorCompanyConsultants(req, query, locale);
+        return res.status(200).send(consultants);
     }
 
     @Post()
@@ -35,18 +37,24 @@ export class DiorCompanyConsultantsController {
     @Roles(Role.Consultant)
     async createDiorCompanyConsultants(
         @Headers('X-CHOWIS-LOCALE') locale: string,
-        @Req() req: Request,
+        @Res() res: Response,
         @Body() body: CreateDiorCompanyConsultantsDto,
     ) {
-        return await this.diorCompanyConsultantsService.createDiorCompanyConsultants(body, locale);
+        const consultant = await this.diorCompanyConsultantsService.createDiorCompanyConsultants(body, locale);
+        return res.status(200).send(consultant);
     }
 
     @Get('by_consultant')
     @ApiBearerAuth()
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
-    async getConsultantByBranchesConsultant(@Req() req: Request, @Headers('X-CHOWIS-LOCALE') locale?: string) {
-        return await this.diorCompanyConsultantsService.getConsultantByBranchesConsultant(req, locale);
+    async getConsultantByBranchesConsultant(
+        @Req() req: Request,
+        @Res() res: Response,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
+    ) {
+        const consultant = await this.diorCompanyConsultantsService.getConsultantByBranchesConsultant(req, locale);
+        return res.status(200).send(consultant);
     }
 
     @Get('export')
@@ -72,10 +80,11 @@ export class DiorCompanyConsultantsController {
     @Roles(Role.Consultant)
     async importDiorCompanyConsultants(
         @Headers('X-CHOWIS-LOCALE') locale: string,
-        @Req() req: Request,
+        @Res() res: Response,
         @Body() body: ImportDiorCompanyConsultantsDto,
     ) {
-        return await this.diorCompanyConsultantsService.importDiorCompanyConsultants(body, locale);
+        const result = await this.diorCompanyConsultantsService.importDiorCompanyConsultants(body, locale);
+        return res.status(200).send(result);
     }
 
     @Delete(':id')
@@ -84,10 +93,11 @@ export class DiorCompanyConsultantsController {
     @Roles(Role.Consultant)
     async deleteDiorCompanyConsultant(
         @Headers('X-CHOWIS-LOCALE') locale: string,
-        @Req() req: Request,
+        @Res() res: Response,
         @Param('id') consultantId: string,
     ) {
-        return await this.diorCompanyConsultantsService.deleteDiorCompanyConsultant(consultantId, locale);
+        const result = await this.diorCompanyConsultantsService.deleteDiorCompanyConsultant(consultantId, locale);
+        return res.status(200).send(result);
     }
 
     @Delete('delete_multiple/:ids')
@@ -96,9 +106,10 @@ export class DiorCompanyConsultantsController {
     @Roles(Role.Consultant)
     async deleteMultipleCompanyConsultants(
         @Headers('X-CHOWIS-LOCALE') locale: string,
-        @Req() req: Request,
+        @Res() res: Response,
         @Param('ids') consultantIds: string,
     ) {
-        return await this.diorCompanyConsultantsService.deleteMultipleCompanyConsultants(consultantIds, locale);
+        const result = await this.diorCompanyConsultantsService.deleteMultipleCompanyConsultants(consultantIds, locale);
+        return res.status(200).send(result);
     }
 }

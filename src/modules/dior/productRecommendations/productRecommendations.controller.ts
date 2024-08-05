@@ -41,75 +41,90 @@ export class ProductRecommendationController {
     @Roles(Role.Consultant)
     async getProductRecommendation(
         @Req() req: Request,
+        @Res() res: Response,
         @Query() query: SearchProductRecommendationDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
-        return await this.productRecommendationsService.getProductRecommendation(req, query, locale);
+        const productRecommendations = await this.productRecommendationsService.getProductRecommendation(
+            req,
+            query,
+            locale,
+        );
+        return res.status(200).send(productRecommendations);
     }
 
     @Post()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async createProductRecommendation(@Body() body: CreateProductRecommendationDto) {
-        return await this.productRecommendationsService.createProductRecommendation(body);
+    async createProductRecommendation(@Res() res: Response, @Body() body: CreateProductRecommendationDto) {
+        const result = await this.productRecommendationsService.createProductRecommendation(body);
+        return res.status(200).send(result);
     }
 
     @Get('get_automatic_product_by_batch_id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getAutomaticProductByBatchId(@Query() query: AutomaticProductByBatchIdDto) {
-        return await this.productRecommendationsService.getAutomaticProductByBatchId(query);
+    async getAutomaticProductByBatchId(@Res() res: Response, @Query() query: AutomaticProductByBatchIdDto) {
+        const recommendation = await this.productRecommendationsService.getAutomaticProductByBatchId(query);
+        return res.status(200).send(recommendation);
     }
 
     @Get('get_new_automatic_product_by_batch_id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getNewAutomaticProductByBatchId(@Query() query: AutomaticProductByBatchIdDto) {
-        return await this.productRecommendationsService.getNewAutomaticProductByBatchId(query);
+    async getNewAutomaticProductByBatchId(@Res() res: Response, @Query() query: AutomaticProductByBatchIdDto) {
+        const recommendation = await this.productRecommendationsService.getNewAutomaticProductByBatchId(query);
+        return res.status(200).send(recommendation);
     }
 
     @Get('get_collection')
     @ApiBearerAuth()
     @ApiQuery({ name: 'routine', enum: ['Makeup', 'Skincare'] })
     @Roles(Role.Consultant)
-    async getRecommendationsCollection(@Query('routine') routine?: AttributeRoutine) {
-        return await this.productRecommendationsService.getRecommendationsCollection(routine);
+    async getRecommendationsCollection(@Res() res: Response, @Query('routine') routine?: AttributeRoutine) {
+        const collection = await this.productRecommendationsService.getRecommendationsCollection(routine);
+        return res.status(200).send(collection);
     }
 
     @Get('get_category')
     @ApiBearerAuth()
     @ApiQuery({ name: 'routine', enum: ['Makeup', 'Skincare'] })
     @Roles(Role.Consultant)
-    async getRecommendationsCategories(@Query('routine') routine?: AttributeRoutine) {
-        return await this.productRecommendationsService.getRecommendationsCategories(routine);
+    async getRecommendationsCategories(@Res() res: Response, @Query('routine') routine?: AttributeRoutine) {
+        const category = await this.productRecommendationsService.getRecommendationsCategories(routine);
+        return res.status(200).send(category);
     }
 
     @Post('import')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async importProductRecommendtaion(@Body() body: ImportProductRecommendtaionDto) {
-        return await this.productRecommendationsService.importProductRecommendtaion(body);
+    async importProductRecommendtaion(@Res() res: Response, @Body() body: ImportProductRecommendtaionDto) {
+        const result = await this.productRecommendationsService.importProductRecommendtaion(body);
+        return res.status(200).send(result);
     }
 
     @Post('import_translations')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async importProductTranslations(@Body() body: ImportTranslationsDto) {
-        return await this.productRecommendationsService.importProductTranslations(body);
+    async importProductTranslations(@Res() res: Response, @Body() body: ImportTranslationsDto) {
+        const result = await this.productRecommendationsService.importProductTranslations(body);
+        return res.status(200).send(result);
     }
 
     @Post('import_countries')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async importCountries(@Body() body: ImportCountriesDto) {
-        return await this.productRecommendationsService.importCountries(body);
+    async importCountries(@Res() res: Response, @Body() body: ImportCountriesDto) {
+        const result = await this.productRecommendationsService.importCountries(body);
+        return res.status(200).send(result);
     }
 
     @Post('import_pictures')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async importPictures(@Body() body: ImportPicturesDto) {
-        return await this.productRecommendationsService.importPictures(body);
+    async importPictures(@Res() res: Response, @Body() body: ImportPicturesDto) {
+        const result = await this.productRecommendationsService.importPictures(body);
+        return res.status(200).send(result);
     }
 
     @Get('export')
@@ -126,21 +141,23 @@ export class ProductRecommendationController {
     @Get('get_axis')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getAxis() {
-        return await this.productRecommendationsService.getAxis();
+    async getAxis(@Res() res: Response) {
+        const result = await this.productRecommendationsService.getAxis();
+        return res.status(200).send(result);
     }
 
     @Get('presign_upload')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getPresignUpload(@Query() query: GetPresignUploadDto) {
+    async getPresignUpload(@Res() res: Response, @Query() query: GetPresignUploadDto) {
         if (!query.filename) {
             throw new BadRequestException({
                 result_code: 400,
                 error: 'Filename is missing',
             });
         }
-        return await this.productRecommendationsService.getPresignUpload(query);
+        const result = await this.productRecommendationsService.getPresignUpload(query);
+        return res.status(200).send(result);
     }
 
     @Get(':id')
@@ -148,34 +165,47 @@ export class ProductRecommendationController {
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getProductRecommendationById(
-        @Req() req: Request,
+        @Res() res: Response,
         @Param('id') recommendandationId: string,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
-        return await this.productRecommendationsService.getProductRecommendationById(recommendandationId, locale);
+        const recommendation = await this.productRecommendationsService.getProductRecommendationById(
+            recommendandationId,
+            locale,
+        );
+        return res.status(200).send(recommendation);
     }
 
     @Put(':id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     async updateProductRecommendationById(
+        @Res() res: Response,
         @Param('id') recommendandationId: string,
         @Body() body: UpdateProductRecommendationDto,
     ) {
-        return await this.productRecommendationsService.updateProductRecommendationById(body, recommendandationId);
+        const result = await this.productRecommendationsService.updateProductRecommendationById(
+            body,
+            recommendandationId,
+        );
+        return res.status(200).send(result);
     }
 
     @Delete('delete_multiple/:ids')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async deleteMultipleProductRecommendationByIds(@Req() req: Request, @Param('ids') recommendandationIds: string) {
-        return await this.productRecommendationsService.deleteMultipleProductRecommendationByIds(recommendandationIds);
+    async deleteMultipleProductRecommendationByIds(@Res() res: Response, @Param('ids') recommendandationIds: string) {
+        const result = await this.productRecommendationsService.deleteMultipleProductRecommendationByIds(
+            recommendandationIds,
+        );
+        return res.status(200).send(result);
     }
 
     @Delete(':id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async deleteProductRecommendationById(@Req() req: Request, @Param('id') recommendandationId: string) {
-        return await this.productRecommendationsService.deleteProductRecommendationById(recommendandationId);
+    async deleteProductRecommendationById(@Res() res: Response, @Param('id') recommendandationId: string) {
+        const result = await this.productRecommendationsService.deleteProductRecommendationById(recommendandationId);
+        return res.status(200).send(result);
     }
 }

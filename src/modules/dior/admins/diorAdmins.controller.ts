@@ -14,15 +14,17 @@ export class DiorAdminsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get()
-    async getAdmins(@Query() qeury: GetAdminsDto) {
-        return await this.diorAdminsService.getAdmins(qeury);
+    async getAdmins(@Res() res: Response, @Query() qeury: GetAdminsDto) {
+        const admins = await this.diorAdminsService.getAdmins(qeury);
+        return res.status(200).send(admins);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post()
-    async createAdmin(@Body() body: CreateAdminDto) {
-        return await this.diorAdminsService.createAdmin(body);
+    async createAdmin(@Res() res: Response, @Body() body: CreateAdminDto) {
+        const result = await this.diorAdminsService.createAdmin(body);
+        return res.status(200).send(result);
     }
 
     @ApiBearerAuth()
@@ -36,21 +38,23 @@ export class DiorAdminsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Delete('delete_multiple/:ids')
-    async deleteMutipleAdmins(@Param('ids') adminIds: string) {
-        return await this.diorAdminsService.deleteMutipleAdmins(adminIds);
+    async deleteMutipleAdmins(@Res() res: Response, @Param('ids') adminIds: string) {
+        const result = await this.diorAdminsService.deleteMutipleAdmins(adminIds);
+        return res.status(200).send(result);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('import')
-    async importAdmins(@Body() body: ImportAdminsDto) {
-        return await this.diorAdminsService.importAdmins(body);
+    async importAdmins(@Res() res: Response, @Body() body: ImportAdminsDto) {
+        const result = await this.diorAdminsService.importAdmins(body);
+        return res.status(200).send(result);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('export')
-    async exportAdmins(@Query() query: ExportAdminsDto, @Res() res: Response) {
+    async exportAdmins(@Res() res: Response, @Query() query: ExportAdminsDto) {
         const resultFile = await this.diorAdminsService.exportAdmins(query);
 
         res.setHeader('Content-Type', 'text/csv');

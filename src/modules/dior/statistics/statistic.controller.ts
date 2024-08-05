@@ -1,9 +1,10 @@
-import { Request } from 'express';
+import { Request, Response } from 'express';
+import { Controller, Get, Query, Req, Headers, Res } from '@nestjs/common';
+import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
-import { Controller, Get, Query, Req, Headers } from '@nestjs/common';
-import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
+
 import {
     GetInfographStatDetails,
     GetOverAllDetailsDto,
@@ -21,43 +22,49 @@ export class StatisticsController {
     @Get('overall')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getOverAll(@Req() req: Request, @Query() query: GetOverAllDto) {
-        return this.statisticsService.getOverAll(req, query);
+    async getOverAll(@Req() req: Request, @Res() res: Response, @Query() query: GetOverAllDto) {
+        const result = await this.statisticsService.getOverAll(req, query);
+        return res.status(200).send(result);
     }
 
     @Get('overall_details')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getOverAllDetails(@Req() req: Request, @Query() query: GetOverAllDetailsDto) {
-        return this.statisticsService.getOverAllDetails(req, query);
+    async getOverAllDetails(@Req() req: Request, @Res() res: Response, @Query() query: GetOverAllDetailsDto) {
+        const result = await this.statisticsService.getOverAllDetails(req, query);
+        return res.status(200).send(result);
     }
 
     @Get('overall_by_date')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getOverAllByDate() {
-        return this.statisticsService.getOverAllByDate();
+    async getOverAllByDate(@Res() res: Response) {
+        const result = await this.statisticsService.getOverAllByDate();
+        return res.status(200).send(result);
     }
 
     @Get('overall_per_country')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getOverAllPerCountry(@Req() req: Request) {
-        return this.statisticsService.getOverAllPerCountry(req);
+    async getOverAllPerCountry(@Req() req: Request, @Res() res: Response) {
+        const result = await this.statisticsService.getOverAllPerCountry(req);
+        return res.status(200).send(result);
     }
 
     @Get('most_popular_products')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getMostPopularProducts(@Req() req: Request) {
-        return this.statisticsService.getMostPopularProducts();
+    async getMostPopularProducts(@Res() res: Response) {
+        const result = await this.statisticsService.getMostPopularProducts();
+        return res.send(200).send(result);
     }
 
     @Get('stat_details')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getStatDetails(@Req() req: Request, @Query() query: GetStatDetailsDto) {
-        return this.statisticsService.getStatDetails(req, query);
+    async getStatDetails(@Req() req: Request, @Res() res: Response, @Query() query: GetStatDetailsDto) {
+        const result = await this.statisticsService.getStatDetails(req, query);
+        return res.status(200).send(result);
     }
 
     @Get('infograph_stat_details')
@@ -66,10 +73,12 @@ export class StatisticsController {
     @Roles(Role.Consultant)
     async getInfographStatDetails(
         @Req() req: Request,
+        @Res() res: Response,
         @Query() query: GetInfographStatDetails,
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
-        return this.statisticsService.getInfographStatDetails(req, query, locale);
+        const result = await this.statisticsService.getInfographStatDetails(req, query, locale);
+        return res.status(200).send(result);
     }
 
     @Get('get_stat_details_country_wise')
@@ -78,9 +87,11 @@ export class StatisticsController {
     @Roles(Role.Consultant)
     async getStatDetailsCountryWise(
         @Req() req: Request,
+        @Res() res: Response,
         @Query() query: GetStatDetailsCountryWiseDto,
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
-        return this.statisticsService.getStatDetailsCountryWise(req, query, locale);
+        const result = await this.statisticsService.getStatDetailsCountryWise(req, query, locale);
+        return res.status(200).send(result);
     }
 }

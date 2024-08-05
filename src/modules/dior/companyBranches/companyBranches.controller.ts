@@ -21,8 +21,9 @@ export class DiorCompanyBranchesController {
     @Post()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async createBranch(@Req() req: Request, @Body() body: CreateBranchesDto) {
-        return await this.diorCompanyBranchesService.createBranch(req, body);
+    async createBranch(@Req() req: Request, @Res() res: Response, @Body() body: CreateBranchesDto) {
+        const result = await this.diorCompanyBranchesService.createBranch(req, body);
+        return res.status(200).send(result);
     }
 
     @Get()
@@ -31,17 +32,20 @@ export class DiorCompanyBranchesController {
     @Roles(Role.Consultant)
     async searchBranches(
         @Req() req: Request,
+        @Res() res: Response,
         @Query() query: SearchBranchesDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
-        return await this.diorCompanyBranchesService.searchBranches(req, query, locale);
+        const branches = await this.diorCompanyBranchesService.searchBranches(req, query, locale);
+        return res.status(200).send(branches);
     }
 
     @Post('import')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async importBranches(@Req() req: Request, @Body() body: ImportBranchesDto) {
-        return await this.diorCompanyBranchesService.importBranches(body);
+    async importBranches(@Req() req: Request, @Res() res: Response, @Body() body: ImportBranchesDto) {
+        const result = await this.diorCompanyBranchesService.importBranches(body);
+        return res.status(200).send(result);
     }
 
     @Get('export')
@@ -66,31 +70,35 @@ export class DiorCompanyBranchesController {
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async presignUploadImportFileForBranch(
-        @Req() req: Request,
+        @Res() res: Response,
         @Query() query: PresignedUploadForBranchDto,
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
-        return await this.diorCompanyBranchesService.presignUploadImportFileForBranch(query);
+        const result = await this.diorCompanyBranchesService.presignUploadImportFileForBranch(query);
+        return res.status(200).send(result);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Delete('delete_multiple/:ids')
-    async deleteMultipleBranches(@Param('ids') branchIds: string) {
-        return await this.diorCompanyBranchesService.deleteMultipleBranches(branchIds);
+    async deleteMultipleBranches(@Res() res: Response, @Param('ids') branchIds: string) {
+        const result = await this.diorCompanyBranchesService.deleteMultipleBranches(branchIds);
+        return res.status(200).send(result);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Put(':id')
-    async updateBranch(@Param('id') branchId: string, @Body() body: UpdateBranchesDto) {
-        return await this.diorCompanyBranchesService.updateBranch(branchId, body);
+    async updateBranch(@Res() res: Response, @Param('id') branchId: string, @Body() body: UpdateBranchesDto) {
+        const branch = await this.diorCompanyBranchesService.updateBranch(branchId, body);
+        return res.status(200).send(branch);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Delete(':id')
-    async deleteBranch(@Param('id') branchId: string) {
-        return await this.diorCompanyBranchesService.deleteBranch(branchId);
+    async deleteBranch(@Res() res: Response, @Param('id') branchId: string) {
+        const result = await this.diorCompanyBranchesService.deleteBranch(branchId);
+        return res.status(200).send(result);
     }
 }
