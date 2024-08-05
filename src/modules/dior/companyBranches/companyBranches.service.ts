@@ -1,11 +1,17 @@
 import { Request } from 'express';
 import * as argon2 from 'argon2';
 import * as csv from 'csv';
-import * as ExcelJS from 'exceljs';
+import { v4 as uuid } from 'uuid';
+import * as path from 'path';
 
 import { In } from 'typeorm';
 
-import { ConsultantBranchesRepository, ConsultantsRepository, ProductsRepository } from '@/src/common/repositories/crm';
+import {
+    ConsultantBranchesRepository,
+    ConsultantsRepository,
+    PresignRepository,
+    ProductsRepository,
+} from '@/src/common/repositories/crm';
 import { ConsultantBranchesForDiorT } from '@/src/common/types/entities';
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import {
@@ -20,17 +26,20 @@ import { ErrorStatus } from '@/src/common/constants/error-status';
 import { CommonService } from '@/src/common/common.service';
 import { ConsultantBranches } from '@/src/common/entities/crmEntities';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DiorCompanyBranchesService {
     constructor(
         private commonService: CommonService,
+        private configService: ConfigService,
         private awsS3Service: AwsS3Service,
 
         //repos
         private readonly consultantRepository: ConsultantsRepository,
         private readonly consultantBranchesRepository: ConsultantBranchesRepository,
         private readonly productsRepository: ProductsRepository,
+        private readonly presignRepository: PresignRepository,
     ) {}
 
     async createBranch(req: Request, body: CreateBranchesDto) {
@@ -367,21 +376,69 @@ export class DiorCompanyBranchesService {
         }
     }
 
-    async presignUploadImportFileForBranch(query: PresignedUploadForBranchDto) {
+    async presignUploadImportFileForBranch(req: Request, file: Express.Multer.File) {
         try {
-            const fileName = query.filename;
+            const userId = (<{ id: string }>req.user).id;
+            const { originalname: fileName, mimetype, buffer } = file;
 
             // const result = await this.awsS3Service.getPresignUploadForDiorBranches(fileName);
 
             const prefix = `uploads/images/dior/import_company_branches`;
 
             const limit = 8 * 1024 * 1024;
-            const result = await this.awsS3Service.getPresignUpload(prefix, fileName, {
-                acl: 'public-read',
-                limit: limit,
+
+            const hash = uuid();
+
+            const fileExtension = path.extname(fileName);
+
+            const keyForS3 = `${hash}${fileExtension}`;
+
+            await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
+
+            const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
+            const downloadUrl = `${baseUrl}/v1/api/dior/company_branches/files/${hash}`;
+
+            await this.presignRepository.saveNewPresignEntity({
+                hash: hash,
+                fileName: fileName,
+                fileExtension: fileExtension,
+                downloadUrl: downloadUrl,
+                mimeType: mimetype,
+                prefix: prefix,
+                consultantId: Number(userId),
             });
 
-            return result;
+            return {
+                url: downloadUrl,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getBranchesFileFromS3(hash: string) {
+        try {
+            const existFile = await this.presignRepository.findOne({
+                where: {
+                    key: hash,
+                },
+            });
+
+            if (!existFile) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.NOT_FOUND,
+                });
+            }
+
+            const s3Key = `${existFile.prefix}/${hash}${existFile.fileExtension}`;
+
+            const s3File = await this.awsS3Service.getImageCloudS3(s3Key);
+
+            return {
+                binary: s3File.Body,
+                mimeType: existFile.mimeType,
+                fileName: existFile.fileName,
+            };
         } catch (e) {
             throw e;
         }

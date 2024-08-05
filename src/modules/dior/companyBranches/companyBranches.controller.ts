@@ -1,5 +1,19 @@
 import { Request, Response } from 'express';
-import { Controller, Get, Query, Req, Res, Headers, Post, Body, Put, Param, Delete } from '@nestjs/common';
+import {
+    Controller,
+    Get,
+    Query,
+    Req,
+    Res,
+    Headers,
+    Post,
+    Body,
+    Put,
+    Param,
+    Delete,
+    UseInterceptors,
+    UploadedFile,
+} from '@nestjs/common';
 import { DiorCompanyBranchesService } from './companyBranches.service';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -12,6 +26,7 @@ import {
     SearchBranchesDto,
     UpdateBranchesDto,
 } from './companyBranches.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Dior-Company Branches')
 @Controller('dior/company_branches')
@@ -65,16 +80,32 @@ export class DiorCompanyBranchesController {
         return res.send(resultFile);
     }
 
-    @Get('presign_upload_import_file')
+    @Get('files/:hash')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async getBranchesFileFromS3(@Res() res: Response, @Param('hash') hash: string) {
+        const fileData = await this.diorCompanyBranchesService.getBranchesFileFromS3(hash);
+
+        const { binary, fileName, mimeType } = fileData;
+
+        res.status(200);
+        res.set('Content-Type', `${mimeType}`);
+        res.attachment(fileName);
+        res.write(binary, 'binary');
+        return res.end(null, 'binary');
+    }
+
+    @Post('presign_upload_import_file')
     @ApiBearerAuth()
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
+    @UseInterceptors(FileInterceptor('file'))
     async presignUploadImportFileForBranch(
+        @Req() req: Request,
         @Res() res: Response,
-        @Query() query: PresignedUploadForBranchDto,
-        @Headers('X-CHOWIS-LOCALE') locale?: string,
+        @UploadedFile() file: Express.Multer.File,
     ) {
-        const result = await this.diorCompanyBranchesService.presignUploadImportFileForBranch(query);
+        const result = await this.diorCompanyBranchesService.presignUploadImportFileForBranch(req, file);
         return res.status(200).send(result);
     }
 
