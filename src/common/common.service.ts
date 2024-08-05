@@ -21,6 +21,7 @@ import { ErrorStatus } from './constants/error-status';
 import { ResponseMessages } from './constants/response-messages';
 import * as ExcelJS from 'exceljs';
 import { join } from 'path';
+import axios from 'axios';
 
 @Injectable()
 export class CommonService {
@@ -321,6 +322,36 @@ export class CommonService {
 
             return worksheet;
         } catch (e) {
+            throw new BadRequestException({
+                result_code: ErrorStatus.INVALID_REQUEST,
+                error: this.createLocaleErrorMessage('en', 'invalid_request', `cannot detect ${fileUrl}`),
+            });
+        }
+    }
+
+    async getWorkSheetByHTTP(fileUrl: string, token: string) {
+        try {
+            const fileResponse = await axios.get(fileUrl, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                },
+                responseType: 'arraybuffer',
+            });
+
+            const fileBinary = fileResponse.data;
+
+            const buffer = Buffer.from(fileBinary, 'binary');
+            // await fs.writeFile('downloaded.xlsx', fileBinary);
+
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.load(buffer);
+
+            const worksheet = workbook.getWorksheet(1);
+
+            return worksheet;
+        } catch (e) {
+            console.log(e);
             throw new BadRequestException({
                 result_code: ErrorStatus.INVALID_REQUEST,
                 error: this.createLocaleErrorMessage('en', 'invalid_request', `cannot detect ${fileUrl}`),

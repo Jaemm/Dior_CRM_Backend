@@ -333,13 +333,16 @@ export class DiorCompanyBranchesService {
         }
     }
 
-    async importBranches(body: ImportBranchesDto) {
+    async importBranches(req: Request, body: ImportBranchesDto) {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
             const fileUrl = body.file_url;
 
-            const worksheet = await this.commonService.getWorkSheet(fileUrl);
+            const splitToken = req.headers.authorization.split(' ');
+            const accssToken = splitToken[1];
+
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, accssToken);
 
             const header = worksheet.getRow(1);
 
@@ -352,14 +355,12 @@ export class DiorCompanyBranchesService {
 
                 const email = emailText ? emailText : (row.getCell(4).value as string);
 
-                const hashedPassword = await argon2.hash(row.getCell(5).value as string);
-
                 const newBranch = await this.consultantBranchesRepository.create({
                     country: row.getCell(1).value as string,
                     code: row.getCell(2).value as string,
                     name: row.getCell(3).value as string,
                     email: email,
-                    password: hashedPassword,
+                    password: row.getCell(5).value as string,
                     consultantCompanyId: String(diorCompanyId),
                     createdAt: new Date(),
                     updatedAt: new Date(),

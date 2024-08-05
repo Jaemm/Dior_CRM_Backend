@@ -59,7 +59,7 @@ export class DiorCompanyBranchesController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     async importBranches(@Req() req: Request, @Res() res: Response, @Body() body: ImportBranchesDto) {
-        const result = await this.diorCompanyBranchesService.importBranches(body);
+        const result = await this.diorCompanyBranchesService.importBranches(req, body);
         return res.status(200).send(result);
     }
 
