@@ -59,6 +59,7 @@ CREATE TABLE presign (
   url varchar not null,
   file_extension varchar not null,
   file_name varchar not null,
+  mime_type varchar not null,
   created_at date,
   updated_at date
 )

@@ -197,13 +197,13 @@ export class DiorService {
 
             const fileExtension = path.extname(originalname);
 
-            const keyForS3 = `${hash}/${fileExtension}`;
+            const keyForS3 = `${hash}${fileExtension}`;
 
             const prefix = 'upload';
 
             const uploadData: any = await this.awsS3Service.uploadFileNew(buffer, keyForS3, prefix);
 
-            const { Location: uploadedurl } = uploadData;
+            console.log(uploadData);
 
             const createFileUrl = (key: string) => {
                 const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
@@ -213,20 +213,51 @@ export class DiorService {
                 return url;
             };
 
+            const downloadUrl = createFileUrl(hash);
+
             const newPresign = this.presignRepository.create({
                 key: hash,
                 fileName: originalname,
                 fileExtension: fileExtension,
-                url: createFileUrl(hash),
+                url: downloadUrl,
+                mimeType: mimetype,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             });
+
+            await this.presignRepository.save(newPresign);
+
+            return {
+                url: downloadUrl,
+            };
             // ('http://localhost:3100/image/277c7a2f-9236-4759-8d54-3aed0d402506');
             // 1. param -> 277c7a2f-9236-4759-8d54-3aed0d402506
             // 2. DB check -->  ext
             // 3. s3 -> key + .ext
+        } catch (e) {
+            throw e;
+        }
+    }
 
-            console.log(newPresign);
+    async getFile(hash: string) {
+        try {
+            const existFile = await this.presignRepository.findOne({
+                where: {
+                    key: hash,
+                },
+            });
+
+            if (!existFile) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.NOT_FOUND,
+                });
+            }
+
+            const keyForS3 = `upload/${existFile.key}${existFile.fileExtension}`;
+
+            const test = await this.awsS3Service.getImageCloudS3(keyForS3);
+
+            console.log(test);
         } catch (e) {
             throw e;
         }

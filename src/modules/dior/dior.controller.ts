@@ -11,6 +11,7 @@ import {
     Res,
     UseInterceptors,
     UploadedFile,
+    Param,
 } from '@nestjs/common';
 import { DiorService } from './dior.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -45,6 +46,17 @@ export class DiorController {
     @Roles(Role.Consultant)
     async sendWebResult(@Body() body: SendWebResultDto, @Headers('X-CHOWIS-LOCALE') locale?: string) {
         return await this.diorService.sendWebResult(body, locale);
+    }
+
+    @Get('file/:hash')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async getFile(@Res() res: Response, @Param('hash') hash: string) {
+        const fileData = await this.diorService.getFile(hash);
+
+        // res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+        // res.write(file.Body, 'binary');
+        // res.end(null, 'binary');
     }
 
     @Post('file')

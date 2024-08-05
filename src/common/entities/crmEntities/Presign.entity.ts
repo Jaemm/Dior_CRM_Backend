@@ -5,7 +5,7 @@ export class Presign {
     @PrimaryGeneratedColumn({ type: 'bigint', name: 'id' })
     id: number;
 
-    @Column({ name: 'hash', type: 'character varying' })
+    @Column({ name: 'key', type: 'character varying' })
     key: string;
 
     @Column({ name: 'url', type: 'character varying' })
@@ -16,6 +16,9 @@ export class Presign {
 
     @Column({ name: 'file_name', type: 'character varying' })
     fileName: string;
+
+    @Column({ name: 'mime_type', type: 'character varying' })
+    mimeType: string;
 
     @Column({ name: 'created_at', type: 'timestamp with time zone' })
     createdAt: Date;
