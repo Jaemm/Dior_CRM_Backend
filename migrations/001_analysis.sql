@@ -65,3 +65,5 @@ CREATE TABLE presign (
   created_at date,
   updated_at date
 )
+
+ALTER TABLE dior_customer_consents ADD presign_id bigint;

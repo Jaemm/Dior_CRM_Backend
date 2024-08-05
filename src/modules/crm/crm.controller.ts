@@ -15,7 +15,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 
-import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { CRMService } from './crm.service';
 import { Response, Request } from 'express';
 import {
@@ -33,6 +33,7 @@ import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { hash } from 'argon2';
 
 @ApiTags('CRM')
 @Controller('crm')
@@ -84,9 +85,24 @@ export class CRMController {
         return res.status(200).send(result);
     }
 
+    @Get('customers/files/:hash')
+    @ApiBearerAuth()
+    async getFileFromS3(@Res() res: Response, @Param('hash') hash: string) {
+        const fileData = await this.crmService.getFileFromS3(hash);
+
+        const { binary, fileName, mimeType } = fileData;
+
+        res.status(200);
+        res.set('Content-Type', `${mimeType}`);
+        res.attachment(fileName);
+        res.write(binary, 'binary');
+        return res.end(null, 'binary');
+    }
+
     @Post('customers/presign_upload_consent_form')
     // @Roles(Role.Consultant)
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('file'))
     async presignUploadConsentForm(
         @Headers('X-CHOWIS-LOCALE') locale: string,

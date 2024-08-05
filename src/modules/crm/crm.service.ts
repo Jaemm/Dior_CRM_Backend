@@ -591,6 +591,34 @@ export class CRMService {
         };
     }
 
+    async getFileFromS3(hash: string) {
+        try {
+            const existFile = await this.presignRepository.findOne({
+                where: {
+                    key: hash,
+                },
+            });
+
+            if (!existFile) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.NOT_FOUND,
+                });
+            }
+
+            const s3Key = `${existFile.prefix}/${hash}${existFile.fileExtension}`;
+
+            const s3File = await this.awsS3Service.getImageCloudS3(s3Key);
+
+            return {
+                binary: s3File.Body,
+                mimeType: existFile.mimeType,
+                fileName: existFile.fileName,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
     async presignedUpload(req: Request, data: PresignedUploadDto, file: Express.Multer.File, locale: string = 'en') {
         try {
             const consultantId = (<{ id: string }>req.user).id;
