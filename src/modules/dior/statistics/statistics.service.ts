@@ -643,19 +643,25 @@ export class StatisticsService {
 
             let consultants;
             if (currentConsultant.consultant_position_id === PositionsIds.ADMIN) {
-                consultants = await this.consultantRepository.find({
-                    where: {
-                        country: In(currentConsultant.countries.map((c) => c.toLowerCase())),
-                        consultant_company_id: diorCompanyId,
-                    },
-                });
+                consultants = await this.consultantRepository
+                    .createQueryBuilder('consultants')
+                    .where('LOWER (consultants.country) IN (:...countries)', {
+                        countries: currentConsultant.countries.map((c) => c.toLowerCase()),
+                    })
+                    .andWhere('consultants.consultant_company_id = :companyId', {
+                        companyId: diorCompanyId,
+                    })
+                    .getMany();
             } else if (currentConsultant.consultant_position_id === PositionsIds.BRAND_MANAGER) {
-                consultants = await this.consultantRepository.find({
-                    where: {
+                consultants = await this.consultantRepository
+                    .createQueryBuilder('consultants')
+                    .where('LOWER (consultants.country) = :country', {
                         country: currentConsultant.consultant_branch.country.toLowerCase(),
-                        consultant_company_id: diorCompanyId,
-                    },
-                });
+                    })
+                    .andWhere('consultants.consultant_company_id = :companyId', {
+                        companyId: diorCompanyId,
+                    })
+                    .getMany();
             }
 
             let data: any = {};
