@@ -70,19 +70,12 @@ class Measurement {
 export class PresignedUploadDto {
     @ApiProperty()
     @IsNotEmpty()
-    file_name: string;
-
-    @ApiProperty()
-    @IsNotEmpty()
     consent_type: string;
 
-    @ApiProperty()
-    @Validate(IsNumberOrString)
-    @IsNotEmpty()
-    customer_id: string;
-
-    @ApiProperty()
-    file: string;
+    // @ApiProperty()
+    // @Validate(IsNumberOrString)
+    // @IsNotEmpty()
+    // customer_id: string;
 }
 
 export class GetByEmailDto {

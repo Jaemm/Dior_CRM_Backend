@@ -201,7 +201,7 @@ export class DiorService {
 
             const prefix = 'upload';
 
-            const uploadData: any = await this.awsS3Service.uploadFileNew(buffer, keyForS3, prefix);
+            const uploadData: any = await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
 
             console.log(uploadData);
 

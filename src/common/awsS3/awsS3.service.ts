@@ -13,7 +13,7 @@ import { NotFoundException } from '@nestjs/common/exceptions';
 export class AwsS3Service {
     constructor(private readonly configService: ConfigService) {}
 
-    async uploadFileNew(fileContent: Buffer, hash: string, prefix: string) {
+    async uploadFileToS3(fileContent: Buffer, hash: string, prefix: string) {
         if (this.configService.get('REGION') === 'CHINA') {
             // return await this.uploadImageTencent(fileContent, fileName);
         }

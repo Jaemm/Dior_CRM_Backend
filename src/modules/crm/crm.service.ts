@@ -5,7 +5,13 @@ import {
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { In } from 'typeorm';
+import { v4 as uuid } from 'uuid';
+import axios from 'axios';
+import * as fs from 'fs';
+import * as FormData from 'form-data';
+import * as path from 'path';
 
 import { ConsultantsService } from '../consultants/consultants.service';
 import {
@@ -22,22 +28,22 @@ import { ProductsService } from '../products/products.service';
 
 import { CommonService } from '@/src/common/common.service';
 
-import axios from 'axios';
-import * as fs from 'fs';
-import * as FormData from 'form-data';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 import {
     ConsultantsRepository,
     CustomersRepository,
     DiorCustomerConsentsRepository,
+    PresignRepository,
 } from '@/src/common/repositories/crm';
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CRMService {
     constructor(
         private awsS3Service: AwsS3Service,
+        private configService: ConfigService,
         private readonly customerService: CustomersService,
         private consultantsService: ConsultantsService,
 
@@ -49,6 +55,7 @@ export class CRMService {
         private readonly customersRepository: CustomersRepository,
         private readonly consultantRepository: ConsultantsRepository,
         private readonly diorCustomerConsentsRepository: DiorCustomerConsentsRepository,
+        private readonly presignRepository: PresignRepository,
     ) {}
 
     async getCustomer(id: number, data: GetCustomerDto) {
@@ -584,11 +591,14 @@ export class CRMService {
         };
     }
 
-    async presignedUpload(data: PresignedUploadDto, locale: string = 'en') {
+    async presignedUpload(req: Request, data: PresignedUploadDto, file: Express.Multer.File, locale: string = 'en') {
         try {
-            const { file_name, consent_type, customer_id, file } = data;
+            const consultantId = (<{ id: string }>req.user).id;
+            const { consent_type } = data;
 
-            if (!file_name && !consent_type) {
+            const { originalname: fileName, mimetype, buffer } = file;
+
+            if (!fileName || !consent_type) {
                 throw new BadRequestException({
                     result_code: ErrorStatus.CUSTOM_ERROR,
                     error: this.commonService.createLocaleErrorMessage(
@@ -611,24 +621,31 @@ export class CRMService {
             }
 
             const limit = 8 * 1024 * 1024;
-            const prefix = `uploads/images/customers/consents/${consent_type}/${customer_id}`;
+            const prefix = `uploads/images/customers/consents/${consent_type}`;
 
-            let result;
+            const hash = uuid();
+            const fileExtension = path.extname(fileName);
 
-            if (file) {
-                result = await this.awsS3Service.getPresignUpload(prefix, file_name, {
-                    acl: 'public-read',
-                    limit,
-                    file,
-                });
-            } else {
-                result = await this.awsS3Service.getPresignUpload(prefix, file_name, {
-                    acl: 'public-read',
-                    limit,
-                });
-            }
+            const keyForS3 = `${hash}${fileExtension}`;
 
-            return result;
+            await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
+
+            const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
+            const downloadUrl = `${baseUrl}/crm/files/${hash}`;
+
+            await this.presignRepository.saveNewPresignEntity({
+                hash: hash,
+                fileName: fileName,
+                fileExtension: fileExtension,
+                downloadUrl: downloadUrl,
+                mimeType: mimetype,
+                prefix: prefix,
+                consultantId: Number(consultantId),
+            });
+
+            return {
+                url: downloadUrl,
+            };
         } catch (e) {
             throw e;
         }

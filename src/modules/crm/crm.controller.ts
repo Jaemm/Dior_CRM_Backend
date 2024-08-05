@@ -11,6 +11,8 @@ import {
     Req,
     Res,
     UnauthorizedException,
+    UploadedFile,
+    UseInterceptors,
 } from '@nestjs/common';
 
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
@@ -30,6 +32,7 @@ import { JwtService } from '@/src/jwt/jwt.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { ErrorStatus } from '@/src/common/constants/error-status';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('CRM')
 @Controller('crm')
@@ -84,12 +87,15 @@ export class CRMController {
     @Post('customers/presign_upload_consent_form')
     // @Roles(Role.Consultant)
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @UseInterceptors(FileInterceptor('file'))
     async presignUploadConsentForm(
-        @Res() res: Response,
-        @Body() body: PresignedUploadDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Req() req: Request,
+        @Res() res: Response,
+        @UploadedFile() file: Express.Multer.File,
+        @Body() body: PresignedUploadDto,
     ): Promise<any> {
-        const urls = await this.crmService.presignedUpload(body, locale);
+        const urls = await this.crmService.presignedUpload(req, body, file, locale);
         return res.status(200).send(urls);
     }
 

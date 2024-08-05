@@ -58,6 +58,7 @@ import {
     ConsultantsRepository,
     CustomersRepository,
     DiorCustomerConsentsRepository,
+    PresignRepository,
 } from '@/src/common/repositories/crm';
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 
@@ -122,6 +123,7 @@ import { CountriesRepository } from '@/src/common/repositories/crm/countries.rep
         ConsultantsRepository,
         CountriesRepository,
         DiorCustomerConsentsRepository,
+        PresignRepository,
     ],
     exports: [CRMService],
 })
