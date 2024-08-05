@@ -659,7 +659,7 @@ export class CRMService {
             await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
 
             const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
-            const downloadUrl = `${baseUrl}/crm/files/${hash}`;
+            const downloadUrl = `${baseUrl}/v1/api/crm/customers/files/${hash}`;
 
             await this.presignRepository.saveNewPresignEntity({
                 hash: hash,
@@ -721,6 +721,15 @@ export class CRMService {
             createdAt: new Date(),
             updatedAt: new Date(),
         });
+
+        const splitUrl = url.split('/');
+        const candidateKey = splitUrl[splitUrl.length - 1];
+
+        const presign = await this.presignRepository.findOne({ where: { key: candidateKey } });
+
+        if (presign) {
+            newConsent.presignId = presign.id;
+        }
 
         const consent = await this.diorCustomerConsentsRepository.save(newConsent);
 
