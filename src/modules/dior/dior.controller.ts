@@ -14,6 +14,7 @@ import {
     UseInterceptors,
     UploadedFile,
     Param,
+    BadRequestException,
 } from '@nestjs/common';
 
 import { DiorService } from './dior.service';
@@ -66,9 +67,13 @@ export class DiorController {
     async getFile(@Res() res: Response, @Param('hash') hash: string) {
         const fileData = await this.diorService.getFile(hash);
 
-        // res.writeHead(200, { 'Content-Type': 'image/jpeg' });
-        // res.write(file.Body, 'binary');
-        // res.end(null, 'binary');
+        const { binary, fileName, mimeType } = fileData;
+
+        res.status(200);
+        res.set('Content-Type', `${mimeType}`);
+        res.attachment(fileName);
+        res.write(binary, 'binary');
+        return res.end(null, 'binary');
     }
 
     @Post('file')

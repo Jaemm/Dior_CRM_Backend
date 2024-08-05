@@ -255,9 +255,13 @@ export class DiorService {
 
             const keyForS3 = `upload/${existFile.key}${existFile.fileExtension}`;
 
-            const test = await this.awsS3Service.getImageCloudS3(keyForS3);
+            const s3File = await this.awsS3Service.getImageCloudS3(keyForS3);
 
-            console.log(test);
+            return {
+                binary: s3File.Body,
+                mimeType: existFile.mimeType,
+                fileName: existFile.fileName,
+            };
         } catch (e) {
             throw e;
         }
