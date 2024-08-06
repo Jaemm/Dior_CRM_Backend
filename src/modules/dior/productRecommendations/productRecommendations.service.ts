@@ -991,7 +991,7 @@ export class ProductRecommendationService {
         }
     }
 
-    async importProductRecommendtaion(body: ImportProductRecommendtaionDto, locale = 'en') {
+    async importProductRecommendtaion(req: Request, body: ImportProductRecommendtaionDto, locale = 'en') {
         //  Columns
         //  1 - Product Code
         //  2 - Product Name
@@ -1004,11 +1004,13 @@ export class ProductRecommendationService {
         //  9 - Shades
 
         try {
-            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+            const splitToken = req.headers.authorization.split(' ');
+            const token = splitToken[1];
 
             const fileUrl = body.file_url;
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
 
-            const worksheet = await this.commonService.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const rowCount = worksheet.rowCount + 1;
 
@@ -1050,12 +1052,15 @@ export class ProductRecommendationService {
         }
     }
 
-    async importProductTranslations(body: ImportTranslationsDto, locale = 'en') {
+    async importProductTranslations(req: Request, body: ImportTranslationsDto, locale = 'en') {
         try {
+            const splitToken = req.headers.authorization.split(' ');
+            const token = splitToken[1];
+
             const fileUrl = body.file_url;
             const country = body.country;
 
-            const worksheet = await this.commonService.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const headers = worksheet.getRow(1);
 
@@ -1098,12 +1103,15 @@ export class ProductRecommendationService {
         }
     }
 
-    async importCountries(body: ImportCountriesDto) {
+    async importCountries(req: Request, body: ImportCountriesDto) {
         try {
+            const splitToken = req.headers.authorization.split(' ');
+            const token = splitToken[1];
+
             const fileUrl = body.file_url;
             const country = body.country;
 
-            const worksheet = await this.commonService.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const headers = worksheet.getRow(1);
             const rowCount = worksheet.rowCount + 1;

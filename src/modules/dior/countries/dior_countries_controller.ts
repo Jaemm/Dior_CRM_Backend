@@ -66,8 +66,8 @@ export class DiorCountriesController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('import')
-    async importCountries(@Res() res: Response, @Body() body: ImportCountriesDto) {
-        const result = await this.diorCountriesService.importCountries(body);
+    async importCountries(@Req() req: Request, @Res() res: Response, @Body() body: ImportCountriesDto) {
+        const result = await this.diorCountriesService.importCountries(req, body);
         return res.status(200).send(result);
     }
 }

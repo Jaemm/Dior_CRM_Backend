@@ -98,24 +98,28 @@ export class ProductRecommendationController {
     @Post('import')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async importProductRecommendtaion(@Res() res: Response, @Body() body: ImportProductRecommendtaionDto) {
-        const result = await this.productRecommendationsService.importProductRecommendtaion(body);
+    async importProductRecommendtaion(
+        @Req() req: Request,
+        @Res() res: Response,
+        @Body() body: ImportProductRecommendtaionDto,
+    ) {
+        const result = await this.productRecommendationsService.importProductRecommendtaion(req, body);
         return res.status(200).send(result);
     }
 
     @Post('import_translations')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async importProductTranslations(@Res() res: Response, @Body() body: ImportTranslationsDto) {
-        const result = await this.productRecommendationsService.importProductTranslations(body);
+    async importProductTranslations(@Req() req: Request, @Res() res: Response, @Body() body: ImportTranslationsDto) {
+        const result = await this.productRecommendationsService.importProductTranslations(req, body);
         return res.status(200).send(result);
     }
 
     @Post('import_countries')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async importCountries(@Res() res: Response, @Body() body: ImportCountriesDto) {
-        const result = await this.productRecommendationsService.importCountries(body);
+    async importCountries(@Req() req: Request, @Res() res: Response, @Body() body: ImportCountriesDto) {
+        const result = await this.productRecommendationsService.importCountries(req, body);
         return res.status(200).send(result);
     }
 

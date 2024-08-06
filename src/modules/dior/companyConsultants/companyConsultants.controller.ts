@@ -80,10 +80,11 @@ export class DiorCompanyConsultantsController {
     @Roles(Role.Consultant)
     async importDiorCompanyConsultants(
         @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Req() req: Request,
         @Res() res: Response,
         @Body() body: ImportDiorCompanyConsultantsDto,
     ) {
-        const result = await this.diorCompanyConsultantsService.importDiorCompanyConsultants(body, locale);
+        const result = await this.diorCompanyConsultantsService.importDiorCompanyConsultants(req, body, locale);
         return res.status(200).send(result);
     }
 

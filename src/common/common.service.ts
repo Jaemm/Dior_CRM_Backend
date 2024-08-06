@@ -313,22 +313,6 @@ export class CommonService {
         return errorMessage;
     }
 
-    async getWorkSheet(fileUrl: string) {
-        try {
-            const workbook = new ExcelJS.Workbook();
-            await workbook.xlsx.readFile(fileUrl);
-
-            const worksheet = workbook.getWorksheet(1);
-
-            return worksheet;
-        } catch (e) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.INVALID_REQUEST,
-                error: this.createLocaleErrorMessage('en', 'invalid_request', `cannot detect ${fileUrl}`),
-            });
-        }
-    }
-
     async getWorkSheetByHTTP(fileUrl: string, token: string) {
         try {
             const fileResponse = await axios.get(fileUrl, {

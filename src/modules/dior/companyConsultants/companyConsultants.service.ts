@@ -2,7 +2,6 @@ import { Request } from 'express';
 import { In, Like } from 'typeorm';
 import * as argon2 from 'argon2';
 import * as csv from 'csv';
-import * as ExcelJS from 'exceljs';
 
 import {
     ConsultantBranchesRepository,
@@ -368,10 +367,14 @@ export class DiorCompanyConsultantsService {
         }
     }
 
-    async importDiorCompanyConsultants(body: ImportDiorCompanyConsultantsDto, locale: string = 'en') {
+    async importDiorCompanyConsultants(req: Request, body: ImportDiorCompanyConsultantsDto, locale: string = 'en') {
         try {
+            const splitToken = req.headers.authorization.split(' ');
+
+            const token = splitToken[1];
+
             const fileUrl = body.file_url;
-            const worksheet = await this.commonService.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 

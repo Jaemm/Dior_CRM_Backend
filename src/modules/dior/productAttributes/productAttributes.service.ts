@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import * as csv from 'csv';
-import * as ExcelJS from 'exceljs';
+import { Request } from 'express';
 
 import { In } from 'typeorm';
 import {
@@ -303,10 +303,13 @@ export class DiorProductAttributesService {
         }
     }
 
-    async importProductAttributes(body: ImportProductAttributeDataDto) {
+    async importProductAttributes(req: Request, body: ImportProductAttributeDataDto) {
         try {
+            const splitToken = req.headers.authorization.split(' ');
+            const token = splitToken[1];
+
             const fileUrl = body.file_url;
-            const worksheet = await this.commonService.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
 
@@ -336,12 +339,15 @@ export class DiorProductAttributesService {
         }
     }
 
-    async importProductAttributeTranslations(body: ImportProductAttributeTranslationsDataDto) {
+    async importProductAttributeTranslations(req: Request, body: ImportProductAttributeTranslationsDataDto) {
         try {
+            const splitToken = req.headers.authorization.split(' ');
+            const token = splitToken[1];
+
             const fileUrl = body.file_url;
             const country = body.file_url;
 
-            const worksheet = await this.commonService.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const rowCount = worksheet.rowCount + 1;
 

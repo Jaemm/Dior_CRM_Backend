@@ -3,7 +3,7 @@ import { extname } from 'path';
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import * as csv from 'csv';
-import * as ExcelJS from 'exceljs';
+import { Request } from 'express';
 
 import { ConsultantsRepository } from '@/src/common/repositories/crm';
 
@@ -196,8 +196,12 @@ export class DiorAdminsService {
         }
     }
 
-    async importAdmins(body: ImportAdminsDto) {
+    async importAdmins(req: Request, body: ImportAdminsDto) {
         try {
+            const splitToken = req.headers.authorization.split(' ');
+
+            const token = splitToken[1];
+
             const fileUrl = body.file_url;
 
             const fileExtends = extname(fileUrl);
@@ -210,7 +214,7 @@ export class DiorAdminsService {
                 });
             }
 
-            const worksheet = await this.commonService.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const headers = worksheet.getRow(1);
 

@@ -1,6 +1,6 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 
-import { Controller, Res, Get, Post, Query, Delete, Param, Body, Put, Headers } from '@nestjs/common';
+import { Controller, Res, Get, Post, Query, Delete, Param, Body, Put, Headers, Req } from '@nestjs/common';
 import { DiorProductAttributesService } from './productAttributes.service';
 import { ApiBearerAuth, ApiHeader, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -38,8 +38,12 @@ export class DiorProductAttributesController {
     @Post('import')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async importProductAttributes(@Res() res: Response, @Body() body: ImportProductAttributeDataDto) {
-        const result = await this.diorProductAttributesService.importProductAttributes(body);
+    async importProductAttributes(
+        @Req() req: Request,
+        @Res() res: Response,
+        @Body() body: ImportProductAttributeDataDto,
+    ) {
+        const result = await this.diorProductAttributesService.importProductAttributes(req, body);
         return res.status(200).send(result);
     }
 
@@ -47,10 +51,11 @@ export class DiorProductAttributesController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     async importProductAttributeTranslations(
+        @Req() req: Request,
         @Res() res: Response,
         @Body() body: ImportProductAttributeTranslationsDataDto,
     ) {
-        const translations = await this.diorProductAttributesService.importProductAttributeTranslations(body);
+        const translations = await this.diorProductAttributesService.importProductAttributeTranslations(req, body);
         return res.status(200).send(translations);
     }
 

@@ -1,5 +1,5 @@
-import { Body, Query, Param, Controller, Get, Post, Put, Delete, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Query, Param, Controller, Get, Post, Put, Delete, Res, Req } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { DiorAdminsService } from './diorAdmins.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -46,8 +46,8 @@ export class DiorAdminsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('import')
-    async importAdmins(@Res() res: Response, @Body() body: ImportAdminsDto) {
-        const result = await this.diorAdminsService.importAdmins(body);
+    async importAdmins(@Req() req: Request, @Res() res: Response, @Body() body: ImportAdminsDto) {
+        const result = await this.diorAdminsService.importAdmins(req, body);
         return res.status(200).send(result);
     }
 
