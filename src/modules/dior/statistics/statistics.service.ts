@@ -264,7 +264,7 @@ export class StatisticsService {
                 consultation_time: 73.5,
                 total_devices: devices.length,
                 total_branches: branches.length,
-                total_offline_consultations: totalSalesConnections,
+                total_offline_consultations: Number(totalSalesConnections || 0),
             };
         } catch (e) {
             throw e;
