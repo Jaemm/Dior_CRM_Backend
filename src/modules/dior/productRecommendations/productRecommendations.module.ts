@@ -9,14 +9,17 @@ import {
     ProductTranslationsRepository,
     ProductAttributeTranslationsRepository,
     ProductRecommendationGroupsRepository,
+    PresignRepository,
 } from '@/src/common/repositories/crm';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
+import { CommonService } from '@/src/common/common.service';
 
 @Module({
     controllers: [ProductRecommendationController],
     providers: [
         ProductRecommendationService,
         AwsS3Service,
+        CommonService,
 
         // Repos
         ConsultantsRepository,
@@ -27,6 +30,7 @@ import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
         ProductTranslationsRepository,
         ProductAttributeTranslationsRepository,
         ProductRecommendationGroupsRepository,
+        PresignRepository,
     ],
 })
 export class ProductRecommendationModule {}

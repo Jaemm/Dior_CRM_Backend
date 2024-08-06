@@ -13,6 +13,8 @@ import {
     Delete,
     Put,
     BadRequestException,
+    UseInterceptors,
+    UploadedFile,
 } from '@nestjs/common';
 import { ProductRecommendationService } from './productRecommendations.service';
 
@@ -29,6 +31,7 @@ import {
     ImportTranslationsDto,
     UpdateProductRecommendationDto,
 } from './productRecommendation.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Dior-Product Recommendtaions')
 @Controller('/dior/product_recommendations')
@@ -150,17 +153,33 @@ export class ProductRecommendationController {
         return res.status(200).send(result);
     }
 
+    @Get('files/:hash')
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async getProductRecommandationFileFromS3(@Res() res: Response, @Param('hash') hash: string) {
+        const fileData = await this.productRecommendationsService.getProductRecommandationFileFromS3(hash);
+
+        const { binary, fileName, mimeType } = fileData;
+
+        res.status(200);
+        res.set('Content-Type', `${mimeType}`);
+        res.attachment(fileName);
+        res.write(binary, 'binary');
+        return res.end(null, 'binary');
+    }
+
     @Get('presign_upload')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getPresignUpload(@Res() res: Response, @Query() query: GetPresignUploadDto) {
-        if (!query.filename) {
+    @UseInterceptors(FileInterceptor('file'))
+    async getPresignUpload(@Req() req: Request, @Res() res: Response, @UploadedFile() file: Express.Multer.File) {
+        if (!file) {
             throw new BadRequestException({
                 result_code: 400,
-                error: 'Filename is missing',
+                error: 'File is missing',
             });
         }
-        const result = await this.productRecommendationsService.getPresignUpload(query);
+        const result = await this.productRecommendationsService.getPresignUpload(req, file);
         return res.status(200).send(result);
     }
 

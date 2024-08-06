@@ -1,14 +1,14 @@
-import path from 'path';
+import * as path from 'path';
 import * as csv from 'csv';
-
+import { v4 as uuid } from 'uuid';
 import { Request } from 'express';
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import * as ExcelJS from 'exceljs';
 
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import {
     ConsultantCountriesRepository,
     ConsultantsRepository,
+    PresignRepository,
     ProductAttributeTranslationsRepository,
     ProductAttributesRepository,
     ProductRecommendationGroupsRepository,
@@ -34,11 +34,14 @@ import {
 import { ProductRecommendationT, ProductTranslationT } from '@/src/common/types/entities';
 import axios from 'axios';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ProductRecommendationService {
     constructor(
         private readonly commonService: CommonService,
+        private readonly configService: ConfigService,
+
         private readonly awsS3Service: AwsS3Service,
 
         private readonly consultantCountriesRepository: ConsultantCountriesRepository,
@@ -47,6 +50,7 @@ export class ProductRecommendationService {
         private readonly paTranslationsRepository: ProductAttributeTranslationsRepository,
         private readonly prGroupsRepository: ProductRecommendationGroupsRepository,
         private readonly productTranslationsRepository: ProductTranslationsRepository,
+        private readonly presignRepository: PresignRepository,
         private readonly consultantRepository: ConsultantsRepository,
     ) {}
     async getProductRecommendation(req: Request, query: SearchProductRecommendationDto, locale: string = 'en') {
@@ -1289,21 +1293,67 @@ export class ProductRecommendationService {
         }
     }
 
-    async getPresignUpload(query: GetPresignUploadDto) {
+    async getProductRecommandationFileFromS3(hash: string) {
+        try {
+            const existFile = await this.presignRepository.findOne({
+                where: {
+                    key: hash,
+                },
+            });
+
+            if (!existFile) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.NOT_FOUND,
+                });
+            }
+
+            const s3Key = `${existFile.prefix}/${hash}${existFile.fileExtension}`;
+
+            const s3File = await this.awsS3Service.getImageCloudS3(s3Key);
+
+            return {
+                binary: s3File.Body,
+                mimeType: existFile.mimeType,
+                fileName: existFile.fileName,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getPresignUpload(req: Request, file: Express.Multer.File) {
         try {
             const diorConsultant = await this.consultantRepository.getDiorConsultant();
 
-            const { filename } = query;
+            const userId = (<{ id: string }>req.user).id;
+            const { originalname: fileName, mimetype, buffer } = file;
 
             const prefix = `uploads/images/product_recommendations/${diorConsultant.id}`;
 
+            const hash = uuid();
+            const fileExtension = path.extname(fileName);
+            const keyForS3 = `${hash}${fileExtension}`;
+
             const limit = 8 * 1024 * 1024;
-            const result = await this.awsS3Service.getPresignUpload(prefix, filename, {
-                acl: 'public-read',
-                limit: limit,
+
+            await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
+
+            const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
+            const downloadUrl = `${baseUrl}/v1/api/dior/product_recommendations/files/${hash}`;
+
+            await this.presignRepository.saveNewPresignEntity({
+                hash: hash,
+                fileName: fileName,
+                fileExtension: fileExtension,
+                downloadUrl: downloadUrl,
+                mimeType: mimetype,
+                prefix: prefix,
+                consultantId: Number(userId),
             });
 
-            return result;
+            return {
+                url: downloadUrl,
+            };
         } catch (e) {
             throw e;
         }

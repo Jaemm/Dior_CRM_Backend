@@ -38,47 +38,6 @@ export class AwsS3Service {
         });
     }
 
-    async getPresignUpload(
-        prefix: string,
-        fileName: string,
-        options?: { acl?: string; limit?: number; file?: string },
-    ) {
-        const uniqueFilename = `${uuid()}-${fileName}`;
-        const uploadKey = `${prefix}/${uniqueFilename}`;
-        const bucketName = this.configService.get('AWS_BUCKET_NAME');
-
-        const s3 = new S3();
-
-        const params: any = {};
-        if (options.acl) params.ACL = options.acl;
-        if (options.limit) params.ContentLength = options.limit;
-
-        const presignedUrl = s3.getSignedUrl('putObject', {
-            Bucket: bucketName,
-            Key: uploadKey,
-            ACL: params?.ACL,
-        });
-
-        if (options.file) {
-            const fileStream = fs.createReadStream(options.file);
-            await s3
-                .upload({
-                    Bucket: bucketName,
-                    Key: uploadKey,
-                    Body: fileStream,
-                    ...params,
-                })
-                .promise();
-        }
-
-        const publicUrl = `https://${bucketName}.s3.amazonaws.com/${uploadKey}`;
-
-        return {
-            presigned_url: presignedUrl,
-            public_url: publicUrl,
-        };
-    }
-
     async uploadFile(fileContent: Buffer, fileName: string) {
         if (this.configService.get('REGION') === 'CHINA') {
             // return await this.uploadImageTencent(fileContent, fileName);
