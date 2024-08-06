@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as csv from 'csv';
 import { v4 as uuid } from 'uuid';
 import { Request } from 'express';
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import {
@@ -1323,10 +1323,17 @@ export class ProductRecommendationService {
 
     async getPresignUpload(req: Request, file: Express.Multer.File) {
         try {
-            const diorConsultant = await this.consultantRepository.getDiorConsultant();
-
             const userId = (<{ id: string }>req.user).id;
             const { originalname: fileName, mimetype, buffer } = file;
+
+            const allowedMimeTypeList = ['image/png', 'image/jpeg'];
+
+            if (!allowedMimeTypeList.includes(mimetype)) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.BAD_REQUEST,
+                });
+            }
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
 
             const prefix = `uploads/images/product_recommendations/${diorConsultant.id}`;
 
