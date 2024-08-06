@@ -9,7 +9,7 @@ const rubyUrl = 'https://stg-dior.chowis.cloud/api';
 let localToken: string;
 let rubyToken: string;
 
-describe('Dior - Devices Module (e2e)', () => {
+describe('Dior - Product Attributes Module (e2e)', () => {
     beforeAll(async () => {
         const localResponse = await request(localUrl).post('/consultants/login').send(consultantLoginData);
         const rubyResponse = await request(rubyUrl).post('/consultants/login').send(consultantLoginData);
@@ -18,9 +18,9 @@ describe('Dior - Devices Module (e2e)', () => {
         localToken = localResponse.body.token;
     });
 
-    test('dior/devices (GET)', async () => {
+    test('dior/admins (GET)', async () => {
         const localResponse = await request(localUrl)
-            .get('/dior/devices?search=FAB01920')
+            .get('/dior/product_attributes?search=Creams')
             .auth(localToken, {
                 type: 'bearer',
             })
@@ -28,7 +28,7 @@ describe('Dior - Devices Module (e2e)', () => {
             .expect(200);
 
         const rubyResponse = await request(rubyUrl)
-            .get('/dior/devices?search=FAB01920')
+            .get('/dior/product_attributes?search=Creams')
             .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);

@@ -182,9 +182,12 @@ export class DiorProductAttributesService {
             }
 
             const searchPage = Number(page || 1);
-            const searchPer = Number(per || 10);
+            const searchPer = Number(per || 25);
 
-            const [productAttributes, totalCount] = await attributesQuery.getManyAndCount();
+            const [productAttributes, totalCount] = await attributesQuery
+                .skip((searchPage - 1) * searchPer)
+                .take(searchPer)
+                .getManyAndCount();
 
             const reformatProductAttributeList: ProductAttributesForDiorT[] = productAttributes.map((attributes) => {
                 let translations: ProductAttributeTranslationsForDiorT[] = [];
@@ -210,6 +213,7 @@ export class DiorProductAttributesService {
 
             return {
                 data: reformatProductAttributeList,
+                total_size: totalCount,
                 current_page_size: reformatProductAttributeList.length,
                 current_page: searchPage,
                 total_pages: Math.ceil(totalCount / searchPer),
