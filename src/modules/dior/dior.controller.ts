@@ -30,7 +30,7 @@ export class DiorController {
     @Get('customers')
     @ApiBearerAuth()
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
-    @Roles(Role.Consultant)
+    // @Roles(Role.Consultant)
     async getCustomers(
         @Headers('X-CHOWIS-LOCALE') locale: string,
         @Res() res: Response,
