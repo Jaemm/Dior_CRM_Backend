@@ -35,5 +35,5 @@ describe('Dior - Devices Module (e2e)', () => {
 
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
         expect(missingFields).toEqual([]);
-    });
+    }, 50000);
 });

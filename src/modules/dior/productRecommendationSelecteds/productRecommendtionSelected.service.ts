@@ -9,7 +9,7 @@ import {
 import { ProductRecommendationForDiorT, ProductRecommendationVariantForDiorT } from '@/src/common/types/entities';
 import { ProductTranslationForDiorT } from '@/src/common/types/entities/product_translations.type';
 import { Injectable } from '@nestjs/common';
-import { Not } from 'typeorm';
+import { Equal, Not } from 'typeorm';
 import {
     GetListOfRecommendationListDto,
     GetRecommendationSelectedDto,
@@ -190,12 +190,12 @@ export class ProductRecommendationSelectedsService {
                 return acc;
             }, {} as Record<number, number>);
 
-            const searchPage = Number(page || 1);
-            const searchPer = Number(per || 10);
-
             const productIds = Object.keys(productSelectedGrouped).map(Number).filter(Boolean);
 
-            const [productRecommendations, totalCount] = await this.productRecommendationRepository
+            const searchPage = Number(page || 1);
+            const searchPer = Number(per || 25);
+
+            const productQuery = this.productRecommendationRepository
                 .createQueryBuilder('prdouctRecommendation')
                 .leftJoinAndSelect('prdouctRecommendation.productVariants', 'productVariants')
                 .where('prdouctRecommendation.id IN (:...productIds)', {
@@ -204,15 +204,16 @@ export class ProductRecommendationSelectedsService {
                 .andWhere('prdouctRecommendation.recommendationCount > 0')
                 .orderBy('prdouctRecommendation.recommendationCount', 'DESC')
                 .skip((searchPage - 1) * searchPer)
-                .take(searchPer)
-                .getManyAndCount();
+                .take(searchPer);
+
+            const [productRecommendations, totalCount] = await productQuery.getManyAndCount();
 
             const promiseReformat: Promise<ProductRecommendationForDiorT>[] = productRecommendations.map(
                 async (recommendation) => {
                     let refRecommendation;
                     let name: string | null = null;
                     let shades: string | null = null;
-                    let collectionShades: string[] | null = [];
+                    let collectionShades: string[] = [];
                     let productTranslations: ProductTranslationForDiorT[] = [];
                     let categoryTranslations: any[] = [];
                     let collectionTranslations: any[] = [];
@@ -235,13 +236,14 @@ export class ProductRecommendationSelectedsService {
                     }
 
                     // collection shades
-                    const recommShadeList = await this.productRecommendationRepository.find({
-                        select: ['shades'],
-                        where: {
+                    const recommShadeList = await this.productRecommendationRepository
+                        .createQueryBuilder('recommendtaions')
+                        .where('recommendtaions.collection = :collection', {
                             collection: recommendation.collection,
-                            shades: Not(null),
-                        },
-                    });
+                        })
+                        .andWhere('recommendtaions.shades IS NOT NULL')
+                        .getMany();
+
                     collectionShades = recommShadeList.map((recomm) => recomm.shades);
                     // collection_shades END
 
@@ -254,36 +256,34 @@ export class ProductRecommendationSelectedsService {
                         });
 
                         const promiseTranslations = translations.map(async (t) => {
-                            const recomm = await this.productRecommendationRepository.findOneBy({
-                                id: t.productRecommendationId,
+                            const attribute = await this.productAttributesRepository.findOne({
+                                where: {
+                                    value: recommendation.category,
+                                },
                             });
 
-                            const category = recomm.category;
-                            const collection = recomm.collection;
-
-                            const categoryAttribute = await this.productAttributesRepository.findOneBy({
-                                value: category,
+                            const collection = await this.productAttributesRepository.findOne({
+                                where: {
+                                    value: recommendation.collection,
+                                },
                             });
 
-                            const collectionAttribute = await this.productAttributesRepository.findOneBy({
-                                value: collection,
-                            });
-
-                            const attributeName = categoryAttribute
+                            const attributeName = attribute
                                 ? (
                                       await this.productAttributeTranslationsRepository.findOne({
                                           where: {
-                                              productAttributeId: Number(categoryAttribute.id),
+                                              productAttributeId: Number(attribute.id),
                                               language: t.language,
                                           },
                                       })
                                   )?.value
                                 : null;
-                            const collectionName = collectionAttribute
+
+                            const collectionName = collection
                                 ? (
                                       await this.productAttributeTranslationsRepository.findOne({
                                           where: {
-                                              productAttributeId: Number(collectionAttribute.id),
+                                              productAttributeId: Number(collection.id),
                                               language: t.language,
                                           },
                                       })
@@ -291,12 +291,9 @@ export class ProductRecommendationSelectedsService {
                                 : null;
 
                             return {
-                                id: Number(t.id),
-                                field_name: t.fieldName,
-                                language: t.language,
-                                value: t.value,
-                                attribute_name: attributeName,
-                                collection_name: collectionName,
+                                ...t.getBasicInfo,
+                                attribute_name: attributeName || null,
+                                collection_name: collectionName || null,
                             };
                         });
 
@@ -304,39 +301,15 @@ export class ProductRecommendationSelectedsService {
                     }
                     // product translations END
 
-                    categoryTranslations = (
-                        await this.productAttributesRepository.findOne({
-                            where: {
-                                typ: 'Category',
-                                value: recommendation.category,
-                            },
-                            relations: ['productAttributeTranslations'],
-                        })
-                    ).productAttributeTranslations.map((t) => {
-                        return {
-                            id: Number(t.id),
-                            field_name: t.fieldName,
-                            language: t.language,
-                            value: t.value,
-                        };
-                    });
+                    categoryTranslations = await this.productAttributesRepository.getTranslationsByType(
+                        'Category',
+                        recommendation.category,
+                    );
 
-                    collectionTranslations = (
-                        await this.productAttributesRepository.findOne({
-                            where: {
-                                typ: 'Collection',
-                                value: recommendation.category,
-                            },
-                            relations: ['productAttributeTranslations'],
-                        })
-                    )?.productAttributeTranslations.map((t) => {
-                        return {
-                            id: Number(t.id),
-                            field_name: t.fieldName,
-                            language: t.language,
-                            value: t.value,
-                        };
-                    });
+                    collectionTranslations = await this.productAttributesRepository.getTranslationsByType(
+                        'Collection',
+                        recommendation.collection,
+                    );
 
                     productVariants = recommendation.productVariants
                         ? recommendation.productVariants.map((variants) => {
@@ -359,17 +332,7 @@ export class ProductRecommendationSelectedsService {
                         : [];
 
                     return {
-                        id: Number(recommendation.id),
-                        product_type: recommendation.productType,
-                        description: recommendation.description,
-                        link: recommendation.link,
-                        image_url: recommendation.imageUrl,
-                        code: recommendation.code,
-                        routine: recommendation.routine,
-                        collection: recommendation.collection,
-                        category: recommendation.category,
-                        countries: recommendation.countries,
-                        product_recommendation_id: recommendation.productRecommendationId,
+                        ...recommendation.getBasicInfo,
                         name: name,
                         shades: shades,
                         collection_shades: collectionShades,
@@ -385,10 +348,10 @@ export class ProductRecommendationSelectedsService {
 
             return {
                 data: data,
-                total_size: totalCount,
-                current_page_size: data.length,
-                current_page: searchPage,
-                total_pages: Math.ceil(totalCount / searchPer),
+                total_size: page && per ? totalCount : undefined,
+                current_page_size: page && per ? data.length : undefined,
+                current_page: page && per ? Number(page) : undefined,
+                total_pages: page && per ? Math.ceil(totalCount / Number(per)) : undefined,
             };
         } catch (e) {
             throw e;
