@@ -385,15 +385,26 @@ export class DiorCompanyConsultantsService {
             for (let i = 2; i < rowCount; i++) {
                 const row = worksheet.getRow(i);
 
+                const bcCode = row.getCell(3).value.toLocaleString();
+                const posCode = row.getCell(2).value.toLocaleString();
+
+                const consultant = await this.consultantRepository.findOneBy({
+                    code: bcCode,
+                });
+
+                if (consultant) {
+                    continue;
+                }
+
                 const branch = await this.consultantBranchesRepository.findOneBy({
-                    code: row.getCell(2).value.toLocaleString(),
+                    code: posCode,
                 });
 
                 const status = row.getCell(6).value === 'active' ? 0 : 1;
 
                 const newConsultant = this.consultantRepository.create({
                     country: row.getCell(1).value.toLocaleString(),
-                    code: row.getCell(3).value.toLocaleString(),
+                    code: bcCode,
                     name: row.getCell(4).value.toLocaleString(),
                     status: status,
                     consultant_branch_id: Number(branch?.id || null),
