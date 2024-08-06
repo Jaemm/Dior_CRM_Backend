@@ -18,7 +18,7 @@ describe('Dior - Product Attributes Module (e2e)', () => {
         localToken = localResponse.body.token;
     });
 
-    test('dior/admins (GET)', async () => {
+    test('dior/product_attributes (GET)', async () => {
         const localResponse = await request(localUrl)
             .get('/dior/product_attributes?search=Creams')
             .auth(localToken, {
