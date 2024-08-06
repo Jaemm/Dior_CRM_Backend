@@ -145,12 +145,12 @@ export class DiorCompanyBranchesService {
                 );
             }
 
-            const pageCondition = Number(page || 1);
-            const perCondition = Number(per || 10);
+            const searchPage = Number(page || 1);
+            const searchPer = Number(per || 25);
 
             const [branches, total] = await branchQuery
-                .skip((pageCondition - 1) * perCondition)
-                .take(perCondition)
+                .skip((searchPage - 1) * searchPer)
+                .take(searchPer)
                 .getManyAndCount();
 
             const reformatBranches: Promise<ConsultantBranchesForDiorT>[] = branches.map(async (branch) => {
@@ -165,7 +165,7 @@ export class DiorCompanyBranchesService {
                     country: branch.country,
                     password: branch.password,
                     total_devices: totalDevices,
-                    last_consultation_date: null,
+                    last_consultation_date: '01-03-2022',
                 };
 
                 return reformatBranch;
@@ -173,10 +173,10 @@ export class DiorCompanyBranchesService {
 
             return {
                 data: await Promise.all(reformatBranches),
-                total,
-                currentPage: page,
-                pageSize: branches.length,
-                totalPages: Math.ceil(total / perCondition),
+                total_size: total,
+                current_page_size: branches.length,
+                current_page: searchPage,
+                total_pages: Math.ceil(total / searchPer),
             };
         } catch (e) {
             throw e;
