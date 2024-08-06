@@ -321,8 +321,8 @@ export class DiorProductAttributesService {
                 const row = worksheet.getRow(i);
 
                 const newProductAttribute = this.productAttributesRepository.create({
-                    typ: row.getCell(1).value.toLocaleString(),
-                    value: row.getCell(2).value.toLocaleString(),
+                    typ: row.getCell(1).value?.toLocaleString(),
+                    value: row.getCell(2).value?.toLocaleString(),
                     consultantCompanyId: diorCompanyId,
                     createdAt: new Date(),
                     updatedAt: new Date(),

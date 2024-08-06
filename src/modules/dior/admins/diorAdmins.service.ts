@@ -206,14 +206,6 @@ export class DiorAdminsService {
 
             const fileExtends = extname(fileUrl);
 
-            if (['.xls', '.xlsx'].includes(fileExtends)) {
-            } else {
-                throw new BadRequestException({
-                    result_code: ErrorStatus.BAD_REQUEST,
-                    error: `Unknown file type: ${fileUrl}`,
-                });
-            }
-
             const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const headers = worksheet.getRow(1);

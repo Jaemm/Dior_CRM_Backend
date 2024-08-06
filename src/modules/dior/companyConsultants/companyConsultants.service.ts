@@ -389,13 +389,15 @@ export class DiorCompanyConsultantsService {
                     code: row.getCell(2).value.toLocaleString(),
                 });
 
+                const status = row.getCell(6).value === 'active' ? 0 : 1;
+
                 const newConsultant = this.consultantRepository.create({
                     country: row.getCell(1).value.toLocaleString(),
                     code: row.getCell(3).value.toLocaleString(),
                     name: row.getCell(4).value.toLocaleString(),
-                    status: Number(row.getCell(6).value),
+                    status: status,
                     consultant_branch_id: Number(branch?.id || null),
-                    email: await this.generateEmailForDior(diorCompanyId),
+                    email: row.getCell(5).value.toLocaleString(),
                     consultant_company_id: diorCompanyId,
                     created_at: new Date(),
                     updated_at: new Date(),
