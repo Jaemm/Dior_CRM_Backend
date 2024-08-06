@@ -38,12 +38,12 @@ export class DiorCompanyConsultantsService {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
-            const hashedPassword = await argon2.hash(body.password);
+            // const hashedPassword = await argon2.hash(body.password);
 
             const newConsultant = this.consultantRepository.create({
                 name: body.name,
                 code: body.code,
-                password_digest: hashedPassword,
+                // password_digest: hashedPassword,
                 consultant_branch_id: Number(body.consultant_branch_id),
                 consultant_company_id: diorCompanyId,
                 country: body.country,

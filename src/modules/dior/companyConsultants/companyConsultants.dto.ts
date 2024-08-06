@@ -39,10 +39,10 @@ export class CreateDiorCompanyConsultantsDto {
     @IsString()
     name: string;
 
-    @ApiProperty()
-    @IsNotEmpty()
-    @IsString()
-    password: string;
+    // @ApiProperty()
+    // @IsNotEmpty()
+    // @IsString()
+    // password: string;
 
     @ApiPropertyOptional()
     @IsOptional()
