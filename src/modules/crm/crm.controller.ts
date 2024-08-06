@@ -15,7 +15,7 @@ import {
     UseInterceptors,
 } from '@nestjs/common';
 
-import { ApiBearerAuth, ApiConsumes, ApiHeader, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { CRMService } from './crm.service';
 import { Response, Request } from 'express';
 import {
@@ -102,6 +102,21 @@ export class CRMController {
     @Post('customers/presign_upload_consent_form')
     // @Roles(Role.Consultant)
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                },
+                consent_type: {
+                    type: 'string',
+                },
+            },
+        },
+    })
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('file'))
     async presignUploadConsentForm(

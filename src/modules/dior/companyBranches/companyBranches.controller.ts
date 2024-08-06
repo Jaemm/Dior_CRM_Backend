@@ -15,7 +15,7 @@ import {
     UploadedFile,
 } from '@nestjs/common';
 import { DiorCompanyBranchesService } from './companyBranches.service';
-import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import {
@@ -97,6 +97,18 @@ export class DiorCompanyBranchesController {
 
     @Post('presign_upload_import_file')
     @ApiBearerAuth()
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                },
+            },
+        },
+    })
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     @UseInterceptors(FileInterceptor('file'))
