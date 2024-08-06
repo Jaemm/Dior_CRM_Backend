@@ -152,7 +152,7 @@ export class DiorCompanyConsultantsService {
             }
 
             const searchPage = Number(page || 1);
-            const searchPer = Number(per || 10);
+            const searchPer = Number(per || 25);
 
             const [consultants, totalCount] = await consultantsQuery
                 .skip((searchPage - 1) * searchPer)
