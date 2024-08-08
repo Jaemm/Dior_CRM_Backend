@@ -81,8 +81,6 @@ export class DiorCompanyBranchesController {
     }
 
     @Get('files/:hash')
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
     async getBranchesFileFromS3(@Res() res: Response, @Param('hash') hash: string) {
         const fileData = await this.diorCompanyBranchesService.getBranchesFileFromS3(hash);
 

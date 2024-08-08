@@ -97,10 +97,16 @@ export class DiorModule {
     configure(consumer: MiddlewareConsumer) {
         consumer
             .apply(AuthMiddleware)
-            .exclude({
-                path: 'dior/product_recommendations/files/:hash',
-                method: RequestMethod.GET,
-            })
+            .exclude(
+                {
+                    path: 'dior/product_recommendations/files/:hash',
+                    method: RequestMethod.GET,
+                },
+                {
+                    path: 'dior/company_branches/files/:hash',
+                    method: RequestMethod.GET,
+                },
+            )
             .forRoutes({
                 path: 'dior/*',
                 method: RequestMethod.ALL,

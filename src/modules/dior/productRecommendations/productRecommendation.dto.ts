@@ -224,9 +224,8 @@ export class ImportCountriesDto {
 
 export class ImportPicturesDto {
     @ApiProperty()
-    @IsString()
     @IsNotEmpty()
-    file_url: string;
+    file_url: string | string[];
 }
 
 export class ExportRecommendtaionsDto {

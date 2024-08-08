@@ -1158,24 +1158,32 @@ export class ProductRecommendationService {
         try {
             const fileUrl = body.file_url;
 
-            const response = await axios.get(fileUrl);
+            const isArray = Array.isArray(fileUrl);
 
-            const isExistImage = response.headers['Content-Type'].toLocaleString().startsWith('image');
+            const urlList = isArray ? fileUrl : [fileUrl];
 
-            if (isExistImage) {
-                throw new Error();
-            }
+            const saveUrlPromise = urlList.map(async (url) => {
+                const response = await axios.get(url);
 
-            const fileName = path.basename(fileUrl, path.extname(fileUrl));
-            const productCode = fileName.slice(37);
+                const isExistImage = response.headers['Content-Type'].toLocaleString().startsWith('image');
 
-            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+                if (isExistImage) {
+                    throw new Error();
+                }
 
-            const product = diorConsultant.productRecommendations.find((pr) => pr.code === productCode);
-            if (product) {
-                product.imageUrl = fileUrl;
-                await this.productRecommendationRepository.save(product);
-            }
+                const fileName = path.basename(url, path.extname(url));
+                const productCode = fileName.slice(37);
+
+                const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+                const product = diorConsultant.productRecommendations.find((pr) => pr.code === productCode);
+                if (product) {
+                    product.imageUrl = url;
+                    await this.productRecommendationRepository.save(product);
+                }
+            });
+
+            await Promise.all(saveUrlPromise);
 
             return {
                 message: 'Success import data',
