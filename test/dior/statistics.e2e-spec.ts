@@ -149,4 +149,42 @@ describe('Dior - Statistics Module (e2e)', () => {
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
         expect(missingFields).toEqual([]);
     }, 30000);
+
+    test('dior/statistics/infograph_stat_details (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/dior/statistics/infograph_stat_details?stat_type=stores')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/dior/statistics/infograph_stat_details?stat_type=stores')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    }, 30000);
+
+    test('dior/statistics/get_stat_details_country_wise (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/dior/statistics/get_stat_details_country_wise?stat_type=stores&country_name=Japan')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/dior/statistics/get_stat_details_country_wise?stat_type=stores&country_name=Japan')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    }, 30000);
 });
