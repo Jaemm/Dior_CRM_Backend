@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class GetDiorCompanyConsultantsDto {
     @ApiPropertyOptional()
@@ -51,8 +51,8 @@ export class CreateDiorCompanyConsultantsDto {
 
     @ApiPropertyOptional()
     @IsNotEmpty()
-    @IsString()
-    consultant_branch_id: string;
+    @IsNumber()
+    consultant_branch_id: number;
 
     @ApiPropertyOptional()
     @IsNotEmpty()

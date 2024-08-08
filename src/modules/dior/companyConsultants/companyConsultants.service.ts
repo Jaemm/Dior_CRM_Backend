@@ -44,7 +44,7 @@ export class DiorCompanyConsultantsService {
                 name: body.name,
                 code: body.code,
                 // password_digest: hashedPassword,
-                consultant_branch_id: Number(body.consultant_branch_id),
+                consultant_branch_id: body.consultant_branch_id,
                 consultant_company_id: diorCompanyId,
                 country: body.country,
                 app_id: 88,
