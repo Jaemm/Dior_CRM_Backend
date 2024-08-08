@@ -34,7 +34,7 @@ export class ProductRecommendationSelectedsController {
 
     @Get()
     @ApiBearerAuth()
-    // @Roles(Role.Consultant)
+    @Roles(Role.Consultant)
     async getProductRecommendationSelecteds(@Res() res: Response, @Query() query: GetRecommendationSelectedDto) {
         const selecteds = await this.productRecommendationSelectedsService.getProductRecommendationSelecteds(query);
         return res.status(200).send(selecteds);

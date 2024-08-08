@@ -71,7 +71,7 @@ export class CRMController {
 
     @Get('customers/get_by_email')
     @ApiBearerAuth()
-    // @Roles(Role.Consultant)
+    @Roles(Role.Consultant)
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async getCustomerByEmail(
         @Req() req: Request,
@@ -100,7 +100,7 @@ export class CRMController {
     }
 
     @Post('customers/presign_upload_consent_form')
-    // @Roles(Role.Consultant)
+    @Roles(Role.Consultant)
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @ApiConsumes('multipart/form-data')
     @ApiBody({
@@ -130,7 +130,7 @@ export class CRMController {
         return res.status(200).send(urls);
     }
 
-    // @Roles(Role.Consultant)
+    @Roles(Role.Consultant)
     @Put('customers/update_consent_form')
     async updateConsentForm(@Res() res: Response, @Body() body: UpdateConsentForm): Promise<any> {
         const result = await this.crmService.updateConsentForm(body);
