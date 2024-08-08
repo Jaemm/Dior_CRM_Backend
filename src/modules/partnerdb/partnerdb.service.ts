@@ -265,7 +265,7 @@ export class PartnerDbService {
 
             return {
                 data: reformatCustomer,
-                total_count: totalCount,
+                total_size: totalCount,
                 current_page_size: reformatCustomer.length,
                 current_page: searchPage,
                 total_pages: Math.ceil(totalCount / searchPer),

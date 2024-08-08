@@ -17,7 +17,7 @@ describe('Dior - Countries Module (e2e)', () => {
         localToken = localResponse.body.token;
     });
 
-    test('dior/admins (GET)', async () => {
+    test('dior/countries (GET)', async () => {
         const localResponse = await request(localUrl)
             .get('/dior/countries')
             .auth(localToken, {

@@ -35,4 +35,23 @@ describe('PartnerDB Module (e2e)', () => {
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
         expect(missingFields).toEqual([]);
     });
+
+    test('partnerdb/consultants/:id/customers (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/partnerdb/consultants/19645/customers')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/partnerdb/consultants/19645/customers')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
 });
