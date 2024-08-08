@@ -168,7 +168,7 @@ export class ProductRecommendationController {
         return res.end(null, 'binary');
     }
 
-    @Get('presign_upload')
+    @Post('presign_upload')
     @ApiBearerAuth()
     @ApiConsumes('multipart/form-data')
     @ApiBody({
