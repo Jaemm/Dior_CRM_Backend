@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ApiBearerAuth, ApiHeader, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiHeader, ApiQuery, ApiTags } from '@nestjs/swagger';
 import {
     Controller,
     Get,
@@ -170,6 +170,18 @@ export class ProductRecommendationController {
 
     @Get('presign_upload')
     @ApiBearerAuth()
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+        schema: {
+            type: 'object',
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                },
+            },
+        },
+    })
     @Roles(Role.Consultant)
     @UseInterceptors(FileInterceptor('file'))
     async getPresignUpload(@Req() req: Request, @Res() res: Response, @UploadedFile() file: Express.Multer.File) {
