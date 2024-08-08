@@ -154,7 +154,6 @@ export class ProductRecommendationController {
     }
 
     @Get('files/:hash')
-    @ApiBearerAuth()
     async getProductRecommandationFileFromS3(@Res() res: Response, @Param('hash') hash: string) {
         const fileData = await this.productRecommendationsService.getProductRecommandationFileFromS3(hash);
 

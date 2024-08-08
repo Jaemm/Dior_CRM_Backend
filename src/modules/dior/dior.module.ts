@@ -95,10 +95,16 @@ import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 })
 export class DiorModule {
     configure(consumer: MiddlewareConsumer) {
-        consumer.apply(AuthMiddleware).forRoutes({
-            path: 'dior/*',
-            method: RequestMethod.ALL,
-        });
+        consumer
+            .apply(AuthMiddleware)
+            .exclude({
+                path: 'dior/product_recommendations/files/:hash',
+                method: RequestMethod.GET,
+            })
+            .forRoutes({
+                path: 'dior/*',
+                method: RequestMethod.ALL,
+            });
         // consumer.apply(AuthMiddleware).forRoutes({
         //     path: 'dior/company_consultants/by_consultant',
         //     method: RequestMethod.GET,
