@@ -1165,10 +1165,10 @@ export class ProductRecommendationService {
             const saveUrlPromise = urlList.map(async (url) => {
                 const response = await axios.get(url);
 
-                const isExistImage = response.headers['Content-Type'].toLocaleString().startsWith('image');
+                const isExistImage = response.headers['content-type'].toLocaleString().startsWith('image');
 
-                if (isExistImage) {
-                    throw new Error();
+                if (!isExistImage) {
+                    throw new Error('not exist image');
                 }
 
                 const fileName = path.basename(url, path.extname(url));
@@ -1177,6 +1177,7 @@ export class ProductRecommendationService {
                 const diorConsultant = await this.consultantRepository.getDiorConsultant();
 
                 const product = diorConsultant.productRecommendations.find((pr) => pr.code === productCode);
+
                 if (product) {
                     product.imageUrl = url;
                     await this.productRecommendationRepository.save(product);
