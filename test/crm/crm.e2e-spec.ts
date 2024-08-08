@@ -37,6 +37,25 @@ describe('CRM Module (e2e)', () => {
         expect(missingFields).toEqual([]);
     });
 
+    test('crm/customers/:id (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/crm/customers/117458')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/crm/customers/117458')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
     test('crm/customers/get_by_email (GET)', async () => {
         const localResponse = await request(localUrl)
             .get('/crm/customers/get_by_email?email=test%2B123%40chowis.com')

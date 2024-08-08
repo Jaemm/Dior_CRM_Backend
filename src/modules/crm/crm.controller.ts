@@ -157,7 +157,7 @@ export class CRMController {
 
     @Get('customers/:id')
     @ApiBearerAuth()
-    @Roles(Role.Consultant)
+    // @Roles(Role.Consultant)
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async getCustomerById(
         @Req() req: Request,

@@ -150,7 +150,7 @@ export class CRMService {
             });
         }
 
-        return customer;
+        return customer.getBasicInfo;
     }
 
     async deleteCustomer(consultantId: number, customerId: number, locale: string = 'en') {
