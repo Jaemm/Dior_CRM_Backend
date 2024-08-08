@@ -177,14 +177,7 @@ export class PartnerDbService {
                           updated_at: consultant.consultant_shop.updatedAt,
                       }
                     : {},
-                consultant_position: consultant.consultant_position
-                    ? {
-                          id: consultant.consultant_position.id,
-                          name: consultant.consultant_position.name,
-                          created_at: consultant.consultant_position.created_at,
-                          updated_at: consultant.consultant_position.updated_at,
-                      }
-                    : {},
+                consultant_position: consultant.getPosition,
             };
 
             return reformatConsultant;

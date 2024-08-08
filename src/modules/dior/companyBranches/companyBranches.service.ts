@@ -203,13 +203,11 @@ export class DiorCompanyBranchesService {
                 });
             }
 
-            const hashedPassword = password ? await argon2.hash(password) : null;
-
             branch.email = email ? email : branch.email;
             branch.name = name ? name : branch.name;
             branch.code = code ? code : branch.code;
             branch.country = country ? country : branch.country;
-            branch.password = hashedPassword ? hashedPassword : branch.password;
+            branch.password = password ? password : branch.password;
             branch.updatedAt = new Date();
 
             const savedBranch = await this.consultantBranchesRepository.save(branch);
