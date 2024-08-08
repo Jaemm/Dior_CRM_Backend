@@ -259,6 +259,8 @@ export class Customers {
             ethnicity_id: this.ethnicity_id || null,
             gender: this.gender || null,
             age: this.age || null,
+            birth: this.birth || null,
+            register_date: this.register_date || null,
         };
     }
 

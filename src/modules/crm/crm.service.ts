@@ -93,7 +93,7 @@ export class CRMService {
                 .getManyAndCount();
 
             return {
-                data: customers,
+                data: customers.map((c) => c.getBasicInfo),
                 total_size: totalCount,
                 current_page_size: customers.length,
                 current_page: page,
