@@ -34,7 +34,8 @@ export class ProductRecommendationGroupsController {
     @Roles(Role.Consultant)
     @Get()
     async getProductRecommendationGroups(@Res() res: Response, @Query() query: SearchProductRecommendationGroupsDto) {
-        return await this.productRecommendationGroupsService.getProductRecommendationGroups(query);
+        const groups = await this.productRecommendationGroupsService.getProductRecommendationGroups(query);
+        return res.status(200).send(groups);
     }
 
     @Get('get_products/:id')
