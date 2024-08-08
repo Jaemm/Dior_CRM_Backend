@@ -380,9 +380,7 @@ export class StatisticsService {
                 };
             });
 
-            return {
-                data: await Promise.all(promiseDataList),
-            };
+            return await Promise.all(promiseDataList);
         } catch (e) {
             throw e;
         }
@@ -450,8 +448,6 @@ export class StatisticsService {
                 },
                 relations: ['productVariants'],
             });
-
-            console.log(productRecommendations);
 
             const reformatPromise: Promise<any>[] = productRecommendations.map(async (recommendations) => {
                 const shades = recommendations.getShade();

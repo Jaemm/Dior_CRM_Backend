@@ -56,7 +56,7 @@ export class StatisticsController {
     @Roles(Role.Consultant)
     async getMostPopularProducts(@Res() res: Response) {
         const result = await this.statisticsService.getMostPopularProducts();
-        return res.send(200).send(result);
+        return res.status(200).send(result);
     }
 
     @Get('stat_details')
