@@ -56,6 +56,12 @@ export class DiorCompanyConsultantsService {
 
             const savedConsultant = await this.consultantRepository.save(newConsultant);
 
+            const consultantBranch = await this.consultantBranchesRepository.findOne({
+                where: {
+                    id: String(body.consultant_branch_id),
+                },
+            });
+
             return {
                 id: savedConsultant.id,
                 name: savedConsultant.name,
@@ -64,6 +70,8 @@ export class DiorCompanyConsultantsService {
                 created_at: savedConsultant.created_at,
                 country: savedConsultant.country,
                 status: savedConsultant.convertStatus,
+                pos_code: consultantBranch ? consultantBranch.code : null,
+                pos_email: consultantBranch ? consultantBranch.email : null,
             };
         } catch (e) {
             throw e;
