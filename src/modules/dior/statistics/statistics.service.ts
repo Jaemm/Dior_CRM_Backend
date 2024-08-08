@@ -449,76 +449,65 @@ export class StatisticsService {
                 relations: ['productVariants'],
             });
 
-            const reformatPromise: Promise<any>[] = productRecommendations.map(async (recommendations) => {
-                const shades = recommendations.getShade();
-
-                let refRecommendation;
-                let name: string | null = null;
-                let collectionShades: string[] | null = [];
-                let productTranslations: ProductTranslationForDiorT[] = [];
-                let categoryTranslations: any[] = [];
-                let collectionTranslations: any[] = [];
-                let productVariants: ProductRecommendationVariantForDiorT[] = [];
-                if (recommendations.productRecommendationId) {
+            const reformatPromise: Promise<any>[] = productRecommendations.map(async (recommendation) => {
+                let refRecommendation = recommendation;
+                if (recommendation.productRecommendationId) {
                     refRecommendation = await this.productRecommendationRepository.findOne({
                         where: {
-                            id: String(recommendations.productRecommendationId),
+                            id: String(recommendation.productRecommendationId),
                         },
                     });
-
-                    name = refRecommendation.name;
                 }
 
                 // collection shades
-                const recommShadeList = await this.productRecommendationRepository.find({
-                    select: ['shades'],
-                    where: {
-                        collection: recommendations.collection,
-                        shades: Not(null),
-                    },
-                });
-                collectionShades = recommShadeList.map((recomm) => recomm.shades);
-                // collection_shades END
+                const recommShadeList = await this.productRecommendationRepository
+                    .createQueryBuilder('recommendtaions')
+                    .where('recommendtaions.collection = :collection', {
+                        collection: recommendation.collection,
+                    })
+                    .andWhere('recommendtaions.shades IS NOT NULL')
+                    .getMany();
 
-                // product translations START
-                if (refRecommendation || recommendations) {
-                    const oneOfRecomm = refRecommendation || recommendations;
+                const collectionShades = recommShadeList.map((recomm) => recomm.shades);
+
+                let productTranslations: any = [];
+                // product translations
+                if (refRecommendation || recommendation) {
+                    const oneOfRecomm = refRecommendation || recommendation;
 
                     const translations = await this.productTranslationsRepository.findBy({
                         productRecommendationId: oneOfRecomm.id,
                     });
 
                     const promiseTranslations = translations.map(async (t) => {
-                        const recomm = await this.productRecommendationRepository.findOneBy({
-                            id: t.productRecommendationId,
+                        const attribute = await this.productAttributesRepository.findOne({
+                            where: {
+                                value: recommendation.category,
+                            },
                         });
 
-                        const category = recomm.category;
-                        const collection = recomm.collection;
-
-                        const categoryAttribute = await this.productAttributesRepository.findOneBy({
-                            value: category,
+                        const collection = await this.productAttributesRepository.findOne({
+                            where: {
+                                value: recommendation.collection,
+                            },
                         });
 
-                        const collectionAttribute = await this.productAttributesRepository.findOneBy({
-                            value: collection,
-                        });
-
-                        const attributeName = categoryAttribute
+                        const attributeName = attribute
                             ? (
                                   await this.productAttributeTranslationsRepository.findOne({
                                       where: {
-                                          productAttributeId: Number(categoryAttribute.id),
+                                          productAttributeId: Number(attribute.id),
                                           language: t.language,
                                       },
                                   })
                               )?.value
                             : null;
-                        const collectionName = collectionAttribute
+
+                        const collectionName = collection
                             ? (
                                   await this.productAttributeTranslationsRepository.findOne({
                                       where: {
-                                          productAttributeId: Number(collectionAttribute.id),
+                                          productAttributeId: Number(collection.id),
                                           language: t.language,
                                       },
                                   })
@@ -526,55 +515,29 @@ export class StatisticsService {
                             : null;
 
                         return {
-                            id: Number(t.id),
-                            field_name: t.fieldName,
-                            language: t.language,
-                            value: t.value,
-                            attribute_name: attributeName,
-                            collection_name: collectionName,
+                            ...t.getBasicInfo,
+                            attribute_name: attributeName || null,
+                            collection_name: collectionName || null,
                         };
                     });
 
                     productTranslations = await Promise.all(promiseTranslations);
                 }
-                // product translations END
 
-                categoryTranslations = (
-                    await this.productAttributesRepository.findOne({
-                        where: {
-                            typ: 'Category',
-                            value: recommendations.category,
-                        },
-                        relations: ['productAttributeTranslations'],
-                    })
-                ).productAttributeTranslations.map((t) => {
-                    return {
-                        id: Number(t.id),
-                        field_name: t.fieldName,
-                        language: t.language,
-                        value: t.value,
-                    };
-                });
+                // category
+                const categoryTranslations = await this.productAttributesRepository.getTranslationsByType(
+                    'Category',
+                    recommendation.category,
+                );
 
-                collectionTranslations = (
-                    await this.productAttributesRepository.findOne({
-                        where: {
-                            typ: 'Collection',
-                            value: recommendations.category,
-                        },
-                        relations: ['productAttributeTranslations'],
-                    })
-                )?.productAttributeTranslations.map((t) => {
-                    return {
-                        id: Number(t.id),
-                        field_name: t.fieldName,
-                        language: t.language,
-                        value: t.value,
-                    };
-                });
+                // collection
+                const collectionTranslations = await this.productAttributesRepository.getTranslationsByType(
+                    'Collection',
+                    recommendation.collection,
+                );
 
-                productVariants = recommendations.productVariants
-                    ? recommendations.productVariants.map((variants) => {
+                const productVariants = recommendation.productVariants
+                    ? recommendation.productVariants.map((variants) => {
                           return {
                               id: Number(variants.id),
                               name: variants.name,
@@ -594,19 +557,9 @@ export class StatisticsService {
                     : [];
 
                 return {
-                    id: recommendations.id,
-                    product_type: recommendations.productType,
-                    description: recommendations.description,
-                    link: recommendations.link,
-                    image_url: recommendations.imageUrl,
-                    code: recommendations.code,
-                    routine: recommendations.routine,
-                    collection: recommendations.collection,
-                    category: recommendations.category,
-                    countries: recommendations.countries,
-                    product_recommendation_id: recommendations.productRecommendationId,
-                    name: name,
-                    shades: shades,
+                    ...recommendation.getBasicInfo,
+                    name: refRecommendation.name,
+                    shades: recommendation.getShade(),
                     collection_shades: collectionShades,
                     product_translations: productTranslations,
                     category_translations: categoryTranslations,
@@ -615,7 +568,15 @@ export class StatisticsService {
                 };
             });
 
-            return await Promise.all(reformatPromise);
+            const data = await Promise.all(reformatPromise);
+
+            const mostPopular = first20ProductIds.map((productId) => {
+                return data.find((row) => row.id === productId);
+            });
+
+            return {
+                data: mostPopular,
+            };
         } catch (e) {
             throw e;
         }
