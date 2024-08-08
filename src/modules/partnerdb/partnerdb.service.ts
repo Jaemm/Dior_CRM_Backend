@@ -86,6 +86,8 @@ export class PartnerDbService {
                 country: consultant.country,
                 zip_code: consultant.zip_code,
                 state: consultant.state,
+                token: consultant.token,
+                refresh_token: null as any,
                 birthdate: consultant.birthdate,
                 note: consultant.note,
                 push_token: consultant.push_token,
@@ -130,35 +132,7 @@ export class PartnerDbService {
                           };
                       })
                     : [],
-                consultant_company: consultant.consultant_company
-                    ? {
-                          id: consultant.consultant_company.id,
-                          name: consultant.consultant_company.name,
-                          created_at: consultant.consultant_company.created_at,
-                          updated_at: consultant.consultant_company.updated_at,
-                          address: consultant.consultant_company.address,
-                          email: consultant.consultant_company.email,
-                          phone: consultant.consultant_company.phone,
-                          registeration_date: consultant.consultant_company.registeration_date,
-                          primary_color_code: consultant.consultant_company.primary_color_code,
-                          secondary_color_code: consultant.consultant_company.secondary_color_code,
-                          font: consultant.consultant_company.font,
-                          program_color_code: consultant.consultant_company.program_color_code,
-                          top_color_code: consultant.consultant_company.top_color_code,
-                          text_icon_color_code: consultant.consultant_company.text_icon_color_code,
-                          pie_chart_color_1: consultant.consultant_company.pie_chart_color_1,
-                          pie_chart_color_2: consultant.consultant_company.pie_chart_color_2,
-                          pie_chart_color_3: consultant.consultant_company.pie_chart_color_3,
-                          pie_chart_color_4: consultant.consultant_company.pie_chart_color_4,
-                          pie_chart_color_5: consultant.consultant_company.pie_chart_color_5,
-                          pie_chart_points_color: consultant.consultant_company.pie_chart_points_color,
-                          active: consultant.consultant_company.active,
-                          font_color_1: consultant.consultant_company.font_color_1,
-                          font_color_2: consultant.consultant_company.font_color_2,
-                          data_exchange_url: consultant.consultant_company.data_exchange_url,
-                          pmx: consultant.consultant_company.pmx,
-                      }
-                    : {},
+                consultant_company: consultant.consultant_company ? consultant.consultant_company.getBasicInfo : {},
                 consultant_branch: consultant.consultant_branch
                     ? {
                           id: Number(consultant.consultant_branch.id),
