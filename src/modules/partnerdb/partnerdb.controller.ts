@@ -65,7 +65,7 @@ export class PartnerDbController {
     @Get('customers/:id/analysis_histories/:batch_id')
     @ApiBearerAuth()
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
-    @Roles(Role.Consultant)
+    // @Roles(Role.Consultant)
     async getAnalysisHistoriesByBatchId(
         @Req() req: Request,
         @Param('id') customerId: string,
