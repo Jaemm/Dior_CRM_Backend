@@ -49,8 +49,7 @@ export class CreateProductRecommendationDto {
 
     @ApiProperty()
     @IsOptional()
-    @IsNumber()
-    product_recommendation_id: number;
+    product_recommendation_id: number | string;
 
     @ApiProperty()
     @IsOptional()
@@ -166,7 +165,7 @@ export class UpdateProductRecommendationDto {
 
     @ApiPropertyOptional()
     @IsOptional()
-    product_recommendation_id: number;
+    product_recommendation_id: number | string;
 
     @ApiPropertyOptional()
     @IsOptional()
