@@ -38,6 +38,7 @@ import {
 } from '@/src/common/repositories/crm';
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 import { ConfigService } from '@nestjs/config';
+import { Customers } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class CRMService {
@@ -495,7 +496,7 @@ export class CRMService {
             this.commonService.throwNotFoundError();
         }
 
-        const customer = consultant.customers.find((customer: any) => customer.email === data.email);
+        const customer: Customers = consultant.customers.find((customer: any) => customer.email === data.email);
 
         if (!customer) {
             throw new NotFoundException({
@@ -504,7 +505,11 @@ export class CRMService {
             });
         }
 
-        return customer;
+        return {
+            ...customer.getBasicInfo,
+            birth: customer.birth,
+            register_date: customer.register_date,
+        };
     }
 
     async syncCustomer(consultantId: number, authToken: string, data: CustomerSyncDto) {

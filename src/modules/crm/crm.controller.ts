@@ -71,7 +71,7 @@ export class CRMController {
 
     @Get('customers/get_by_email')
     @ApiBearerAuth()
-    @Roles(Role.Consultant)
+    // @Roles(Role.Consultant)
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async getCustomerByEmail(
         @Req() req: Request,

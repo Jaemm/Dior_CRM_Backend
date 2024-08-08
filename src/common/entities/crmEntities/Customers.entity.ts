@@ -233,6 +233,35 @@ export class Customers {
         }
     }
 
+    get getBasicInfo() {
+        return {
+            id: this.id || null,
+            email: this.email || null,
+            external_id: this.external_id || null,
+            name: this.name || null,
+            surname: this.surname || null,
+            os: this.os || null,
+            language: this.language || null,
+            phone_country_code: this.phone_country_code || null,
+            phone: this.phone || null,
+            address: this.address || null,
+            city: this.city || null,
+            state: this.state || null,
+            zip_code: this.zip_code || null,
+            country: this.country || null,
+            country_code: this.country_code || null,
+            notes: this.notes || null,
+            push_token: this.push_token || null,
+            app_id: this.app_id || null,
+            company_id: this.company_id || null,
+            consultant_id: this.consultant_id || null,
+            skin_color_group_id: this.skin_color_group_id || null,
+            ethnicity_id: this.ethnicity_id || null,
+            gender: this.gender || null,
+            age: this.age || null,
+        };
+    }
+
     @AfterLoad()
     afterLoad() {
         this.id = Number(this.id);
