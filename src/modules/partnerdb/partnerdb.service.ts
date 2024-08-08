@@ -397,7 +397,7 @@ export class PartnerDbService {
 
     async getAnalysisHistories(req: Request, customerId: string, query: GetAnalysisHistoriesDto, locale = 'en') {
         try {
-            const { filter_by: filterBy } = query;
+            const { filter_by: filterBy, page, limit } = query;
 
             const requestHeaders = req.headers;
 
@@ -481,7 +481,10 @@ export class PartnerDbService {
                 }
             }
 
-            return filteredData;
+            const searchPage = Number(page || 1);
+            const searchLimit = Number(limit || 25);
+
+            return this.commonService.paginate(filteredData, searchPage, searchLimit);
         } catch (e) {
             throw e;
         }

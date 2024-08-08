@@ -342,4 +342,18 @@ export class CommonService {
             });
         }
     }
+
+    paginate(array: any[], page: number, limit: number) {
+        const offset = (page - 1) * limit;
+        const paginatedItems = array.slice(offset, offset + limit);
+        const totalPages = Math.ceil(array.length / limit);
+
+        return {
+            data: paginatedItems,
+            total_size: array.length,
+            current_page_size: paginatedItems.length,
+            current_page: page,
+            total_pages: totalPages,
+        };
+    }
 }
