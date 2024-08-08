@@ -100,6 +100,7 @@ export class DiorCompanyConsultantsService {
 
             const consultantsQuery = await this.consultantRepository
                 .createQueryBuilder('consultants')
+                .leftJoinAndSelect('consultants.consultant_branch', 'consultant_branch')
                 .where('consultants.consultant_company_id = :companyId', { companyId: diorCompanyId });
 
             if (Number(currentConsultant.consultant_position_id) === PositionsIds.SUPER_ADMIN) {
