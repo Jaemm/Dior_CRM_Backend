@@ -1,5 +1,5 @@
-export const localURL = 'http://localhost:3100/v1/api';
-export const rubyURL = 'https://v3-staging.chowis.cloud/api';
+export const localURL = 'localhost:3100/v1/api';
+export const rubyURL = 'https://stg-dior.chowis.cloud/api';
 
 export const consultantRegisterData = {
     email: 'test+123@chowis.com',

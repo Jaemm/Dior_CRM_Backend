@@ -1,10 +1,9 @@
 import * as request from 'supertest';
-import { consultantLoginData, consultantUpdateData } from '../utils/data';
+import { consultantLoginData, consultantUpdateData, localURL, rubyURL } from '../utils/data';
 import { findMissingFields } from '../utils/helper';
-import axios from 'axios';
 
-const localUrl = 'localhost:3100/v1/api';
-const rubyUrl = 'https://stg-dior.chowis.cloud/api';
+const localUrl = localURL;
+const rubyUrl = rubyURL;
 
 let localToken: string;
 let rubyToken: string;
