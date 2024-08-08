@@ -74,6 +74,25 @@ describe('PartnerDB Module (e2e)', () => {
         expect(missingFields).toEqual([]);
     });
 
+    test('partnerdb/customers/:id (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/partnerdb/customers/115421')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/partnerdb/customers/115421')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
     // test('partnerdb/customers/:customer_id/analysis_histories/:batch_id (GET)', async () => {
     //     const localResponse = await request(localUrl)
     //         .get('/partnerdb/customers/1/analysis_histories/3?analysis_type=cndpskin')

@@ -21,6 +21,7 @@ import { Products } from './Products.entity';
 import { Genders } from './Genders.entity';
 import { Consultants } from './Consultants.entity';
 import { ProductRecommendationSelecteds } from './ProductRecommendationSelecteds.entity';
+import { Applications } from './Applications.entity';
 
 @Index('index_customers_on_email', ['email'], {})
 @Index('customers_pkey', ['id'], { unique: true })
@@ -204,6 +205,10 @@ export class Customers {
 
     @OneToMany(() => ProductRecommendationSelecteds, (prSelecteds) => prSelecteds.customer)
     prSelecteds: ProductRecommendationSelecteds[];
+
+    @ManyToOne(() => Applications, (app) => app)
+    @JoinColumn({ name: 'app_id', referencedColumnName: 'id' })
+    applications: Applications;
 
     @BeforeInsert()
     insertCreated() {
