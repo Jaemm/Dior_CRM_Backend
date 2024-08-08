@@ -239,7 +239,10 @@ export class DiorAdminsService {
                 try {
                     await this.consultantsRepository.save(newConsultant);
                 } catch (e) {
-                    throw new BadRequestException(e);
+                    throw new BadRequestException({
+                        result_code: ErrorStatus.DATA_ALREADY_EXIST,
+                        error: `data already exist. email: ${email}`,
+                    });
                 }
             }
 
