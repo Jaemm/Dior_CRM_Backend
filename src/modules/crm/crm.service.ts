@@ -432,30 +432,9 @@ export class CRMService {
             const createdCustomer = await this.customersRepository.save(newCustomer);
 
             return {
-                id: createdCustomer.id,
-                email: createdCustomer.email,
-                name: createdCustomer.name,
-                surname: createdCustomer.surname,
-                os: createdCustomer.os,
-                language: createdCustomer.language,
-                phone_country_code: createdCustomer.phone_country_code,
-                phone: createdCustomer.phone,
-                address: createdCustomer.address,
-                city: createdCustomer.city,
-                state: createdCustomer.state,
-                zip_code: createdCustomer.zip_code,
-                notes: createdCustomer.notes,
-                push_token: createdCustomer.push_token,
-                app_id: createdCustomer.app_id,
-                company_id: createdCustomer.company_id,
-                consultant_id: createdCustomer.consultant_id,
-                skin_color_group_id: createdCustomer.skin_color_group_id,
-                ethnicity_id: createdCustomer.ethnicity_id,
-                age: createdCustomer.age,
+                ...createdCustomer.getBasicInfo,
                 birth: createdCustomer.birth,
-                country: createdCustomer.country,
                 register_date: createdCustomer.register_date,
-                country_code: createdCustomer.country_code,
             };
         } catch (e) {
             throw e;
