@@ -1,14 +1,10 @@
 import { Request } from 'express';
 import * as moment from 'moment';
 
-import { Module, UnauthorizedException, Injectable, BadRequestException } from '@nestjs/common';
-import {
-    GetInfographStatDetails,
-    GetOverAllDetailsDto,
-    GetOverAllDto,
-    GetStatDetailsCountryWiseDto,
-    GetStatDetailsDto,
-} from './statistics.dto';
+import { CommonService } from '@/src/common/common.service';
+import { ErrorStatus } from '@/src/common/constants/error-status';
+import { Consultants, Devices } from '@/src/common/entities/crmEntities';
+import { PositionsIds } from '@/src/common/enums/position.enum';
 import {
     ConsultantBranchesRepository,
     ConsultantCountriesRepository,
@@ -23,18 +19,16 @@ import {
     ProductsRepository,
     SalesConnectionRepository,
 } from '@/src/common/repositories/crm';
-import { ErrorStatus } from '@/src/common/constants/error-status';
-import { PositionsIds } from '@/src/common/enums/position.enum';
-import { Equal, ILike, In, IsNull, Not, Or } from 'typeorm';
-import { AnalysisDataReplicationModule } from '../../dataReplication/analysisDataReplication/analysisDataReplication.module';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { In, Not } from 'typeorm';
 import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
-import { ConsultantBranches, Consultants, Devices } from '@/src/common/entities/crmEntities';
-import { when } from 'joi';
-import { count } from 'console';
-import { ProductRecommendationForDiorT, ProductRecommendationVariantForDiorT } from '@/src/common/types/entities';
-import { ProductTranslationForDiorT } from '@/src/common/types/entities/product_translations.type';
-import { CommonService } from '@/src/common/common.service';
-import { start } from 'repl';
+import {
+    GetInfographStatDetails,
+    GetOverAllDetailsDto,
+    GetOverAllDto,
+    GetStatDetailsCountryWiseDto,
+    GetStatDetailsDto,
+} from './statistics.dto';
 
 @Injectable()
 export class StatisticsService {
@@ -100,7 +94,7 @@ export class StatisticsService {
 
             let consultants: Consultants[] = [];
             let devices: Devices[] = [];
-            let branches: Consultants[] = [];
+            let branches: any = diorBranches;
             let consultation;
             let customer;
             let totalClients;
@@ -142,7 +136,7 @@ export class StatisticsService {
 
                 const branchQuery = this.consultantRepository
                     .createQueryBuilder('consultants')
-                    .select('DISTINCT (.consultant_branch_id)', 'branchId')
+                    .select('DISTINCT (consultants.consultant_branch_id)', 'branchId')
                     .leftJoinAndSelect('consultants.consultant_branch', 'consultant_branch')
                     .where('consultants.id IN (:...consultantIds)', {
                         consultantIds: consultants.map((consultant) => consultant.id),
@@ -152,6 +146,7 @@ export class StatisticsService {
                 }
 
                 branches = await branchQuery.getMany();
+
                 consultation = await this.analysisDataReplicationService.getConsultationByConsultant(consultants);
             } else if (PositionsIds.SUPER_ADMIN === Number(currentConsultant.consultant_position_id)) {
                 consultants = await this.consultantRepository
