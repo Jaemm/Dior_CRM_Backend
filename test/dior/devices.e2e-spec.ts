@@ -35,4 +35,27 @@ describe('Dior - Devices Module (e2e)', () => {
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
         expect(missingFields).toEqual([]);
     });
+
+    test('dior/devices/connect-reset (POST)', async () => {
+        const localResponse = await request(localUrl)
+            .post('/dior/devices/connect-reset')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send({
+                device_id: '1580',
+            })
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .post('/dior/devices/connect-reset')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send({
+                device_id: '1580',
+            })
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
 });
