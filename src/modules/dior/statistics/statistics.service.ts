@@ -709,7 +709,7 @@ export class StatisticsService {
                             });
                     }
                 } else if (
-                    [PositionsIds.BRAND_MANAGER, PositionsIds.ADMIN].includes(currentConsultant.consultant_position_id)
+                    [PositionsIds.SUPER_ADMIN, PositionsIds.ADMIN].includes(currentConsultant.consultant_position_id)
                 ) {
                     deviceQuery.andWhere('devices.consultant_company_id = :companyId', {
                         companyId: diorCompanyId,
