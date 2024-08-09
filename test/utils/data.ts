@@ -1,4 +1,4 @@
-export const localURL = 'localhost:3100/v1/api';
+export const localURL = 'https://staging.chowis.cloud:8083/v1/api';
 export const rubyURL = 'https://stg-dior.chowis.cloud/api';
 
 export const consultantRegisterData = {
