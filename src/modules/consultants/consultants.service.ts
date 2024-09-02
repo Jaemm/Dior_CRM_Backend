@@ -2750,10 +2750,16 @@ export class ConsultantsService {
             }
 
             const device = await this.deviceRepository.findOne({
-                where: {
-                    optic_number: optic_number,
-                    pwd: password,
-                },
+                where: [
+                    {
+                        optic_number: optic_number,
+                        pwd: password, // OR serial_number: password
+                    },
+                    {
+                        optic_number: optic_number,
+                        serial_number: password, // assuming password matches serial_number
+                    },
+                ],
                 relations: ['consultant_company'],
             });
 
@@ -2840,7 +2846,7 @@ export class ConsultantsService {
                         lat: device.lat,
                         lng: device.lng,
                         consultant_company: {
-                            id: device.consultant_company.id,
+                            id: device?.consultant_company?.id ?? 213,
                             name: device.consultant_company.name,
                             address: device.consultant_company.address,
                             email: device.consultant_company.email,

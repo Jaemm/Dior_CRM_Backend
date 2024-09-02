@@ -219,6 +219,7 @@ export class ConsultantsController {
         @Body() body: EnterProductDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
+        console.log('body---> ', body);
         const result = await this.consultants.enterProducts(req, body, locale);
         return res.status(200).send(result);
     }
