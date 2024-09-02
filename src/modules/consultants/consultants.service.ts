@@ -2763,6 +2763,8 @@ export class ConsultantsService {
                 relations: ['consultant_company'],
             });
 
+            console.log('device', device);
+
             if (!device) {
                 throw new BadRequestException('2:존재하지 않는 정보');
             }
@@ -2802,7 +2804,7 @@ export class ConsultantsService {
                 throw new Error('6:사용등록오류');
             }
 
-            const consultantCompanyId = device.consultant_company_id;
+            const consultantCompanyId = device?.consultant_company_id ?? 213;
             if (consultantCompanyId) {
                 const currentConsultant = await this.consultantsRepository.findOne({ where: { id: consultant.id } });
                 currentConsultant.consultant_company_id = consultantCompanyId;
