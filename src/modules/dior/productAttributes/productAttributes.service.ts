@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import * as csv from 'csv';
-import * as ExcelJS from 'exceljs';
+import { Request } from 'express';
 
 import { In } from 'typeorm';
 import {
@@ -182,9 +182,12 @@ export class DiorProductAttributesService {
             }
 
             const searchPage = Number(page || 1);
-            const searchPer = Number(per || 10);
+            const searchPer = Number(per || 25);
 
-            const [productAttributes, totalCount] = await attributesQuery.getManyAndCount();
+            const [productAttributes, totalCount] = await attributesQuery
+                .skip((searchPage - 1) * searchPer)
+                .take(searchPer)
+                .getManyAndCount();
 
             const reformatProductAttributeList: ProductAttributesForDiorT[] = productAttributes.map((attributes) => {
                 let translations: ProductAttributeTranslationsForDiorT[] = [];
@@ -210,6 +213,7 @@ export class DiorProductAttributesService {
 
             return {
                 data: reformatProductAttributeList,
+                total_size: totalCount,
                 current_page_size: reformatProductAttributeList.length,
                 current_page: searchPage,
                 total_pages: Math.ceil(totalCount / searchPer),
@@ -299,10 +303,13 @@ export class DiorProductAttributesService {
         }
     }
 
-    async importProductAttributes(body: ImportProductAttributeDataDto) {
+    async importProductAttributes(req: Request, body: ImportProductAttributeDataDto) {
         try {
+            const splitToken = req.headers.authorization.split(' ');
+            const token = splitToken[1];
+
             const fileUrl = body.file_url;
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
 
@@ -314,8 +321,8 @@ export class DiorProductAttributesService {
                 const row = worksheet.getRow(i);
 
                 const newProductAttribute = this.productAttributesRepository.create({
-                    typ: row.getCell(1).value.toLocaleString(),
-                    value: row.getCell(2).value.toLocaleString(),
+                    typ: row.getCell(1).value?.toLocaleString(),
+                    value: row.getCell(2).value?.toLocaleString(),
                     consultantCompanyId: diorCompanyId,
                     createdAt: new Date(),
                     updatedAt: new Date(),
@@ -332,12 +339,15 @@ export class DiorProductAttributesService {
         }
     }
 
-    async importProductAttributeTranslations(body: ImportProductAttributeTranslationsDataDto) {
+    async importProductAttributeTranslations(req: Request, body: ImportProductAttributeTranslationsDataDto) {
         try {
+            const splitToken = req.headers.authorization.split(' ');
+            const token = splitToken[1];
+
             const fileUrl = body.file_url;
             const country = body.file_url;
 
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const rowCount = worksheet.rowCount + 1;
 
@@ -393,13 +403,5 @@ export class DiorProductAttributesService {
                 resolve(output);
             });
         });
-    }
-
-    async getWorkSheet(fileUrl: string) {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(fileUrl);
-        const worksheet = workbook.getWorksheet(1);
-
-        return worksheet;
     }
 }

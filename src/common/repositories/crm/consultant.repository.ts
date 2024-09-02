@@ -159,4 +159,12 @@ export class ConsultantsRepository extends Repository<Consultants> {
         const result: any = await this.insertConsultant(user);
         return result;
     }
+
+    async findByEmail(email: string) {
+        return await this.findOne({
+            where: {
+                email: email,
+            },
+        });
+    }
 }

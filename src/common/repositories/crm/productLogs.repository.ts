@@ -23,6 +23,6 @@ export class ProductLogsRepository extends Repository<ProductLogs> {
             return false;
         }
 
-        return null;
+        return true;
     }
 }

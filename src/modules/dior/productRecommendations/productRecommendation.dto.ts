@@ -1,14 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class CreateProductRecommendationDto {
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     shades: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     product_type: string;
 
@@ -18,65 +18,59 @@ export class CreateProductRecommendationDto {
     name: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     description: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     link: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     image_url: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     code: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     category: string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     routine: string;
 
     @ApiProperty()
-    @IsNotEmpty()
-    @IsString()
-    product_recommendation_id: string;
+    @IsOptional()
+    product_recommendation_id: number | string;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @IsString()
     collection: string;
 
     @ApiProperty()
-    @IsNotEmpty()
-    @IsString()
+    @IsOptional()
     countries: string[];
 
     @ApiProperty({
         default: [
             {
-                product_recommendation_id: '',
-                id: '',
                 field_name: '',
                 language: '',
                 value: '',
             },
         ],
     })
-    @IsArray()
-    product_translations_attributes: {
-        product_recommendation_id: string;
-        id: string;
+    @IsOptional()
+    product_translations: {
         field_name: string;
         language: string;
         value: string;
@@ -87,32 +81,23 @@ export class UpdateProductRecommendationDto {
     @ApiPropertyOptional()
     @IsOptional()
     @IsString()
-    shades: string;
+    category: string;
 
-    @ApiPropertyOptional()
+    @ApiPropertyOptional({
+        default: [
+            {
+                field_name: '',
+                language: '',
+                value: '',
+            },
+        ],
+    })
     @IsOptional()
-    @IsString()
-    product_type: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    name: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    description: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    link: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    image_url: string;
+    category_translations: {
+        field_name: string;
+        language: string;
+        value: string;
+    }[];
 
     @ApiPropertyOptional()
     @IsOptional()
@@ -122,43 +107,84 @@ export class UpdateProductRecommendationDto {
     @ApiPropertyOptional()
     @IsOptional()
     @IsString()
-    category: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    routine: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
-    product_recommendation_id: string;
-
-    @ApiPropertyOptional()
-    @IsOptional()
-    @IsString()
     collection: string;
 
     @ApiPropertyOptional()
     @IsOptional()
     @IsString()
-    countries: string[];
+    shades: string;
 
-    @ApiProperty({
+    @ApiPropertyOptional()
+    @IsOptional()
+    collection_shades: string[];
+
+    @ApiPropertyOptional({
         default: [
             {
-                product_recommendation_id: '',
-                id: '',
                 field_name: '',
                 language: '',
                 value: '',
             },
         ],
     })
-    @IsArray()
-    product_translations_attributes: {
-        product_recommendation_id: string;
-        id: string;
+    @IsOptional()
+    collection_translations: {
+        field_name: string;
+        language: string;
+        value: string;
+    }[];
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    countries: string[];
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    description: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    image_url: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    link: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    name: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    product_type: string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    product_recommendation_id: number | string;
+
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    routine: string;
+
+    @ApiPropertyOptional({
+        default: [
+            {
+                // id: 0,
+                field_name: '',
+                language: '',
+                value: '',
+            },
+        ],
+    })
+    @IsOptional()
+    product_translations: {
+        // id: number;
         field_name: string;
         language: string;
         value: string;
@@ -198,9 +224,8 @@ export class ImportCountriesDto {
 
 export class ImportPicturesDto {
     @ApiProperty()
-    @IsString()
     @IsNotEmpty()
-    file_url: string;
+    file_url: string | string[];
 }
 
 export class ExportRecommendtaionsDto {

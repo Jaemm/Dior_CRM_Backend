@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3 } from 'aws-sdk';
+import { S3, Credentials } from 'aws-sdk';
 import { v4 as uuid } from 'uuid';
 import { GetObjectOutput, ManagedUpload } from 'aws-sdk/clients/s3';
 import * as path from 'path';
+import fs from 'fs';
 import { NotFoundException } from '@nestjs/common/exceptions';
 
 // let COS = require('cos-nodejs-sdk-v5');
@@ -12,102 +13,29 @@ import { NotFoundException } from '@nestjs/common/exceptions';
 export class AwsS3Service {
     constructor(private readonly configService: ConfigService) {}
 
-    async getPresignUploadForDiorBranches(fileName: string) {
-        const prefix = `uploads/images/dior/import_company_branches`;
-
-        const s3 = new S3();
-
-        const key = `${prefix}/${fileName}`;
-
-        const params: {
-            Bucket: string;
-            Key: string;
-            Expires: number;
-            ACL: string;
-            ContentLength?: number;
-        } = {
-            Bucket: this.configService.get('AWS_BUCKET_NAME'),
-            Key: key,
-            Expires: 60 * 5,
-            ACL: 'public-read',
-        };
-
-        const result = await s3.getSignedUrlPromise('putObject', params);
-
-        return result;
-    }
-
-    async getPresignUploadForDiorProductRecommendation(fileName: string, diorConsultantId: number) {
-        const prefix = `uploads/images/product_recommendations/${diorConsultantId}`;
-
-        const s3 = new S3();
-
-        const key = `${prefix}/${fileName}`;
-
-        const params: {
-            Bucket: string;
-            Key: string;
-            Expires: number;
-            ACL: string;
-            ContentLength?: number;
-        } = {
-            Bucket: this.configService.get('AWS_BUCKET_NAME'),
-            Key: key,
-            Expires: 60 * 5,
-            ACL: 'public-read',
-        };
-
-        const result = await s3.getSignedUrlPromise('putObject', params);
-
-        return result;
-    }
-
-    async getPresignedUploadForCRM({
-        fileName,
-        consentType,
-        customerId,
-        file,
-    }: {
-        fileName: string;
-        consentType: string;
-        customerId: string;
-        file?: any;
-    }) {
+    async uploadFileToS3(fileContent: Buffer, hash: string, prefix: string) {
         if (this.configService.get('REGION') === 'CHINA') {
             // return await this.uploadImageTencent(fileContent, fileName);
         }
 
+        const key = `${prefix}/${hash}`;
+
         const s3 = new S3();
-
-        const prefix = `uploads/images/customers/consents/${consentType}/${customerId}`;
-        const key = `${prefix}/${fileName}`;
-
-        const params: {
-            Bucket: string;
-            Key: string;
-            Expires: number;
-            ACL: string;
-            ContentLength?: number;
-        } = {
+        const params = {
             Bucket: this.configService.get('AWS_BUCKET_NAME'),
             Key: key,
-            Expires: 60 * 5,
-            ACL: 'public-read',
+            Body: fileContent,
+            // ACL: 'public-read',
         };
 
-        let result;
-        if (file) {
-            params.ContentLength = file.size;
-            result = await s3.getSignedUrlPromise('putObject', params);
-            if (file.size > 8 * 1024 * 1024) {
-                // 8 MB in bytes
-                throw new Error('File size exceeds 8 MB limit');
-            }
-        } else {
-            result = await s3.getSignedUrlPromise('putObject', params);
-        }
-
-        return result;
+        return new Promise((resolve, reject) => {
+            s3.upload(params, (err: unknown, data: ManagedUpload.SendData) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve(data);
+            });
+        });
     }
 
     async uploadFile(fileContent: Buffer, fileName: string) {

@@ -82,7 +82,7 @@ describe('Consultants Module ( E2E )', () => {
                     },
                 ],
             })
-            .expect(201);
+            .expect(200);
 
         const rubyResponse = await request(rubyUrl)
             .post('/consultants/request_callback_url')
@@ -116,7 +116,7 @@ describe('Consultants Module ( E2E )', () => {
                 lat: '37.564',
                 lng: '26.6963',
             })
-            .expect(201);
+            .expect(200);
 
         const rubyResponse = await request(rubyUrl)
             .post('/consultants/products/enter')
@@ -224,7 +224,7 @@ describe('Consultants Module ( E2E )', () => {
                 social_provider: 'twitter',
                 social_id: 'abc1234',
             })
-            .expect(201);
+            .expect(200);
 
         const rubyResponse = await request(rubyUrl)
             .post('/consultants/login/social')
@@ -254,6 +254,41 @@ describe('Consultants Module ( E2E )', () => {
             .get('/consultants/fetch_sales_connection')
             .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
+    test('consultants/products/enter (POST)', async () => {
+        const localResponse = await request(localUrl)
+            .post('/consultants/products/enter')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send({
+                optic_number: 'FC101490',
+                password: 'CH7950',
+                application_id: 88,
+                mac_address: 'CNDV3UC-N4-00010',
+                first_use_date: '2022-02-02',
+                lat: '37.564',
+                lng: '26.6963',
+            })
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .post('/consultants/products/enter')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send({
+                optic_number: 'FC101490',
+                password: 'CH7950',
+                application_id: 88,
+                mac_address: 'CNDV3UC-N4-00010',
+                first_use_date: '2022-02-02',
+                lat: '37.564',
+                lng: '26.6963',
+            })
             .expect(200);
 
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);

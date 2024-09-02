@@ -1,14 +1,10 @@
 import { Request } from 'express';
 import * as moment from 'moment';
 
-import { Module, UnauthorizedException, Injectable, BadRequestException } from '@nestjs/common';
-import {
-    GetInfographStatDetails,
-    GetOverAllDetailsDto,
-    GetOverAllDto,
-    GetStatDetailsCountryWiseDto,
-    GetStatDetailsDto,
-} from './statistics.dto';
+import { CommonService } from '@/src/common/common.service';
+import { ErrorStatus } from '@/src/common/constants/error-status';
+import { Consultants, Devices } from '@/src/common/entities/crmEntities';
+import { PositionsIds } from '@/src/common/enums/position.enum';
 import {
     ConsultantBranchesRepository,
     ConsultantCountriesRepository,
@@ -23,18 +19,16 @@ import {
     ProductsRepository,
     SalesConnectionRepository,
 } from '@/src/common/repositories/crm';
-import { ErrorStatus } from '@/src/common/constants/error-status';
-import { PositionsIds } from '@/src/common/enums/position.enum';
-import { Equal, ILike, In, IsNull, Not, Or } from 'typeorm';
-import { AnalysisDataReplicationModule } from '../../dataReplication/analysisDataReplication/analysisDataReplication.module';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { In, Not } from 'typeorm';
 import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
-import { ConsultantBranches, Consultants, Devices } from '@/src/common/entities/crmEntities';
-import { when } from 'joi';
-import { count } from 'console';
-import { ProductRecommendationForDiorT, ProductRecommendationVariantForDiorT } from '@/src/common/types/entities';
-import { ProductTranslationForDiorT } from '@/src/common/types/entities/product_translations.type';
-import { CommonService } from '@/src/common/common.service';
-import { start } from 'repl';
+import {
+    GetInfographStatDetails,
+    GetOverAllDetailsDto,
+    GetOverAllDto,
+    GetStatDetailsCountryWiseDto,
+    GetStatDetailsDto,
+} from './statistics.dto';
 
 @Injectable()
 export class StatisticsService {
@@ -100,7 +94,7 @@ export class StatisticsService {
 
             let consultants: Consultants[] = [];
             let devices: Devices[] = [];
-            let branches: Consultants[] = [];
+            let branches: any = diorBranches;
             let consultation;
             let customer;
             let totalClients;
@@ -142,7 +136,7 @@ export class StatisticsService {
 
                 const branchQuery = this.consultantRepository
                     .createQueryBuilder('consultants')
-                    .select('DISTINCT (.consultant_branch_id)', 'branchId')
+                    .select('DISTINCT (consultants.consultant_branch_id)', 'branchId')
                     .leftJoinAndSelect('consultants.consultant_branch', 'consultant_branch')
                     .where('consultants.id IN (:...consultantIds)', {
                         consultantIds: consultants.map((consultant) => consultant.id),
@@ -152,6 +146,7 @@ export class StatisticsService {
                 }
 
                 branches = await branchQuery.getMany();
+
                 consultation = await this.analysisDataReplicationService.getConsultationByConsultant(consultants);
             } else if (PositionsIds.SUPER_ADMIN === Number(currentConsultant.consultant_position_id)) {
                 consultants = await this.consultantRepository
@@ -264,7 +259,7 @@ export class StatisticsService {
                 consultation_time: 73.5,
                 total_devices: devices.length,
                 total_branches: branches.length,
-                total_offline_consultations: totalSalesConnections,
+                total_offline_consultations: Number(totalSalesConnections || 0),
             };
         } catch (e) {
             throw e;
@@ -380,9 +375,7 @@ export class StatisticsService {
                 };
             });
 
-            return {
-                data: await Promise.all(promiseDataList),
-            };
+            return await Promise.all(promiseDataList);
         } catch (e) {
             throw e;
         }
@@ -451,78 +444,65 @@ export class StatisticsService {
                 relations: ['productVariants'],
             });
 
-            console.log(productRecommendations);
-
-            const reformatPromise: Promise<any>[] = productRecommendations.map(async (recommendations) => {
-                const shades = recommendations.getShade();
-
-                let refRecommendation;
-                let name: string | null = null;
-                let collectionShades: string[] | null = [];
-                let productTranslations: ProductTranslationForDiorT[] = [];
-                let categoryTranslations: any[] = [];
-                let collectionTranslations: any[] = [];
-                let productVariants: ProductRecommendationVariantForDiorT[] = [];
-                if (recommendations.productRecommendationId) {
+            const reformatPromise: Promise<any>[] = productRecommendations.map(async (recommendation) => {
+                let refRecommendation = recommendation;
+                if (recommendation.productRecommendationId) {
                     refRecommendation = await this.productRecommendationRepository.findOne({
                         where: {
-                            id: String(recommendations.productRecommendationId),
+                            id: String(recommendation.productRecommendationId),
                         },
                     });
-
-                    name = refRecommendation.name;
                 }
 
                 // collection shades
-                const recommShadeList = await this.productRecommendationRepository.find({
-                    select: ['shades'],
-                    where: {
-                        collection: recommendations.collection,
-                        shades: Not(null),
-                    },
-                });
-                collectionShades = recommShadeList.map((recomm) => recomm.shades);
-                // collection_shades END
+                const recommShadeList = await this.productRecommendationRepository
+                    .createQueryBuilder('recommendtaions')
+                    .where('recommendtaions.collection = :collection', {
+                        collection: recommendation.collection,
+                    })
+                    .andWhere('recommendtaions.shades IS NOT NULL')
+                    .getMany();
 
-                // product translations START
-                if (refRecommendation || recommendations) {
-                    const oneOfRecomm = refRecommendation || recommendations;
+                const collectionShades = recommShadeList.map((recomm) => recomm.shades);
+
+                let productTranslations: any = [];
+                // product translations
+                if (refRecommendation || recommendation) {
+                    const oneOfRecomm = refRecommendation || recommendation;
 
                     const translations = await this.productTranslationsRepository.findBy({
                         productRecommendationId: oneOfRecomm.id,
                     });
 
                     const promiseTranslations = translations.map(async (t) => {
-                        const recomm = await this.productRecommendationRepository.findOneBy({
-                            id: t.productRecommendationId,
+                        const attribute = await this.productAttributesRepository.findOne({
+                            where: {
+                                value: recommendation.category,
+                            },
                         });
 
-                        const category = recomm.category;
-                        const collection = recomm.collection;
-
-                        const categoryAttribute = await this.productAttributesRepository.findOneBy({
-                            value: category,
+                        const collection = await this.productAttributesRepository.findOne({
+                            where: {
+                                value: recommendation.collection,
+                            },
                         });
 
-                        const collectionAttribute = await this.productAttributesRepository.findOneBy({
-                            value: collection,
-                        });
-
-                        const attributeName = categoryAttribute
+                        const attributeName = attribute
                             ? (
                                   await this.productAttributeTranslationsRepository.findOne({
                                       where: {
-                                          productAttributeId: Number(categoryAttribute.id),
+                                          productAttributeId: Number(attribute.id),
                                           language: t.language,
                                       },
                                   })
                               )?.value
                             : null;
-                        const collectionName = collectionAttribute
+
+                        const collectionName = collection
                             ? (
                                   await this.productAttributeTranslationsRepository.findOne({
                                       where: {
-                                          productAttributeId: Number(collectionAttribute.id),
+                                          productAttributeId: Number(collection.id),
                                           language: t.language,
                                       },
                                   })
@@ -530,55 +510,29 @@ export class StatisticsService {
                             : null;
 
                         return {
-                            id: Number(t.id),
-                            field_name: t.fieldName,
-                            language: t.language,
-                            value: t.value,
-                            attribute_name: attributeName,
-                            collection_name: collectionName,
+                            ...t.getBasicInfo,
+                            attribute_name: attributeName || null,
+                            collection_name: collectionName || null,
                         };
                     });
 
                     productTranslations = await Promise.all(promiseTranslations);
                 }
-                // product translations END
 
-                categoryTranslations = (
-                    await this.productAttributesRepository.findOne({
-                        where: {
-                            typ: 'Category',
-                            value: recommendations.category,
-                        },
-                        relations: ['productAttributeTranslations'],
-                    })
-                ).productAttributeTranslations.map((t) => {
-                    return {
-                        id: Number(t.id),
-                        field_name: t.fieldName,
-                        language: t.language,
-                        value: t.value,
-                    };
-                });
+                // category
+                const categoryTranslations = await this.productAttributesRepository.getTranslationsByType(
+                    'Category',
+                    recommendation.category,
+                );
 
-                collectionTranslations = (
-                    await this.productAttributesRepository.findOne({
-                        where: {
-                            typ: 'Collection',
-                            value: recommendations.category,
-                        },
-                        relations: ['productAttributeTranslations'],
-                    })
-                )?.productAttributeTranslations.map((t) => {
-                    return {
-                        id: Number(t.id),
-                        field_name: t.fieldName,
-                        language: t.language,
-                        value: t.value,
-                    };
-                });
+                // collection
+                const collectionTranslations = await this.productAttributesRepository.getTranslationsByType(
+                    'Collection',
+                    recommendation.collection,
+                );
 
-                productVariants = recommendations.productVariants
-                    ? recommendations.productVariants.map((variants) => {
+                const productVariants = recommendation.productVariants
+                    ? recommendation.productVariants.map((variants) => {
                           return {
                               id: Number(variants.id),
                               name: variants.name,
@@ -598,19 +552,9 @@ export class StatisticsService {
                     : [];
 
                 return {
-                    id: recommendations.id,
-                    product_type: recommendations.productType,
-                    description: recommendations.description,
-                    link: recommendations.link,
-                    image_url: recommendations.imageUrl,
-                    code: recommendations.code,
-                    routine: recommendations.routine,
-                    collection: recommendations.collection,
-                    category: recommendations.category,
-                    countries: recommendations.countries,
-                    product_recommendation_id: recommendations.productRecommendationId,
-                    name: name,
-                    shades: shades,
+                    ...recommendation.getBasicInfo,
+                    name: refRecommendation.name,
+                    shades: recommendation.getShade(),
                     collection_shades: collectionShades,
                     product_translations: productTranslations,
                     category_translations: categoryTranslations,
@@ -619,7 +563,15 @@ export class StatisticsService {
                 };
             });
 
-            return await Promise.all(reformatPromise);
+            const data = await Promise.all(reformatPromise);
+
+            const mostPopular = first20ProductIds.map((productId) => {
+                return data.find((row) => row.id === productId);
+            });
+
+            return {
+                data: mostPopular,
+            };
         } catch (e) {
             throw e;
         }
@@ -643,19 +595,25 @@ export class StatisticsService {
 
             let consultants;
             if (currentConsultant.consultant_position_id === PositionsIds.ADMIN) {
-                consultants = await this.consultantRepository.find({
-                    where: {
-                        country: In(currentConsultant.countries.map((c) => c.toLowerCase())),
-                        consultant_company_id: diorCompanyId,
-                    },
-                });
+                consultants = await this.consultantRepository
+                    .createQueryBuilder('consultants')
+                    .where('LOWER (consultants.country) IN (:...countries)', {
+                        countries: currentConsultant.countries.map((c) => c.toLowerCase()),
+                    })
+                    .andWhere('consultants.consultant_company_id = :companyId', {
+                        companyId: diorCompanyId,
+                    })
+                    .getMany();
             } else if (currentConsultant.consultant_position_id === PositionsIds.BRAND_MANAGER) {
-                consultants = await this.consultantRepository.find({
-                    where: {
+                consultants = await this.consultantRepository
+                    .createQueryBuilder('consultants')
+                    .where('LOWER (consultants.country) = :country', {
                         country: currentConsultant.consultant_branch.country.toLowerCase(),
-                        consultant_company_id: diorCompanyId,
-                    },
-                });
+                    })
+                    .andWhere('consultants.consultant_company_id = :companyId', {
+                        companyId: diorCompanyId,
+                    })
+                    .getMany();
             }
 
             let data: any = {};
@@ -751,7 +709,7 @@ export class StatisticsService {
                             });
                     }
                 } else if (
-                    [PositionsIds.BRAND_MANAGER, PositionsIds.ADMIN].includes(currentConsultant.consultant_position_id)
+                    [PositionsIds.SUPER_ADMIN, PositionsIds.ADMIN].includes(currentConsultant.consultant_position_id)
                 ) {
                     deviceQuery.andWhere('devices.consultant_company_id = :companyId', {
                         companyId: diorCompanyId,

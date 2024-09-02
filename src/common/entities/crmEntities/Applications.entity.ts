@@ -4,6 +4,7 @@ import { CustomerApplications } from './CustomerApplications.entity';
 import { Products } from './Products.entity';
 import { ConsultantCompanies } from './ConsultantCompanies.entity';
 import { Consultants } from './Consultants.entity';
+import { Customers } from './Customers.entity';
 
 @Index('index_applications_on_analysis_type', ['analysis_type'], {})
 @Index('index_applications_on_consultant_company_id', ['consultant_company_id'], {})
@@ -105,6 +106,9 @@ export class Applications {
     get analysisData(): string | null {
         return null;
     }
+
+    @OneToMany(() => Customers, (customers) => customers.applications)
+    customers: Customers[];
 
     @AfterLoad()
     afterLoad() {

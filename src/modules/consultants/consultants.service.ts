@@ -2750,12 +2750,20 @@ export class ConsultantsService {
             }
 
             const device = await this.deviceRepository.findOne({
-                where: {
-                    optic_number: optic_number,
-                    pwd: password,
-                },
+                where: [
+                    {
+                        optic_number: optic_number,
+                        pwd: password, // OR serial_number: password
+                    },
+                    {
+                        optic_number: optic_number,
+                        serial_number: password, // assuming password matches serial_number
+                    },
+                ],
                 relations: ['consultant_company'],
             });
+
+            console.log('device', device);
 
             if (!device) {
                 throw new BadRequestException('2:존재하지 않는 정보');
@@ -2796,7 +2804,7 @@ export class ConsultantsService {
                 throw new Error('6:사용등록오류');
             }
 
-            const consultantCompanyId = device.consultant_company_id;
+            const consultantCompanyId = device?.consultant_company_id ?? 213;
             if (consultantCompanyId) {
                 const currentConsultant = await this.consultantsRepository.findOne({ where: { id: consultant.id } });
                 currentConsultant.consultant_company_id = consultantCompanyId;
@@ -2840,7 +2848,7 @@ export class ConsultantsService {
                         lat: device.lat,
                         lng: device.lng,
                         consultant_company: {
-                            id: device.consultant_company.id,
+                            id: device?.consultant_company?.id ?? 213,
                             name: device.consultant_company.name,
                             address: device.consultant_company.address,
                             email: device.consultant_company.email,

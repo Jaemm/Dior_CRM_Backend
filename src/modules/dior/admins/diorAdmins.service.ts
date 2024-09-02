@@ -3,7 +3,7 @@ import { extname } from 'path';
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import * as csv from 'csv';
-import * as ExcelJS from 'exceljs';
+import { Request } from 'express';
 
 import { ConsultantsRepository } from '@/src/common/repositories/crm';
 
@@ -81,24 +81,37 @@ export class DiorAdminsService {
 
             const diorCompanyId = await this.consultantsRepository.getDiorConsultantCompanyId();
 
-            const newAdmin = this.consultantsRepository.create({
-                email: email,
-                name: name,
-                password_digest: await argon2.hash(password),
-                surname: surname,
-                consultant_company_id: diorCompanyId,
-                consultant_position_id: Number(consultant_position_id),
-                countries: countries,
-                app_id: 88,
-                email_confirmed: true,
-                created_at: new Date(),
-                updated_at: new Date(),
-            });
+            const existConsultant = await this.consultantsRepository.findByEmail(email);
+
+            let adminUser: Consultants;
+            if (existConsultant) {
+                adminUser = existConsultant;
+                adminUser.consultant_position_id = consultant_position_id;
+
+                adminUser.password_digest = password ? await argon2.hash(password) : existConsultant.password_digest;
+                adminUser.name = name ? name : adminUser.name;
+                adminUser.surname = surname ? surname : adminUser.surname;
+                adminUser.countries = countries ? countries : adminUser.countries;
+            } else {
+                adminUser = this.consultantsRepository.create({
+                    email: email,
+                    name: name,
+                    password_digest: await argon2.hash(password),
+                    surname: surname,
+                    consultant_company_id: diorCompanyId,
+                    consultant_position_id: consultant_position_id,
+                    countries: countries,
+                    app_id: 88,
+                    email_confirmed: true,
+                    created_at: new Date(),
+                    updated_at: new Date(),
+                });
+            }
 
             if (is_admin) {
-                newAdmin.consultant_position_id = this.getPositionId(is_admin);
+                adminUser.consultant_position_id = this.getPositionId(is_admin);
             }
-            const savedAdmin = await this.consultantsRepository.save(newAdmin);
+            const savedAdmin = await this.consultantsRepository.save(adminUser);
 
             const reformatAdmin: AdminsForDiorT = {
                 id: savedAdmin.id,
@@ -140,7 +153,7 @@ export class DiorAdminsService {
             admin.name = name ? name : admin.name;
             admin.surname = surname ? surname : admin.surname;
             admin.consultant_position_id = this.getPositionId(is_admin);
-            admin.countries = countries ? countries : admin.countries;
+            admin.countries = countries && countries.length > 0 ? countries : admin.countries;
             admin.updated_at = new Date();
 
             const savedAdmin = await this.consultantsRepository.save(admin);
@@ -183,21 +196,17 @@ export class DiorAdminsService {
         }
     }
 
-    async importAdmins(body: ImportAdminsDto) {
+    async importAdmins(req: Request, body: ImportAdminsDto) {
         try {
+            const splitToken = req.headers.authorization.split(' ');
+
+            const token = splitToken[1];
+
             const fileUrl = body.file_url;
 
             const fileExtends = extname(fileUrl);
 
-            if (['.xls', '.xlsx'].includes(fileExtends)) {
-            } else {
-                throw new BadRequestException({
-                    result_code: ErrorStatus.BAD_REQUEST,
-                    error: `Unknown file type: ${fileUrl}`,
-                });
-            }
-
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const headers = worksheet.getRow(1);
 
@@ -230,7 +239,10 @@ export class DiorAdminsService {
                 try {
                     await this.consultantsRepository.save(newConsultant);
                 } catch (e) {
-                    throw new BadRequestException(e);
+                    throw new BadRequestException({
+                        result_code: ErrorStatus.DATA_ALREADY_EXIST,
+                        error: `data already exist. email: ${email}`,
+                    });
                 }
             }
 
@@ -282,14 +294,6 @@ export class DiorAdminsService {
                 resolve(output);
             });
         });
-    }
-
-    async getWorkSheet(fileUrl: string) {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(fileUrl);
-        const worksheet = workbook.getWorksheet(1);
-
-        return worksheet;
     }
 
     getPositionId(isAdmin: string | boolean) {

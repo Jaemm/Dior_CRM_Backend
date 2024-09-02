@@ -36,6 +36,7 @@ import { PositionsIds } from '@/src/common/enums/position.enum';
 import { Role } from '@/src/common/enums/role.enum';
 import { AuthService } from '../auth/auth.service';
 import { Applications, Devices } from '@/src/common/entities/crmEntities';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class PartnerDbService {
@@ -85,6 +86,8 @@ export class PartnerDbService {
                 country: consultant.country,
                 zip_code: consultant.zip_code,
                 state: consultant.state,
+                token: consultant.token,
+                refresh_token: null as any,
                 birthdate: consultant.birthdate,
                 note: consultant.note,
                 push_token: consultant.push_token,
@@ -129,35 +132,7 @@ export class PartnerDbService {
                           };
                       })
                     : [],
-                consultant_company: consultant.consultant_company
-                    ? {
-                          id: consultant.consultant_company.id,
-                          name: consultant.consultant_company.name,
-                          created_at: consultant.consultant_company.created_at,
-                          updated_at: consultant.consultant_company.updated_at,
-                          address: consultant.consultant_company.address,
-                          email: consultant.consultant_company.email,
-                          phone: consultant.consultant_company.phone,
-                          registeration_date: consultant.consultant_company.registeration_date,
-                          primary_color_code: consultant.consultant_company.primary_color_code,
-                          secondary_color_code: consultant.consultant_company.secondary_color_code,
-                          font: consultant.consultant_company.font,
-                          program_color_code: consultant.consultant_company.program_color_code,
-                          top_color_code: consultant.consultant_company.top_color_code,
-                          text_icon_color_code: consultant.consultant_company.text_icon_color_code,
-                          pie_chart_color_1: consultant.consultant_company.pie_chart_color_1,
-                          pie_chart_color_2: consultant.consultant_company.pie_chart_color_2,
-                          pie_chart_color_3: consultant.consultant_company.pie_chart_color_3,
-                          pie_chart_color_4: consultant.consultant_company.pie_chart_color_4,
-                          pie_chart_color_5: consultant.consultant_company.pie_chart_color_5,
-                          pie_chart_points_color: consultant.consultant_company.pie_chart_points_color,
-                          active: consultant.consultant_company.active,
-                          font_color_1: consultant.consultant_company.font_color_1,
-                          font_color_2: consultant.consultant_company.font_color_2,
-                          data_exchange_url: consultant.consultant_company.data_exchange_url,
-                          pmx: consultant.consultant_company.pmx,
-                      }
-                    : {},
+                consultant_company: consultant.consultant_company ? consultant.consultant_company.getBasicInfo : {},
                 consultant_branch: consultant.consultant_branch
                     ? {
                           id: Number(consultant.consultant_branch.id),
@@ -202,14 +177,7 @@ export class PartnerDbService {
                           updated_at: consultant.consultant_shop.updatedAt,
                       }
                     : {},
-                consultant_position: consultant.consultant_position
-                    ? {
-                          id: consultant.consultant_position.id,
-                          name: consultant.consultant_position.name,
-                          created_at: consultant.consultant_position.created_at,
-                          updated_at: consultant.consultant_position.updated_at,
-                      }
-                    : {},
+                consultant_position: consultant.getPosition,
             };
 
             return reformatConsultant;
@@ -297,7 +265,7 @@ export class PartnerDbService {
 
             return {
                 data: reformatCustomer,
-                total_count: totalCount,
+                total_size: totalCount,
                 current_page_size: reformatCustomer.length,
                 current_page: searchPage,
                 total_pages: Math.ceil(totalCount / searchPer),
@@ -429,7 +397,7 @@ export class PartnerDbService {
 
     async getAnalysisHistories(req: Request, customerId: string, query: GetAnalysisHistoriesDto, locale = 'en') {
         try {
-            const { filter_by: filterBy } = query;
+            const { filter_by: filterBy, page, limit } = query;
 
             const requestHeaders = req.headers;
 
@@ -513,7 +481,10 @@ export class PartnerDbService {
                 }
             }
 
-            return filteredData;
+            const searchPage = Number(page || 1);
+            const searchLimit = Number(limit || 25);
+
+            return this.commonService.paginate(filteredData, searchPage, searchLimit);
         } catch (e) {
             throw e;
         }
@@ -768,6 +739,58 @@ export class PartnerDbService {
             });
 
             return this.commonService.generateMessage('Success!');
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getCustomerById(customerId: string, locale: string = 'en') {
+        try {
+            const customer = await this.customerRepository.findOne({
+                where: {
+                    id: Number(customerId),
+                },
+                relations: ['skinColorGroup', 'applications'],
+            });
+
+            if (!customer) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.CUSTOMER_NOT_FOUND,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'crm_customer_not_found'),
+                });
+            }
+
+            return {
+                id: customer.id || null,
+                external_id: customer.external_id || null,
+                email: customer.email || null,
+                name: customer.name || null,
+                surname: customer.surname || null,
+                gender: customer.gender || null,
+                age: customer.age || null,
+                os: customer.os || null,
+                language: customer.language || null,
+                phone: customer.phone || null,
+                birth: customer.birth || null,
+                address: customer.address || null,
+                note: customer.note || null,
+                city: customer.city || null,
+                state: customer.state || null,
+                zip_code: customer.zip_code || null,
+                country: customer.country || null,
+                skin_color: customer.skinColorGroup?.code || null,
+                ethnicity: customer.ethnicity || null,
+                notes: customer.notes || null,
+                push_token: customer.push_token || null,
+                app_id: customer.app_id || null,
+                company_id: customer.company_id || null,
+                consultant_id: customer.consultant_id || null,
+                skin_color_group_id: customer.skin_color_group_id || null,
+                ethnicity_id: customer.ethnicity_id || null,
+                sign_in_count: customer.sign_in_count || null,
+                image_url: customer.image_url || null,
+                app_name: customer.applications?.name || null,
+            };
         } catch (e) {
             throw e;
         }

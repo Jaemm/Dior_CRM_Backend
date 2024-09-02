@@ -20,5 +20,5 @@ export type ConsultantBranchesForDiorT = {
     country: string | null;
     password: string | null;
     total_devices: number | null;
-    last_consultation_date: Date | null;
+    last_consultation_date: string | null;
 };

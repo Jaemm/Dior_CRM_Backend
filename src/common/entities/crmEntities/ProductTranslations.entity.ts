@@ -34,7 +34,7 @@ export class ProductTranslations {
 
     get getBasicInfo() {
         return {
-            id: this.id,
+            id: Number(this.id),
             field_name: this.fieldName,
             language: this.language,
             value: this.value,

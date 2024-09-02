@@ -19,7 +19,7 @@ export class ProductAttributesRepository extends Repository<ProductAttributes> {
         });
         return attribute
             ? attribute.productAttributeTranslations.map((translation) => ({
-                  id: translation.id,
+                  id: Number(translation.id),
                   field_name: translation.fieldName,
                   language: translation.language,
                   value: translation.value,

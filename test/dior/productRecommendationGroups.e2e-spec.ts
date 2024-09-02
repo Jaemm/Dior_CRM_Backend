@@ -8,7 +8,7 @@ const rubyUrl = rubyURL;
 let localToken: string;
 let rubyToken: string;
 
-describe('Dior - Admins Module (e2e)', () => {
+describe('Dior - Product Recommendations Groups (e2e)', () => {
     beforeAll(async () => {
         const localResponse = await request(localUrl).post('/consultants/login').send(consultantLoginData);
         const rubyResponse = await request(rubyUrl).post('/consultants/login').send(consultantLoginData);
@@ -17,9 +17,9 @@ describe('Dior - Admins Module (e2e)', () => {
         localToken = localResponse.body.token;
     });
 
-    test('dior/admins (GET)', async () => {
+    test('dior/product_recommendation_groups/list (GET)', async () => {
         const localResponse = await request(localUrl)
-            .get('/dior/admins?page=1&per=2')
+            .get('/dior/product_recommendation_groups/list')
             .auth(localToken, {
                 type: 'bearer',
             })
@@ -27,7 +27,7 @@ describe('Dior - Admins Module (e2e)', () => {
             .expect(200);
 
         const rubyResponse = await request(rubyUrl)
-            .get('/dior/admins?page=1&per=2')
+            .get('/dior/product_recommendation_groups/list')
             .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
@@ -35,4 +35,23 @@ describe('Dior - Admins Module (e2e)', () => {
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
         expect(missingFields).toEqual([]);
     });
+
+    // test('dior/product_recommendation_groups (GET)', async () => {
+    //     const localResponse = await request(localUrl)
+    //         .get('/dior/product_recommendation_groups')
+    //         .auth(localToken, {
+    //             type: 'bearer',
+    //         })
+    //         .send()
+    //         .expect(200);
+
+    //     const rubyResponse = await request(rubyUrl)
+    //         .get('/dior/product_recommendation_groups')
+    //         .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+    //         .send()
+    //         .expect(200);
+
+    //     const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+    //     expect(missingFields).toEqual([]);
+    // });
 });
