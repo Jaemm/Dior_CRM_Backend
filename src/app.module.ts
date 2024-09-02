@@ -88,7 +88,6 @@ import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
                 CMA_SKIN: Joi.string().optional(),
                 CMA_HAIR: Joi.string().optional(),
 
-                //DIOR
                 DIOR_CNDP_SKIN: Joi.string().required(),
                 CNDP_SKIN_ANALYSIS_URL: Joi.string().required(),
             }),
