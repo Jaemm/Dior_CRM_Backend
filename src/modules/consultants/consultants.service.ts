@@ -2742,7 +2742,7 @@ export class ConsultantsService {
                 relations: ['consultant_company'],
             });
 
-            console.log('device', device);
+            // console.log('device', consultant);
 
             if (!device) {
                 throw new BadRequestException('2:존재하지 않는 정보');
@@ -2750,6 +2750,10 @@ export class ConsultantsService {
 
             if (device.use_yn !== 'Y') {
                 throw new BadRequestException('3:존재하지 않는 정보');
+            }
+
+            if (device.consultant_company === null) {
+                device.consultant_company = consultant.consultant_company;
             }
 
             const device_id = device.id;
