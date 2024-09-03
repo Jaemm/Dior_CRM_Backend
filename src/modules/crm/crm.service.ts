@@ -5,7 +5,13 @@ import {
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { In } from 'typeorm';
+import { v4 as uuid } from 'uuid';
+import axios from 'axios';
+import * as fs from 'fs';
+import * as FormData from 'form-data';
+import * as path from 'path';
 
 import { ConsultantsService } from '../consultants/consultants.service';
 import {
@@ -22,22 +28,23 @@ import { ProductsService } from '../products/products.service';
 
 import { CommonService } from '@/src/common/common.service';
 
-import axios from 'axios';
-import * as fs from 'fs';
-import * as FormData from 'form-data';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 import {
     ConsultantsRepository,
     CustomersRepository,
     DiorCustomerConsentsRepository,
+    PresignRepository,
 } from '@/src/common/repositories/crm';
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
+import { ConfigService } from '@nestjs/config';
+import { Customers } from '@/src/common/entities/crmEntities';
 
 @Injectable()
 export class CRMService {
     constructor(
         private awsS3Service: AwsS3Service,
+        private configService: ConfigService,
         private readonly customerService: CustomersService,
         private consultantsService: ConsultantsService,
 
@@ -49,6 +56,7 @@ export class CRMService {
         private readonly customersRepository: CustomersRepository,
         private readonly consultantRepository: ConsultantsRepository,
         private readonly diorCustomerConsentsRepository: DiorCustomerConsentsRepository,
+        private readonly presignRepository: PresignRepository,
     ) {}
 
     async getCustomer(id: number, data: GetCustomerDto) {
@@ -85,7 +93,7 @@ export class CRMService {
                 .getManyAndCount();
 
             return {
-                data: customers,
+                data: customers.map((c) => c.getBasicInfo),
                 total_size: totalCount,
                 current_page_size: customers.length,
                 current_page: page,
@@ -142,7 +150,7 @@ export class CRMService {
             });
         }
 
-        return customer;
+        return customer.getBasicInfo;
     }
 
     async deleteCustomer(consultantId: number, customerId: number, locale: string = 'en') {
@@ -424,30 +432,9 @@ export class CRMService {
             const createdCustomer = await this.customersRepository.save(newCustomer);
 
             return {
-                id: createdCustomer.id,
-                email: createdCustomer.email,
-                name: createdCustomer.name,
-                surname: createdCustomer.surname,
-                os: createdCustomer.os,
-                language: createdCustomer.language,
-                phone_country_code: createdCustomer.phone_country_code,
-                phone: createdCustomer.phone,
-                address: createdCustomer.address,
-                city: createdCustomer.city,
-                state: createdCustomer.state,
-                zip_code: createdCustomer.zip_code,
-                notes: createdCustomer.notes,
-                push_token: createdCustomer.push_token,
-                app_id: createdCustomer.app_id,
-                company_id: createdCustomer.company_id,
-                consultant_id: createdCustomer.consultant_id,
-                skin_color_group_id: createdCustomer.skin_color_group_id,
-                ethnicity_id: createdCustomer.ethnicity_id,
-                age: createdCustomer.age,
+                ...createdCustomer.getBasicInfo,
                 birth: createdCustomer.birth,
-                country: createdCustomer.country,
                 register_date: createdCustomer.register_date,
-                country_code: createdCustomer.country_code,
             };
         } catch (e) {
             throw e;
@@ -488,7 +475,7 @@ export class CRMService {
             this.commonService.throwNotFoundError();
         }
 
-        const customer = consultant.customers.find((customer: any) => customer.email === data.email);
+        const customer: Customers = consultant.customers.find((customer: any) => customer.email === data.email);
 
         if (!customer) {
             throw new NotFoundException({
@@ -497,7 +484,11 @@ export class CRMService {
             });
         }
 
-        return customer;
+        return {
+            ...customer.getBasicInfo,
+            birth: customer.birth,
+            register_date: customer.register_date,
+        };
     }
 
     async syncCustomer(consultantId: number, authToken: string, data: CustomerSyncDto) {
@@ -584,11 +575,42 @@ export class CRMService {
         };
     }
 
-    async presignedUpload(data: PresignedUploadDto, locale: string = 'en') {
+    async getFileFromS3(hash: string) {
         try {
-            const { file_name, consent_type, customer_id, file } = data;
+            const existFile = await this.presignRepository.findOne({
+                where: {
+                    key: hash,
+                },
+            });
 
-            if (!file_name && !consent_type) {
+            if (!existFile) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.NOT_FOUND,
+                });
+            }
+
+            const s3Key = `${existFile.prefix}/${hash}${existFile.fileExtension}`;
+
+            const s3File = await this.awsS3Service.getImageCloudS3(s3Key);
+
+            return {
+                binary: s3File.Body,
+                mimeType: existFile.mimeType,
+                fileName: existFile.fileName,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async presignedUpload(req: Request, data: PresignedUploadDto, file: Express.Multer.File, locale: string = 'en') {
+        try {
+            const consultantId = (<{ id: string }>req.user).id;
+            const { consent_type } = data;
+
+            const { originalname: fileName, mimetype, buffer } = file;
+
+            if (!fileName || !consent_type) {
                 throw new BadRequestException({
                     result_code: ErrorStatus.CUSTOM_ERROR,
                     error: this.commonService.createLocaleErrorMessage(
@@ -610,14 +632,32 @@ export class CRMService {
                 });
             }
 
-            const result = await this.awsS3Service.getPresignedUploadForCRM({
-                fileName: file_name,
-                consentType: consent_type,
-                customerId: customer_id,
-                file: file,
+            const limit = 8 * 1024 * 1024;
+            const prefix = `uploads/images/customers/consents/${consent_type}`;
+
+            const hash = uuid();
+            const fileExtension = path.extname(fileName);
+
+            const keyForS3 = `${hash}${fileExtension}`;
+
+            await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
+
+            const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
+            const downloadUrl = `${baseUrl}/v1/api/crm/customers/files/${hash}`;
+
+            await this.presignRepository.saveNewPresignEntity({
+                hash: hash,
+                fileName: fileName,
+                fileExtension: fileExtension,
+                downloadUrl: downloadUrl,
+                mimeType: mimetype,
+                prefix: prefix,
+                consultantId: Number(consultantId),
             });
 
-            return { result };
+            return {
+                url: downloadUrl,
+            };
         } catch (e) {
             throw e;
         }
@@ -665,6 +705,15 @@ export class CRMService {
             createdAt: new Date(),
             updatedAt: new Date(),
         });
+
+        const splitUrl = url.split('/');
+        const candidateKey = splitUrl[splitUrl.length - 1];
+
+        const presign = await this.presignRepository.findOne({ where: { key: candidateKey } });
+
+        if (presign) {
+            newConsent.presignId = presign.id;
+        }
 
         const consent = await this.diorCustomerConsentsRepository.save(newConsent);
 

@@ -30,7 +30,7 @@ async function bootstrap() {
     const port = Number(process.env.PORT) || 3100;
     console.log(`Configured Port: ${port}`);
 
-    app.setGlobalPrefix('/v1/api');
+    app.setGlobalPrefix('/api');
 
     const enableSwagger = process.env.OPEN_SWAGGER;
     if (enableSwagger === 'true') {

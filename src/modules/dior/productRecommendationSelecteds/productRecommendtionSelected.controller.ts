@@ -1,4 +1,7 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
+
 import { ProductRecommendationSelectedsService } from './productRecommendtionSelected.service';
 import {
     GetListOfRecommendationListDto,
@@ -7,31 +10,33 @@ import {
 } from './productRecommendtionSelected.dto';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Dior-Product Recommendation Selecteds')
 @Controller('dior/product_recommendation_selecteds')
 export class ProductRecommendationSelectedsController {
     constructor(private readonly productRecommendationSelectedsService: ProductRecommendationSelectedsService) {}
 
-    @Get()
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    async getProductRecommendationSelecteds(@Query() query: GetRecommendationSelectedDto) {
-        return await this.productRecommendationSelectedsService.getProductRecommendationSelecteds(query);
-    }
-
     @Post()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async selectProducts(@Body() body: SelectProductsDto) {
-        return await this.productRecommendationSelectedsService.selectProducts(body);
+    async selectProducts(@Res() res: Response, @Body() body: SelectProductsDto) {
+        const selecteds = await this.productRecommendationSelectedsService.selectProducts(body);
+        return res.status(200).send(selecteds);
     }
 
     @Get('lists')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getListOfRecommendationSelected(@Query() query: GetListOfRecommendationListDto) {
-        return await this.productRecommendationSelectedsService.getListOfRecommendationSelected(query);
+    async getListOfRecommendationSelected(@Res() res: Response, @Query() query: GetListOfRecommendationListDto) {
+        const list = await this.productRecommendationSelectedsService.getListOfRecommendationSelected(query);
+        return res.status(200).send(list);
+    }
+
+    @Get()
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
+    async getProductRecommendationSelecteds(@Res() res: Response, @Query() query: GetRecommendationSelectedDto) {
+        const selecteds = await this.productRecommendationSelectedsService.getProductRecommendationSelecteds(query);
+        return res.status(200).send(selecteds);
     }
 }

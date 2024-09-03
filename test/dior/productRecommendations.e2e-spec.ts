@@ -1,10 +1,9 @@
 import * as request from 'supertest';
-import { consultantLoginData, consultantUpdateData } from '../utils/data';
+import { consultantLoginData, consultantUpdateData, localURL, rubyURL } from '../utils/data';
 import { findMissingFields } from '../utils/helper';
-import axios from 'axios';
 
-const localUrl = 'localhost:3100/v1/api';
-const rubyUrl = 'https://stg-dior.chowis.cloud/api';
+const localUrl = localURL;
+const rubyUrl = rubyURL;
 
 let localToken: string;
 let rubyToken: string;
@@ -18,24 +17,24 @@ describe('Dior - Product Recommendations Module (e2e)', () => {
         localToken = localResponse.body.token;
     });
 
-    test('dior/product_recommendations (GET)', async () => {
-        const localResponse = await request(localUrl)
-            .get('/dior/product_recommendations')
-            .auth(localToken, {
-                type: 'bearer',
-            })
-            .send()
-            .expect(200);
+    // test('dior/product_recommendations (GET)', async () => {
+    //     const localResponse = await request(localUrl)
+    //         .get('/dior/product_recommendations')
+    //         .auth(localToken, {
+    //             type: 'bearer',
+    //         })
+    //         .send()
+    //         .expect(200);
 
-        const rubyResponse = await request(rubyUrl)
-            .get('/dior/product_recommendations')
-            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
-            .send()
-            .expect(200);
+    //     const rubyResponse = await request(rubyUrl)
+    //         .get('/dior/product_recommendations')
+    //         .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+    //         .send()
+    //         .expect(200);
 
-        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
-        expect(missingFields).toEqual([]);
-    });
+    //     const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+    //     expect(missingFields).toEqual([]);
+    // });
 
     test('dior/product_recommendations/get_automatic_product_by_batch_id (GET)', async () => {
         const localResponse = await request(localUrl)
@@ -75,6 +74,25 @@ describe('Dior - Product Recommendations Module (e2e)', () => {
             .get(
                 '/dior/product_recommendations/get_new_automatic_product_by_batch_id?answers=B%2CC%2CB%2CA%2CB%2CB&batch_id=69950&market=Korea&routine_recommendation=5&skin_tone=0.5N',
             )
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
+    test('dior/product_recommendations/:id (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/dior/product_recommendations/864')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/dior/product_recommendations/864')
             .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);

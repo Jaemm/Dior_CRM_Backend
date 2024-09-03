@@ -92,7 +92,7 @@ export class ProductRecommendations {
 
     get getBasicInfo() {
         return {
-            id: this.id,
+            id: Number(this.id),
             product_type: this.productType,
             description: this.description,
             link: this.link,
@@ -111,7 +111,7 @@ export class ProductRecommendations {
         if (this.productVariants && this.productVariants.length > 0) {
             variants = this.productVariants.reverse().map((v) => {
                 return {
-                    id: v.id,
+                    id: Number(v.id),
                     name: v.name,
                     product_type: v.productType,
                     description: v.description,
@@ -169,7 +169,7 @@ export class ProductRecommendations {
 
     getShade() {
         if (this.productVariants && this.productVariants.length > 0) {
-            return 'Seclet Shade';
+            return 'Select Shade';
         }
 
         return this.shades;

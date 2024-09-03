@@ -8,7 +8,7 @@ const rubyUrl = rubyURL;
 let localToken: string;
 let rubyToken: string;
 
-describe('Dior - Admins Module (e2e)', () => {
+describe('Dior - Countries Module (e2e)', () => {
     beforeAll(async () => {
         const localResponse = await request(localUrl).post('/consultants/login').send(consultantLoginData);
         const rubyResponse = await request(rubyUrl).post('/consultants/login').send(consultantLoginData);
@@ -17,9 +17,9 @@ describe('Dior - Admins Module (e2e)', () => {
         localToken = localResponse.body.token;
     });
 
-    test('dior/admins (GET)', async () => {
+    test('dior/countries (GET)', async () => {
         const localResponse = await request(localUrl)
-            .get('/dior/admins?page=1&per=2')
+            .get('/dior/countries')
             .auth(localToken, {
                 type: 'bearer',
             })
@@ -27,7 +27,7 @@ describe('Dior - Admins Module (e2e)', () => {
             .expect(200);
 
         const rubyResponse = await request(rubyUrl)
-            .get('/dior/admins?page=1&per=2')
+            .get('/dior/countries')
             .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);

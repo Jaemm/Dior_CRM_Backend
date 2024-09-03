@@ -8,7 +8,7 @@ const rubyUrl = rubyURL;
 let localToken: string;
 let rubyToken: string;
 
-describe('Dior - Devices Module (e2e)', () => {
+describe('CRM Module (e2e)', () => {
     beforeAll(async () => {
         const localResponse = await request(localUrl).post('/consultants/login').send(consultantLoginData);
         const rubyResponse = await request(rubyUrl).post('/consultants/login').send(consultantLoginData);
@@ -17,9 +17,9 @@ describe('Dior - Devices Module (e2e)', () => {
         localToken = localResponse.body.token;
     });
 
-    test('dior/devices (GET)', async () => {
+    test('crm/customers (GET)', async () => {
         const localResponse = await request(localUrl)
-            .get('/dior/devices?search=FAB01920')
+            .get('/crm/customers')
             .auth(localToken, {
                 type: 'bearer',
             })
@@ -27,7 +27,7 @@ describe('Dior - Devices Module (e2e)', () => {
             .expect(200);
 
         const rubyResponse = await request(rubyUrl)
-            .get('/dior/devices?search=FAB01920')
+            .get('/crm/customers')
             .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
@@ -36,23 +36,38 @@ describe('Dior - Devices Module (e2e)', () => {
         expect(missingFields).toEqual([]);
     });
 
-    test('dior/devices/connect-reset (POST)', async () => {
+    test('crm/customers/:id (GET)', async () => {
         const localResponse = await request(localUrl)
-            .post('/dior/devices/connect-reset')
+            .get('/crm/customers/117458')
             .auth(localToken, {
                 type: 'bearer',
             })
-            .send({
-                device_id: '1580',
-            })
+            .send()
             .expect(200);
 
         const rubyResponse = await request(rubyUrl)
-            .post('/dior/devices/connect-reset')
+            .get('/crm/customers/117458')
             .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
-            .send({
-                device_id: '1580',
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
+    test('crm/customers/get_by_email (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/crm/customers/get_by_email?email=test%2B123%40chowis.com')
+            .auth(localToken, {
+                type: 'bearer',
             })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/crm/customers/get_by_email?email=test%2B123%40chowis.com')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
             .expect(200);
 
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);

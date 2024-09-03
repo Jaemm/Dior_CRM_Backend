@@ -1,5 +1,5 @@
-import { Request } from 'express';
-import { Body, Controller, Get, Param, Post, Query, Req, Headers } from '@nestjs/common';
+import { Request, Response } from 'express';
+import { Body, Controller, Get, Param, Post, Query, Req, Headers, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
@@ -27,7 +27,6 @@ export class PartnerDbController {
     @Post('consultants/password')
     @ApiBearerAuth()
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
-    @Roles(Role.Consultant)
     async resetPassword(@Body() body: ResetPasswordDto, @Headers('X-CHOWIS-LOCALE') locale?: string) {
         return await this.partnerdbService.resetPassword(body, locale);
     }
@@ -66,7 +65,7 @@ export class PartnerDbController {
     @Get('customers/:id/analysis_histories/:batch_id')
     @ApiBearerAuth()
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
-    @Roles(Role.Consultant)
+    // @Roles(Role.Consultant)
     async getAnalysisHistoriesByBatchId(
         @Req() req: Request,
         @Param('id') customerId: string,
@@ -80,7 +79,7 @@ export class PartnerDbController {
     @Get('customers/:id/analysis_histories/:batch_id/hydration_sebum')
     @ApiBearerAuth()
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
-    @Roles(Role.Consultant)
+    // @Roles(Role.Consultant)
     async getHydrationSebumByBatchId(
         @Req() req: Request,
         @Param('id') customerId: string,
@@ -89,5 +88,17 @@ export class PartnerDbController {
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         return await this.partnerdbService.getHydrationSebumByBatchId(req, customerId, batchId, query, locale);
+    }
+
+    @Get('customers/:id')
+    @ApiBearerAuth()
+    async getCustomerById(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Res() res: Response,
+        @Param('id') customerId: string,
+    ) {
+        const customer = await this.partnerdbService.getCustomerById(customerId, locale);
+
+        return res.status(200).send(customer);
     }
 }

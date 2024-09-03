@@ -21,6 +21,7 @@ import { Products } from './Products.entity';
 import { Genders } from './Genders.entity';
 import { Consultants } from './Consultants.entity';
 import { ProductRecommendationSelecteds } from './ProductRecommendationSelecteds.entity';
+import { Applications } from './Applications.entity';
 
 @Index('index_customers_on_email', ['email'], {})
 @Index('customers_pkey', ['id'], { unique: true })
@@ -205,6 +206,10 @@ export class Customers {
     @OneToMany(() => ProductRecommendationSelecteds, (prSelecteds) => prSelecteds.customer)
     prSelecteds: ProductRecommendationSelecteds[];
 
+    @ManyToOne(() => Applications, (app) => app)
+    @JoinColumn({ name: 'app_id', referencedColumnName: 'id' })
+    applications: Applications;
+
     @BeforeInsert()
     insertCreated() {
         this.created_at = new Date();
@@ -231,6 +236,37 @@ export class Customers {
         } else {
             return null;
         }
+    }
+
+    get getBasicInfo() {
+        return {
+            id: this.id || null,
+            email: this.email || null,
+            external_id: this.external_id || null,
+            name: this.name || null,
+            surname: this.surname || null,
+            os: this.os || null,
+            language: this.language || null,
+            phone_country_code: this.phone_country_code || null,
+            phone: this.phone || null,
+            address: this.address || null,
+            city: this.city || null,
+            state: this.state || null,
+            zip_code: this.zip_code || null,
+            country: this.country || null,
+            country_code: this.country_code || null,
+            notes: this.notes || null,
+            push_token: this.push_token || null,
+            app_id: this.app_id || null,
+            company_id: this.company_id || null,
+            consultant_id: this.consultant_id || null,
+            skin_color_group_id: this.skin_color_group_id || null,
+            ethnicity_id: this.ethnicity_id || null,
+            gender: this.gender || null,
+            age: this.age || null,
+            birth: this.birth || null,
+            register_date: this.register_date || null,
+        };
     }
 
     @AfterLoad()

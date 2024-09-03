@@ -2,14 +2,13 @@ import { Request } from 'express';
 import { In, Like } from 'typeorm';
 import * as argon2 from 'argon2';
 import * as csv from 'csv';
-import * as ExcelJS from 'exceljs';
 
 import {
     ConsultantBranchesRepository,
     ConsultantsRepository,
     CustomersRepository,
 } from '@/src/common/repositories/crm';
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CommonService } from '@/src/common/common.service';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { PositionsIds } from '@/src/common/enums/position.enum';
@@ -39,13 +38,13 @@ export class DiorCompanyConsultantsService {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
-            const hashedPassword = await argon2.hash(body.password);
+            // const hashedPassword = await argon2.hash(body.password);
 
             const newConsultant = this.consultantRepository.create({
                 name: body.name,
                 code: body.code,
-                password_digest: hashedPassword,
-                consultant_branch_id: Number(body.consultant_branch_id),
+                // password_digest: hashedPassword,
+                consultant_branch_id: body.consultant_branch_id,
                 consultant_company_id: diorCompanyId,
                 country: body.country,
                 app_id: 88,
@@ -57,6 +56,12 @@ export class DiorCompanyConsultantsService {
 
             const savedConsultant = await this.consultantRepository.save(newConsultant);
 
+            const consultantBranch = await this.consultantBranchesRepository.findOne({
+                where: {
+                    id: String(body.consultant_branch_id),
+                },
+            });
+
             return {
                 id: savedConsultant.id,
                 name: savedConsultant.name,
@@ -65,6 +70,8 @@ export class DiorCompanyConsultantsService {
                 created_at: savedConsultant.created_at,
                 country: savedConsultant.country,
                 status: savedConsultant.convertStatus,
+                pos_code: consultantBranch ? consultantBranch.code : null,
+                pos_email: consultantBranch ? consultantBranch.email : null,
             };
         } catch (e) {
             throw e;
@@ -93,6 +100,7 @@ export class DiorCompanyConsultantsService {
 
             const consultantsQuery = await this.consultantRepository
                 .createQueryBuilder('consultants')
+                .leftJoinAndSelect('consultants.consultant_branch', 'consultant_branch')
                 .where('consultants.consultant_company_id = :companyId', { companyId: diorCompanyId });
 
             if (Number(currentConsultant.consultant_position_id) === PositionsIds.SUPER_ADMIN) {
@@ -152,7 +160,7 @@ export class DiorCompanyConsultantsService {
             }
 
             const searchPage = Number(page || 1);
-            const searchPer = Number(per || 10);
+            const searchPer = Number(per || 25);
 
             const [consultants, totalCount] = await consultantsQuery
                 .skip((searchPage - 1) * searchPer)
@@ -368,10 +376,14 @@ export class DiorCompanyConsultantsService {
         }
     }
 
-    async importDiorCompanyConsultants(body: ImportDiorCompanyConsultantsDto, locale: string = 'en') {
+    async importDiorCompanyConsultants(req: Request, body: ImportDiorCompanyConsultantsDto, locale: string = 'en') {
         try {
+            const splitToken = req.headers.authorization.split(' ');
+
+            const token = splitToken[1];
+
             const fileUrl = body.file_url;
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
@@ -382,17 +394,30 @@ export class DiorCompanyConsultantsService {
             for (let i = 2; i < rowCount; i++) {
                 const row = worksheet.getRow(i);
 
-                const branch = await this.consultantBranchesRepository.findOneBy({
-                    code: row.getCell(2).value.toLocaleString(),
+                const bcCode = row.getCell(3).value.toLocaleString();
+                const posCode = row.getCell(2).value.toLocaleString();
+
+                const consultant = await this.consultantRepository.findOneBy({
+                    code: bcCode,
                 });
+
+                if (consultant) {
+                    continue;
+                }
+
+                const branch = await this.consultantBranchesRepository.findOneBy({
+                    code: posCode,
+                });
+
+                const status = row.getCell(6).value === 'active' ? 0 : 1;
 
                 const newConsultant = this.consultantRepository.create({
                     country: row.getCell(1).value.toLocaleString(),
-                    code: row.getCell(3).value.toLocaleString(),
+                    code: bcCode,
                     name: row.getCell(4).value.toLocaleString(),
-                    status: Number(row.getCell(6).value),
+                    status: status,
                     consultant_branch_id: Number(branch?.id || null),
-                    email: await this.generateEmailForDior(diorCompanyId),
+                    email: row.getCell(5).value.toLocaleString(),
                     consultant_company_id: diorCompanyId,
                     created_at: new Date(),
                     updated_at: new Date(),
@@ -496,14 +521,5 @@ export class DiorCompanyConsultantsService {
                 resolve(output);
             });
         });
-    }
-
-    async getWorkSheet(fileUrl: string) {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(fileUrl);
-
-        const worksheet = workbook.getWorksheet(1);
-
-        return worksheet;
     }
 }

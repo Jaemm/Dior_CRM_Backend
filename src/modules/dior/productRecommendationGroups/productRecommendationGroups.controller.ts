@@ -1,6 +1,20 @@
-import { BadRequestException, Controller, Delete, Get, Param, Query, Headers, Post, Body, Put } from '@nestjs/common';
-import { ProductRecommendationGroupsService } from './productRecommendationGroups.service';
+import {
+    BadRequestException,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Query,
+    Headers,
+    Post,
+    Body,
+    Put,
+    Res,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
+
+import { ProductRecommendationGroupsService } from './productRecommendationGroups.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import {
     CreateProductRecommendationGroupsDto,
@@ -19,33 +33,41 @@ export class ProductRecommendationGroupsController {
     @ApiOperation({ summary: 'search product_recommendation groups by name' })
     @Roles(Role.Consultant)
     @Get()
-    async getProductRecommendationGroups(@Query() query: SearchProductRecommendationGroupsDto) {
-        return await this.productRecommendationGroupsService.getProductRecommendationGroups(query);
+    async getProductRecommendationGroups(@Res() res: Response, @Query() query: SearchProductRecommendationGroupsDto) {
+        const groups = await this.productRecommendationGroupsService.getProductRecommendationGroups(query);
+        return res.status(200).send(groups);
     }
 
     @Get('get_products/:id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getProductById(@Param('id') groupId: string) {
+    async getProductById(@Res() res: Response, @Param('id') groupId: string) {
         if (!groupId) {
             throw new BadRequestException('missing id');
         }
 
-        return await this.productRecommendationGroupsService.getProductById(groupId);
+        const group = await this.productRecommendationGroupsService.getProductById(groupId);
+
+        return res.status(200).send(group);
     }
 
-    @Get('lists')
+    @Get('list')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getListProductRecommendationGroups(@Query() query: GetListProductRecommendationGroupsDto) {
-        return await this.productRecommendationGroupsService.getListProductRecommendationGroups(query);
+    async getListProductRecommendationGroups(
+        @Res() res: Response,
+        @Query() query: GetListProductRecommendationGroupsDto,
+    ) {
+        const list = await this.productRecommendationGroupsService.getListProductRecommendationGroups(query);
+        return res.status(200).send(list);
     }
 
     @Post()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async createProductRecommendationGroups(@Body() body: CreateProductRecommendationGroupsDto) {
-        return await this.productRecommendationGroupsService.createProductRecommendationGroups(body);
+    async createProductRecommendationGroups(@Res() res: Response, @Body() body: CreateProductRecommendationGroupsDto) {
+        const result = await this.productRecommendationGroupsService.createProductRecommendationGroups(body);
+        return res.status(200).send(result);
     }
 
     @Put(':id')
@@ -54,10 +76,16 @@ export class ProductRecommendationGroupsController {
     @Roles(Role.Consultant)
     async updateProductRecommendationGroups(
         @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Res() res: Response,
         @Param('id') groupId: string,
         @Body() body: UpdateProductRecommendationGroupDto,
     ) {
-        return await this.productRecommendationGroupsService.updateProductRecommendationGroups(groupId, body, locale);
+        const result = await this.productRecommendationGroupsService.updateProductRecommendationGroups(
+            groupId,
+            body,
+            locale,
+        );
+        return res.status(200).send(result);
     }
 
     @Delete('delete_multiple/:ids')
@@ -65,9 +93,14 @@ export class ProductRecommendationGroupsController {
     @Roles(Role.Consultant)
     async deleteMultipleProductRecommendtionGroup(
         @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Res() res: Response,
         @Param('ids') groupIds: string,
     ) {
-        return await this.productRecommendationGroupsService.deleteMultipleProductRecommendtionGroup(groupIds, locale);
+        const result = await this.productRecommendationGroupsService.deleteMultipleProductRecommendtionGroup(
+            groupIds,
+            locale,
+        );
+        return res.status(200).send(result);
     }
 
     @Delete(':id')
@@ -75,11 +108,16 @@ export class ProductRecommendationGroupsController {
     @Roles(Role.Consultant)
     async deleteProductRecommendtionGroupById(
         @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Res() res: Response,
         @Param('id') groupId: string,
     ) {
         if (!groupId) {
             throw new BadRequestException();
         }
-        return await this.productRecommendationGroupsService.deleteProductRecommendtionGroupById(groupId, locale);
+        const result = await this.productRecommendationGroupsService.deleteProductRecommendtionGroupById(
+            groupId,
+            locale,
+        );
+        return res.status(200).send(result);
     }
 }

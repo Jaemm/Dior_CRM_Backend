@@ -1,0 +1,114 @@
+import * as request from 'supertest';
+import { consultantLoginData, consultantUpdateData, localURL, rubyURL } from '../utils/data';
+import { findMissingFields } from '../utils/helper';
+
+const localUrl = localURL;
+const rubyUrl = rubyURL;
+
+let localToken: string;
+let rubyToken: string;
+
+describe('PartnerDB Module (e2e)', () => {
+    beforeAll(async () => {
+        const localResponse = await request(localUrl).post('/consultants/login').send(consultantLoginData);
+        const rubyResponse = await request(rubyUrl).post('/consultants/login').send(consultantLoginData);
+
+        rubyToken = rubyResponse.body.token;
+        localToken = localResponse.body.token;
+    });
+
+    test('partnerdb/consultants/:id (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/partnerdb/consultants/19617')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/partnerdb/consultants/19617')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
+    test('partnerdb/consultants/:id/customers (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/partnerdb/consultants/19645/customers')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/partnerdb/consultants/19645/customers')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
+    test('partnerdb/customers/:customer_id/analysis_histories (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/partnerdb/customers/109617/analysis_histories')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/partnerdb/customers/109617/analysis_histories')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
+    test('partnerdb/customers/:id (GET)', async () => {
+        const localResponse = await request(localUrl)
+            .get('/partnerdb/customers/115421')
+            .auth(localToken, {
+                type: 'bearer',
+            })
+            .send()
+            .expect(200);
+
+        const rubyResponse = await request(rubyUrl)
+            .get('/partnerdb/customers/115421')
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .send()
+            .expect(200);
+
+        const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+        expect(missingFields).toEqual([]);
+    });
+
+    // test('partnerdb/customers/:customer_id/analysis_histories/:batch_id (GET)', async () => {
+    //     const localResponse = await request(localUrl)
+    //         .get('/partnerdb/customers/1/analysis_histories/3?analysis_type=cndpskin')
+    //         .auth(localToken, {
+    //             type: 'bearer',
+    //         })
+    //         .send()
+    //         .expect(200);
+
+    //     const rubyResponse = await request(rubyUrl)
+    //         .get('/partnerdb/customers/1/analysis_histories/3?analysis_type=cndpskin')
+    //         .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+    //         .send()
+    //         .expect(200);
+
+    //     const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
+    //     expect(missingFields).toEqual([]);
+    // });
+});

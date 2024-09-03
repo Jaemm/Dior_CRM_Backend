@@ -1,6 +1,6 @@
 import { In } from 'typeorm';
 import * as csv from 'csv';
-import * as ExcelJS from 'exceljs';
+import { Request } from 'express';
 
 import { ConsultantCountriesRepository, ConsultantsRepository } from '@/src/common/repositories/crm';
 import { ConsultantCountryForDiorT, ConsultantCountryT } from '@/src/common/types/entities';
@@ -199,10 +199,14 @@ export class DiorCountriesService {
         }
     }
 
-    async importCountries(body: ImportCountriesDto) {
+    async importCountries(req: Request, body: ImportCountriesDto) {
         const { file_url } = body;
         try {
-            const worksheet = await this.getWorkSheet(file_url);
+            const splitToken = req.headers.authorization.split(' ');
+
+            const token = splitToken[1];
+
+            const worksheet = await this.commonSerivce.getWorkSheetByHTTP(file_url, token);
 
             const headers = worksheet.getRow(1);
 
@@ -250,13 +254,5 @@ export class DiorCountriesService {
                 resolve(output);
             });
         });
-    }
-
-    async getWorkSheet(fileUrl: string) {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(fileUrl);
-        const worksheet = workbook.getWorksheet(1);
-
-        return worksheet;
     }
 }

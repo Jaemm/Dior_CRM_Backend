@@ -1,14 +1,14 @@
-import path from 'path';
+import * as path from 'path';
 import * as csv from 'csv';
-
+import { v4 as uuid } from 'uuid';
 import { Request } from 'express';
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import * as ExcelJS from 'exceljs';
+import { Injectable, NotFoundException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import {
     ConsultantCountriesRepository,
     ConsultantsRepository,
+    PresignRepository,
     ProductAttributeTranslationsRepository,
     ProductAttributesRepository,
     ProductRecommendationGroupsRepository,
@@ -34,11 +34,14 @@ import {
 import { ProductRecommendationT, ProductTranslationT } from '@/src/common/types/entities';
 import axios from 'axios';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ProductRecommendationService {
     constructor(
         private readonly commonService: CommonService,
+        private readonly configService: ConfigService,
+
         private readonly awsS3Service: AwsS3Service,
 
         private readonly consultantCountriesRepository: ConsultantCountriesRepository,
@@ -47,6 +50,7 @@ export class ProductRecommendationService {
         private readonly paTranslationsRepository: ProductAttributeTranslationsRepository,
         private readonly prGroupsRepository: ProductRecommendationGroupsRepository,
         private readonly productTranslationsRepository: ProductTranslationsRepository,
+        private readonly presignRepository: PresignRepository,
         private readonly consultantRepository: ConsultantsRepository,
     ) {}
     async getProductRecommendation(req: Request, query: SearchProductRecommendationDto, locale: string = 'en') {
@@ -165,15 +169,7 @@ export class ProductRecommendationService {
                 prQuery.skip((Number(page) - 1) * Number(limit)).take(Number(limit));
             }
 
-            const [data, totalCount] = await prQuery
-                // .leftJoinAndSelect(
-                //     ProductTranslations,
-                //     'productTranslations',
-                //     'productRecommendation.id = CAST(productTranslations.product_recommendation_id AS integer)',
-                // )
-
-                .getManyAndCount();
-            console.log(await prQuery.getRawOne());
+            const [data, totalCount] = await prQuery.getManyAndCount();
 
             const result = data.map(async (d) => {
                 const returnFormat = {
@@ -294,23 +290,7 @@ export class ProductRecommendationService {
                 throw new NotFoundException({});
             }
 
-            const foundVariants = foundRecommendtaion.productVariants || [];
-
-            const productVariants = foundVariants.map((variant) => {
-                return {
-                    id: Number(variant.id),
-                    name: variant.name,
-                    product_type: variant.productType,
-                    description: variant.description,
-                    link: variant.link,
-                    image_url: variant.imageUrl,
-                    category: variant.category,
-                    routine: variant.routine,
-                    code: variant.code,
-                    collection: variant.collection,
-                    shades: variant.shades,
-                };
-            });
+            const productVariants = foundRecommendtaion.getVariants;
 
             const foundProductTranslations = await this.productTranslationsRepository.find({
                 where: {
@@ -330,7 +310,7 @@ export class ProductRecommendationService {
                 });
             }
 
-            const reformatProductRecommendation: ProductRecommendationT = {
+            const reformatProductRecommendation = {
                 id: Number(foundRecommendtaion.id),
                 name: foundRecommendtaion.name,
                 product_type: foundRecommendtaion.productType,
@@ -338,6 +318,8 @@ export class ProductRecommendationService {
                 link: foundRecommendtaion.link,
                 image_url: foundRecommendtaion.imageUrl,
                 category: foundRecommendtaion.category,
+                countries: foundRecommendtaion.countries,
+                product_recommendation_id: foundRecommendtaion.productRecommendationId,
                 routine: foundRecommendtaion.routine,
                 code: foundRecommendtaion.code,
                 collection: foundRecommendtaion.collection,
@@ -357,6 +339,25 @@ export class ProductRecommendationService {
         recommendationId: string,
         locale = 'en',
     ) {
+        const {
+            category,
+            category_translations,
+            code,
+            collection,
+            shades,
+            collection_shades,
+            collection_translations,
+            countries,
+            description,
+            image_url,
+            link,
+            name,
+            product_type,
+            product_recommendation_id,
+            routine,
+            product_translations,
+        } = body;
+
         try {
             const foundRecommendtaion = await this.productRecommendationRepository.findOneBy({ id: recommendationId });
 
@@ -367,43 +368,99 @@ export class ProductRecommendationService {
                 });
             }
 
-            foundRecommendtaion.productType = body.product_type ? body.product_type : foundRecommendtaion.productType;
-            foundRecommendtaion.name = body.name ? body.name : foundRecommendtaion.name;
-            foundRecommendtaion.description = body.description ? body.description : foundRecommendtaion.description;
-            foundRecommendtaion.link = body.link ? body.link : foundRecommendtaion.link;
-            foundRecommendtaion.imageUrl = body.image_url ? body.image_url : foundRecommendtaion.imageUrl;
-            foundRecommendtaion.code = body.code ? body.code : foundRecommendtaion.code;
-            foundRecommendtaion.category = body.category ? body.category : foundRecommendtaion.category;
-            foundRecommendtaion.productRecommendationId = body.product_recommendation_id
-                ? Number(body.product_recommendation_id)
+            foundRecommendtaion.productType = product_type ? product_type : foundRecommendtaion.productType;
+            foundRecommendtaion.name = name ? name : foundRecommendtaion.name;
+            foundRecommendtaion.description = description ? description : foundRecommendtaion.description;
+            foundRecommendtaion.link = link ? link : foundRecommendtaion.link;
+            foundRecommendtaion.imageUrl = image_url ? image_url : foundRecommendtaion.imageUrl;
+            foundRecommendtaion.code = code ? code : foundRecommendtaion.code;
+            foundRecommendtaion.category = category ? category : foundRecommendtaion.category;
+            foundRecommendtaion.productRecommendationId = product_recommendation_id
+                ? Number(product_recommendation_id)
                 : foundRecommendtaion.productRecommendationId;
-            foundRecommendtaion.collection = body.collection ? body.collection : foundRecommendtaion.collection;
-            foundRecommendtaion.countries = body.countries ? body.countries : foundRecommendtaion.countries;
+            foundRecommendtaion.collection = collection ? collection : foundRecommendtaion.collection;
+            foundRecommendtaion.countries = countries ? countries : foundRecommendtaion.countries;
+            foundRecommendtaion.shades = shades ? shades : foundRecommendtaion.shades;
+            foundRecommendtaion.routine = routine ? routine : foundRecommendtaion.routine;
             foundRecommendtaion.updatedAt = new Date();
 
             await this.productRecommendationRepository.save(foundRecommendtaion);
 
-            const foundProductTranslations = await this.productTranslationsRepository.findBy({
-                productRecommendationId: foundRecommendtaion.id,
-            });
+            if (product_translations) {
+                const foundProductTranslations = await this.productTranslationsRepository.findBy({
+                    productRecommendationId: foundRecommendtaion.id,
+                });
 
-            await this.productTranslationsRepository.remove(foundProductTranslations);
+                await this.productTranslationsRepository.remove(foundProductTranslations);
 
-            if (body.product_translations_attributes) {
-                const productTranslationList = body.product_translations_attributes.map(async (translations) => {
+                const productTranslationList = product_translations.map((translations) => {
                     const newTranslations = this.productTranslationsRepository.create({
                         productRecommendationId: foundRecommendtaion.id,
                         fieldName: translations.field_name,
-                        language: translations.field_name,
+                        language: translations.language,
                         value: translations.value,
                         createdAt: new Date(),
                         updatedAt: new Date(),
                     });
-                    return await this.productTranslationsRepository.save(newTranslations);
+
+                    return newTranslations;
+                });
+                const translations = await this.productTranslationsRepository.save(productTranslationList);
+                foundRecommendtaion.productTranslations = translations;
+            }
+
+            if (category_translations) {
+                const attribute = await this.productAttributesRepository.findOne({
+                    where: {
+                        typ: 'Category',
+                        value: foundRecommendtaion.category,
+                    },
+                    relations: ['productAttributeTranslations'],
                 });
 
-                const translations = await Promise.all(productTranslationList);
-                foundRecommendtaion.productTranslations = translations;
+                const paTranslations = attribute.productAttributeTranslations;
+
+                await this.paTranslationsRepository.remove(paTranslations);
+
+                const newCategories = category_translations.map((cTranslations) => {
+                    return this.paTranslationsRepository.create({
+                        fieldName: cTranslations.field_name,
+                        language: cTranslations.language,
+                        value: cTranslations.value,
+                        productAttributeId: Number(attribute.id),
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    });
+                });
+
+                await this.paTranslationsRepository.save(newCategories);
+            }
+
+            if (collection_translations) {
+                const attribute = await this.productAttributesRepository.findOne({
+                    where: {
+                        typ: 'Collection',
+                        value: foundRecommendtaion.collection,
+                    },
+                    relations: ['productAttributeTranslations'],
+                });
+
+                const paTranslations = attribute.productAttributeTranslations;
+
+                await this.paTranslationsRepository.remove(paTranslations);
+
+                const newCategories = category_translations.map((cTranslations) => {
+                    return this.paTranslationsRepository.create({
+                        fieldName: cTranslations.field_name,
+                        language: cTranslations.language,
+                        value: cTranslations.value,
+                        productAttributeId: Number(attribute.id),
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    });
+                });
+
+                await this.paTranslationsRepository.save(newCategories);
             }
 
             const foundVariants = await this.productRecommendationRepository.find({
@@ -518,7 +575,7 @@ export class ProductRecommendationService {
                 code: body.code,
                 category: body.category,
                 routine: body.routine,
-                productRecommendationId: Number(body.product_recommendation_id),
+                productRecommendationId: Number(body.product_recommendation_id) || null,
                 collection: body.collection,
                 countries: body.countries,
                 createdAt: new Date(),
@@ -529,12 +586,12 @@ export class ProductRecommendationService {
                 newProductRecommendation,
             );
 
-            if (body.product_translations_attributes) {
-                const productTranslationList = body.product_translations_attributes.map(async (translations) => {
+            if (body.product_translations) {
+                const productTranslationList = body.product_translations.map(async (translations) => {
                     const newTranslations = this.productTranslationsRepository.create({
                         productRecommendationId: savedProductRecommendation.id,
                         fieldName: translations.field_name,
-                        language: translations.field_name,
+                        language: translations.language,
                         value: translations.value,
                         createdAt: new Date(),
                         updatedAt: new Date(),
@@ -938,7 +995,7 @@ export class ProductRecommendationService {
         }
     }
 
-    async importProductRecommendtaion(body: ImportProductRecommendtaionDto, locale = 'en') {
+    async importProductRecommendtaion(req: Request, body: ImportProductRecommendtaionDto, locale = 'en') {
         //  Columns
         //  1 - Product Code
         //  2 - Product Name
@@ -951,11 +1008,13 @@ export class ProductRecommendationService {
         //  9 - Shades
 
         try {
-            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+            const splitToken = req.headers.authorization.split(' ');
+            const token = splitToken[1];
 
             const fileUrl = body.file_url;
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
 
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const rowCount = worksheet.rowCount + 1;
 
@@ -997,12 +1056,15 @@ export class ProductRecommendationService {
         }
     }
 
-    async importProductTranslations(body: ImportTranslationsDto, locale = 'en') {
+    async importProductTranslations(req: Request, body: ImportTranslationsDto, locale = 'en') {
         try {
+            const splitToken = req.headers.authorization.split(' ');
+            const token = splitToken[1];
+
             const fileUrl = body.file_url;
             const country = body.country;
 
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const headers = worksheet.getRow(1);
 
@@ -1045,12 +1107,15 @@ export class ProductRecommendationService {
         }
     }
 
-    async importCountries(body: ImportCountriesDto) {
+    async importCountries(req: Request, body: ImportCountriesDto) {
         try {
+            const splitToken = req.headers.authorization.split(' ');
+            const token = splitToken[1];
+
             const fileUrl = body.file_url;
             const country = body.country;
 
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const headers = worksheet.getRow(1);
             const rowCount = worksheet.rowCount + 1;
@@ -1093,24 +1158,33 @@ export class ProductRecommendationService {
         try {
             const fileUrl = body.file_url;
 
-            const response = await axios.get(fileUrl);
+            const isArray = Array.isArray(fileUrl);
 
-            const isExistImage = response.headers['Content-Type'].toLocaleString().startsWith('image');
+            const urlList = isArray ? fileUrl : [fileUrl];
 
-            if (isExistImage) {
-                throw new Error();
-            }
+            const saveUrlPromise = urlList.map(async (url) => {
+                const response = await axios.get(url);
 
-            const fileName = path.basename(fileUrl, path.extname(fileUrl));
-            const productCode = fileName.slice(37);
+                const isExistImage = response.headers['content-type'].toLocaleString().startsWith('image');
 
-            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+                if (!isExistImage) {
+                    throw new Error('not exist image');
+                }
 
-            const product = diorConsultant.productRecommendations.find((pr) => pr.code === productCode);
-            if (product) {
-                product.imageUrl = fileUrl;
-                await this.productRecommendationRepository.save(product);
-            }
+                const fileName = path.basename(url, path.extname(url));
+                const productCode = fileName.slice(37);
+
+                const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+                const product = diorConsultant.productRecommendations.find((pr) => pr.code === productCode);
+
+                if (product) {
+                    product.imageUrl = url;
+                    await this.productRecommendationRepository.save(product);
+                }
+            });
+
+            await Promise.all(saveUrlPromise);
 
             return {
                 message: 'Success import data',
@@ -1228,19 +1302,73 @@ export class ProductRecommendationService {
         }
     }
 
-    async getPresignUpload(query: GetPresignUploadDto) {
+    async getProductRecommandationFileFromS3(hash: string) {
         try {
-            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+            const existFile = await this.presignRepository.findOne({
+                where: {
+                    key: hash,
+                },
+            });
 
-            const { filename } = query;
+            if (!existFile) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.NOT_FOUND,
+                });
+            }
 
-            const result = await this.awsS3Service.getPresignUploadForDiorProductRecommendation(
-                filename,
-                diorConsultant.id,
-            );
+            const s3Key = `${existFile.prefix}/${hash}${existFile.fileExtension}`;
+
+            const s3File = await this.awsS3Service.getImageCloudS3(s3Key);
 
             return {
-                result,
+                binary: s3File.Body,
+                mimeType: existFile.mimeType,
+                fileName: existFile.fileName,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getPresignUpload(req: Request, file: Express.Multer.File) {
+        try {
+            const userId = (<{ id: string }>req.user).id;
+            const { originalname: fileName, mimetype, buffer } = file;
+
+            const allowedMimeTypeList = ['image/png', 'image/jpeg'];
+
+            if (!allowedMimeTypeList.includes(mimetype)) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.BAD_REQUEST,
+                });
+            }
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+            const prefix = `uploads/images/product_recommendations/${diorConsultant.id}`;
+
+            const hash = uuid();
+            const fileExtension = path.extname(fileName);
+            const keyForS3 = `${hash}${fileExtension}`;
+
+            const limit = 8 * 1024 * 1024;
+
+            await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
+
+            const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
+            const downloadUrl = `${baseUrl}/v1/api/dior/product_recommendations/files/${hash}`;
+
+            await this.presignRepository.saveNewPresignEntity({
+                hash: hash,
+                fileName: fileName,
+                fileExtension: fileExtension,
+                downloadUrl: downloadUrl,
+                mimeType: mimetype,
+                prefix: prefix,
+                consultantId: Number(userId),
+            });
+
+            return {
+                url: downloadUrl,
             };
         } catch (e) {
             throw e;
@@ -1252,13 +1380,6 @@ export class ProductRecommendationService {
      * Utils
      *
      * */
-    async getWorkSheet(fileUrl: string) {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(fileUrl);
-        const worksheet = workbook.getWorksheet(1);
-
-        return worksheet;
-    }
 
     writeCSVFileForExportByTranslations(recommendations: ProductRecommendations[]) {
         const header = ['Product Code', 'Language', 'Value'];
