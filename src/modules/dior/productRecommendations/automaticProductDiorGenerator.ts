@@ -148,6 +148,8 @@ export class AutomaticProductDiorGenerator {
             })
             .getOne();
 
+        console.log('foundMarket', foundMarket);
+
         const market = foundMarket?.name;
 
         const recommanded = foundMarket.defaultRecommendation;
@@ -665,3 +667,4 @@ export class AutomaticProductDiorGenerator {
         return makeupProducts;
     }
 }
+
