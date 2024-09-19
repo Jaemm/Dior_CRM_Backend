@@ -148,18 +148,29 @@ export class AutomaticProductDiorGenerator {
             })
             .getOne();
 
+<<<<<<< HEAD
         console.log('foundMarket', foundMarket);
 
         const market = foundMarket?.name;
+=======
+        const market = foundMarket?.name ?? '';
+>>>>>>> c62b4fe1a1ce343185ab8f49c88681491a1c2364
 
-        const recommanded = foundMarket.defaultRecommendation;
+        const recommanded = foundMarket?.defaultRecommendation ?? '';
 
         let product: ProductRecommendationSelecteds[];
         if (market.toLocaleLowerCase() === 'japan') {
             product = await this.getProductsFromMarketJapan(result);
-        } else if (recommanded.includes('western')) {
+        } else if (recommanded.includes('western') || recommanded.includes('europe')) {
             product = await this.getProductsFromMarketWestern(result);
-        } else {
+        }
+
+        // else if (this.routineRecommendation === '3') {
+        //     product = await this.getProductsFromMarketWestern(result);
+        // } else if (this.routineRecommendation === '5') {
+        //     product = await this.getProductsFromMarketAsia(result);
+        // }
+        else {
             // Default from asia
             product = await this.getProductsFromMarketAsia(result);
         }
