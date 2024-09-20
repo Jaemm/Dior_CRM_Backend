@@ -19,6 +19,7 @@ export class UtilsController {
         return { qr_code_url: qrCodeImageUrl };
     }
 
+    // new util
     // @ApiBearerAuth()
     // @Roles(Role.Consultant)
     @Get('serve_qr_code')
@@ -34,3 +35,4 @@ export class UtilsController {
         return res.send(qrCode);
     }
 }
+
