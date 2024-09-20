@@ -10,15 +10,17 @@ import { Response } from 'express';
 export class UtilsController {
     constructor(private readonly utlis: UtilsService) {}
 
+    @ApiBearerAuth()
+    @Roles(Role.Consultant)
     @Get('generate_qr_code')
     generateQRCodeUrl(@Query('url') url: string) {
         // Return the URL of the QR code image (handled in another endpoint)
-        const qrCodeImageUrl = `${process.env.DEFAULT_URL}/utils/serve_qr_code?url=${encodeURIComponent(url)}`;
+        const qrCodeImageUrl = `${process.env.DOMAIN}/api/utils/serve_qr_code?url=${encodeURIComponent(url)}`;
         return { qr_code_url: qrCodeImageUrl };
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
+    // @ApiBearerAuth()
+    // @Roles(Role.Consultant)
     @Get('serve_qr_code')
     async generateQrCode(@Query('url') url: string, @Res() res: Response) {
         const qrCode = await this.utlis.generateQrCode(url);
@@ -29,7 +31,6 @@ export class UtilsController {
 
         // return { qr_code_url: qrCode };
         // Send the image buffer as the response
-        // return res.send(qrCode);
+        return res.send(qrCode);
     }
 }
-
