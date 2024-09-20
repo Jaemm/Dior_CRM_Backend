@@ -1,8 +1,9 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Res } from '@nestjs/common';
 import { UtilsService } from './utils.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
+import { Response } from 'express';
 
 @ApiTags('Dior-Admins')
 @Controller('utils')
@@ -12,10 +13,14 @@ export class UtilsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('generate_qr_code')
-    async generateQrCode(@Query('url') url: string) {
-        const qrCodeUrl = await this.utlis.generateQrCode(url);
+    async generateQrCode(@Query('url') url: string, @Res() res: Response) {
+        const qrCodeBuffer = await this.utlis.generateQrCode(url);
 
-        console.log(qrCodeUrl);
-        return { qr_code_url: qrCodeUrl };
+        // Set the response headers to serve the image
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Content-Disposition', 'inline; filename="qrcode.png"');
+
+        // Send the image buffer as the response
+        return res.send(qrCodeBuffer);
     }
 }
