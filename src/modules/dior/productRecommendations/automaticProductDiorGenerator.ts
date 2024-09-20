@@ -148,13 +148,7 @@ export class AutomaticProductDiorGenerator {
             })
             .getOne();
 
-<<<<<<< HEAD
-        console.log('foundMarket', foundMarket);
-
-        const market = foundMarket?.name;
-=======
         const market = foundMarket?.name ?? '';
->>>>>>> c62b4fe1a1ce343185ab8f49c88681491a1c2364
 
         const recommanded = foundMarket?.defaultRecommendation ?? '';
 

@@ -148,7 +148,7 @@ export class ConsultantsController {
     }
 
     @ApiBearerAuth()
-    @Roles(Role.Consultant)
+    // @Roles(Role.Consultant)
     @Post('create-sales-connection')
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async createSalesConnection(
