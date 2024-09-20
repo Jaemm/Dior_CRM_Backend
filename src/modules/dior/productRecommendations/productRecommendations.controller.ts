@@ -68,6 +68,7 @@ export class ProductRecommendationController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     async getAutomaticProductByBatchId(@Res() res: Response, @Query() query: AutomaticProductByBatchIdDto) {
+        console.log(query);
         const recommendation = await this.productRecommendationsService.getAutomaticProductByBatchId(query);
         return res.status(200).send(recommendation);
     }
@@ -76,6 +77,7 @@ export class ProductRecommendationController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     async getNewAutomaticProductByBatchId(@Res() res: Response, @Query() query: AutomaticProductByBatchIdDto) {
+        console.log('query ---->', query);
         const recommendation = await this.productRecommendationsService.getNewAutomaticProductByBatchId(query);
         return res.status(200).send(recommendation);
     }
@@ -242,3 +244,4 @@ export class ProductRecommendationController {
         return res.status(200).send(result);
     }
 }
+

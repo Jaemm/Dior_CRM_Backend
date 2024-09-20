@@ -210,10 +210,10 @@ export class ConsultantsModule {
                 path: 'consultants/store',
                 method: RequestMethod.GET,
             },
-            {
-                path: 'consultants/create_sale_connection',
-                method: RequestMethod.POST,
-            },
+            // {
+            //     path: 'consultants/create-sales-connection',
+            //     method: RequestMethod.POST,
+            // },
             {
                 path: 'consultants/fetch_sales_connection',
                 method: RequestMethod.GET,

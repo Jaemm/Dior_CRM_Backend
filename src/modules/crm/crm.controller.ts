@@ -64,6 +64,7 @@ export class CRMController {
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         const userId = Number((<{ id: string }>req['user']).id);
+        console.log('check', body);
 
         const result = await this.crmService.createCustomer(userId, body, locale);
         return res.status(200).send(result);

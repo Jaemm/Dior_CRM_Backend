@@ -29,6 +29,7 @@ export class UtilsController {
 
         // return { qr_code_url: qrCode };
         // Send the image buffer as the response
-        return res.send(qrCode);
+        // return res.send(qrCode);
     }
 }
+
