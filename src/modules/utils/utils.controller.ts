@@ -14,13 +14,14 @@ export class UtilsController {
     @Roles(Role.Consultant)
     @Get('generate_qr_code')
     async generateQrCode(@Query('url') url: string, @Res() res: Response) {
-        const qrCodeBuffer = await this.utlis.generateQrCode(url);
+        const qrCode = await this.utlis.generateQrCode(url);
 
         // Set the response headers to serve the image
-        res.setHeader('Content-Type', 'image/png');
-        res.setHeader('Content-Disposition', 'inline; filename="qrcode.png"');
+        // res.setHeader('Content-Type', 'image/png');
+        // res.setHeader('Content-Disposition', 'inline; filename="qrcode.png"');
 
+        return { qr_code_url: qrCode };
         // Send the image buffer as the response
-        return res.send(qrCodeBuffer);
+        return res.send(qrCode);
     }
 }
