@@ -37,7 +37,7 @@ import {
     SkinColorGroupsRepository,
 } from './common/repositories/crm';
 import { CountriesRepository } from './common/repositories/crm/countries.repository';
-import { SkinColorGroups } from './common/entities/crmEntities';
+import { UtilsModule } from './modules/utils/utils.module';
 import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
 
 @Module({
@@ -99,6 +99,7 @@ import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
         ProductsModule,
         PartnerDbModule,
         CRMModule,
+        UtilsModule,
     ],
     controllers: [AppController],
     providers: [
