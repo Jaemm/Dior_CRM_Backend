@@ -1,4 +1,11 @@
-import { HttpStatus, Inject, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import {
+    HttpStatus,
+    Inject,
+    INestApplication,
+    Injectable,
+    NotFoundException,
+    UnprocessableEntityException,
+} from '@nestjs/common';
 import { ILike } from 'typeorm';
 import { FetchFwVersionDto, LoginSocialDto, ShopListDto, UpdateFwVersionDto } from './app.dto';
 import { CountriesListDto } from './modules/customers/customers.dto';
@@ -17,9 +24,44 @@ import {
     SkinColorGroupsRepository,
 } from './common/repositories/crm';
 import { CountriesRepository } from './common/repositories/crm/countries.repository';
+import * as XLSX from 'xlsx';
+import { ExpressAdapter } from '@nestjs/platform-express';
 
 @Injectable()
 export class AppService {
+    handleApp(app: INestApplication) {
+        const httpAdapter = app.getHttpAdapter();
+
+        // Check if the app is using Express
+        if (httpAdapter instanceof ExpressAdapter) {
+            const expressApp = httpAdapter.getInstance(); // Get the Express instance
+            const router = expressApp._router; // Access the internal router
+
+            // Ensure the router is available
+            if (router) {
+                const availableRoutes = router.stack
+                    .filter((layer: any) => layer.route) // Filters out middleware
+                    .map((layer: any) => ({
+                        path: layer.route.path,
+                        method: layer.route.stack[0].method,
+                    }));
+
+                // Create an Excel file with route information
+                const worksheet = XLSX.utils.json_to_sheet(availableRoutes);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'APIRoutes');
+
+                const filePath = './api_routes.xlsx';
+                XLSX.writeFile(workbook, filePath);
+
+                console.log(`API routes have been written to ${filePath}`);
+            } else {
+                console.error('Router is undefined');
+            }
+        } else {
+            console.error('This application is not using Express');
+        }
+    }
     constructor(
         private readonly customersService: CustomersService,
         private readonly commonService: CommonService,

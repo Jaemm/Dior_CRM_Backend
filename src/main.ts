@@ -4,6 +4,7 @@ import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as fs from 'fs';
+import { AppService } from './app.service';
 
 async function bootstrap() {
     const SSL = process.env.SSL;
@@ -13,19 +14,26 @@ async function bootstrap() {
     let httpsOptions = null;
 
     if (isSSL) {
-        const keyPath = process.env.SSL_KEY_PATH || '';
-        const certPath = process.env.SSL_CERT_PATH || '';
+        try {
+            const keyPath = process.env.SSL_KEY_PATH || '';
+            const certPath = process.env.SSL_CERT_PATH || '';
 
-        httpsOptions = {
-            key: fs.readFileSync(keyPath),
-            cert: fs.readFileSync(certPath),
-        };
+            httpsOptions = {
+                key: fs.readFileSync(keyPath),
+                cert: fs.readFileSync(certPath),
+            };
+        } catch (error) {
+            Logger.error('Error reading SSL certificate or key', error);
+            process.exit(1); // Exit if SSL is required but the key/cert cannot be read
+        }
     }
     const app = await NestFactory.create(AppModule, {
         httpsOptions,
         rawBody: true,
         logger: ['log', 'error', 'warn', 'debug', 'verbose'],
     });
+    const appService = app.get(AppService); // Get AppService
+    appService.handleApp(app);
 
     const port = Number(process.env.PORT) || 3100;
     console.log(`Configured Port: ${port}`);
