@@ -690,7 +690,7 @@ export class ProductRecommendationService {
                 diorConsultant: diorConsultant,
                 skinTone: query.skin_tone,
                 routineRecommendation: query.routine_recommendation,
-                market: query.market,
+                market: query?.market ?? '',
                 answers: query.answers,
                 old: true,
             };

@@ -1,18 +1,7 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as Joi from '@hapi/joi';
-import {
-    globalDB,
-    secondDB,
-    cndpSkinDB,
-    ohioCndpSkinDB,
-    cndpHairDB,
-    ohioCndpHairDB,
-    thirdDB,
-    thirdCndpSkinDB,
-    thirdCndpHairDB,
-    diorCndpSkinDB,
-} from './config/typeOrm.config';
+import { globalDB, cndpSkinDB, diorCndpSkinDB } from './config/typeOrm.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module';
 import { CommonModule } from './common/common.module';
@@ -48,7 +37,7 @@ import {
     SkinColorGroupsRepository,
 } from './common/repositories/crm';
 import { CountriesRepository } from './common/repositories/crm/countries.repository';
-import { SkinColorGroups } from './common/entities/crmEntities';
+import { UtilsModule } from './modules/utils/utils.module';
 import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
 
 @Module({
@@ -70,18 +59,7 @@ import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
                 JWT_RESET_PASSWORD_SECRET: Joi.string().required(),
                 JWT_RESET_PASSWORD_TIME: Joi.string().required(),
                 DOMAIN: Joi.string().required(),
-                // New Ohio Test
-                POSTGRES_HOST_2: Joi.string().required(),
-                POSTGRES_USER_2: Joi.string().required(),
-                POSTGRES_DB_2: Joi.string().required(),
-                POSTGRES_PASSWORD_2: Joi.string().required(),
-                POSTGRES_PORT_2: Joi.string().required(),
 
-                POSTGRES_HOST_3: Joi.string().required(),
-                POSTGRES_USER_3: Joi.string().required(),
-                POSTGRES_DB_3: Joi.string().required(),
-                POSTGRES_PASSWORD_3: Joi.string().required(),
-                POSTGRES_PORT_3: Joi.string().required(),
                 // Analyis Table
                 CNDP_SKIN: Joi.string().optional(),
                 CNDP_HAIR: Joi.string().optional(),
@@ -95,19 +73,7 @@ import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
         ConfigModule.forRoot({
             isGlobal: true,
             envFilePath: ['env/.env'],
-            load: [
-                config,
-                globalDB,
-                secondDB,
-                cndpSkinDB,
-                diorCndpSkinDB,
-                ohioCndpSkinDB,
-                cndpHairDB,
-                ohioCndpHairDB,
-                thirdDB,
-                thirdCndpSkinDB,
-                thirdCndpHairDB,
-            ],
+            load: [config, globalDB, cndpSkinDB, diorCndpSkinDB],
         }),
 
         DevtoolsModule.register({
@@ -132,6 +98,7 @@ import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
         ProductsModule,
         PartnerDbModule,
         CRMModule,
+        UtilsModule,
     ],
     controllers: [AppController],
     providers: [

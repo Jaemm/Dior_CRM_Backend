@@ -19,24 +19,6 @@ export class AnalysisDataReplicationService {
 
         @InjectRepository(Analysis, 'diorCndpSkinDB')
         private readonly diorCndpSkinRepository: Repository<Analysis>,
-
-        // Hair
-        @InjectRepository(Analysis, 'cndpHairDB')
-        private readonly globalCndpHairRepository: Repository<Analysis>,
-        @InjectRepository(Measurements, 'cndpHairDB')
-        private readonly globalCndpHairAnalysisRepository: Repository<Measurements>,
-
-        // SKIN
-        @InjectRepository(Analysis, 'ohioCndpSkinDB')
-        private readonly ohioCndpRepository: Repository<Analysis>,
-        @InjectRepository(Measurements, 'ohioCndpSkinDB')
-        private readonly ohioCndpSkinAnalysisRepository: Repository<Measurements>,
-
-        // Hair
-        @InjectRepository(Analysis, 'ohioCndpHairDB')
-        private readonly ohioCndpHairRepository: Repository<Analysis>,
-        @InjectRepository(Measurements, 'ohioCndpHairDB')
-        private readonly ohioCndpHairAnalysisRepository: Repository<Measurements>, // ohioCndpHairDB
     ) {}
 
     async getDiorAnalysisByCustomerIds(customerIds: string[]) {
@@ -221,34 +203,34 @@ export class AnalysisDataReplicationService {
             .getRawMany();
     }
 
-    async getBatchId(customerId: string, appId: number) {
-        const repository = this.DBRediction(appId).ohioRepos;
-        const analyisData = repository.find({
-            where: {
-                customerId,
-            },
-            select: {
-                customerId: false,
-                args: {},
-                createdTime: true,
-                batchId: true,
-            },
-        });
+    // async getBatchId(customerId: string, appId: number) {
+    //     const repository = this.DBRediction(appId).ohioRepos;
+    //     const analyisData = repository.find({
+    //         where: {
+    //             customerId,
+    //         },
+    //         select: {
+    //             customerId: false,
+    //             args: {},
+    //             createdTime: true,
+    //             batchId: true,
+    //         },
+    //     });
 
-        return analyisData;
-    }
+    //     return analyisData;
+    // }
 
-    async getMeasuremt(batchId: number, appId: number): Promise<Measurements[]> {
-        const repository = this.DBRediction(appId).ohioAnalysisRepos;
-        const result = await repository.find({
-            where: {
-                batchId,
-            },
+    // async getMeasuremt(batchId: number, appId: number): Promise<Measurements[]> {
+    //     const repository = this.DBRediction(appId).ohioAnalysisRepos;
+    //     const result = await repository.find({
+    //         where: {
+    //             batchId,
+    //         },
 
-            relations: ['typeImage', 'typeMeasurement'],
-        });
-        return result;
-    }
+    //         relations: ['typeImage', 'typeMeasurement'],
+    //     });
+    //     return result;
+    // }
 
     analysisInsertion(data: any, appId: number) {
         const repository = this.DBRediction(appId).globalRepos;
@@ -262,30 +244,30 @@ export class AnalysisDataReplicationService {
         return repository.save(measurementData);
     }
 
-    async AnalysisReplication(customerIdMapping: any, appId: number) {
-        const importCustomerIds = Object.keys(customerIdMapping);
-        for (const importCustomerId of importCustomerIds) {
-            const oldBatches = await this.getBatchId(importCustomerId, appId);
+    // async AnalysisReplication(customerIdMapping: any, appId: number) {
+    //     const importCustomerIds = Object.keys(customerIdMapping);
+    //     for (const importCustomerId of importCustomerIds) {
+    //         const oldBatches = await this.getBatchId(importCustomerId, appId);
 
-            const newCustomerIds = {
-                customerId: Number(customerIdMapping[importCustomerId]),
-            };
+    //         const newCustomerIds = {
+    //             customerId: Number(customerIdMapping[importCustomerId]),
+    //         };
 
-            const newAnalysisBatches = await this.analysisInsertion(newCustomerIds, appId);
+    //         const newAnalysisBatches = await this.analysisInsertion(newCustomerIds, appId);
 
-            // create new measurement
-            for (var i = 0; i < oldBatches.length; i++) {
-                const getOldMeasuremt = await this.getMeasuremt(Number(oldBatches[i].batchId), appId);
-                const newBatchIdsInMeasurment = getOldMeasuremt.map((customer) => ({
-                    ...customer,
-                    batchId: this.getBatchIdFromObject(newAnalysisBatches),
-                    id: undefined,
-                }));
-                this.insertMeasurement(newBatchIdsInMeasurment, appId);
-            }
-        }
-        return;
-    }
+    //         // create new measurement
+    //         for (var i = 0; i < oldBatches.length; i++) {
+    //             const getOldMeasuremt = await this.getMeasuremt(Number(oldBatches[i].batchId), appId);
+    //             const newBatchIdsInMeasurment = getOldMeasuremt.map((customer) => ({
+    //                 ...customer,
+    //                 batchId: this.getBatchIdFromObject(newAnalysisBatches),
+    //                 id: undefined,
+    //             }));
+    //             this.insertMeasurement(newBatchIdsInMeasurment, appId);
+    //         }
+    //     }
+    //     return;
+    // }
 
     getBatchIdFromObject(obj: any) {
         // Check if the direct property 'batchId' exists in the object
@@ -312,17 +294,9 @@ export class AnalysisDataReplicationService {
         let ohioAnalysisRepos;
         let ohioRepos;
 
-        if (appId === 44) {
+        if (appId === 88) {
             globalAnalysisRepos = this.globalCndpAnalysisRepository;
             globalRepos = this.globalcndpSkinRepository;
-            ohioAnalysisRepos = this.ohioCndpSkinAnalysisRepository;
-            ohioRepos = this.ohioCndpRepository;
-        }
-        if (appId === 53) {
-            globalAnalysisRepos = this.globalCndpHairAnalysisRepository;
-            globalRepos = this.globalCndpHairRepository;
-            ohioAnalysisRepos = this.ohioCndpHairAnalysisRepository;
-            ohioRepos = this.ohioCndpHairRepository;
         }
 
         return {

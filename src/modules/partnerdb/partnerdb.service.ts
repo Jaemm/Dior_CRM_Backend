@@ -442,8 +442,8 @@ export class PartnerDbService {
             const analysisHistoryRequestPromise = analysisTypeList.map(async (analysisType) => {
                 let result: any;
 
-                if (['CNDP Skin', 'CNDP Hair', 'FFA', 'HH', 'CMA Skin', 'CMA Hair'].includes(analysisType)) {
-                    const type = analysisType as 'CNDP Skin' | 'CNDP Hair' | 'FFA' | 'HH' | 'CMA Skin' | 'CMA Hair';
+                if (['CNDP Skin'].includes(analysisType)) {
+                    const type = analysisType as 'CNDP Skin';
                     result = await this.analysisHistoryRequest(type, customerId, bearerToken);
                 }
 
@@ -508,8 +508,8 @@ export class PartnerDbService {
 
             let result: any;
 
-            if (['cndpskin', 'cndphair', 'ffa', 'hh', 'cmaskin', 'cmahair'].includes(analysisType)) {
-                const type = analysisType as 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair';
+            if (['cndpskin'].includes(analysisType)) {
+                const type = analysisType as 'cndpskin';
                 result = await this.analysisHistoryRequestByBatchId(type, customerId, batchId, bearerToken);
             }
 
@@ -539,8 +539,8 @@ export class PartnerDbService {
 
             let result: any;
 
-            if (['cndpskin', 'cndphair', 'ffa', 'hh', 'cmaskin', 'cmahair'].includes(analysisType)) {
-                const type = analysisType as 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair';
+            if (['cndpskin'].includes(analysisType)) {
+                const type = analysisType as 'cndpskin';
                 result = await this.analysisHydrationSebumByBatchId(type, batchId, bearerToken);
             }
 
@@ -552,18 +552,9 @@ export class PartnerDbService {
         }
     }
 
-    async analysisHistoryRequest(
-        analysisType: 'CNDP Skin' | 'CNDP Hair' | 'FFA' | 'HH' | 'CMA Skin' | 'CMA Hair',
-        customerId: string,
-        bearerToken: string,
-    ): Promise<any[]> {
+    async analysisHistoryRequest(analysisType: 'CNDP Skin', customerId: string, bearerToken: string): Promise<any[]> {
         const urlObj = {
             'CNDP Skin': process.env['CNDP_SKIN_ANALYSIS_URL'],
-            'CNDP Hair': process.env['CNDP_HAIR_ANALYSIS_URL'],
-            'FFA': process.env['FFA_ANALYSIS_URL'],
-            'HH': process.env['HH_ANALYSIS_URL'],
-            'CMA Skin': process.env['CMA_SKIN_ANALYSIS_URL'],
-            'CMA Hair': process.env['CMA_HAIR_ANALYSIS_URL'],
         };
 
         const baseUrl = urlObj[analysisType];
@@ -593,18 +584,13 @@ export class PartnerDbService {
     }
 
     async analysisHistoryRequestByBatchId(
-        analysisType: 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair',
+        analysisType: 'cndpskin',
         customerId: string,
         batchId: string,
         bearerToken: string,
     ): Promise<any[]> {
         const urlObj = {
             cndpskin: process.env['CNDP_SKIN_ANALYSIS_URL'],
-            cndphair: process.env['CNDP_HAIR_ANALYSIS_URL'],
-            ffa: process.env['FFA_ANALYSIS_URL'],
-            hh: process.env['HH_ANALYSIS_URL'],
-            cmaskin: process.env['CMA_SKIN_ANALYSIS_URL'],
-            cmahair: process.env['CMA_HAIR_ANALYSIS_URL'],
         };
 
         const baseUrl = urlObj[analysisType];
@@ -615,11 +601,6 @@ export class PartnerDbService {
 
         const requestUrlObj = {
             cndpskin: `${baseUrl}/cndpskin/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
-            cndphair: `${baseUrl}/cndphair/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
-            ffa: `${baseUrl}/ffa/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
-            hh: `${baseUrl}/cndphh/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
-            cmaskin: `${baseUrl}/cmaskin/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
-            cmahair: `${baseUrl}/cmahair/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
         };
 
         const requestUrl = requestUrlObj[analysisType];
@@ -634,17 +615,12 @@ export class PartnerDbService {
     }
 
     async analysisHydrationSebumByBatchId(
-        analysisType: 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair',
+        analysisType: 'cndpskin',
         batchId: string,
         bearerToken: string,
     ): Promise<any[]> {
         const urlObj = {
             cndpskin: process.env['CNDP_SKIN_ANALYSIS_URL'],
-            cndphair: process.env['CNDP_HAIR_ANALYSIS_URL'],
-            ffa: process.env['FFA_ANALYSIS_URL'],
-            hh: process.env['HH_ANALYSIS_URL'],
-            cmaskin: process.env['CMA_SKIN_ANALYSIS_URL'],
-            cmahair: process.env['CMA_HAIR_ANALYSIS_URL'],
         };
 
         const baseUrl = urlObj[analysisType];
@@ -655,11 +631,6 @@ export class PartnerDbService {
 
         const requestUrlObj = {
             cndpskin: `${baseUrl}/cndpskin/hydration-sebum?batch_id=${batchId}`,
-            cndphair: `${baseUrl}/cndphair/hydration-sebum?batch_id=${batchId}`,
-            ffa: `${baseUrl}/ffa/hydration-sebum?batch_id=${batchId}`,
-            hh: `${baseUrl}/cndphh/hydration-sebum?batch_id=${batchId}`,
-            cmaskin: `${baseUrl}/cmaskin/hydration-sebum?batch_id=${batchId}`,
-            cmahair: `${baseUrl}/cmahair/hydration-sebum?batch_id=${batchId}`,
         };
 
         const requestUrl = requestUrlObj[analysisType];

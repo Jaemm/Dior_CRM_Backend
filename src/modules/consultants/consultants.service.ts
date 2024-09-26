@@ -68,7 +68,7 @@ import {
     Customers,
 } from '@/src/common/entities/crmEntities';
 import { CommonService } from 'src/common/common.service';
-import { CrmDataReplicationService } from '../dataReplication/consultantDataReplication/consultantDataReplication.service';
+
 import * as fs from 'fs/promises';
 import * as handlebars from 'handlebars';
 
@@ -123,6 +123,7 @@ import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repos
 @Injectable()
 export class ConsultantsService {
     private readonly jwtConfig: IJwt;
+    private readonly saltRounds = 10;
 
     constructor(
         @InjectRepository(ProductRecommendations)
@@ -140,7 +141,6 @@ export class ConsultantsService {
         private readonly jwtService: JwtService,
 
         private readonly commonService: CommonService,
-        private readonly dataReplication: CrmDataReplicationService,
 
         private readonly analysisReplService: AnalysisDataReplicationService,
 
@@ -174,6 +174,9 @@ export class ConsultantsService {
     }
 
     // Account
+    async bcryptHashPassword(password: string): Promise<string> {
+        return bcrypt.hash(password, this.saltRounds);
+    }
 
     public async sendAccountConfimationEmail(token: string, email: string, locale: string) {
         const subject = await this.commonService.translate('confirm_email_subject', locale);
@@ -214,7 +217,7 @@ export class ConsultantsService {
 
     // Method to determine which hashing algorithm was used for a stored password
     determineHashAlgorithm(storedHash: string): 'bcrypt' | 'argon2' {
-        return storedHash.startsWith('$2a$') ? 'bcrypt' : 'argon2';
+        return storedHash.startsWith('$2') ? 'bcrypt' : 'argon2';
     }
 
     // Method to verify password based on the hashing algorithm used
@@ -327,91 +330,90 @@ export class ConsultantsService {
     }
 
     public async signUpRuby(newUser: ConsultantDto, locale: string = 'en') {
-        try {
-            const existUser = await this.consultantsRepository.findConsultant(Number(newUser.app_id), newUser.email);
+        const existUser = await this.consultantsRepository.findConsultant(Number(newUser.app_id), newUser.email);
 
-            if (existUser) {
-                throw new ConflictException({
-                    result_code: ErrorStatus.BAD_REQUEST,
-                    error: ResponseMessages.EmailAlreadyExist,
-                });
-            }
-
-            const consultantData: any = newUser;
-
-            if (newUser.email.includes('@chowistest.com')) {
-                consultantData['email_confirmed'] = true;
-            }
-
-            const consultant: Consultants = await this.consultantsRepository.createConsultant(consultantData);
-
-            const [confirmationToken, token] = await Promise.all([
-                this.jwtService.generateToken(
-                    { id: consultant.id, email: consultant.email, role: Role.Consultant },
-                    TokenTypeEnum.CONFIRMATION,
-                    null,
-                ),
-                this.authService.generateAuthTokens(
-                    { id: consultant.id, email: consultant.email, role: Role.Consultant },
-                    '',
-                ),
-            ]);
-
-            const [accessToken, refreshToken] = token;
-
-            await Promise.all([
-                this.sendAccountConfimationEmail(confirmationToken, consultant.email, locale),
-                this.consultantsRepository.updateConsultant(consultant.id, {
-                    confirm_token: confirmationToken,
-                    token: refreshToken,
-                }),
-            ]);
-
-            const consultantResponseData = await this.consultantsRepository.findOne({
-                where: {
-                    id: consultant.id,
-                },
-                relations: ['country_details', 'products', 'products.device'],
+        console.log('===>', existUser);
+        if (existUser !== null) {
+            throw new ConflictException({
+                result_code: ErrorStatus.BAD_REQUEST,
+                error: ResponseMessages.EmailAlreadyExist,
             });
-
-            return {
-                id: consultantResponseData.id,
-                email: consultantResponseData.email,
-                name: consultantResponseData.name,
-                surname: consultantResponseData.surname,
-                gender: consultantResponseData.gender,
-                os: consultantResponseData.os,
-                language: consultantResponseData.language,
-                phone: consultantResponseData.phone,
-                address: consultantResponseData.address,
-                city: consultantResponseData.city,
-                country: consultantResponseData.country,
-                zip_code: consultantResponseData.zip_code,
-                state: consultantResponseData.state,
-                birthdate: consultantResponseData.birthdate,
-                note: consultantResponseData.note,
-                push_token: consultantResponseData.push_token,
-                memo: consultantResponseData.memo,
-                app_id: consultantResponseData.app_id,
-                company_name: consultantResponseData.company_name,
-                company_address: consultantResponseData.company_address,
-                branch: consultantResponseData.branch,
-                position: consultantResponseData.position,
-                skin_color_group_id: consultantResponseData.skin_color_group_id,
-                ethnicity_id: consultantResponseData.ethnicity_id,
-                callback_url: consultantResponseData.callback_url,
-                code: consultantResponseData.code,
-                token: accessToken,
-                refresh_token: refreshToken,
-                social: consultantResponseData.social,
-                country_code: consultantResponseData.country_details?.code,
-                store: consultantResponseData.consultant_shop,
-                optic_number: consultantResponseData.getOpticNumbers,
-                password_update_needed: consultantResponseData.password_update_needed,
-            };
-        } catch (e) {
-            throw e;
         }
+
+        const consultantData: any = newUser;
+
+        if (newUser.email.includes('@chowistest.com')) {
+            consultantData['email_confirmed'] = true;
+        }
+
+        const consultant: Consultants = await this.consultantsRepository.createConsultant(consultantData);
+
+        const [confirmationToken, token] = await Promise.all([
+            this.jwtService.generateToken(
+                { id: consultant.id, email: consultant.email, role: Role.Consultant },
+                TokenTypeEnum.CONFIRMATION,
+                null,
+            ),
+            this.authService.generateAuthTokens(
+                { id: consultant.id, email: consultant.email, role: Role.Consultant },
+                '',
+            ),
+        ]);
+
+        const [accessToken, refreshToken] = token;
+
+        await Promise.all([
+            this.sendAccountConfimationEmail(confirmationToken, consultant.email, locale),
+            this.consultantsRepository.updateConsultant(consultant.id, {
+                confirm_token: confirmationToken,
+                token: refreshToken,
+            }),
+        ]);
+
+        console.log(consultant);
+
+        const consultantResponseData = await this.consultantsRepository.findOne({
+            where: {
+                id: consultant.id,
+            },
+            relations: ['country_details', 'products', 'products.device'],
+        });
+
+        return {
+            id: consultantResponseData.id,
+            email: consultantResponseData.email,
+            name: consultantResponseData.name,
+            surname: consultantResponseData.surname,
+            gender: consultantResponseData.gender,
+            os: consultantResponseData.os,
+            language: consultantResponseData.language,
+            phone: consultantResponseData.phone,
+            address: consultantResponseData.address,
+            city: consultantResponseData.city,
+            country: consultantResponseData.country,
+            zip_code: consultantResponseData.zip_code,
+            state: consultantResponseData.state,
+            birthdate: consultantResponseData.birthdate,
+            note: consultantResponseData.note,
+            push_token: consultantResponseData.push_token,
+            memo: consultantResponseData.memo,
+            app_id: consultantResponseData.app_id,
+            company_name: consultantResponseData.company_name,
+            company_address: consultantResponseData.company_address,
+            branch: consultantResponseData.branch,
+            position: consultantResponseData.position,
+            skin_color_group_id: consultantResponseData.skin_color_group_id,
+            ethnicity_id: consultantResponseData.ethnicity_id,
+            callback_url: consultantResponseData.callback_url,
+            code: consultantResponseData.code,
+            token: accessToken,
+            refresh_token: refreshToken,
+            social: consultantResponseData.social,
+            country_code: consultantResponseData.country_details?.code,
+            store: consultantResponseData.consultant_shop,
+            optic_number: consultantResponseData.getOpticNumbers,
+            password_update_needed: consultantResponseData.password_update_needed,
+        };
     }
 
     public async updateConsultantRuby(req: Request, body: UpdateConsultantRubyDto, locale: string = 'en') {
@@ -576,22 +578,6 @@ export class ConsultantsService {
             relations: includes ? includes : [],
         });
 
-        if (!consultant && conditions.email && conditions.app_id) {
-            const newConsultant = await this.dataReplication.replicateUserToMasterOperation(
-                conditions.email,
-                conditions.app_id,
-            );
-
-            const consultant = await this.consultantsRepository.findOne({
-                where: { id: newConsultant['id'] },
-                select: selections
-                    ? (selections as FindOptionsSelectByString<Consultants>)
-                    : ['id', 'email', 'app_id', 'name'],
-                relations: includes ? includes : [],
-            });
-            return consultant;
-        }
-
         return consultant;
     }
 
@@ -730,6 +716,7 @@ export class ConsultantsService {
 
         const confirmPwd = await this.verifyPassword(password, user?.password_digest ?? null);
 
+        console.log('confirmPwd ----> ', confirmPwd);
         if (confirmPwd) {
             return user;
         }
@@ -868,42 +855,38 @@ export class ConsultantsService {
     }
 
     async loginRuby(data: LoginConsultantDto, locale: string = 'en') {
-        try {
-            const { app_id, password, email } = data;
-            const consultant: Consultants = await this.validateUser(email, Number(app_id), password);
+        const { app_id, password, email } = data;
+        const consultant: Consultants = await this.validateUser(email, Number(app_id), password);
 
-            // ONLY APP_ID IS NULL
-            if (consultant.app_id === null) {
-                consultant.app_id = Number(data.app_id);
+        // ONLY APP_ID IS NULL
+        if (consultant.app_id === null) {
+            consultant.app_id = Number(data.app_id);
 
-                await this.consultantsRepository.save(consultant);
-            }
-
-            if (!consultant.email_confirmed) {
-                throw new BadRequestException({
-                    result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
-                    error: ResponseMessages.EmailNotConfirmed,
-                });
-            }
-
-            const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
-                { id: consultant.id, email: consultant.email, role: Role.Consultant },
-                '',
-            );
-
-            consultant.token = accessToken;
             await this.consultantsRepository.save(consultant);
-
-            await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
-
-            return {
-                token: accessToken,
-                refresh_token: refreshToken,
-                ...consultant.getConsultantsInfo,
-            };
-        } catch (e) {
-            throw e;
         }
+
+        if (!consultant.email_confirmed) {
+            throw new BadRequestException({
+                result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
+                error: ResponseMessages.EmailNotConfirmed,
+            });
+        }
+
+        const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
+            { id: consultant.id, email: consultant.email, role: Role.Consultant },
+            '',
+        );
+
+        consultant.token = accessToken;
+        await this.consultantsRepository.save(consultant);
+
+        await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
+
+        return {
+            token: accessToken,
+            refresh_token: refreshToken,
+            ...consultant.getConsultantsInfo,
+        };
     }
 
     async logout(id: number) {
@@ -1281,7 +1264,7 @@ export class ConsultantsService {
                 });
             }
 
-            consultant.password_digest = await argon2.hash(data.new_password);
+            consultant.password_digest = await this.bcryptHashPassword(data.new_password); //await argon2.hash(data.new_password);
 
             const subject = await this.commonService.translate('password_reset_subject', locale);
 
@@ -1733,7 +1716,7 @@ export class ConsultantsService {
             await this.passwordDetailRepository.save({ email: email, createdAt: new Date(), updatedAt: new Date() });
 
             const password = this.commonService.generateRandomPassword(12);
-            const hashedPassword = await argon2.hash(password);
+            const hashedPassword = await this.bcryptHashPassword(password); //await argon2.hash(password);
 
             await this.consultantsRepository.updateConsultant(consultant.id, { password_digest: hashedPassword });
 
@@ -1787,7 +1770,7 @@ export class ConsultantsService {
             });
         }
 
-        const password_digest = await argon2.hash(new_password);
+        const password_digest = await this.bcryptHashPassword(new_password); //await argon2.hash(new_password);
 
         const updatedConsultant = await this.consultantsRepository.updateConsultant(consultantId, {
             password_digest,
@@ -1873,7 +1856,7 @@ export class ConsultantsService {
             });
         }
 
-        const hashedPassword = await argon2.hash(password);
+        const hashedPassword = await this.bcryptHashPassword(password); //await argon2.hash(password);
 
         await this.consultantsRepository.updateConsultant(consultant.id, {
             password_digest: hashedPassword,
@@ -2763,7 +2746,7 @@ export class ConsultantsService {
                 relations: ['consultant_company'],
             });
 
-            console.log('device', device);
+            // console.log('device', consultant);
 
             if (!device) {
                 throw new BadRequestException('2:존재하지 않는 정보');
@@ -2771,6 +2754,10 @@ export class ConsultantsService {
 
             if (device.use_yn !== 'Y') {
                 throw new BadRequestException('3:존재하지 않는 정보');
+            }
+
+            if (device.consultant_company === null) {
+                device.consultant_company = consultant.consultant_company;
             }
 
             const device_id = device.id;
