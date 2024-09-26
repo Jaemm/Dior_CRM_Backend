@@ -313,7 +313,7 @@ export class ConsultantsService {
             this.consultantsRepository.updateConsultant(consultantData.id, {
                 confirm_token: confirmationToken,
                 token: refreshToken,
-                confirmation_sent_at: new Date(),
+                // confirmation_sent_at: new Date(),
             }),
         ]);
 
@@ -1989,8 +1989,8 @@ export class ConsultantsService {
                     pie_chart_color_5: company.pie_chart_color_5,
                     pie_chart_points_color: company.pie_chart_points_color,
                     active: company.active,
-                    font_color_1: company.font_color_1,
-                    font_color_2: company.font_color_2,
+                    // font_color_1: company.font_color_1,
+                    // font_color_2: company.font_color_2,
                     data_exchange_url: company.data_exchange_url,
                     pmx: company.pmx,
                 };
