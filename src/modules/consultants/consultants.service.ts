@@ -123,6 +123,7 @@ import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repos
 @Injectable()
 export class ConsultantsService {
     private readonly jwtConfig: IJwt;
+    private readonly saltRounds = 10;
 
     constructor(
         @InjectRepository(ProductRecommendations)
@@ -173,6 +174,9 @@ export class ConsultantsService {
     }
 
     // Account
+    async bcryptHashPassword(password: string): Promise<string> {
+        return bcrypt.hash(password, this.saltRounds);
+    }
 
     public async sendAccountConfimationEmail(token: string, email: string, locale: string) {
         const subject = await this.commonService.translate('confirm_email_subject', locale);
@@ -213,7 +217,7 @@ export class ConsultantsService {
 
     // Method to determine which hashing algorithm was used for a stored password
     determineHashAlgorithm(storedHash: string): 'bcrypt' | 'argon2' {
-        return storedHash.startsWith('$2a$') ? 'bcrypt' : 'argon2';
+        return storedHash.startsWith('$2') ? 'bcrypt' : 'argon2';
     }
 
     // Method to verify password based on the hashing algorithm used
@@ -1260,7 +1264,7 @@ export class ConsultantsService {
                 });
             }
 
-            consultant.password_digest = await argon2.hash(data.new_password);
+            consultant.password_digest = await this.bcryptHashPassword(data.new_password); //await argon2.hash(data.new_password);
 
             const subject = await this.commonService.translate('password_reset_subject', locale);
 
@@ -1712,7 +1716,7 @@ export class ConsultantsService {
             await this.passwordDetailRepository.save({ email: email, createdAt: new Date(), updatedAt: new Date() });
 
             const password = this.commonService.generateRandomPassword(12);
-            const hashedPassword = await argon2.hash(password);
+            const hashedPassword = await this.bcryptHashPassword(password); //await argon2.hash(password);
 
             await this.consultantsRepository.updateConsultant(consultant.id, { password_digest: hashedPassword });
 
@@ -1766,7 +1770,7 @@ export class ConsultantsService {
             });
         }
 
-        const password_digest = await argon2.hash(new_password);
+        const password_digest = await this.bcryptHashPassword(new_password); //await argon2.hash(new_password);
 
         const updatedConsultant = await this.consultantsRepository.updateConsultant(consultantId, {
             password_digest,
@@ -1852,7 +1856,7 @@ export class ConsultantsService {
             });
         }
 
-        const hashedPassword = await argon2.hash(password);
+        const hashedPassword = await this.bcryptHashPassword(password); //await argon2.hash(password);
 
         await this.consultantsRepository.updateConsultant(consultant.id, {
             password_digest: hashedPassword,
