@@ -15,6 +15,7 @@ import * as path from 'path';
 
 import { ConsultantsService } from '../consultants/consultants.service';
 import {
+    CreateCrmCustomerDto,
     CustomerSyncDto,
     GetByEmailDto,
     GetCustomerDto,
@@ -381,21 +382,20 @@ export class CRMService {
         return { ...updatedCustomer, consultant_name: consultant.name, optic_number: updatedCustomer.getOpticNumbers };
     }
 
-    async createCustomer(consultantId: number, data: UpdateCrmCustomersDto, locale = 'en') {
+    async createCustomer(consultantId: number, data: CreateCrmCustomerDto, locale = 'en') {
         try {
             const { email, phone } = data;
 
-            if (!email || !phone) {
+            if (!email && !phone) {
                 throw new BadRequestException({
                     result_code: ErrorStatus.CUSTOM_ERROR,
                     error: this.commonService.createLocaleErrorMessage(
                         locale,
                         'custom_error',
-                        'Missing email and phone number',
+                        'Either email or phone number must be provided',
                     ),
                 });
             }
-
             const consultant = this.consultantRepository.findOneBy({ id: consultantId });
 
             if (!consultant) {
@@ -407,6 +407,7 @@ export class CRMService {
 
             const newCustomer = this.customersRepository.create({
                 email: data?.email,
+                consultant_id: consultantId,
                 name: data?.name,
                 surname: data?.surname,
                 gender: data?.gender,
@@ -643,7 +644,7 @@ export class CRMService {
             await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
 
             const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
-            const downloadUrl = `${baseUrl}/v1/api/crm/customers/files/${hash}`;
+            const downloadUrl = `${baseUrl}/api/crm/customers/files/${hash}`;
 
             await this.presignRepository.saveNewPresignEntity({
                 hash: hash,

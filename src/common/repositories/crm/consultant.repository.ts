@@ -146,7 +146,7 @@ export class ConsultantsRepository extends Repository<Consultants> {
 
     async createConsultant(newUser: any) {
         const user: any = {
-            password_digest: (await argon2.hash(newUser.password)) ?? null,
+            password_digest: newUser.password ?? null,
             email: newUser.email,
             unconfirmed_email: newUser.email,
             app_id: newUser.app_id,

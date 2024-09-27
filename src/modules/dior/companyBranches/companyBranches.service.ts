@@ -395,7 +395,7 @@ export class DiorCompanyBranchesService {
             await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
 
             const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
-            const downloadUrl = `${baseUrl}/v1/api/dior/company_branches/files/${hash}`;
+            const downloadUrl = `${baseUrl}/api/dior/company_branches/files/${hash}`;
 
             await this.presignRepository.saveNewPresignEntity({
                 hash: hash,
