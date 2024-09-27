@@ -313,7 +313,7 @@ export class ConsultantsService {
             this.consultantsRepository.updateConsultant(consultantData.id, {
                 confirm_token: confirmationToken,
                 token: refreshToken,
-                confirmation_sent_at: new Date(),
+                // confirmation_sent_at: new Date(),
             }),
         ]);
 
@@ -332,7 +332,7 @@ export class ConsultantsService {
     public async signUpRuby(newUser: ConsultantDto, locale: string = 'en') {
         const existUser = await this.consultantsRepository.findConsultant(Number(newUser.app_id), newUser.email);
 
-        console.log('===>', existUser);
+        
         if (existUser !== null) {
             throw new ConflictException({
                 result_code: ErrorStatus.BAD_REQUEST,
@@ -346,6 +346,7 @@ export class ConsultantsService {
             consultantData['email_confirmed'] = true;
         }
 
+        consultantData.password = await this.bcryptHashPassword(consultantData.password)
         const consultant: Consultants = await this.consultantsRepository.createConsultant(consultantData);
 
         const [confirmationToken, token] = await Promise.all([

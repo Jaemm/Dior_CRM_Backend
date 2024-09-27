@@ -9,13 +9,12 @@ export class CRMDto {
 }
 
 export class UpdateConsentForm {
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
-    consent_form_answers: string;
+    consent_form_answers: any;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @Validate(IsNumberOrString)
     customer_id: number;
 
@@ -117,10 +116,10 @@ export class GetCustomerDto {
 }
 
 export class CreateCrmCustomerDto {
-    @ApiProperty()
-    @IsNotEmpty()
-    @Validate(IsNumberOrString)
-    consultant_id: number;
+    // @ApiProperty()
+    // @IsNotEmpty()
+    // @Validate(IsNumberOrString)
+    // consultant_id: number;
 
     @ApiProperty()
     @IsOptional()
