@@ -856,7 +856,8 @@ export class ConsultantsService {
     }
 
     async loginRuby(data: LoginConsultantDto, locale: string = 'en') {
-        const { app_id, password, email } = data;
+        let { app_id, password, email } = data;
+
         const consultant: Consultants = await this.validateUser(email, Number(app_id), password);
 
         // ONLY APP_ID IS NULL
