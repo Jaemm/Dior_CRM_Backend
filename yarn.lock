@@ -1007,7 +1007,7 @@
     "lodash" "4.17.21"
     "uuid" "9.0.0"
 
-"@nestjs/core@^8.0.0 || ^9.0.0", "@nestjs/core@^9.0.0", "@nestjs/core@^9.0.0 || ^10.0.0", "@nestjs/core@^9.3.7 || ^10.0.0":
+"@nestjs/core@^8.0.0 || ^9.0.0", "@nestjs/core@^8.0.0 || ^9.0.0 || ^10.0.0", "@nestjs/core@^9.0.0", "@nestjs/core@^9.0.0 || ^10.0.0", "@nestjs/core@^9.3.7 || ^10.0.0":
   "integrity" "sha512-Qi63+wi55Jh4sDyaj5Hhx2jOpKqT386aeo+VOKsxnd+Ql9VvkO/FjmuwBGUyzkJt29ENYc+P0Sx/k5LtstNpPQ=="
   "resolved" "https://registry.npmjs.org/@nestjs/core/-/core-9.4.3.tgz"
   "version" "9.4.3"
@@ -1055,6 +1055,14 @@
     "express" "4.18.2"
     "multer" "1.4.4-lts.1"
     "tslib" "2.5.3"
+
+"@nestjs/schedule@^4.1.1":
+  "integrity" "sha512-VxAnCiU4HP0wWw8IdWAVfsGC/FGjyToNjjUtXDEQL6oj+w/N5QDd2VT9k6d7Jbr8PlZuBZNdWtDKSkH5bZ+RXQ=="
+  "resolved" "https://registry.npmjs.org/@nestjs/schedule/-/schedule-4.1.1.tgz"
+  "version" "4.1.1"
+  dependencies:
+    "cron" "3.1.7"
+    "uuid" "10.0.0"
 
 "@nestjs/schematics@^9.0.0", "@nestjs/schematics@^9.0.4":
   "integrity" "sha512-wHpNJDPzM6XtZUOB3gW0J6mkFCSJilzCM3XrHI1o0C8vZmFE1snbmkIXNyoi1eV0Nxh1BMymcgz5vIMJgQtTqw=="
@@ -1504,6 +1512,11 @@
   "integrity" "sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA=="
   "resolved" "https://registry.npmjs.org/@types/long/-/long-4.0.2.tgz"
   "version" "4.0.2"
+
+"@types/luxon@~3.4.0":
+  "integrity" "sha512-TifLZlFudklWlMBfhubvgqTXRzLDI5pCbGa4P8a3wPyUQSW+1xQ5eDsreP9DWHX3tjq1ke96uYG/nwundroWcA=="
+  "resolved" "https://registry.npmjs.org/@types/luxon/-/luxon-3.4.2.tgz"
+  "version" "3.4.2"
 
 "@types/methods@^1.1.4":
   "integrity" "sha512-ymXWVrDiCxTBE3+RIrrP533E70eA+9qu7zdWoHuOmGujkYtzf4HQF96b8nwHLqhuf4ykX61IGRIB38CC6/sImQ=="
@@ -3542,6 +3555,14 @@
   "integrity" "sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ=="
   "resolved" "https://registry.npmjs.org/create-require/-/create-require-1.1.1.tgz"
   "version" "1.1.1"
+
+"cron@3.1.7":
+  "integrity" "sha512-tlBg7ARsAMQLzgwqVxy8AZl/qlTc5nibqYwtNGoCrd+cV+ugI+tvZC1oT/8dFH8W455YrywGykx/KMmAqOr7Jw=="
+  "resolved" "https://registry.npmjs.org/cron/-/cron-3.1.7.tgz"
+  "version" "3.1.7"
+  dependencies:
+    "@types/luxon" "~3.4.0"
+    "luxon" "~3.4.0"
 
 "cross-spawn@^5.0.1":
   "integrity" "sha512-pTgQJ5KC0d2hcY8eyL1IzlBPYjTkyH72XRZPnLyKus2mBfNjQs3klqbJU2VILqZryAZUt9JOb3h/mWMy23/f5A=="
@@ -7203,6 +7224,11 @@
     "lodash.clonedeep" "^4.5.0"
     "lru-cache" "6.0.0"
 
+"luxon@~3.4.0":
+  "integrity" "sha512-zobTr7akeGHnv7eBOXcRgMeCP6+uyYsczwmeRCauvpvaAltgNyTbLH/+VaEAPUeWBT+1GuNmz4wC/6jtQzbbVA=="
+  "resolved" "https://registry.npmjs.org/luxon/-/luxon-3.4.4.tgz"
+  "version" "3.4.4"
+
 "macos-release@^2.5.0":
   "integrity" "sha512-DXqXhEM7gW59OjZO8NIjBCz9AQ1BEMrfiOAl4AYByHCtVHRF4KoGNO8mqQeM8lRCtQe/UnJ4imO/d2HdkKsd+A=="
   "resolved" "https://registry.npmjs.org/macos-release/-/macos-release-2.5.1.tgz"
@@ -7796,6 +7822,13 @@
   "integrity" "sha512-vgbBJTS4m5/KkE16t5Ly0WW9hz46swAstv0hYYwMtbG7AznRhNyfLRe8HZAiWIpcHzoO7HxhLuBQj9rJ/Ho0ZA=="
   "resolved" "https://registry.npmjs.org/node-addon-api/-/node-addon-api-7.0.0.tgz"
   "version" "7.0.0"
+
+"node-cron@^3.0.3":
+  "integrity" "sha512-dOal67//nohNgYWb+nWmg5dkFdIwDm8EpeGYMekPMrngV3637lqnX0lbUcCtgibHTz6SEz7DAIjKvKDFYCnO1A=="
+  "resolved" "https://registry.npmjs.org/node-cron/-/node-cron-3.0.3.tgz"
+  "version" "3.0.3"
+  dependencies:
+    "uuid" "8.3.2"
 
 "node-emoji@1.11.0":
   "integrity" "sha512-wo2DpQkQp7Sjm2A0cq+sN7EHKO6Sl0ctXeBdFZrL9T9+UywORbufTcTZxom8YqpLQt/FqNMUkOpkZrJVYSKD3A=="
@@ -10724,6 +10757,11 @@
   "integrity" "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA=="
   "resolved" "https://registry.npmjs.org/uuid/-/uuid-9.0.1.tgz"
   "version" "9.0.1"
+
+"uuid@10.0.0":
+  "integrity" "sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ=="
+  "resolved" "https://registry.npmjs.org/uuid/-/uuid-10.0.0.tgz"
+  "version" "10.0.0"
 
 "uuid@8.0.0":
   "integrity" "sha512-jOXGuXZAWdsTH7eZLtyXMqUb9EcWMGZNbL9YcGBJl4MH4nrxHmZJhEHvyLFrkxo+28uLb/NYRcStH48fnD0Vzw=="

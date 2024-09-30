@@ -366,7 +366,7 @@ export class ConsultantsController {
     @Roles(Role.Consultant)
     @Get('generate_flat_file_dior')
     async generateFlatFileDior(@Req() req: Request, @Res() res: Response) {
-        const result = await this.consultants.generateFlatFileDior(req);
+        const result = await this.consultants.generateFlatFileDior();
         return res.status(200).send(result);
     }
 

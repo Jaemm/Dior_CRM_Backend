@@ -39,7 +39,7 @@ import {
 import { CountriesRepository } from './common/repositories/crm/countries.repository';
 import { UtilsModule } from './modules/utils/utils.module';
 import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
-
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -81,7 +81,8 @@ import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
             http: process.env.NODE_ENV !== 'production',
         }),
 
-        //
+        ScheduleModule.forRoot(),
+
         DatabaseModule,
 
         ConsultantsModule,
