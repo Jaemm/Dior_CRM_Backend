@@ -2164,7 +2164,7 @@ export class ConsultantsService {
         const newSaleConnection = this.salesConnectionRepository.create({
             consultantId: Number(consultant_id),
             batchId: Number(batch_id),
-            countryName: country_name,
+            countryName: country_name  
         });
 
         try {
