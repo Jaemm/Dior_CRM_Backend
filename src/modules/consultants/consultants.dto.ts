@@ -608,17 +608,17 @@ export class LoginSocialDto {
 
 export class CreateSalesConnectionDto {
     @ApiProperty()
-    @IsString()
     @IsOptional()
+    @Validate(IsNumberOrString)
     consultant_id: string;
 
     @ApiProperty()
-    @IsString()
+    @Validate(IsNumberOrString)
     @IsOptional()
     batch_id: string;
 
     @ApiProperty()
-    @IsString()
+    @Validate(IsNumberOrString)
     @IsOptional()
     country_name: string;
 }
