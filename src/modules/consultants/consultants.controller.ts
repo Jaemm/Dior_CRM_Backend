@@ -148,14 +148,18 @@ export class ConsultantsController {
     }
 
     @ApiBearerAuth()
-    // @Roles(Role.Consultant)
+    @Roles(Role.Consultant)
     @Post('create-sales-connection')
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async createSalesConnection(
         @Res() res: Response,
-        @Body() body: CreateSalesConnectionDto,
+        @Body() body: any,
         @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Req() req: Request,
     ) {
+        const userId = Number((<{ id: string }>req['user']).id);
+        console.log(body);
+        if (!body?.consultant_id) body.consultant_id = userId;
         const result = await this.consultants.createSalesConnection(body, locale);
         return res.status(200).send(result);
     }
@@ -220,7 +224,6 @@ export class ConsultantsController {
         @Body() body: EnterProductDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
-        console.log('body---> ', body);
         const result = await this.consultants.enterProducts(req, body, locale);
         return res.status(200).send(result);
     }

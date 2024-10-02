@@ -608,19 +608,29 @@ export class LoginSocialDto {
 
 export class CreateSalesConnectionDto {
     @ApiProperty()
-    @IsString()
+    @Validate(IsNumberOrString)
     @IsOptional()
-    consultant_id: string;
+    consultant_id: number;
 
     @ApiProperty()
-    @IsString()
+    @Validate(IsNumberOrString)
     @IsOptional()
-    batch_id: string;
+    batch_id: number;
 
     @ApiProperty()
     @IsString()
     @IsOptional()
     country_name: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    answer1: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsOptional()
+    answer2: string;
 }
 
 export class FetchSalesConnectionDto {

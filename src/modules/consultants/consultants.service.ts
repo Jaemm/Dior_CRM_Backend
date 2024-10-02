@@ -333,7 +333,6 @@ export class ConsultantsService {
     public async signUpRuby(newUser: ConsultantDto, locale: string = 'en') {
         const existUser = await this.consultantsRepository.findConsultant(Number(newUser.app_id), newUser.email);
 
-        
         if (existUser !== null) {
             throw new ConflictException({
                 result_code: ErrorStatus.BAD_REQUEST,
@@ -347,7 +346,7 @@ export class ConsultantsService {
             consultantData['email_confirmed'] = true;
         }
 
-        consultantData.password = await this.bcryptHashPassword(consultantData.password)
+        consultantData.password = await this.bcryptHashPassword(consultantData.password);
         const consultant: Consultants = await this.consultantsRepository.createConsultant(consultantData);
 
         const [confirmationToken, token] = await Promise.all([
@@ -2127,7 +2126,7 @@ export class ConsultantsService {
     }
 
     async createSalesConnection(body: CreateSalesConnectionDto, locale = 'en') {
-        const { consultant_id, batch_id, country_name } = body;
+        let { consultant_id, batch_id, country_name, answer1, answer2 } = body;
 
         if (!consultant_id) {
             throw new BadRequestException({
@@ -2150,20 +2149,23 @@ export class ConsultantsService {
             });
         }
         if (!country_name) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.CUSTOM_ERROR,
-                error: this.commonService.createLocaleErrorMessage(
-                    locale,
-                    'custom_error',
-                    'Country name missing! country_name param needed',
-                ),
-            });
+            country_name = '';
+            // throw new BadRequestException({
+            //     result_code: ErrorStatus.CUSTOM_ERROR,
+            //     error: this.commonService.createLocaleErrorMessage(
+            //         locale,
+            //         'custom_error',
+            //         'Country name missing! country_name param needed',
+            //     ),
+            // });
         }
 
         const newSaleConnection = this.salesConnectionRepository.create({
             consultantId: Number(consultant_id),
             batchId: Number(batch_id),
             countryName: country_name,
+            answer1: answer1,
+            answer2: answer2,
         });
 
         try {
