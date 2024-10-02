@@ -2128,7 +2128,7 @@ export class ConsultantsService {
     }
 
     async createSalesConnection(body: CreateSalesConnectionDto, locale = 'en') {
-        const { consultant_id, batch_id, country_name } = body;
+        let { consultant_id, batch_id, country_name } = body;
 
         if (!consultant_id) {
             throw new BadRequestException({
@@ -2151,20 +2151,22 @@ export class ConsultantsService {
             });
         }
         if (!country_name) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.CUSTOM_ERROR,
-                error: this.commonService.createLocaleErrorMessage(
-                    locale,
-                    'custom_error',
-                    'Country name missing! country_name param needed',
-                ),
-            });
+            country_name = ''
+            // throw new BadRequestException({
+            //     result_code: ErrorStatus.CUSTOM_ERROR,
+            //     error: this.commonService.createLocaleErrorMessage(
+            //         locale,
+            //         'custom_error',
+            //         'Country name missing! country_name param needed',
+            //     ),
+            // });
         }
 
         const newSaleConnection = this.salesConnectionRepository.create({
             consultantId: Number(consultant_id),
             batchId: Number(batch_id),
-            countryName: country_name  
+            countryName: country_name,
+            createdAt: new Date()
         });
 
         try {
