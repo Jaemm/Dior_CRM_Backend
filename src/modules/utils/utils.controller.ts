@@ -11,7 +11,7 @@ export class UtilsController {
     constructor(private readonly utlis: UtilsService) {}
 
     @ApiBearerAuth()
-    @Roles(Role.Consultant)
+    // @Roles(Role.Consultant)
     @Get('generate_qr_code')
     generateQRCodeUrl(@Query('url') url: string) {
         // Return the URL of the QR code image (handled in another endpoint)

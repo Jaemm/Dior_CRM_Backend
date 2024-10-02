@@ -134,6 +134,8 @@ export class CRMController {
     @Roles(Role.Consultant)
     @Put('customers/update_consent_form')
     async updateConsentForm(@Res() res: Response, @Body() body: UpdateConsentForm): Promise<any> {
+        
+        body.customer_id = body?.customer_id ? body.customer_id : 0
         const result = await this.crmService.updateConsentForm(body);
         return res.status(200).send(result);
     }

@@ -208,7 +208,7 @@ export class DiorService {
             const createFileUrl = (key: string) => {
                 const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
 
-                const url = `${baseUrl}/v1/api/dior/file/${key}`;
+                const url = `${baseUrl}/api/dior/file/${key}`;
 
                 return url;
             };

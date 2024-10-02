@@ -7,7 +7,7 @@ source ~/.nvm/nvm.sh
 echo "Starting deployment process"
 
 # Change directory to where your application is located
-cd /home/ubuntu/repositories/BE_nodejs_login_crm_v1/
+cd /home/ubuntu/repositories/BE_dior_v2_crm/
 
 # Pull the latest changes from the Git repository
 echo "Pulling the latest changes from the Git repository"
