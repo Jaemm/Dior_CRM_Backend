@@ -225,6 +225,7 @@ export class ConsultantsService {
     async verifyPassword(enteredPassword: string, storedHash: string): Promise<boolean> {
         const hashAlgorithm = this.determineHashAlgorithm(storedHash);
 
+        console.log('hashAlgorithm', hashAlgorithm);
         switch (hashAlgorithm) {
             case 'bcrypt':
                 return this.verifyPasswordBcrypt(enteredPassword, storedHash);
@@ -2126,11 +2127,7 @@ export class ConsultantsService {
     }
 
     async createSalesConnection(body: CreateSalesConnectionDto, locale = 'en') {
-<<<<<<< HEAD
-        let { consultant_id, batch_id, country_name } = body;
-=======
         let { consultant_id, batch_id, country_name, answer1, answer2 } = body;
->>>>>>> adbdcb6e91d906a8dcc8eea8be911b65c20e23d5
 
         if (!consultant_id) {
             throw new BadRequestException({
@@ -2153,11 +2150,7 @@ export class ConsultantsService {
             });
         }
         if (!country_name) {
-<<<<<<< HEAD
-            country_name = ''
-=======
             country_name = '';
->>>>>>> adbdcb6e91d906a8dcc8eea8be911b65c20e23d5
             // throw new BadRequestException({
             //     result_code: ErrorStatus.CUSTOM_ERROR,
             //     error: this.commonService.createLocaleErrorMessage(
@@ -2172,12 +2165,8 @@ export class ConsultantsService {
             consultantId: Number(consultant_id),
             batchId: Number(batch_id),
             countryName: country_name,
-<<<<<<< HEAD
-            createdAt: new Date()
-=======
             answer1: answer1,
             answer2: answer2,
->>>>>>> adbdcb6e91d906a8dcc8eea8be911b65c20e23d5
         });
 
         try {
@@ -3026,7 +3015,7 @@ export class ConsultantsService {
     }
 
     // CRON;
-    // @Cron('*/1 * * * *')
+    @Cron('0 0 * * *')
     async generateFlatFileDior() {
         try {
             const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
@@ -3154,7 +3143,7 @@ export class ConsultantsService {
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
-            const dateString = '2024-09-26'; //`${yyyy}-${mm}-${dd}`;
+            const dateString = `${yyyy}-${mm}-${dd}`;
 
             const fileName = `${dateString}.json`;
             const filePath = path.join(flatFilesDirectoryPath, fileName);
@@ -3189,10 +3178,6 @@ export class ConsultantsService {
         return periodLeft;
     }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> adbdcb6e91d906a8dcc8eea8be911b65c20e23d5
     expiredDate(firstUseDate: string, licensePeriod: number) {
         if (firstUseDate && licensePeriod) {
             return new Date(new Date(firstUseDate).getTime() + licensePeriod * 24 * 60 * 60 * 1000); // Convert days to milliseconds
