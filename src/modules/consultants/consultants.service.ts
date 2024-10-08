@@ -119,6 +119,7 @@ import {
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 import { LicenseHistoriesRepository } from '@/src/common/repositories/crm/licenseHistories.repository';
 import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repository';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class ConsultantsService {
@@ -332,7 +333,6 @@ export class ConsultantsService {
     public async signUpRuby(newUser: ConsultantDto, locale: string = 'en') {
         const existUser = await this.consultantsRepository.findConsultant(Number(newUser.app_id), newUser.email);
 
-        
         if (existUser !== null) {
             throw new ConflictException({
                 result_code: ErrorStatus.BAD_REQUEST,
@@ -346,7 +346,7 @@ export class ConsultantsService {
             consultantData['email_confirmed'] = true;
         }
 
-        consultantData.password = await this.bcryptHashPassword(consultantData.password)
+        consultantData.password = await this.bcryptHashPassword(consultantData.password);
         const consultant: Consultants = await this.consultantsRepository.createConsultant(consultantData);
 
         const [confirmationToken, token] = await Promise.all([
@@ -762,8 +762,6 @@ export class ConsultantsService {
         const { app_id, password, email } = data;
         const consultant = await this.validateUser(email, Number(app_id), password);
         const checkToken = this.authService.isTokenExpired(consultant.token);
-
-        console.log(consultant);
 
         if (!consultant.email_confirmed) {
             if (!checkToken) {
@@ -2128,7 +2126,11 @@ export class ConsultantsService {
     }
 
     async createSalesConnection(body: CreateSalesConnectionDto, locale = 'en') {
+<<<<<<< HEAD
         let { consultant_id, batch_id, country_name } = body;
+=======
+        let { consultant_id, batch_id, country_name, answer1, answer2 } = body;
+>>>>>>> adbdcb6e91d906a8dcc8eea8be911b65c20e23d5
 
         if (!consultant_id) {
             throw new BadRequestException({
@@ -2151,7 +2153,11 @@ export class ConsultantsService {
             });
         }
         if (!country_name) {
+<<<<<<< HEAD
             country_name = ''
+=======
+            country_name = '';
+>>>>>>> adbdcb6e91d906a8dcc8eea8be911b65c20e23d5
             // throw new BadRequestException({
             //     result_code: ErrorStatus.CUSTOM_ERROR,
             //     error: this.commonService.createLocaleErrorMessage(
@@ -2166,7 +2172,12 @@ export class ConsultantsService {
             consultantId: Number(consultant_id),
             batchId: Number(batch_id),
             countryName: country_name,
+<<<<<<< HEAD
             createdAt: new Date()
+=======
+            answer1: answer1,
+            answer2: answer2,
+>>>>>>> adbdcb6e91d906a8dcc8eea8be911b65c20e23d5
         });
 
         try {
@@ -3014,19 +3025,27 @@ export class ConsultantsService {
         });
     }
 
-    async generateFlatFileDior(req: Request) {
+    // CRON;
+    // @Cron('*/1 * * * *')
+    async generateFlatFileDior() {
         try {
             const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
-            // const CNDP_SKIN_ANALYSIS_URL = 'http://localhost:3444';
 
-            const token = req.headers.authorization.split(' ')[1];
+            const data = {
+                app_id: '88',
+                email: 'krtest@diormail.com',
+                password: process.env.LOGIN_PASSWORD,
+                confirmPassword: process.env.LOGIN_PASSWORD,
+            };
+            const userData = await this.login(data, 'en');
+            const token = userData.token;
 
-            if (!token) {
-                throw new UnauthorizedException({
-                    result_code: ErrorStatus.UNAUTHORIZED,
-                    error: this.commonService.createLocaleErrorMessage('en', 'unauthorized'),
-                });
-            }
+            // if (!token) {
+            //     throw new UnauthorizedException({
+            //         result_code: ErrorStatus.UNAUTHORIZED,
+            //         error: this.commonService.createLocaleErrorMessage('en', 'unauthorized'),
+            //     });
+            // }
 
             const customers = await this.customersRepository.getTodayCreatedCustomers();
 
@@ -3130,16 +3149,18 @@ export class ConsultantsService {
                 await fs.mkdir(flatFilesDirectoryPath);
             }
 
+            //
             const today = new Date();
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
-            const dateString = `${yyyy}-${mm}-${dd}`;
+            const dateString = '2024-09-26'; //`${yyyy}-${mm}-${dd}`;
 
             const fileName = `${dateString}.json`;
             const filePath = path.join(flatFilesDirectoryPath, fileName);
 
             const jsonData = JSON.stringify(result);
+            console.log('jsonData ====>', jsonData);
 
             fs.writeFile(filePath, jsonData)
                 .then(() => console.log(`${fileName} writing success`))
@@ -3149,6 +3170,7 @@ export class ConsultantsService {
                 data: result,
             };
         } catch (e) {
+            console.log(e);
             throw e;
         }
     }
@@ -3167,7 +3189,10 @@ export class ConsultantsService {
         return periodLeft;
     }
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> adbdcb6e91d906a8dcc8eea8be911b65c20e23d5
     expiredDate(firstUseDate: string, licensePeriod: number) {
         if (firstUseDate && licensePeriod) {
             return new Date(new Date(firstUseDate).getTime() + licensePeriod * 24 * 60 * 60 * 1000); // Convert days to milliseconds

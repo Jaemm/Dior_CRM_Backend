@@ -22,14 +22,14 @@ export class SalesConn {
     @Column('timestamp without time zone', {
         name: 'created_at',
         nullable: true,
-        default: () => 'now()',
+        default: () => 'CURRENT_TIMESTAMP',
     })
     createdAt: Date | null;
 
     @Column('timestamp without time zone', {
         name: 'updated_at',
         nullable: true,
-        default: () => 'now()',
+        default: () => 'CURRENT_TIMESTAMP',
     })
     updatedAt: Date | null;
 }

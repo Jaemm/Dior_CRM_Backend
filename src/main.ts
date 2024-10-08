@@ -3,9 +3,9 @@ import { AppModule } from './app.module';
 import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AppService } from './app.service';
 
 async function bootstrap() {
-
     const SSL = process.env.SSL;
     const HOSTNAME = process.env.HOSTNAME;
 
@@ -16,6 +16,8 @@ async function bootstrap() {
         rawBody: true,
         logger: ['log', 'error', 'warn', 'debug', 'verbose'],
     });
+    const appService = app.get(AppService); // Get AppService
+    appService.handleApp(app);
 
     const port = Number(process.env.PORT) || 8081;
     console.log(`Configured Port: ${port}`);
@@ -27,7 +29,7 @@ async function bootstrap() {
             .setTitle('Chowis User management and Login V1/API')
             .setDescription('Chowis User management and Login V1/API')
             .setDescription(
-                `<b>Production</b>: https://crm.chowis.cloud/v1/api <br>
+                `<b>Production</b>: https://crm-dior.chowis.cloud/v1/api <br>
                 <b>Stagging</b>: https://crm-staging.chowis.cloud/v1/api <br>
                `,
             )
