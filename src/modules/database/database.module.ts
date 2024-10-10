@@ -1,14 +1,6 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
-// import { ServeStaticModule } from '@nestjs/serve-static';
-import { join } from 'path';
-
-import { DevtoolsModule } from '@nestjs/devtools-integration';
-import { Analysis } from '@/src/common/entities/analysisEntities/Analysis.entity';
 
 @Module({
     imports: [
