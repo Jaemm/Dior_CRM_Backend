@@ -84,6 +84,24 @@ export class AnalysisDataReplicationService {
         }
     }
 
+    async getStatisticsConsultantions(startDate?: string, endDate?: string) {
+        try {
+            const consultationQuery = await this.diorCndpSkinRepository.createQueryBuilder('analysis');
+
+            if (startDate && endDate) {
+                consultationQuery.andWhere(
+                    `analysis.created_time BETWEEN ${startDate} 00:00:00 AND ${endDate} 23:59:59`,
+                );
+            }
+
+            const consultations = await consultationQuery.getMany();
+
+            return consultations;
+        } catch (e) {
+            throw e;
+        }
+    }
+
     async getConsultantions(startDate?: string, endDate?: string) {
         try {
             const consultationQuery = await this.diorCndpSkinRepository

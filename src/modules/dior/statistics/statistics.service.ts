@@ -118,8 +118,8 @@ export class StatisticsService {
 
                 const deviceQuery = this.productRepository
                     .createQueryBuilder('products')
-                    .select('DISTINCT (products.deviceId)', 'deviceIds')
-                    .where('products.consultantId IN (:...consultantIds)', {
+                    .select('DISTINCT (products.device_id)', 'deviceIds')
+                    .where('products.consultant_id IN (:...consultantIds)', {
                         consultantIds: consultants.map((consultant) => consultant.id),
                     });
 
@@ -136,106 +136,78 @@ export class StatisticsService {
 
                 const branchQuery = this.consultantRepository
                     .createQueryBuilder('consultants')
-                    .select('DISTINCT (consultants.consultant_branch_id)', 'branchId')
+                    .select('consultants.consultant_branch_id', 'branchId') // Correct use of DISTINCT
                     .leftJoinAndSelect('consultants.consultant_branch', 'consultant_branch')
                     .where('consultants.id IN (:...consultantIds)', {
                         consultantIds: consultants.map((consultant) => consultant.id),
                     });
+
+                // Check if start_date and end_date exist, and apply them as query parameters
                 if (start_date && end_date) {
-                    branchQuery.andWhere(`consultant_branch.created_at BETWEEN ${start_date} AND ${end_date}`);
+                    branchQuery.andWhere('consultant_branch.created_at BETWEEN :startDate AND :endDate', {
+                        startDate: start_date,
+                        endDate: end_date,
+                    });
                 }
 
                 branches = await branchQuery.getMany();
 
                 consultation = await this.analysisDataReplicationService.getConsultationByConsultant(consultants);
             } else if (PositionsIds.SUPER_ADMIN === Number(currentConsultant.consultant_position_id)) {
-                consultants = await this.consultantRepository
-                    .createQueryBuilder('consultants')
-                    .where('consultants.consultant_branch_id IN (:...branchIds)', {
-                        branchIds: diorBranches.map((branch) => branch.id),
-                    })
-                    .andWhere('consultants.id NOT IN (:...ids)', {
-                        ids: [11156, 9304],
-                    })
-                    .getMany();
+                if (PositionsIds.SUPER_ADMIN === Number(currentConsultant.consultant_position_id)) {
+                    // Fetch consultants for the SUPER_ADMIN position
+                    consultants = await this.consultantRepository
+                        .createQueryBuilder('consultants')
+                        .where('consultants.consultant_branch_id IN (:...branchIds)', {
+                            branchIds: diorBranches.map((branch) => branch.id),
+                        })
+                        .andWhere('consultants.id NOT IN (:...ids)', {
+                            ids: [11156, 9304],
+                        })
+                        .getMany();
 
-                const customerQuery = this.customerRepository.createQueryBuilder('customers');
+                    // Build customer query
+                    const customerQuery = this.customerRepository.createQueryBuilder('customers');
+                    if (start_date && end_date) {
+                        customerQuery.andWhere('customers.created_at BETWEEN :startDate AND :endDate', {
+                            startDate: `${start_date} 00:00:00`,
+                            endDate: `${end_date} 23:59:59`,
+                        });
+                    }
 
-                if (start_date && end_date) {
-                    customerQuery.andWhere(
-                        `customers.created_at BETWEEN ${start_date} 00:00:00 AND ${end_date} 23:59:59`,
-                    );
+                    // Fetch customers, consultations, products, and devices in parallel
+                    const [customerList, total, consultation_, products] = await Promise.all([
+                        customerQuery.getMany(), // Fetch customers
+                        customerQuery.getCount(), // Fetch customer count (could be done with `getManyAndCount`)
+                        this.analysisDataReplicationService.getConsultantions(), // Fetch consultation stats
+                        this.productRepository.find({
+                            where: {
+                                consultant_id: In(consultants.map((consultant) => consultant.id)),
+                            },
+                        }), // Fetch products by consultant
+                    ]);
+
+                    totalClients = total;
+                    customer = customerList;
+                    consultation = consultation_;
+
+                    // Fetch devices linked to the products and Dior devices
+                    const productDeviceIds = products.map((product) => product.device_id);
+                    const diorDeviceIds = diorDevices.map((device) => device.id);
+
+                    devices = await this.devicesRepository
+                        .createQueryBuilder('devices')
+                        .where('devices.id IN (:...productDeviceIds)', { productDeviceIds })
+                        .orWhere('devices.id IN (:...diorDeviceIds)', { diorDeviceIds })
+                        .getMany();
                 }
-
-                const [customerList, total] = await customerQuery.getManyAndCount();
-
-                totalClients = total;
-                customer = customerList;
-
-                consultation = await this.analysisDataReplicationService.getConsultantions();
-
-                products = await this.productRepository.find({
-                    where: {
-                        consultant_id: In(consultants.map((consultant) => consultant.id)),
-                    },
-                });
-
-                devices = await this.devicesRepository.find({
-                    where: {
-                        id: In(products.map((product) => product.device_id)),
-                    },
-                });
-                devices = await this.devicesRepository
-                    .createQueryBuilder('devices')
-                    .where('devices.id IN (:...ids)', {
-                        ids: devices.map((d) => d.id),
-                    })
-                    .orWhere('devices.id IN (:...ids)', {
-                        ids: diorDevices.map((d) => d.id),
-                    })
-                    .getMany();
-            } else {
-                totalClients = 0;
-                consultation = [];
-                devices = [];
-                branches = [];
             }
 
-            if (Number(currentConsultant.consultant_position_id) === 6) {
-                const branchs = await this.branchesRepository.find({
-                    where: {
-                        consultantCompanyId: String(diorCompanyId),
-                    },
-                });
+            const deviceArray: any = devices;
 
-                const consults = await this.consultantRepository.find({
-                    where: {
-                        consultant_branch_id: In(branchs.map((b) => b.id)),
-                    },
-                });
+            const arrayOfDevice = Array.isArray(deviceArray) ? devices?.map((d) => d.id) : [devices];
 
-                const prods = await this.productRepository.find({
-                    where: {
-                        consultant_id: In(consults.map((c) => c.id)),
-                    },
-                });
-
-                const devicess = await this.devicesRepository.find({
-                    where: {
-                        id: In(prods.map((p) => p.id)),
-                    },
-                });
-
-                devices = await this.devicesRepository
-                    .createQueryBuilder('devices')
-                    .where('devices.id IN (:...ids)', {
-                        ids: devices.map((d) => d.id),
-                    })
-                    .orWhere('devices.id IN (:...ids)', {
-                        ids: devicess.map((d) => d.id),
-                    })
-                    .getMany();
-            }
+            console.log(arrayOfDevice);
 
             const deviceQuery = this.devicesRepository
                 .createQueryBuilder('devices')
@@ -243,7 +215,7 @@ export class StatisticsService {
                     opticNumbers: ['FAB02135', 'FAB02363', 'FAB02709', 'DVAA4496'],
                 })
                 .andWhere('devices.id IN (:...ids)', {
-                    ids: devices.map((d) => d.id),
+                    ids: arrayOfDevice,
                 });
 
             if (start_date && end_date) {
@@ -652,7 +624,7 @@ export class StatisticsService {
                     })
                 ).map((c) => c.name);
 
-                const countryBranchCounts: { [country: string]: number } = {};
+                const countryBranchCounts: { [country: string]: any } = {};
                 for (const country of countries) {
                     const branchQuery = this.consultantBranchesRepository
                         .createQueryBuilder('branch')
@@ -680,9 +652,15 @@ export class StatisticsService {
                     delete countryBranchCounts['null'];
                 }
 
+                let transformedData: any = {};
+                for (const country in countryBranchCounts) {
+                    if (countryBranchCounts.hasOwnProperty(country)) {
+                        transformedData[country] = Number(countryBranchCounts[country].count_all);
+                    }
+                }
                 data = {
                     total_count: branches.length,
-                    data: countryBranchCounts,
+                    data: transformedData,
                 };
             } else if (stat_type === 'devices') {
                 let devices: Devices[] = [];
@@ -835,7 +813,7 @@ export class StatisticsService {
 
                 let branches;
                 let totalClients;
-                const jsonData: { [country: string]: number } = {};
+                const jsonData: { [country: string]: any } = {};
 
                 if (
                     [PositionsIds.ADMIN, PositionsIds.BRAND_MANAGER].includes(currentConsultant.consultant_position_id)
@@ -939,6 +917,13 @@ export class StatisticsService {
                     delete jsonData['null'];
                 }
 
+                for (const country in jsonData) {
+                    if (jsonData.hasOwnProperty(country)) {
+                        jsonData[country] = Number(jsonData[country].count_all);
+                    }
+                }
+
+                console.log(data);
                 data = {
                     total_count: totalClients,
                     data: jsonData,

@@ -223,6 +223,7 @@ export class DiorCountriesService {
                     defaultRecommendation: row.getCell(3).value as string,
                     urlAndPort: row.getCell(4).value as string,
                     consultantCompanyId: diorConsultant.consultant_company_id,
+                    
                 });
 
                 await this.consultantCountriesRepository.save(newCountries);

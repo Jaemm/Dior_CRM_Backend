@@ -1,8 +1,7 @@
 import * as path from 'path';
-import { createWriteStream, existsSync } from 'fs';
+import { createWriteStream, existsSync, fsync } from 'fs';
 import * as csv from 'csv';
-
-import admin, { app } from 'firebase-admin';
+import * as moment from 'moment';
 
 import {
     BadRequestException,
@@ -14,7 +13,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Or, Equal, Repository, Between } from 'typeorm';
+import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Repository } from 'typeorm';
 import { TokenTypeEnum } from 'src/jwt/enums/auth-token.enum';
 
 import { AuthService } from '../auth/auth.service';
@@ -55,7 +54,7 @@ import {
     FetchSalesConnectionDto,
     LoginConsultantDto,
 } from '@/src/modules/consultants/consultants.dto';
-
+let Client = require('ssh2-sftp-client');
 import {
     Consultants,
     Notifications,
@@ -119,12 +118,19 @@ import {
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 import { LicenseHistoriesRepository } from '@/src/common/repositories/crm/licenseHistories.repository';
 import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repository';
-import { Cron } from '@nestjs/schedule';
-
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { promisify } from 'util';
 @Injectable()
 export class ConsultantsService {
+    private readonly readFile = promisify(fs.readFile);
     private readonly jwtConfig: IJwt;
     private readonly saltRounds = 10;
+    client = new Client();
+
+    // Disconnecting
+    async disconnect() {
+        await this.client.end();
+    }
 
     constructor(
         @InjectRepository(ProductRecommendations)
@@ -225,6 +231,7 @@ export class ConsultantsService {
     async verifyPassword(enteredPassword: string, storedHash: string): Promise<boolean> {
         const hashAlgorithm = this.determineHashAlgorithm(storedHash);
 
+        console.log('hashAlgorithm', hashAlgorithm);
         switch (hashAlgorithm) {
             case 'bcrypt':
                 return this.verifyPasswordBcrypt(enteredPassword, storedHash);
@@ -2839,29 +2846,29 @@ export class ConsultantsService {
                         lng: device.lng,
                         consultant_company: {
                             id: device?.consultant_company?.id ?? 213,
-                            name: device.consultant_company.name,
-                            address: device.consultant_company.address,
-                            email: device.consultant_company.email,
-                            phone: device.consultant_company.phone,
-                            font: device.consultant_company.font,
-                            primary_color_code: device.consultant_company.primary_color_code,
-                            secondary_color_code: device.consultant_company.secondary_color_code,
-                            program_color_code: device.consultant_company.program_color_code,
-                            top_color_code: device.consultant_company.top_color_code,
-                            text_icon_color_code: device.consultant_company.text_icon_color_code,
-                            pie_chart_color_1: device.consultant_company.pie_chart_color_1,
-                            pie_chart_color_2: device.consultant_company.pie_chart_color_2,
-                            pie_chart_color_3: device.consultant_company.pie_chart_color_3,
-                            pie_chart_color_4: device.consultant_company.pie_chart_color_4,
-                            pie_chart_color_5: device.consultant_company.pie_chart_color_5,
-                            pie_chart_points_color: device.consultant_company.pie_chart_points_color,
+                            name: device?.consultant_company?.name ?? 'Dior',
+                            address: device?.consultant_company?.address ?? '',
+                            email: device?.consultant_company?.email ?? '',
+                            phone: device?.consultant_company?.phone ?? '',
+                            font: device?.consultant_company?.font ?? '',
+                            primary_color_code: device?.consultant_company?.primary_color_code ?? '',
+                            secondary_color_code: device?.consultant_company?.secondary_color_code ?? '',
+                            program_color_code: device.consultant_company?.program_color_code ?? '',
+                            top_color_code: device?.consultant_company?.top_color_code ?? null,
+                            text_icon_color_code: device?.consultant_company?.text_icon_color_code ?? null,
+                            pie_chart_color_1: device?.consultant_company?.pie_chart_color_1 ?? null,
+                            pie_chart_color_2: device?.consultant_company?.pie_chart_color_2 ?? null,
+                            pie_chart_color_3: device?.consultant_company?.pie_chart_color_3 ?? null,
+                            pie_chart_color_4: device?.consultant_company?.pie_chart_color_4 ?? null,
+                            pie_chart_color_5: device.consultant_company?.pie_chart_color_5 ?? null,
+                            pie_chart_points_color: device?.consultant_company?.pie_chart_points_color ?? null,
                             logo_url: null as null,
                             app_icon_url: null as null,
                             background_image_url: null as null,
                             progressbar_image_1_url: null as null,
                             progressbar_image_2_url: null as null,
                             progressbar_image_3_url: null as null,
-                            created_at: device.consultant_company.created_at,
+                            created_at: device?.consultant_company?.created_at ?? null,
                         },
                     },
                     license: {
@@ -3014,7 +3021,7 @@ export class ConsultantsService {
     }
 
     // CRON;
-    // @Cron('*/1 * * * *')
+    @Cron('0 0 * * *')
     async generateFlatFileDior() {
         try {
             const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
@@ -3142,7 +3149,7 @@ export class ConsultantsService {
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
-            const dateString = '2024-09-26'; //`${yyyy}-${mm}-${dd}`;
+            const dateString = `${yyyy}-${mm}-${dd}`;
 
             const fileName = `${dateString}.json`;
             const filePath = path.join(flatFilesDirectoryPath, fileName);
@@ -3426,6 +3433,130 @@ export class ConsultantsService {
                 error: error.message || ResponseMessages.InternalServerError,
             });
         }
+    }
+
+    // FTP TRANSFERT
+
+    async listFiles(remoteDir: any, fileGlob: any) {
+        console.log(`Listing ${remoteDir} ...`);
+        let fileObjects;
+        try {
+            fileObjects = await this.client.list(remoteDir, fileGlob);
+        } catch (err) {
+            console.log('Listing failed:', err);
+        }
+
+        const fileNames: any[] = [];
+
+        for (const file of fileObjects) {
+            if (file.type === 'd') {
+                console.log(`${new Date(file.modifyTime).toISOString()} PRE ${file.name}`);
+            } else {
+                console.log(`${new Date(file.modifyTime).toISOString()} ${file.size} ${file.name}`);
+            }
+            fileNames.push(file.name);
+        }
+
+        return fileNames;
+    }
+
+    // Transfering file
+    async uploadFile(localFile: any, remoteFile: any) {
+        console.log(`Uploading ${localFile} to ${remoteFile} ...`);
+        try {
+            await this.client.put(localFile, remoteFile);
+        } catch (err) {
+            console.error('Uploading failed:', err);
+        }
+    }
+
+    readJsonFile(file: string) {
+        try {
+            const bufferData = fs.readFile(file);
+            const stData = bufferData.toString();
+            const data = JSON.parse(stData);
+            return data;
+        } catch (err) {
+            console.error(`Error reading or parsing JSON file (${file}):`, err);
+            throw err;
+        }
+    }
+
+    async ftpconnect(options: { host: string; port: number; username: string; password: string }) {
+        console.log(`Connecting to ${options.host}:${options.port}`);
+        try {
+            const response = await this.client.connect(options);
+            console.log('Connected successfully');
+            return response; // Return the response if needed
+        } catch (err) {
+            console.error('Failed to connect:', err);
+            throw err; // Propagate the error
+        }
+    }
+    getDates(startDate: Date, endDate: Date): string[] {
+        const dateArray: any[] = [];
+        const currentDate = new Date(startDate);
+
+        while (currentDate <= endDate) {
+            const formattedDate = currentDate.toISOString().split('T')[0];
+            dateArray.push(formattedDate);
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        return dateArray;
+    }
+
+    async fileExists(filePath: string): Promise<boolean> {
+        try {
+            // Check if the file exists using fs.access()
+            await fs.access(filePath);
+            return true; // File exists
+        } catch (error) {
+            return false; // File does not exist
+        }
+    }
+    // @Cron('* * * * *')
+    @Cron(CronExpression.EVERY_DAY_AT_1AM)
+    async transferFileToServer() {
+        const date = new Date();
+        const formattedDate = moment(date).format('YYYY-MM-DD');
+
+        try {
+            await this.ftpconnect({
+                host: process.env.SFTP_HOST || '',
+                port: Number(process.env.SFTP_PORT),
+                username: process.env.SFTP_USER || '',
+                password: process.env.SFTP_PASS || '',
+            });
+
+            const outputPath = `/home/ubuntu/repositories/BE_dior_v2_crm/public/dior-flat-files/${formattedDate}.json`;
+
+            if (this.fileExists(outputPath)) {
+                const json = this.readJsonFile(outputPath);
+                const result = json.map((jsonData: any) => {
+                    // Assuming jsonData is an object, not a string
+                    const jsonString = JSON.stringify(jsonData);
+                    const cleanedJsonString = jsonString.replace(/\\/g, '');
+                    return JSON.parse(cleanedJsonString);
+                });
+
+                if (this.fileExists(outputPath)) {
+                    await this.uploadFile(outputPath, `./analysis_data/PROD/${formattedDate}.json`);
+                    console.log('File sent:', formattedDate + '.json');
+                } else {
+                    console.log('File not found:', outputPath);
+                }
+            } else {
+                console.log('File not found:', outputPath);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            await this.disconnect();
+            console.log('Disconnected');
+        }
+
+        return 'disconnected';
     }
 }
 

@@ -623,12 +623,12 @@ export class CreateSalesConnectionDto {
     country_name: string;
 
     @ApiProperty()
-    @IsString()
+    @Validate(IsNumberOrString)
     @IsOptional()
     answer1: string;
 
     @ApiProperty()
-    @IsString()
+    @Validate(IsNumberOrString)
     @IsOptional()
     answer2: string;
 }
