@@ -44,8 +44,8 @@ export class DiorAdminsService {
                 });
             }
 
-            const searchPage = Number(page || '');
-            const searchPer = Number(per || '');
+            const searchPage = Number(page || 1);
+            const searchPer = Number(per || 10);
 
             const [admins, totalCount] = await adminsQuery
                 .skip((searchPage - 1) * searchPer)
