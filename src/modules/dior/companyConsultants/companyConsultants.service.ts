@@ -88,8 +88,9 @@ export class DiorCompanyConsultantsService {
                 'consultant_branch',
             ]);
 
-            const diorConsultant = await this.consultantRepository.getDiorConsultant();
-            const diorCompanyId = diorConsultant.consultant_company_id;
+            // const diorConsultant = await this.consultantRepository.getDiorConsultant();
+            console.log('diorConsultant', 8131);
+            const diorCompanyId = 213; // diorConsultant.consultant_company_id;
 
             if (!currentConsultant) {
                 throw new UnauthorizedException({
@@ -105,7 +106,7 @@ export class DiorCompanyConsultantsService {
 
             if (Number(currentConsultant.consultant_position_id) === PositionsIds.SUPER_ADMIN) {
                 consultantsQuery.andWhere('consultants.id != :diorConsultantId', {
-                    diorConsultantId: diorConsultant.id,
+                    diorConsultantId: 8131,
                 });
             } else if (Number(currentConsultant.consultant_position_id) === PositionsIds.ADMIN) {
                 consultantsQuery
@@ -113,7 +114,7 @@ export class DiorCompanyConsultantsService {
                         countries: currentConsultant.countries.map((country) => country.toLocaleLowerCase()),
                     })
                     .andWhere('consultants.id != :diorConsultantId', {
-                        diorConsultantId: diorConsultant.id,
+                        diorConsultantId: 8131,
                     });
             } else {
                 consultantsQuery
@@ -121,16 +122,15 @@ export class DiorCompanyConsultantsService {
                         country: currentConsultant.consultant_branch.country.toLocaleLowerCase(),
                     })
                     .andWhere('consultants.id != :diorConsultantId', {
-                        diorConsultantId: diorConsultant.id,
+                        diorConsultantId: 8131,
                     });
             }
 
-            consultantsQuery
-                .andWhere('consultants.hide_for_bc = false')
-                .andWhere('(LOWER (consultants.email) != :email OR LOWER (consultants.email) != :email2)', {
-                    email: 'ann.chowis613@gmail.com',
-                    email2: 'ann@chowis.com',
-                });
+            consultantsQuery.andWhere('consultants.hide_for_bc = false');
+
+            consultantsQuery.andWhere('LOWER(consultants.email) NOT IN (:...excludedEmails)', {
+                excludedEmails: ['ann.chowis613@gmail.com', 'ann@chowis.com'],
+            });
 
             if (filter_by) {
                 consultantsQuery.andWhere('LOWER (consultants.country) = :filterBy', {
@@ -166,6 +166,8 @@ export class DiorCompanyConsultantsService {
                 .skip((searchPage - 1) * searchPer)
                 .take(searchPer)
                 .getManyAndCount();
+
+            console.log('====> totalCount', totalCount);
 
             const reformatConsultantList: ConsultantForDiorT[] = consultants.map((consultant) => {
                 const branch = consultant.consultant_branch;
@@ -325,7 +327,7 @@ export class DiorCompanyConsultantsService {
                 .createQueryBuilder('consultants')
                 .leftJoinAndSelect('consultants.consultant_branch', 'consultant_branch')
                 .where('consultants.id != :diorConsultantId', {
-                    diorConsultantId: diorConsultant.id,
+                    diorConsultantId: 8131,
                 });
 
             if ([5, 6].includes(currentConsultant.consultant_position_id)) {

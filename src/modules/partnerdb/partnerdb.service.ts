@@ -198,7 +198,9 @@ export class PartnerDbService {
                 });
             }
 
-            const customerQuery = this.customerRepository.createQueryBuilder('customers');
+            const customerQuery = this.customerRepository
+                .createQueryBuilder('customer')
+                .where('customer.consultant_id = :consultantId', { consultantId });
 
             if (search) {
                 customerQuery.andWhere(

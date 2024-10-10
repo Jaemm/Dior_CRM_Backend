@@ -624,7 +624,7 @@ export class StatisticsService {
                     })
                 ).map((c) => c.name);
 
-                const countryBranchCounts: { [country: string]: number } = {};
+                const countryBranchCounts: { [country: string]: any } = {};
                 for (const country of countries) {
                     const branchQuery = this.consultantBranchesRepository
                         .createQueryBuilder('branch')
@@ -652,9 +652,15 @@ export class StatisticsService {
                     delete countryBranchCounts['null'];
                 }
 
+                let transformedData: any = {};
+                for (const country in countryBranchCounts) {
+                    if (countryBranchCounts.hasOwnProperty(country)) {
+                        transformedData[country] = Number(countryBranchCounts[country].count_all);
+                    }
+                }
                 data = {
                     total_count: branches.length,
-                    data: countryBranchCounts,
+                    data: transformedData,
                 };
             } else if (stat_type === 'devices') {
                 let devices: Devices[] = [];
@@ -807,7 +813,7 @@ export class StatisticsService {
 
                 let branches;
                 let totalClients;
-                const jsonData: { [country: string]: number } = {};
+                const jsonData: { [country: string]: any } = {};
 
                 if (
                     [PositionsIds.ADMIN, PositionsIds.BRAND_MANAGER].includes(currentConsultant.consultant_position_id)
@@ -911,6 +917,13 @@ export class StatisticsService {
                     delete jsonData['null'];
                 }
 
+                for (const country in jsonData) {
+                    if (jsonData.hasOwnProperty(country)) {
+                        jsonData[country] = Number(jsonData[country].count_all);
+                    }
+                }
+
+                console.log(data);
                 data = {
                     total_count: totalClients,
                     data: jsonData,

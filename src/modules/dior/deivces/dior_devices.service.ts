@@ -42,7 +42,7 @@ export class DiorDevicesService {
             const consultantsQuery = await this.consultantsRespository.createQueryBuilder('consultants');
             if ([5, 6].includes(Number(positionId))) {
                 consultantsQuery.where('consultants.consultant_company_id = :diorCompany', {
-                    diorCompany: diorConsultant.consultant_company_id,
+                    diorCompany: 213,
                 });
             } else if ([6].includes(positionId)) {
                 consultantsQuery.andWhere('LOWER (consultants.country) IN (:...countries)', {
@@ -74,20 +74,34 @@ export class DiorDevicesService {
                 });
             }
             let totalCount = devices.length;
+            console.log('totalCount ===> ', totalCount);
 
-            const deviceQuery = await this.devicesRepository
-                .createQueryBuilder('devices')
-                .leftJoinAndSelect('devices.products', 'products')
-                .leftJoinAndSelect('products.consultant', 'consultant')
-                .orWhere('devices.consultant_company_id = :companyId', {
-                    companyId: diorConsultant.consultant_company_id,
-                })
-                .andWhere('devices.optic_number NOT IN (:...opticNumbers)', {
-                    opticNumbers: ['FAB02135', 'FAB02363', 'FAB02709', 'DVAA4496'],
-                });
+            const productDeviceIds = products.map((product) => product.device_id);
+
+            // Step 2: Fetch devices based on the products' device IDs or Dior company devices
+            let devicesQuery = this.devicesRepository
+                .createQueryBuilder('device')
+                .where('device.id IN (:...productDeviceIds)', { productDeviceIds })
+                .orWhere('device.consultant_company_id = :diorCompanyId', { diorCompanyId: 213 });
+
+            // Step 3: Exclude specific optic numbers
+            devicesQuery = devicesQuery.andWhere('device.optic_number NOT IN (:...excludedOptics)', {
+                excludedOptics: ['FAB02135', 'FAB02363', 'FAB02709', 'DVAA4496'],
+            });
+
+            // const deviceQuery = await this.devicesRepository
+            //     .createQueryBuilder('devices')
+            //     .leftJoinAndSelect('devices.products', 'products')
+            //     .leftJoinAndSelect('products.consultant', 'consultant')
+            //     .orWhere('devices.consultant_company_id = :companyId', {
+            //         companyId: 213,
+            //     })
+            //     .andWhere('devices.optic_number NOT IN (:...opticNumbers)', {
+            //         opticNumbers: ['FAB02135', 'FAB02363', 'FAB02709', 'DVAA4496'],
+            //     });
 
             if (query.search) {
-                deviceQuery.andWhere('devices.optic_number LIKE :search', {
+                devicesQuery.andWhere('devices.optic_number LIKE :search', {
                     search: `%${query.search}%`,
                 });
             }
@@ -95,7 +109,7 @@ export class DiorDevicesService {
             const searchPage = Number(query?.page || 1);
             const searchPer = Number(query?.limit || 25);
 
-            [devices, totalCount] = await deviceQuery
+            [devices, totalCount] = await devicesQuery
                 .skip((searchPage - 1) * searchPer)
                 .take(searchPer)
                 .getManyAndCount();
