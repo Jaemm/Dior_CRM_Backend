@@ -502,18 +502,18 @@ export class PartnerDbService {
         try {
             const { analysis_type: analysisType } = query;
 
-            const requestHeaders = req.headers;
+            // const requestHeaders = req.headers;
 
-            const authorization = requestHeaders?.authorization;
+            const authorization: any = req.headers['x-chowis-consultant-token']; //requestHeaders?.authorization;
 
-            const bearerToken = authorization.startsWith('Bearer') ? authorization : null;
+            const bearerToken = authorization ? 'Bearer ' + authorization : null;
 
             let result: any;
 
-            if (['cndpskin'].includes(analysisType)) {
-                const type = analysisType as 'cndpskin';
-                result = await this.analysisHistoryRequestByBatchId(type, customerId, batchId, bearerToken);
-            }
+            // if (['cndpskin'].includes(analysisType)) {
+            const type = 'cndpskin';
+            result = await this.analysisHistoryRequestByBatchId(type, customerId, batchId, bearerToken);
+            // }
 
             return {
                 data: result,
@@ -555,26 +555,13 @@ export class PartnerDbService {
     }
 
     async analysisHistoryRequest(analysisType: 'CNDP Skin', customerId: string, bearerToken: string): Promise<any[]> {
-        const urlObj = {
-            'CNDP Skin': process.env['CNDP_SKIN_ANALYSIS_URL'],
-        };
-
-        const baseUrl = urlObj[analysisType];
+        const baseUrl = process.env['CNDP_SKIN_ANALYSIS_URL'];
 
         if (!baseUrl) {
             return null;
         }
 
-        const requestUrlObj = {
-            'CNDP Skin': `${baseUrl}/cndpskin/${customerId}/analysis-history?page=1&limit=25`,
-            'CNDP Hair': `${baseUrl}/cndphair/${customerId}/analysis-history?page=1&limit=25`,
-            'FFA': `${baseUrl}/ffa/${customerId}/analysis-history?page=1&limit=25`,
-            'HH': `${baseUrl}/cndphh/${customerId}/analysis-history`,
-            'CMA Skin': `${baseUrl}/cmaskin/${customerId}/analysis-history`,
-            'CMA Hair': `${baseUrl}/cmahair/${customerId}/analysis-history`,
-        };
-
-        const requestUrl = requestUrlObj[analysisType];
+        const requestUrl = `${baseUrl}/cndpskin/${customerId}/analysis-history?page=1&limit=25`;
 
         const response = await axios.get(requestUrl, {
             headers: {
@@ -591,21 +578,16 @@ export class PartnerDbService {
         batchId: string,
         bearerToken: string,
     ): Promise<any[]> {
-        const urlObj = {
-            cndpskin: process.env['CNDP_SKIN_ANALYSIS_URL'],
-        };
-
-        const baseUrl = urlObj[analysisType];
+        const baseUrl = process.env['CNDP_SKIN_ANALYSIS_URL'];
 
         if (!baseUrl) {
             return null;
         }
+        //
 
-        const requestUrlObj = {
-            cndpskin: `${baseUrl}/cndpskin/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
-        };
+        const requestUrlObj = `${baseUrl}/cndpskin/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`;
 
-        const requestUrl = requestUrlObj[analysisType];
+        const requestUrl = requestUrlObj;
 
         const response = await axios.get(requestUrl, {
             headers: {
@@ -621,21 +603,13 @@ export class PartnerDbService {
         batchId: string,
         bearerToken: string,
     ): Promise<any[]> {
-        const urlObj = {
-            cndpskin: process.env['CNDP_SKIN_ANALYSIS_URL'],
-        };
-
-        const baseUrl = urlObj[analysisType];
+        const baseUrl = process.env['CNDP_SKIN_ANALYSIS_URL'];
 
         if (!baseUrl) {
             return null;
         }
 
-        const requestUrlObj = {
-            cndpskin: `${baseUrl}/cndpskin/hydration-sebum?batch_id=${batchId}`,
-        };
-
-        const requestUrl = requestUrlObj[analysisType];
+        const requestUrl = `${baseUrl}/cndpskin/hydration-sebum?batch_id=${batchId}`;
 
         const response = await axios.get(requestUrl, {
             headers: {

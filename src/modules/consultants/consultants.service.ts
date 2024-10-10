@@ -231,7 +231,6 @@ export class ConsultantsService {
     async verifyPassword(enteredPassword: string, storedHash: string): Promise<boolean> {
         const hashAlgorithm = this.determineHashAlgorithm(storedHash);
 
-        console.log('hashAlgorithm', hashAlgorithm);
         switch (hashAlgorithm) {
             case 'bcrypt':
                 return this.verifyPasswordBcrypt(enteredPassword, storedHash);
@@ -3021,7 +3020,7 @@ export class ConsultantsService {
     }
 
     // CRON;
-    @Cron('0 0 * * *')
+    // @Cron('*/1 * * * *')
     async generateFlatFileDior() {
         try {
             const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
@@ -3149,7 +3148,7 @@ export class ConsultantsService {
             const yyyy = today.getFullYear();
             const mm = String(today.getMonth() + 1).padStart(2, '0');
             const dd = String(today.getDate()).padStart(2, '0');
-            const dateString = `${yyyy}-${mm}-${dd}`;
+            const dateString = '2024-09-26'; //`${yyyy}-${mm}-${dd}`;
 
             const fileName = `${dateString}.json`;
             const filePath = path.join(flatFilesDirectoryPath, fileName);
