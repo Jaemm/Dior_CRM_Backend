@@ -1,8 +1,7 @@
 import * as path from 'path';
-import { createWriteStream, existsSync } from 'fs';
+import { createWriteStream, existsSync, fsync } from 'fs';
 import * as csv from 'csv';
-
-import admin, { app } from 'firebase-admin';
+import * as moment from 'moment';
 
 import {
     BadRequestException,
@@ -14,7 +13,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Or, Equal, Repository, Between } from 'typeorm';
+import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Repository } from 'typeorm';
 import { TokenTypeEnum } from 'src/jwt/enums/auth-token.enum';
 
 import { AuthService } from '../auth/auth.service';
@@ -55,7 +54,7 @@ import {
     FetchSalesConnectionDto,
     LoginConsultantDto,
 } from '@/src/modules/consultants/consultants.dto';
-
+let Client = require('ssh2-sftp-client');
 import {
     Consultants,
     Notifications,
@@ -119,12 +118,19 @@ import {
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 import { LicenseHistoriesRepository } from '@/src/common/repositories/crm/licenseHistories.repository';
 import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repository';
-import { Cron } from '@nestjs/schedule';
-
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { promisify } from 'util';
 @Injectable()
 export class ConsultantsService {
+    private readonly readFile = promisify(fs.readFile);
     private readonly jwtConfig: IJwt;
     private readonly saltRounds = 10;
+    client = new Client();
+
+    // Disconnecting
+    async disconnect() {
+        await this.client.end();
+    }
 
     constructor(
         @InjectRepository(ProductRecommendations)
@@ -3427,6 +3433,130 @@ export class ConsultantsService {
                 error: error.message || ResponseMessages.InternalServerError,
             });
         }
+    }
+
+    // FTP TRANSFERT
+
+    async listFiles(remoteDir: any, fileGlob: any) {
+        console.log(`Listing ${remoteDir} ...`);
+        let fileObjects;
+        try {
+            fileObjects = await this.client.list(remoteDir, fileGlob);
+        } catch (err) {
+            console.log('Listing failed:', err);
+        }
+
+        const fileNames: any[] = [];
+
+        for (const file of fileObjects) {
+            if (file.type === 'd') {
+                console.log(`${new Date(file.modifyTime).toISOString()} PRE ${file.name}`);
+            } else {
+                console.log(`${new Date(file.modifyTime).toISOString()} ${file.size} ${file.name}`);
+            }
+            fileNames.push(file.name);
+        }
+
+        return fileNames;
+    }
+
+    // Transfering file
+    async uploadFile(localFile: any, remoteFile: any) {
+        console.log(`Uploading ${localFile} to ${remoteFile} ...`);
+        try {
+            await this.client.put(localFile, remoteFile);
+        } catch (err) {
+            console.error('Uploading failed:', err);
+        }
+    }
+
+    readJsonFile(file: string) {
+        try {
+            const bufferData = fs.readFile(file);
+            const stData = bufferData.toString();
+            const data = JSON.parse(stData);
+            return data;
+        } catch (err) {
+            console.error(`Error reading or parsing JSON file (${file}):`, err);
+            throw err;
+        }
+    }
+
+    async ftpconnect(options: { host: string; port: number; username: string; password: string }) {
+        console.log(`Connecting to ${options.host}:${options.port}`);
+        try {
+            const response = await this.client.connect(options);
+            console.log('Connected successfully');
+            return response; // Return the response if needed
+        } catch (err) {
+            console.error('Failed to connect:', err);
+            throw err; // Propagate the error
+        }
+    }
+    getDates(startDate: Date, endDate: Date): string[] {
+        const dateArray: any[] = [];
+        const currentDate = new Date(startDate);
+
+        while (currentDate <= endDate) {
+            const formattedDate = currentDate.toISOString().split('T')[0];
+            dateArray.push(formattedDate);
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        return dateArray;
+    }
+
+    async fileExists(filePath: string): Promise<boolean> {
+        try {
+            // Check if the file exists using fs.access()
+            await fs.access(filePath);
+            return true; // File exists
+        } catch (error) {
+            return false; // File does not exist
+        }
+    }
+    // @Cron('* * * * *')
+    @Cron(CronExpression.EVERY_DAY_AT_1AM)
+    async transferFileToServer() {
+        const date = new Date();
+        const formattedDate = moment(date).format('YYYY-MM-DD');
+
+        try {
+            await this.ftpconnect({
+                host: process.env.SFTP_HOST || '',
+                port: Number(process.env.SFTP_PORT),
+                username: process.env.SFTP_USER || '',
+                password: process.env.SFTP_PASS || '',
+            });
+
+            const outputPath = `/home/ubuntu/repositories/BE_dior_v2_crm/public/dior-flat-files/${formattedDate}.json`;
+
+            if (this.fileExists(outputPath)) {
+                const json = this.readJsonFile(outputPath);
+                const result = json.map((jsonData: any) => {
+                    // Assuming jsonData is an object, not a string
+                    const jsonString = JSON.stringify(jsonData);
+                    const cleanedJsonString = jsonString.replace(/\\/g, '');
+                    return JSON.parse(cleanedJsonString);
+                });
+
+                if (this.fileExists(outputPath)) {
+                    await this.uploadFile(outputPath, `./analysis_data/PROD/${formattedDate}.json`);
+                    console.log('File sent:', formattedDate + '.json');
+                } else {
+                    console.log('File not found:', outputPath);
+                }
+            } else {
+                console.log('File not found:', outputPath);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            await this.disconnect();
+            console.log('Disconnected');
+        }
+
+        return 'disconnected';
     }
 }
 
