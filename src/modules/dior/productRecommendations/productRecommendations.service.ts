@@ -182,7 +182,7 @@ export class ProductRecommendationService {
             if (page && limit) {
                 prQuery.skip((Number(page) - 1) * Number(limit)).take(Number(limit));
             }
-            prQuery.orderBy('productRecommendation.id', 'DESC');
+            prQuery.orderBy('productRecommendation.code', 'ASC');
 
             const [data, totalCount] = await prQuery.getManyAndCount();
 
