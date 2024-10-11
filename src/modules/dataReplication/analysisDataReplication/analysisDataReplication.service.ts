@@ -21,6 +21,33 @@ export class AnalysisDataReplicationService {
         private readonly diorCndpSkinRepository: Repository<Analysis>,
     ) {}
 
+    async statististic(_ids: any[], start_date: string, end_date: string) {
+        // Count analyses where status is true
+        let _countQuery = this.diorCndpSkinRepository
+            .createQueryBuilder('analysis')
+            .where("args->>'status' LIKE :status", {
+                status: '%true%',
+            });
+
+        // Apply date range filter if start_date and end_date are provided
+        if (start_date && end_date) {
+            _countQuery = _countQuery.andWhere('created_time BETWEEN :start AND :end', {
+                start: start_date,
+                end: end_date,
+            });
+        }
+
+        // Prepare the IDs for the SQL query
+        const likeIds = _ids.map((id) => (String(id).startsWith('%') ? String(id) : `%${id}`));
+
+        // Count the matching analyses based on consultant IDs
+        const count = await _countQuery
+            .andWhere("args->>'consultant_id' LIKE ANY (ARRAY[:...ids])", { ids: likeIds })
+            .getCount();
+
+        return count;
+    }
+
     async getDiorAnalysisByCustomerIds(customerIds: string[]) {
         const rows = await this.diorCndpSkinRepository.find({
             where: {

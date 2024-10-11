@@ -20,7 +20,7 @@ import {
     SalesConnectionRepository,
 } from '@/src/common/repositories/crm';
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { In, Not } from 'typeorm';
+import { In, Not, Repository } from 'typeorm';
 import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
 import {
     GetInfographStatDetails,
@@ -29,6 +29,8 @@ import {
     GetStatDetailsCountryWiseDto,
     GetStatDetailsDto,
 } from './statistics.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Analysis } from '@/src/common/entities/analysisEntities/Analysis.entity';
 
 @Injectable()
 export class StatisticsService {
@@ -563,7 +565,7 @@ export class StatisticsService {
 
             const currentConsultant = await this.consultantRepository.getConsultantById(userId, ['consultant_branch']);
 
-            const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
+            const diorCompanyId = 213; //await this.consultantRepository.getDiorConsultantCompanyId();
 
             let consultants;
             if (currentConsultant.consultant_position_id === PositionsIds.ADMIN) {
@@ -750,56 +752,75 @@ export class StatisticsService {
                     data: jsonData,
                 };
             } else if (stat_type === 'consultations') {
-                const countries = (
-                    await this.consultantCountriesRepository.find({
-                        where: {
-                            consultantCompanyId: diorCompanyId,
-                        },
-                    })
-                ).map((c) => c.name);
+                // Get countries name
+                const countries = await this.consultantCountriesRepository.find({
+                    where: { consultantCompanyId: diorCompanyId },
+                });
 
-                const consultantIdArray = (
-                    await this.analysisDataReplicationService.getConsultantIds(start_date, end_date)
-                ).map((c: any) => c.consultantId);
+                // Extract country names and convert to lowercase
+                const countryNames = countries.map((c) => c.name.toLowerCase());
 
-                const consultantIds = [...new Set(consultantIdArray)];
+                // Get consultant IDs from the analysis API argument
+                const consultantIdArray = await this.analysisDataReplicationService.getConsultantIds(
+                    start_date,
+                    end_date,
+                );
+                const consultantIds = [...new Set(consultantIdArray.map((c: any) => c.consultantId))];
 
                 const jsonData: { [country: string]: number } = {};
-                for (const country of countries) {
-                    const consultants = await this.consultantRepository
-                        .createQueryBuilder('consultants')
-                        .where('(LOWER (consultants.country) = :country)', {
-                            country: country.toLocaleLowerCase(),
-                        })
-                        .andWhere('(consultants.id IN (:...ids))', {
-                            ids: consultantIds,
-                        })
-                        .getMany();
 
-                    const consultantIdList = consultants.map((c) =>
-                        String(c.id).startsWith('%') ? `${c.id}` : `%${c.id}`,
-                    );
+                // Initialize jsonData with zero counts for all countries
+                for (const country of countryNames) {
+                    jsonData[country] = 0; // Start with zero count for each country
+                }
 
-                    let count = 0;
+                // Find all consultants matching the provided country names and IDs in a single query
+                const consultants = await this.consultantRepository
+                    .createQueryBuilder('consultants')
+                    .select('consultants.id, lower(consultants.country) as country')
+                    .where('consultants.id IN (:...ids)', { ids: consultantIds })
+                    .andWhere('lower(consultants.country) IN (:...countries)', { countries: countryNames })
+                    .getRawMany();
 
-                    if (consultantIdList && consultantIdList.length > 0) {
-                        count = await this.analysisDataReplicationService.getConsultantCountsForStatDetails(
-                            consultantIdList,
+                // Prepare a map to hold the counts per country
+                const countryConsultantMap: { [key: string]: number[] } = {};
+
+                // Organize consultant IDs by country
+                for (const consultant of consultants) {
+                    const country = consultant.country;
+                    if (!countryConsultantMap[country]) {
+                        countryConsultantMap[country] = [];
+                    }
+                    countryConsultantMap[country].push(consultant.id);
+                }
+
+                // Use Promise.all to get counts for all countries concurrently
+                const countPromises = Object.keys(countryConsultantMap).map(async (country) => {
+                    const _ids = countryConsultantMap[country];
+                    if (_ids.length > 0) {
+                        const count = await this.analysisDataReplicationService.statististic(
+                            _ids,
                             start_date,
                             end_date,
                         );
+                        jsonData[country] = count; // Update count for this country
                     }
+                    // No need to explicitly set jsonData[country] = 0, as it starts at 0
+                });
 
-                    jsonData[country] = count;
-                }
-                const totalConusltation = await this.analysisDataReplicationService.getConsultantCountsForStatDetails(
+                // Wait for all counts to be resolved
+                await Promise.all(countPromises);
+
+                // Get total consultations
+                const totalConsultation = await this.analysisDataReplicationService.getConsultantCountsForStatDetails(
                     null,
                     start_date,
                     end_date,
                 );
 
+                // Final data structure
                 data = {
-                    total_count: totalConusltation,
+                    total_count: totalConsultation,
                     data: jsonData,
                 };
             } else if (stat_type === 'clients') {
