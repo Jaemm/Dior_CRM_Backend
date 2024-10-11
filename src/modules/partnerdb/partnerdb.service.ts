@@ -506,8 +506,12 @@ export class PartnerDbService {
 
             const authorization: any = req.headers['x-chowis-consultant-token']; //requestHeaders?.authorization;
 
-            const bearerToken = authorization ? 'Bearer ' + authorization : null;
+            let bearerToken = authorization ? 'Bearer ' + authorization : null;
+            if (!bearerToken) {
+                bearerToken = req.headers?.authorization;
+            }
 
+            console.log('========> ', bearerToken);
             let result: any;
 
             // if (['cndpskin'].includes(analysisType)) {
