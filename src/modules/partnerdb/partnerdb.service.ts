@@ -506,7 +506,10 @@ export class PartnerDbService {
 
             const authorization: any = req.headers['x-chowis-consultant-token']; //requestHeaders?.authorization;
 
-            const bearerToken = authorization ? 'Bearer ' + authorization : null;
+            let bearerToken = authorization ? 'Bearer ' + authorization : null;
+            if (!bearerToken) {
+                bearerToken = req.headers?.authorization;
+            }
 
             let result: any;
 
@@ -515,6 +518,13 @@ export class PartnerDbService {
             result = await this.analysisHistoryRequestByBatchId(type, customerId, batchId, bearerToken);
             // }
 
+            if (result.data && result.data.length > 0) {
+                // Remove duplicates by 'hash' key
+                const uniqueData = Array.from(new Map(result.data.map((item: any) => [item['hash'], item])).values());
+
+                console.log(uniqueData);
+                result.data = uniqueData;
+            }
             return {
                 data: result,
             };
@@ -594,6 +604,8 @@ export class PartnerDbService {
                 Authorization: bearerToken,
             },
         });
+
+        // Return the result as JSON
 
         return response.data || [];
     }
