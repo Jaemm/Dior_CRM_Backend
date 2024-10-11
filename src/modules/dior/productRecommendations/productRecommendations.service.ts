@@ -123,46 +123,60 @@ export class ProductRecommendationService {
             }
 
             if (search) {
-                prQuery.andWhere(
-                    'LOWER(productRecommendation.name) LIKE :search OR LOWER(productRecommendation.category) LIKE :search OR LOWER(productRecommendation.collection) LIKE :search OR LOWER(productRecommendation.routine) LIKE :search OR LOWER(productRecommendation.code) LIKE :search',
-                    { search: `%${search.toLowerCase()}%` },
-                );
+                prQuery
+                    .andWhere(
+                        'LOWER(productRecommendation.name) LIKE :search OR LOWER(productRecommendation.category) LIKE :search OR LOWER(productRecommendation.collection) LIKE :search OR LOWER(productRecommendation.routine) LIKE :search OR LOWER(productRecommendation.code) LIKE :search',
+                        { search: `%${search.toLowerCase()}%` },
+                    )
+                    .andWhere('productRecommendation.productRecommendationId IS NULL');
             }
 
             if (filter_by) {
-                prQuery.andWhere('productRecommendation.category = :filterBy', {
-                    filterBy: req.query.filter_by,
-                });
+                prQuery
+                    .andWhere('productRecommendation.category = :filterBy', {
+                        filterBy: req.query.filter_by,
+                    })
+                    .andWhere('productRecommendation.productRecommendationId IS NULL');
             }
 
             if (filter_by_2) {
-                prQuery.andWhere('productRecommendation.collection = :filterBy2', {
-                    filterBy2: filter_by_2,
-                });
+                prQuery
+                    .andWhere('productRecommendation.collection = :filterBy2', {
+                        filterBy2: filter_by_2,
+                    })
+                    .andWhere('productRecommendation.productRecommendationId IS NULL');
             }
 
             if (filter_by_country) {
-                prQuery.andWhere('productRecommendation.countries && ARRAY[:filterByCountry]', {
-                    filterByCountry: filter_by_country,
-                });
+                prQuery
+                    .andWhere('productRecommendation.countries && ARRAY[:filterByCountry]', {
+                        filterByCountry: filter_by_country,
+                    })
+                    .andWhere('productRecommendation.productRecommendationId IS NULL');
             }
 
             if (category) {
-                prQuery.andWhere('productRecommendation.category = :category', {
-                    category: category,
-                });
+                prQuery
+                    .andWhere('productRecommendation.category = :category', {
+                        category: category,
+                    })
+                    .andWhere('productRecommendation.productRecommendationId IS NULL');
             }
 
             if (routine) {
-                prQuery.andWhere('productRecommendation.routine = :routine', {
-                    routine: routine,
-                });
+                prQuery
+                    .andWhere('productRecommendation.routine = :routine', {
+                        routine: routine,
+                    })
+                    .andWhere('productRecommendation.productRecommendationId IS NULL');
             }
 
             if (collection) {
-                prQuery.andWhere('productRecommendation.collection = :collection', {
-                    collection: collection,
-                });
+                prQuery
+                    .andWhere('productRecommendation.collection = :collection', {
+                        collection: collection,
+                    })
+                    .andWhere('productRecommendation.productRecommendationId IS NULL');
             }
 
             if (page && limit) {
