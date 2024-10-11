@@ -519,7 +519,6 @@ export class PartnerDbService {
             result = await this.analysisHistoryRequestByBatchId(type, customerId, batchId, bearerToken);
             // }
 
-            console.log(result.data);
             if (result.data && result.data.length > 0) {
                 // Remove duplicates by 'hash' key
                 const uniqueData = Array.from(new Map(result.data.map((item: any) => [item['hash'], item])).values());
