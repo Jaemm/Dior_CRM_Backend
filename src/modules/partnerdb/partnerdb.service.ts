@@ -511,7 +511,6 @@ export class PartnerDbService {
                 bearerToken = req.headers?.authorization;
             }
 
-            console.log('========> ', bearerToken);
             let result: any;
 
             // if (['cndpskin'].includes(analysisType)) {
