@@ -824,104 +824,66 @@ export class StatisticsService {
                     data: jsonData,
                 };
             } else if (stat_type === 'clients') {
+                const dateRangeCondition =
+                    start_date && end_date
+                        ? `customers.created_at BETWEEN '${start_date} 00:00:00' AND '${end_date} 23:59:59'`
+                        : '1=1';
+
+                // Fetch consultant country counts in a single batch query
+                const consultantCountryCounts = await this.customerRepository
+                    .createQueryBuilder('customers')
+                    .leftJoin('customers.consultant', 'consultant')
+                    .select('LOWER(consultant.country)', 'country')
+                    .addSelect('COUNT(customers.id)', 'count')
+                    .where(dateRangeCondition)
+                    .andWhere(
+                        "(consultant.country IS NOT NULL AND consultant.country <> '') OR consultant.country IS NULL",
+                    )
+                    .groupBy('consultant.country')
+                    .getRawMany();
+
+                // Preload all countries from the diorCompany
                 const countries = (
                     await this.consultantCountriesRepository.find({
                         where: {
                             consultantCompanyId: diorCompanyId,
                         },
                     })
-                ).map((c) => c.name);
+                ).map((c) => c.name.toLowerCase());
 
-                let branches;
-                let totalClients;
-                const jsonData: { [country: string]: any } = {};
+                // Construct jsonData from the result of the query, with 0 default for missing countries
+                const jsonData: { [country: string]: number } = {};
+                countries.forEach((country) => {
+                    jsonData[country] = 0; // Default to 0 for all countries
+                });
 
+                // Populate jsonData with actual counts from the query result
+                consultantCountryCounts.forEach(({ country, count }) => {
+                    jsonData[country || 'unknown_country'] = parseInt(count, 10);
+                });
+
+                // Handle total clients in one query, depending on consultant position
+                let totalClients = 0;
                 if (
                     [PositionsIds.ADMIN, PositionsIds.BRAND_MANAGER].includes(currentConsultant.consultant_position_id)
                 ) {
-                    branches = await this.consultantBranchesRepository.find({
-                        where: {
-                            id: In(consultants.map((consultant) => consultant.consultant_branch_id)),
-                        },
-                    });
-
-                    for (const country of countries) {
-                        const countQuery = this.customerRepository
-                            .createQueryBuilder('customers')
-                            .leftJoinAndSelect('customers.consultant', 'consultant');
-
-                        if (country === null || country === '') {
-                            countQuery
-                                .andWhere('(consultant.country IS NULL AND customers.email IS NULL)')
-                                .orWhere('(consultant.country IS NULL AND customers.email IS NOT NULL)');
-                        } else {
-                            countQuery
-                                .andWhere('(LOWER(consultant.country) = :country AND customers.email IS NULL)', {
-                                    country: country.toLowerCase(),
-                                })
-                                .orWhere('(LOWER(consultant.country) = :country AND customers.email IS NOT NULL)', {
-                                    country: country.toLowerCase(),
-                                });
-                        }
-
-                        if (start_date && end_date) {
-                            countQuery.andWhere(
-                                `customers.created_at BETWEEN ${start_date} 00:00:00 AND ${end_date} 23:59:59 `,
-                            );
-                        }
-                        const count = await countQuery.getCount();
-
-                        jsonData[country] = count;
-                    }
-
                     const consultantIds = consultants.map((c) => c.id);
 
-                    const totalClientQuery = this.customerRepository.createQueryBuilder('customers');
-                    if (consultantIds && consultantIds.length > 0) {
-                        totalClientQuery
-                            .andWhere('(customers.consultant_id IN (:...consultantIds) AND customers.email IS NULL)', {
-                                consultantIds: consultantIds,
-                            })
-                            .orWhere(
-                                '(customers.consultant_id IN (:...consultantIds) AND customers.email IS NOT NULL)',
-                                {
-                                    consultantIds: consultantIds,
-                                },
-                            );
-                        if (start_date && end_date) {
-                            totalClientQuery.andWhere(
-                                `customers.created_at BETWEEN ${start_date} 00:00:00 AND ${end_date} 23:59:59`,
-                            );
-                        }
-
-                        totalClients = await totalClientQuery.getCount();
+                    if (consultantIds.length > 0) {
+                        totalClients = await this.customerRepository
+                            .createQueryBuilder('customers')
+                            .where('customers.consultant_id IN (:...consultantIds)', { consultantIds })
+                            .andWhere(dateRangeCondition)
+                            .getCount();
                     }
                 } else if (currentConsultant.consultant_position_id === PositionsIds.SUPER_ADMIN) {
-                    branches = await this.branchesRepository.find({
-                        where: {
-                            consultantCompanyId: String(diorCompanyId),
-                        },
-                    });
-
-                    const totalClientQuery = this.customerRepository.createQueryBuilder('customers');
-
-                    if (start_date && end_date) {
-                        totalClientQuery.where(`customers.created_at BETWEEN ${start_date} AND ${end_date}`);
-                    }
-
-                    totalClients = await totalClientQuery.getCount();
-
-                    for (const country of countries) {
-                        const count = await this.customerRepository.countValidCustomersPerCountry(
-                            country,
-                            start_date,
-                            end_date,
-                        );
-
-                        jsonData[country] = count;
-                    }
+                    totalClients = await this.customerRepository
+                        .createQueryBuilder('customers')
+                        .where(dateRangeCondition)
+                        .getCount();
                 }
 
+                // Handle 'unknown_country' logic (if empty string or null countries exist)
                 jsonData['unknown_country'] = await this.customerRepository.countValidCustomersPerCountry(
                     null,
                     start_date,
@@ -938,13 +900,8 @@ export class StatisticsService {
                     delete jsonData['null'];
                 }
 
-                for (const country in jsonData) {
-                    if (jsonData.hasOwnProperty(country)) {
-                        jsonData[country] = Number(jsonData[country].count_all);
-                    }
-                }
-
-                console.log(data);
+                delete jsonData['0'];
+                // Return the final response data
                 data = {
                     total_count: totalClients,
                     data: jsonData,
