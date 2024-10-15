@@ -30,90 +30,105 @@ export class DiorDevicesService {
     async getDevices(req: Request, query: GetDevicesDto, locale = 'en') {
         try {
             const userId = (<{ id: string }>req.user).id;
-
+    
+            // Step 1: Get the current consultant
             const currentConsultant = await this.consultantsRespository.getConsultantById(userId, [
                 'consultant_branch',
             ]);
-
             const positionId = currentConsultant.consultant_position_id;
-
-            const diorConsultant = await this.consultantsRespository.getDiorConsultant();
-
-            const consultantsQuery = await this.consultantsRespository.createQueryBuilder('consultants');
+    
+            // Step 2: Build consultants query based on positionId
+            let consultantsQuery = this.consultantsRespository.createQueryBuilder('consultants');
+    
             if ([5, 6].includes(Number(positionId))) {
                 consultantsQuery.where('consultants.consultant_company_id = :diorCompany', {
                     diorCompany: 213,
                 });
-            } else if ([6].includes(positionId)) {
-                consultantsQuery.andWhere('LOWER (consultants.country) IN (:...countries)', {
+            } else if (positionId === 6) {
+                consultantsQuery.andWhere('LOWER(consultants.country) IN (:...countries)', {
                     countries: currentConsultant?.countries.map((country) => country.toLocaleLowerCase()),
                 });
             } else {
-                consultantsQuery.andWhere('LOWER (consultants.country) = :country', {
+                consultantsQuery.andWhere('LOWER(consultants.country) = :country', {
                     country: currentConsultant?.consultant_branch?.country.toLocaleLowerCase(),
                 });
             }
-
-            consultantsQuery.andWhere('consultants.id NOT IN (:...consultantIds)', { consultantIds: [11156, 9304] });
-
+    
+            // Step 3: Exclude specific consultant IDs
+            consultantsQuery.andWhere('consultants.id NOT IN (:...consultantIds)', {
+                consultantIds: [11156, 9304],
+            });
+    
             const consultants = await consultantsQuery.getMany();
-
+    
+            // Step 4: Fetch products associated with consultants
             const products = await this.productsRepository.find({
                 where: {
                     consultant_id: In(consultants.map((row) => row.id)),
                 },
             });
-
-            let devices: Devices[];
-
-            if (products.length > 0) {
-                devices = await this.devicesRepository.find({
-                    where: {
-                        id: In(products.map((row) => row.device_id)),
-                    },
-                });
-            }
-            let totalCount = devices.length;
-            console.log('totalCount ===> ', totalCount);
-
+    
+            // Return early if there are no products
+            // if (products.length === 0) {
+            //     return {
+            //         data: [{}],
+            //         total_size: 0,
+            //         current_page_size: 0,
+            //         current_page: query.page || 1,
+            //         total_pages: 0,
+            //     };
+            // }
+    
+            // Step 5: Fetch devices based on product IDs
             const productDeviceIds = products.map((product) => product.device_id);
-
-            // Step 2: Fetch devices based on the products' device IDs or Dior company devices
+    
             let devicesQuery = this.devicesRepository
                 .createQueryBuilder('device')
                 .where('device.id IN (:...productDeviceIds)', { productDeviceIds })
-                .orWhere('device.consultant_company_id = :diorCompanyId', { diorCompanyId: 213 });
 
-            // Step 3: Exclude specific optic numbers
+            devicesQuery = devicesQuery.orWhere('device.consultant_company_id = :diorCompanyId', { diorCompanyId: 213 });
+    
+            // Step 6: Exclude specific optic numbers
             devicesQuery = devicesQuery.andWhere('device.optic_number NOT IN (:...excludedOptics)', {
                 excludedOptics: ['FAB02135', 'FAB02363', 'FAB02709', 'DVAA4496'],
             });
+    
+            // Step 7: Apply exact search filter if present
 
-            // const deviceQuery = await this.devicesRepository
-            //     .createQueryBuilder('devices')
-            //     .leftJoinAndSelect('devices.products', 'products')
-            //     .leftJoinAndSelect('products.consultant', 'consultant')
-            //     .orWhere('devices.consultant_company_id = :companyId', {
-            //         companyId: 213,
-            //     })
-            //     .andWhere('devices.optic_number NOT IN (:...opticNumbers)', {
-            //         opticNumbers: ['FAB02135', 'FAB02363', 'FAB02709', 'DVAA4496'],
-            //     });
-
-            if (query.search) {
-                devicesQuery.andWhere('devices.optic_number LIKE :search', {
-                    search: `%${query.search}%`,
-                });
-            }
-
+            console.log(query.search)
+ 
+            // Step 8: Pagination
             const searchPage = Number(query?.page || 1);
             const searchPer = Number(query?.limit || 25);
-
-            [devices, totalCount] = await devicesQuery
+    
+            // Fetch devices and count
+            let [devices, totalCount] = await devicesQuery
                 .skip((searchPage - 1) * searchPer)
                 .take(searchPer)
                 .getManyAndCount();
 
+
+                if (query.search) {
+                    let searchQuery = this.devicesRepository
+                    .createQueryBuilder('device')
+
+                    searchQuery.andWhere('device.consultant_company_id = :diorCompanyId', { diorCompanyId: 213 });
+                    
+                    searchQuery = searchQuery.andWhere('device.optic_number NOT IN (:...excludedOptics)', {
+                        excludedOptics: ['FAB02135', 'FAB02363', 'FAB02709', 'DVAA4496'],
+                    });
+                    searchQuery = searchQuery.andWhere('device.optic_number LIKE :search', { search: `%${query.search}%` })   
+                    
+                    let [devices_, count] = await searchQuery
+                    .skip((searchPage - 1) * searchPer)
+                    .take(searchPer)
+                    .getManyAndCount();
+                    devices = devices_;
+                    totalCount = count
+                }
+        
+    
+            // Step 9: Reformat devices for output
             const reformatDevices: DeviceForDiorT[] = devices.map((device) => {
                 const consultant = device.getConsultant();
                 return {
@@ -141,7 +156,8 @@ export class DiorDevicesService {
                         : undefined,
                 };
             });
-
+    
+            // Return the result with pagination info
             return {
                 data: reformatDevices,
                 total_size: totalCount,
@@ -150,10 +166,15 @@ export class DiorDevicesService {
                 total_pages: Math.ceil(totalCount / searchPer),
             };
         } catch (e) {
-            throw e;
+            console.error('Error fetching devices:', e);
+            throw new Error('An error occurred while fetching devices.');
         }
     }
+    
+    
+    
 
+    // 1971
     async resetConnect(req: Request, body: ResetConnectDto, locale: string = 'en') {
         try {
             const userId = (<{ id: string }>req.user).id;
