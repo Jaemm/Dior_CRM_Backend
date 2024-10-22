@@ -191,7 +191,7 @@ export class DiorDevicesService {
 
             const productCount = await this.productsRepository.count({
                 where: {
-                    device_id: device_id,
+                    device_id: String(device_id),
                 },
             });
 
@@ -199,14 +199,14 @@ export class DiorDevicesService {
             if (productCount > 1) {
                 product = await this.productsRepository.findOne({
                     where: {
-                        device_id: device_id,
+                        device_id: String(device_id),
                         application_id: 88,
                     },
                 });
             } else {
                 product = await this.productsRepository.findOne({
                     where: {
-                        device_id: device_id,
+                        device_id: String(device_id),
                     },
                 });
             }
