@@ -1,5 +1,6 @@
+import { IsNumberOrString } from '@/src/common/validators/number-or-string.validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Validate } from 'class-validator';
 
 export class GetDevicesDto {
     @ApiPropertyOptional()
@@ -21,6 +22,6 @@ export class GetDevicesDto {
 export class ResetConnectDto {
     @ApiProperty()
     @IsNotEmpty()
-    @IsString()
-    device_id: string;
+    @Validate(IsNumberOrString)
+    device_id: string | number;
 }
