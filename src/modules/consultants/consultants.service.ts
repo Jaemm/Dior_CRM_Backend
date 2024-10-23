@@ -3020,153 +3020,301 @@ export class ConsultantsService {
     }
 
     // CRON;
-    // @Cron('*/1 * * * *')
+    // @Cron('* * * * *')
+    // async generateFlatFileDior() {
+    //     try {
+    //         const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
+
+    //         const data = {
+    //             app_id: '88',
+    //             email: 'krtest@diormail.com',
+    //             password: process.env.LOGIN_PASSWORD,
+    //             confirmPassword: process.env.LOGIN_PASSWORD,
+    //         };
+    //         const userData = await this.login(data, 'en');
+    //         const token = userData.token;
+
+    //         // if (!token) {
+    //         //     throw new UnauthorizedException({
+    //         //         result_code: ErrorStatus.UNAUTHORIZED,
+    //         //         error: this.commonService.createLocaleErrorMessage('en', 'unauthorized'),
+    //         //     });
+    //         // }
+
+    //         const customers = await this.customersRepository.getTodayCreatedCustomers();
+
+    //         const customerIds = customers.map((row) => String(row.id));
+
+    //         if (customerIds.length < 1) {
+    //             return;
+    //         }
+
+    //         const diorAnalysis = await this.analysisReplService.getDiorAnalysisByCustomerIds(customerIds);
+
+    //         const promiseData = diorAnalysis.map(async (analysis) => {
+    //             const batchId = analysis.batchId;
+
+    //             const response = await axios.get(`${CNDP_SKIN_ANALYSIS_URL}/web-result/cndpskin/${batchId}`, {
+    //                 headers: {
+    //                     Authorization: `Bearer ${token}`,
+    //                 },
+    //             });
+
+    //             const responseData = response.data;
+    //             const responseBody = responseData.body;
+
+    //             console.log('responseData ----->', responseData);
+
+    //             const customer = await this.customersRepository.findOne({
+    //                 where: {
+    //                     id: Number(analysis.customerId),
+    //                 },
+    //                 relations: [
+    //                     'prSelecteds',
+    //                     'prSelecteds.productRecommendation',
+    //                     'conslutant',
+    //                     'conslutant.consultant_branch',
+    //                 ],
+    //             });
+
+    //             const products: any[] = [];
+
+    //             customer.prSelecteds.forEach((prSelect) => {
+    //                 const recomm = prSelect.productRecommendation;
+    //                 products.push({
+    //                     name: recomm.name,
+    //                     link: recomm.link,
+    //                     image_url: recomm.imageUrl,
+    //                     category: recomm.category,
+    //                     collection: recomm.collection,
+    //                     code: recomm.code,
+    //                 });
+    //             });
+
+    //             const consent = await this.diorConsentRepository.findOne({
+    //                 where: {
+    //                     customerId: customer.id,
+    //                     batchId: batchId,
+    //                 },
+    //             });
+
+    //             const returnData = {
+    //                 client_iw_id: customer.id,
+    //                 country: customer.country,
+    //                 consultation_id: batchId,
+    //                 pos: customer.consultant?.consultant_branch?.code || null,
+    //                 bc: customer.consultant?.code || null,
+    //                 consultation_date: analysis.createdTime,
+    //                 opt_in: consent?.fetchOptions || null,
+    //                 scores: responseBody,
+    //                 recommended_product: products,
+    //             };
+
+    //             if (consent) {
+    //                 const consentAnswers = consent.consentFormAnswers;
+    //                 if (consent.consentType === 'without_ipos_consent') {
+    //                     if (consentAnswers && consentAnswers[2] === 'No') {
+    //                         returnData.client_iw_id = null;
+    //                         returnData.recommended_product = null;
+    //                         returnData.scores = null;
+    //                     }
+    //                 }
+
+    //                 if (consent.consentType === 'ipos_consent') {
+    //                     if (consentAnswers && consentAnswers[2] === 'No') {
+    //                         returnData.client_iw_id = null;
+    //                     }
+
+    //                     if (consentAnswers && consentAnswers[3] === 'No') {
+    //                         returnData.recommended_product = null;
+    //                         returnData.scores = null;
+    //                     }
+    //                 }
+    //             }
+
+    //             return returnData;
+    //         });
+
+    //         console.log('promiseData -----> ', promiseData);
+    //         const result = await Promise.all(promiseData);
+
+    //         const rootDirectoryPath = process.cwd();
+
+    //         const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
+
+    //         if (!existsSync(flatFilesDirectoryPath)) {
+    //             await fs.mkdir(flatFilesDirectoryPath);
+    //         }
+
+    //         //
+    //         const today = new Date();
+    //         const yyyy = today.getFullYear();
+    //         const mm = String(today.getMonth() + 1).padStart(2, '0');
+    //         const dd = String(today.getDate()).padStart(2, '0');
+    //         const dateString = `${yyyy}-${mm}-${dd}`;
+
+    //         const fileName = `${dateString}.json`;
+    //         const filePath = path.join(flatFilesDirectoryPath, fileName);
+
+    //         const jsonData = JSON.stringify(result);
+    //         console.log('jsonData ====>', jsonData);
+
+    //         fs.writeFile(filePath, jsonData)
+    //             .then(() => console.log(`${fileName} writing success`))
+    //             .catch(() => console.log(`${fileName} writing failed`));
+
+    //         return {
+    //             data: result,
+    //         };
+    //     } catch (e) {
+    //         console.log(e);
+    //         throw e;
+    //     }
+    // }
+
+    @Cron('*/2 * * * *')
     async generateFlatFileDior() {
-        try {
-            const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
+        const excelData = [];
+        const data_ = {
+            app_id: '88',
+            email: 'krtest@diormail.com',
+            password: process.env.LOGIN_PASSWORD,
+            confirmPassword: process.env.LOGIN_PASSWORD,
+        };
 
-            const data = {
-                app_id: '88',
-                email: 'krtest@diormail.com',
-                password: process.env.LOGIN_PASSWORD,
-                confirmPassword: process.env.LOGIN_PASSWORD,
+        const userData = await this.login(data_, 'en');
+        const token = userData.token;
+
+        const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
+
+        // Pre-calculate date ranges
+        const startDate = `${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
+        const endDate = `${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
+
+        // Fetch all required analysis data
+        const data = await this.analysisReplService.getStatisticsConsultantions(startDate, endDate);
+
+        // Fetch all customer data in batch
+        const customerIds = data.map((analyseData) => Number(analyseData.customerId));
+        const customers = await this.customersRepository.getTodayCreatedCustomers(customerIds); // Assuming batch fetch implementation
+
+        // Build a map for quick lookup
+        const customerMap = new Map(customers.map((customer) => [customer.id, customer]));
+
+        // console.log('customerMap==>', customerMap);
+        // Fetch all consent data in batch for filtering
+        const batchIds = data.map((analyseData) => analyseData.batchId);
+
+        // const consents = await this.diorConsentRepository.find({
+        //     where: { customerId: In (customer.id), batchId: In(batchIds) },
+        // });
+
+        const consents = await this.diorConsentRepository.find({
+            where: { batchId: In(batchIds), customerId: In(customerIds) },
+        });
+
+        const consentMap = new Map(consents.map((consent) => [`${consent.customerId}_${consent.batchId}`, consent]));
+
+        // Parallel API requests
+        const analysisResults = await Promise.all(
+            data.map((analyseData) =>
+                axios.get(`${CNDP_SKIN_ANALYSIS_URL}/web-result/cndpskin/${analyseData.batchId}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
+            ),
+        );
+
+        // Iterate over the fetched data
+        for (const [index, analyseData] of data.entries()) {
+            const customer = customerMap.get(Number(analyseData.customerId));
+            if (!customer) continue;
+
+            const bc = customer.consultant;
+            const pos = bc?.consultant_branch?.code;
+
+            const result = analysisResults[index];
+
+            // Prepare products for the customer
+            const products = customer.prSelecteds
+                .map((p: any) => p.productRecommendation)
+                .filter(Boolean)
+                .map((product: any) => ({
+                    name: product.name,
+                    link: product.link,
+                    imageUrl: product.imageUrl,
+                    category: product.category,
+                    collection: product.collection,
+                    code: product.code,
+                }));
+
+            const newData = {
+                batchId: analyseData.batchId,
+                createdTime: analyseData.createdTime,
+                results: result.data, // Assuming response data is in `data`
+                productRecommendation: [...new Set(products.map((p) => p.code))],
             };
-            const userData = await this.login(data, 'en');
-            const token = userData.token;
 
-            // if (!token) {
-            //     throw new UnauthorizedException({
-            //         result_code: ErrorStatus.UNAUTHORIZED,
-            //         error: this.commonService.createLocaleErrorMessage('en', 'unauthorized'),
-            //     });
-            // }
+            console.log(newData);
 
-            const customers = await this.customersRepository.getTodayCreatedCustomers();
+            if (newData.productRecommendation.length > 0) {
+                const consent = consentMap.get(`${customer.id}_${analyseData.batchId}`);
+                const consentAnswers = consent?.consentFormAnswers;
 
-            const customerIds = customers.map((row) => String(row.id));
-
-            if (customerIds.length < 1) {
-                return;
-            }
-
-            const diorAnalysis = await this.analysisReplService.getDiorAnalysisByCustomerIds(customerIds);
-
-            const promiseData = diorAnalysis.map(async (analysis) => {
-                const batchId = analysis.batchId;
-
-                const response = await axios.get(`${CNDP_SKIN_ANALYSIS_URL}/web-result/cndpskin/${batchId}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                const responseData = response.data;
-                const responseBody = responseData.body;
-
-                const customer = await this.customersRepository.findOne({
-                    where: {
-                        id: Number(analysis.customerId),
-                    },
-                    relations: [
-                        'prSelecteds',
-                        'prSelecteds.productRecommendation',
-                        'conslutant',
-                        'conslutant.consultant_branch',
-                    ],
-                });
-
-                const products: any[] = [];
-
-                customer.prSelecteds.forEach((prSelect) => {
-                    const recomm = prSelect.productRecommendation;
-                    products.push({
-                        name: recomm.name,
-                        link: recomm.link,
-                        image_url: recomm.imageUrl,
-                        category: recomm.category,
-                        collection: recomm.collection,
-                        code: recomm.code,
-                    });
-                });
-
-                const consent = await this.diorConsentRepository.findOne({
-                    where: {
-                        customerId: customer.id,
-                        batchId: batchId,
-                    },
-                });
-
-                const returnData = {
-                    client_iw_id: customer.id,
-                    country: customer.country,
-                    consultation_id: batchId,
-                    pos: customer.consultant?.consultant_branch?.code || null,
-                    bc: customer.consultant?.code || null,
-                    consultation_date: analysis.createdTime,
-                    opt_in: consent?.fetchOptions || null,
-                    scores: responseBody,
-                    recommended_product: products,
+                const newJson: any = {
+                    clientIwId: customer.external_id,
+                    country: customer.country, // Replaced commented out part
+                    consultationId: analyseData.batchId,
+                    pos: pos,
+                    bc: bc?.code,
+                    consultationDate: analyseData.createdTime,
+                    optIn: consent?.fetchOptions,
+                    scores: result.data,
+                    recommendedProduct: newData.productRecommendation,
                 };
 
+                // Handle consent logic
                 if (consent) {
-                    const consentAnswers = consent.consentFormAnswers;
-                    if (consent.consentType === 'without_ipos_consent') {
-                        if (consentAnswers && consentAnswers[2] === 'No') {
-                            returnData.client_iw_id = null;
-                            returnData.recommended_product = null;
-                            returnData.scores = null;
-                        }
+                    if (consent.consentType === 'without_ipos_consent' && consentAnswers?.[2] === 'No') {
+                        delete newJson.clientIwId;
+                        delete newJson.recommendedProduct;
+                        delete newJson.scores;
                     }
-
                     if (consent.consentType === 'ipos_consent') {
-                        if (consentAnswers && consentAnswers[2] === 'No') {
-                            returnData.client_iw_id = null;
-                        }
-
-                        if (consentAnswers && consentAnswers[3] === 'No') {
-                            returnData.recommended_product = null;
-                            returnData.scores = null;
+                        if (consentAnswers?.[2] === 'No') delete newJson.clientIwId;
+                        if (consentAnswers?.[3] === 'No') {
+                            delete newJson.recommendedProduct;
+                            delete newJson.scores;
                         }
                     }
                 }
 
-                return returnData;
-            });
-
-            const result = await Promise.all(promiseData);
-
-            const rootDirectoryPath = process.cwd();
-
-            const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
-
-            if (!existsSync(flatFilesDirectoryPath)) {
-                await fs.mkdir(flatFilesDirectoryPath);
+                // Filtering based on consent answers
+                if ((consentAnswers || []).length === 2 && !consentAnswers.includes('No')) {
+                    excelData.push(JSON.stringify(newJson));
+                } else if ((consentAnswers || []).length === 4) {
+                    if (
+                        !(
+                            consentAnswers[0] === 'Yes' &&
+                            consentAnswers[1] === 'No' &&
+                            consentAnswers[2] === 'No' &&
+                            consentAnswers[3] === 'No'
+                        ) &&
+                        !(
+                            consentAnswers[0] === 'Yes' &&
+                            consentAnswers[1] === 'Yes' &&
+                            consentAnswers[2] === 'No' &&
+                            consentAnswers[3] === 'No'
+                        )
+                    ) {
+                        excelData.push(JSON.stringify(newJson));
+                    }
+                }
             }
-
-            //
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const dateString = '2024-09-26'; //`${yyyy}-${mm}-${dd}`;
-
-            const fileName = `${dateString}.json`;
-            const filePath = path.join(flatFilesDirectoryPath, fileName);
-
-            const jsonData = JSON.stringify(result);
-            console.log('jsonData ====>', jsonData);
-
-            fs.writeFile(filePath, jsonData)
-                .then(() => console.log(`${fileName} writing success`))
-                .catch(() => console.log(`${fileName} writing failed`));
-
-            return {
-                data: result,
-            };
-        } catch (e) {
-            console.log(e);
-            throw e;
         }
+
+        console.log(excelData);
+
+        return excelData;
     }
 
     daysLeftFromExpired(licensePeriod: number, firstUseDate: string) {
@@ -3492,6 +3640,7 @@ export class ConsultantsService {
             throw err; // Propagate the error
         }
     }
+
     getDates(startDate: Date, endDate: Date): string[] {
         const dateArray: any[] = [];
         const currentDate = new Date(startDate);
@@ -3515,8 +3664,9 @@ export class ConsultantsService {
         }
     }
     // @Cron('* * * * *')
-    @Cron(CronExpression.EVERY_DAY_AT_1AM)
+    // @Cron(CronExpression.EVERY_DAY_AT_1AM)
     async transferFileToServer() {
+        console.log('checking');
         const date = new Date();
         const formattedDate = moment(date).format('YYYY-MM-DD');
 

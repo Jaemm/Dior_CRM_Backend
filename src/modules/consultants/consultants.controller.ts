@@ -366,13 +366,13 @@ export class ConsultantsController {
         return res.status(200).send(token);
     }
 
-    @ApiBearerAuth()
-    @Roles(Role.Consultant)
-    @Get('generate_flat_file_dior')
-    async generateFlatFileDior(@Req() req: Request, @Res() res: Response) {
-        const result = await this.consultants.generateFlatFileDior();
-        return res.status(200).send(result);
-    }
+    // @ApiBearerAuth()
+    // @Roles(Role.Consultant)
+    // @Get('generate_flat_file_dior')
+    // async generateFlatFileDior(@Req() req: Request, @Res() res: Response) {
+    //     const result = await this.consultants.generateFlatFileDior();
+    //     return res.status(200).send(result);
+    // }
 
     @Get('confirm_email/:id')
     async confirmEmailById(@Res() res: Response, @Param('id') id: string) {
