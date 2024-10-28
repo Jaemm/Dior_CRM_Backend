@@ -27,9 +27,12 @@ import { CommonService } from '@/src/common/common.service';
 import { ConsultantBranches } from '@/src/common/entities/crmEntities';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 import { ConfigService } from '@nestjs/config';
+import { ConsultantsService } from '../../consultants/consultants.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class DiorCompanyBranchesService {
+    private readonly saltRounds = 10;
     constructor(
         private commonService: CommonService,
         private configService: ConfigService,
@@ -42,6 +45,32 @@ export class DiorCompanyBranchesService {
         private readonly presignRepository: PresignRepository,
     ) {}
 
+    public async createCondultantForPos(newUser: any) {
+        const consultantData: any = newUser;
+        consultantData['email_confirmed'] = true;
+
+        console.log(newUser.password);
+
+        // consultantData.password = await bcrypt.hash(newUser.password, 10);
+
+        const consultant = await this.consultantRepository.createConsultantForPOS({
+            name: newUser.name,
+            consultant_company_id: 213,
+            password_digest: await bcrypt.hash(newUser.password, this.saltRounds),
+            email: newUser.email,
+            unconfirmed_email: newUser.email,
+            app_id: 88,
+            email_confirmed: true,
+            rememberCreatedAt: new Date(),
+            code: newUser.newUser,
+            consultant_branch_id: String(newUser.consultant_branch_id),
+            country: newUser.country,
+            updated_at: new Date(),
+            created_at: new Date(),
+        });
+
+        return consultant;
+    }
     async createBranch(req: Request, body: CreateBranchesDto) {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
@@ -76,6 +105,12 @@ export class DiorCompanyBranchesService {
                 total_devices: 0,
                 last_consultation_date: null,
             };
+
+            // cons
+            body.consultant_branch_id = reformatBranch.id;
+            if (reformatBranch) {
+                this.createCondultantForPos(body);
+            }
 
             return reformatBranch;
         } catch (e) {

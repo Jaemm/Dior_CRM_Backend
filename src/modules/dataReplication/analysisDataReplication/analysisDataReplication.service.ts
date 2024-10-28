@@ -116,9 +116,7 @@ export class AnalysisDataReplicationService {
             const consultationQuery = await this.diorCndpSkinRepository.createQueryBuilder('analysis');
 
             if (startDate && endDate) {
-                consultationQuery.andWhere(
-                    `analysis.created_time BETWEEN ${startDate} 00:00:00 AND ${endDate} 23:59:59`,
-                );
+                consultationQuery.andWhere(`analysis.created_time BETWEEN '${startDate}' AND '${endDate}'`);
             }
 
             const consultations = await consultationQuery.getMany();

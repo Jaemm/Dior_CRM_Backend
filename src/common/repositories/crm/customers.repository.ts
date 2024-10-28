@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository, Between } from 'typeorm';
+import { DataSource, Repository, Between, In } from 'typeorm';
 import { Customers } from '@/src/common/entities/crmEntities';
 
 @Injectable()
@@ -8,7 +8,7 @@ export class CustomersRepository extends Repository<Customers> {
         super(Customers, dataSource.createEntityManager());
     }
 
-    async getTodayCreatedCustomers() {
+    async getTodayCreatedCustomers(ids: number[]) {
         const startOfToday = new Date('2024-09-17');
         startOfToday.setHours(0, 0, 0, 0);
 
@@ -17,9 +17,10 @@ export class CustomersRepository extends Repository<Customers> {
 
         const customers = await this.find({
             where: {
-                created_at: Between(startOfToday, endOfToday),
+                // created_at: Between(startOfToday, endOfToday),
+                id: In(ids),
             },
-            relations: ['prSelecteds', 'prSelecteds.productRecommendation'],
+            relations: ['prSelecteds', 'prSelecteds.productRecommendation', 'consultant'],
         });
 
         return customers;

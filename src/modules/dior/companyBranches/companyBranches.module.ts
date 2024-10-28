@@ -14,7 +14,6 @@ import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
     providers: [
         DiorCompanyBranchesService,
         AwsS3Service,
-
         // Repos
         ConsultantsRepository,
         ConsultantBranchesRepository,
