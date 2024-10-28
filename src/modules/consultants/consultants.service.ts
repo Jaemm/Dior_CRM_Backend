@@ -2787,15 +2787,23 @@ export class ConsultantsService {
 
             const beforeUseDate = product.use_date;
 
-            product.consultant_id = consultant.id;
+            product.consultant_id = Number(consultant?.id);
             product.use_date = useDate;
             product.use_time = useTime;
             product.mac_address = macAddress;
             product.app_use_yn = 'Y';
             // comments
 
+
             try {
-                await this.productsRepository.save(product);
+                await this.productsService.updateProduct(product.id, {
+                    consultant_id:  consultant.id,
+                    use_date:  useDate,
+                    use_time:  useTime,
+                    mac_address:  macAddress,
+                    app_use_yn: 'Y',
+                });
+
             } catch (e) {
                 throw new Error('6:사용등록오류');
             }
@@ -2807,8 +2815,14 @@ export class ConsultantsService {
                 await this.consultantsRepository.save(currentConsultant);
             }
 
+            // console.log("===>",consultant.id);
+
+           
+
             if (!beforeUseDate && product.use_date && !isFirstUseDate) {
-                product.first_use_date = product.use_date;
+                if (!product.first_use_date || product.first_use_date === null) {
+                    product.first_use_date = product.use_date;
+                }
                 await this.productsRepository.save(product);
             }
 
@@ -2891,15 +2905,16 @@ export class ConsultantsService {
                     },
                 },
             };
-        } catch (e) {
-            const splitMessage = e.message.split(':');
+        } catch (error) {
+            console.log(error)
+            const splitMessage = error.message.split(':');
             if (splitMessage.length > 1) {
                 return {
                     result_code: splitMessage[0],
                     error: splitMessage[1],
                 };
             }
-            throw e;
+            throw error;
         }
     }
 
