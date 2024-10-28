@@ -231,6 +231,7 @@ export class ConsultantsService {
     async verifyPassword(enteredPassword: string, storedHash: string): Promise<boolean> {
         const hashAlgorithm = this.determineHashAlgorithm(storedHash);
 
+        console.log(hashAlgorithm);
         switch (hashAlgorithm) {
             case 'bcrypt':
                 return this.verifyPasswordBcrypt(enteredPassword, storedHash);
@@ -376,8 +377,6 @@ export class ConsultantsService {
                 token: refreshToken,
             }),
         ]);
-
-        console.log(consultant);
 
         const consultantResponseData = await this.consultantsRepository.findOne({
             where: {
@@ -723,7 +722,6 @@ export class ConsultantsService {
 
         const confirmPwd = await this.verifyPassword(password, user?.password_digest ?? null);
 
-        console.log('confirmPwd ----> ', confirmPwd);
         if (confirmPwd) {
             return user;
         }
@@ -2808,7 +2806,9 @@ export class ConsultantsService {
             }
 
             if (!beforeUseDate && product.use_date && !isFirstUseDate) {
-                product.first_use_date = product.use_date;
+                if (!product.first_use_date || product.first_use_date === null) {
+                    product.first_use_date = product.use_date;
+                }
                 await this.productsRepository.save(product);
             }
 
