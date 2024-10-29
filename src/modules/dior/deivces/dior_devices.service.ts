@@ -72,11 +72,12 @@ export class DiorDevicesService {
             const productDeviceIds = products.map((product) => product.device_id);
 
             // getConsultant
-
+            // consultant_branch
             let devicesQuery = this.devicesRepository
                 .createQueryBuilder('device')
                 .leftJoinAndSelect('device.products', 'products')
                 .leftJoinAndSelect('products.consultant', 'consultant')
+                .leftJoinAndSelect('consultant.consultant_branch', 'consultant_branch')
                 .where('device.id IN (:...productDeviceIds)', { productDeviceIds });
 
             devicesQuery = devicesQuery.orWhere('device.consultant_company_id = :diorCompanyId', {
@@ -121,6 +122,7 @@ export class DiorDevicesService {
             // Step 9: Reformat devices for output
             const reformatDevices: DeviceForDiorT[] = devices.map((device) => {
                 const consultant = device.getConsultant();
+                const pos = device.getConsultantShop();
 
                 return {
                     id: device.id,
@@ -149,6 +151,9 @@ export class DiorDevicesService {
                               email: null,
                               code: null,
                           },
+                    bc_code: consultant?.code ?? null,
+                    pos_code: pos?.code ?? null,
+                    country: consultant?.country ?? null,
                 };
             });
 
