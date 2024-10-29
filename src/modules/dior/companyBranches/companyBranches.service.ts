@@ -49,8 +49,6 @@ export class DiorCompanyBranchesService {
         const consultantData: any = newUser;
         consultantData['email_confirmed'] = true;
 
-        console.log(newUser.password);
-
         // consultantData.password = await bcrypt.hash(newUser.password, 10);
 
         const consultant = await this.consultantRepository.createConsultantForPOS({
