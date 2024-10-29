@@ -102,7 +102,11 @@ export class DiorDevicesService {
                 .getManyAndCount();
 
             if (query.search) {
-                let searchQuery = this.devicesRepository.createQueryBuilder('device');
+                let searchQuery = this.devicesRepository
+                    .createQueryBuilder('device')
+                    .leftJoinAndSelect('device.products', 'products')
+                    .leftJoinAndSelect('products.consultant', 'consultant')
+                    .leftJoinAndSelect('consultant.consultant_branch', 'consultant_branch');
 
                 searchQuery.andWhere('device.consultant_company_id = :diorCompanyId', { diorCompanyId: 213 });
 
