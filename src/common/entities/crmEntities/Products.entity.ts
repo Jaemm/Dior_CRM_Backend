@@ -89,7 +89,7 @@ export class Products {
     @JoinColumn([{ name: 'customer_id', referencedColumnName: 'id' }])
     customer: Customers;
 
-    @OneToOne(() => Consultants, (consultants) => consultants.products)
+    @OneToOne(() => Consultants, (consultants) => consultants.products, { eager: true })
     @JoinColumn([{ name: 'consultant_id', referencedColumnName: 'id' }])
     consultant: Consultants;
 
@@ -118,6 +118,14 @@ export class Products {
     @AfterLoad()
     afterLoad() {
         this.id = Number(this.id);
+    }
+
+    get getConsultant() {
+        if (this.consultant) {
+            return this.consultant;
+        }
+
+        return null;
     }
 
     get getBasicInfo() {
