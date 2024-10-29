@@ -152,7 +152,7 @@ export class Devices {
     @Column('character varying', { name: 'pwd_digest', nullable: true })
     pwd_digest: string | null;
 
-    @OneToMany(() => Products, (products) => products.device)
+    @OneToMany(() => Products, (products) => products.device, { eager: true })
     products: Products[];
 
     @ManyToOne(() => ConsultantCompanies, (consultantCompanies) => consultantCompanies.devices)
@@ -185,17 +185,29 @@ export class Devices {
 
     getLicensePeriod() {
         if (this.products && this.products.length > 0) {
-            return this.products[0].license_period;
+            return this.products[0]?.license_period ?? null;
         }
 
         return null;
     }
 
     getConsultant() {
+        console.log(this.products[0]?.consultant?.email);
         if (this.products && this.products.length > 0) {
-            return this.products[0].consultant;
+            return this.products[0]?.consultant ?? null;
         }
-
         return null;
     }
 }
+
+// for get consultant it get the value for the productsEntity as foolow
+// consultant is a
+
+// getConsultant() {
+//     console.log('==========> DEVICES', this.products ?? null);
+//     if (this.products && this.products.length > 0) {
+//         return this.products[0].consultant;
+//     }
+
+//     return null;
+// }
