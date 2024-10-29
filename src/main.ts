@@ -26,11 +26,11 @@ async function bootstrap() {
     const enableSwagger = process.env.OPEN_SWAGGER;
     if (enableSwagger === 'true') {
         const config = new DocumentBuilder()
-            .setTitle('Chowis User management and Login V1/API')
-            .setDescription('Chowis User management and Login V1/API')
+            .setTitle('Dior User management and Login V1/API')
+            .setDescription('Dior User management and Login V1/API')
             .setDescription(
                 `<b>Production</b>: https://crm-dior.chowis.cloud/v1/api <br>
-                <b>Stagging</b>: https://crm-staging.chowis.cloud/v1/api <br>
+                <b>Stagging</b>: https://stg-dior.chowis.cloud/v1/api <br>
                `,
             )
             .setVersion('1.0.0')
