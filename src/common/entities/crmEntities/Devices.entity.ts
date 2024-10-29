@@ -192,11 +192,18 @@ export class Devices {
     }
 
     getConsultant() {
-        console.log(this.products[0]?.consultant?.email);
         if (this.products && this.products.length > 0) {
             return this.products[0]?.consultant ?? null;
         }
         return null;
+    }
+
+    getConsultantShop() {
+        if (this.products && this.products.length > 0) {
+            return this.products[0]?.consultant?.consultant_branch ?? null;
+        }
+        return null;
+        // getConsultantShop
     }
 }
 
