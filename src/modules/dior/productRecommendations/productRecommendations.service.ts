@@ -1370,6 +1370,8 @@ export class ProductRecommendationService {
             await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
 
             const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
+
+            console.log('baseUrl ====> ', baseUrl);
             const downloadUrl = `${baseUrl}/api/dior/product_recommendations/files/${hash}`;
 
             await this.presignRepository.saveNewPresignEntity({
@@ -1469,3 +1471,4 @@ export class ProductRecommendationService {
         };
     }
 }
+
