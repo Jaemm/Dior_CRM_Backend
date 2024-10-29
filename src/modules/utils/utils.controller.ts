@@ -15,7 +15,7 @@ export class UtilsController {
     @Get('generate_qr_code')
     generateQRCodeUrl(@Query('url') url: string) {
         // Return the URL of the QR code image (handled in another endpoint)
-        const qrCodeImageUrl = `${process.env.DOMAIN}/api/utils/serve_qr_code?url=${encodeURIComponent(url)}`;
+        const qrCodeImageUrl = `https://${process.env.DOMAIN}/api/utils/serve_qr_code?url=${encodeURIComponent(url)}`;
         return { qr_code_url: qrCodeImageUrl };
     }
 
@@ -35,4 +35,3 @@ export class UtilsController {
         return res.send(qrCode);
     }
 }
-
