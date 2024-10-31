@@ -83,9 +83,7 @@ export class DiorCompanyBranchesService {
         newUser.name = newUser?.name ? newUser.name : bm.name;
         newUser.code = newUser?.code ? newUser.code : bm.code;
         newUser.country = newUser?.country ? newUser.country : bm.country;
-        newUser.password_digest = newUser?.password
-            ? bcrypt.hash(newUser.password, this.saltRounds)
-            : bm.password_digest;
+        newUser.password_digest = bcrypt.hash(newUser.password, this.saltRounds);
         newUser.updated_at = new Date();
 
         delete newUser.password;
