@@ -75,6 +75,7 @@ export class DiorCompanyBranchesService {
 
         delete newUser.consultantCompanyId;
         delete newUser.createdAt;
+        delete newUser.updatedAt;
 
         newUser.email = newUser.email ? newUser.email : bm.email;
         newUser.name = newUser.name ? newUser.name : bm.name;
