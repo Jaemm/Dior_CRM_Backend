@@ -90,6 +90,8 @@ export class DiorCompanyBranchesService {
 
         delete newUser.countryId;
 
+        console.log('newUser ====>', newUser);
+
         newUser.email = newUser?.email ? newUser.email : bm.email;
         newUser.name = newUser?.name ? newUser.name : bm.name;
         newUser.code = newUser?.code ? newUser.code : bm.code;
