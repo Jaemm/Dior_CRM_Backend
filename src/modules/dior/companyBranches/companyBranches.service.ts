@@ -63,8 +63,8 @@ export class DiorCompanyBranchesService {
             app_id: 88,
             email_confirmed: true,
             rememberCreatedAt: new Date(),
-            code: newUser.newUser,
-            consultant_branch_id: String(newUser.consultant_branch_id),
+            code: newUser.code,
+            consultant_branch_id: String(newUser.id),
             country: newUser.country,
             updated_at: new Date(),
             created_at: new Date(),
@@ -89,6 +89,8 @@ export class DiorCompanyBranchesService {
         delete newUser.updatedAt;
 
         delete newUser.countryId;
+
+        console.log('newUser ====>', newUser);
 
         newUser.email = newUser?.email ? newUser.email : bm.email;
         newUser.name = newUser?.name ? newUser.name : bm.name;
@@ -443,11 +445,11 @@ export class DiorCompanyBranchesService {
                     updatedAt: new Date(),
                 });
 
-                if (newBranch) {
-                    this.createCondultantForPos(body);
+                console.log('========> ', newBranch);
+                const registredPos = await this.consultantBranchesRepository.save(newBranch);
+                if (registredPos) {
+                    this.createCondultantForPos(registredPos);
                 }
-
-                await this.consultantBranchesRepository.save(newBranch);
             }
 
             return {
