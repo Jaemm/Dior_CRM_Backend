@@ -76,25 +76,18 @@ export class DiorCompanyBranchesService {
         delete newUser.consultantCompanyId;
         delete newUser.createdAt;
         delete newUser.updatedAt;
-        delete newUser.password;
         delete newUser.id;
         delete newUser.countryId;
 
-        const email = newUser.email ? newUser.email : bm.email;
-        const name = newUser.name ? newUser.name : bm.name;
-        const code = newUser.code ? newUser.code : bm.code;
-        const country = newUser.country ? newUser.country : bm.country;
-        const password = newUser.password ? bcrypt.hash(newUser.password, this.saltRounds) : bm.password_digest;
-        const updated_at = new Date();
+        newUser.email = newUser.email ? newUser.email : bm.email;
+        newUser.name = newUser.name ? newUser.name : bm.name;
+        newUser.code = newUser.code ? newUser.code : bm.code;
+        newUser.country = newUser.country ? newUser.country : bm.country;
+        newUser.password = newUser.password ? bcrypt.hash(newUser.password, this.saltRounds) : bm.password_digest;
+        newUser.updated_at = new Date();
 
-        const updatedBM = await this.consultantRepository.updateConsultant(bm.id, {
-            email: email,
-            name: name,
-            code: code,
-            country: country,
-            password: password,
-            updated_at: updated_at,
-        });
+        delete newUser.password;
+        const updatedBM = await this.consultantRepository.updateConsultant(bm.id, newUser);
 
         return updatedBM;
     }
