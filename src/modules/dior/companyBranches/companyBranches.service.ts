@@ -65,7 +65,7 @@ export class DiorCompanyBranchesService {
             email_confirmed: true,
             rememberCreatedAt: new Date(),
             code: newUser.code,
-            consultant_branch_id: String(newUser.id),
+            consultant_branch_id: newUser?.consultant_branch_id ?? String(newUser.id),
             country: newUser.country,
             updated_at: new Date(),
             created_at: new Date(),
