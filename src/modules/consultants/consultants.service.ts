@@ -662,13 +662,15 @@ export class ConsultantsService {
         const products = await this.productsRepository.getCompaniesFiles(consultant?.id ?? null, Number(app_id));
 
         const promises: Promise<any>[] = [];
-        products.map((p) => {
-            if (p.device.consultant_company_id) {
-                promises.push(
-                    this.getCompanyDetails({ consultant_company_id: String(p.device.consultant_company_id) }),
-                );
-            }
-        });
+        if(products.length > 0){
+            products.map((p) => {
+                if (p?.device?.consultant_company_id) {
+                    promises.push(
+                        this.getCompanyDetails({ consultant_company_id: String(p.device.consultant_company_id) }),
+                    );
+                }
+            });
+        }
 
         const result = await Promise.all(promises);
         const optic_number: string[] = [];
