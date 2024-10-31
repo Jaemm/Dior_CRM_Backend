@@ -264,7 +264,7 @@ export class DiorCompanyBranchesService {
             const savedBranch = await this.consultantBranchesRepository.save(branch);
 
             if (savedBranch) {
-                this.updateCondultantForPos(savedBranch).catch((e) => {
+                await this.updateCondultantForPos(savedBranch).catch((e) => {
                     throw new NotFoundException({
                         result_code: ErrorStatus.UNEXPECTED_ERROR,
                         error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
