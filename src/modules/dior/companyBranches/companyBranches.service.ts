@@ -281,8 +281,6 @@ export class DiorCompanyBranchesService {
 
             const savedBranch = await this.consultantBranchesRepository.save(branch);
 
-            console.log(savedBranch);
-
             if (savedBranch) {
                 await this.updateCondultantForPos(savedBranch).catch((error) => {
                     console.log('===>', error);

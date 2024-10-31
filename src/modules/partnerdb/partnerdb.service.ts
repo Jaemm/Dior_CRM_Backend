@@ -474,8 +474,6 @@ export class PartnerDbService {
                     filterByField = filterBy.replace('-', '');
                 }
 
-                console.log(`filter_by_order => ${filterByOrder}`);
-
                 if (filterByOrder === 'DESC') {
                     filteredData = _.orderBy(filteredData, [filterByField], ['desc']);
                 } else {
@@ -522,7 +520,6 @@ export class PartnerDbService {
                 // Remove duplicates by 'hash' key
                 const uniqueData = Array.from(new Map(result.data.map((item: any) => [item['hash'], item])).values());
 
-                console.log(uniqueData);
                 result.data = uniqueData;
             }
             return {

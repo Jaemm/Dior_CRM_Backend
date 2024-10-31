@@ -167,8 +167,6 @@ export class DiorCompanyConsultantsService {
                 .take(searchPer)
                 .getManyAndCount();
 
-            console.log('====> totalCount', totalCount);
-
             const reformatConsultantList: ConsultantForDiorT[] = consultants.map((consultant) => {
                 const branch = consultant.consultant_branch;
 
@@ -200,61 +198,109 @@ export class DiorCompanyConsultantsService {
         }
     }
 
-    async getConsultantByBranchesConsultant(req: Request, locale = 'en') {
-        try {
-            const userId = (<{ id: string }>req.user).id;
+    async getConsultantByBranchesConsultant(req: Request, locale = 'en'): Promise<any[]> {
+        const currentConsultantId = (<{ id: string }>req.user).id;
+        const currentConsultant = await this.consultantRepository.findOne({
+            where: { id: Number(currentConsultantId) },
+            relations: ['consultant_branch'],
+        });
 
-            const currentConsultant = await this.consultantRepository.findOne({
-                where: { id: Number(userId) },
-                relations: ['consultant_branch'],
-            });
-
-            if (!currentConsultant) {
-                throw new UnauthorizedException({
-                    result_code: ErrorStatus.UNAUTHORIZED,
-                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
-                });
-            }
-
-            const branch = currentConsultant.consultant_branch;
-
-            if (!branch) {
-                throw new NotFoundException({
-                    result_code: ErrorStatus.NOT_FOUND,
-                });
-            }
-
-            const consultantsByBranch = await this.consultantRepository
-                .createQueryBuilder('consultants')
-                .where('consultants.email != :email OR consultants.email != :email2', {
-                    email: 'ann.chowis613@gmail.com', // who is this...
-                    email2: 'ann@chowis.com', // who is this...
-                })
-                .getMany();
-
-            const data: {
-                id: number;
-                email: string;
-                code: string;
-                name: string;
-                surname: string;
-            }[] = consultantsByBranch.map((row) => {
-                return {
-                    id: row.id,
-                    email: row.email,
-                    code: row.code,
-                    name: row.name,
-                    surname: row.surname,
-                };
-            });
-
-            return {
-                data,
-            };
-        } catch (e) {
-            throw e;
+        if (!currentConsultant) {
+            throw new Error('Consultant not found');
         }
+
+        const consultants = await this.consultantRepository.find({
+            where: [
+                {
+                    consultant_branch: { id: currentConsultant?.consultant_branch?.id },
+                },
+                { id: currentConsultant.id },
+            ],
+        });
+
+        // Filter out specific emails
+        return consultants
+            .filter(
+                (consultant) =>
+                    consultant.email.toLowerCase() !== 'ann.chowis613@gmail.com' &&
+                    consultant.email.toLowerCase() !== 'ann@chowis.com',
+            )
+            .map((consultant) => ({
+                id: consultant.id,
+                email: consultant.email,
+                code: consultant.code,
+                name: consultant.name,
+                surname: consultant.surname,
+            }));
     }
+
+    // async getConsultantByBranchesConsultant(req: Request, locale = 'en') {
+    //     try {
+    //         const userId = (<{ id: string }>req.user).id;
+
+    //         const currentConsultant = await this.consultantRepository.findOne({
+    //             where: { id: Number(userId) },
+    //             relations: ['consultant_branch'],
+    //         });
+
+    //         if (!currentConsultant) {
+    //             throw new UnauthorizedException({
+    //                 result_code: ErrorStatus.UNAUTHORIZED,
+    //                 error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+    //             });
+    //         }
+
+    //         const branch = currentConsultant.consultant_branch;
+    //         console.log('===> ', branch);
+
+    //         if (!branch) {
+    //             throw new NotFoundException({
+    //                 result_code: ErrorStatus.NOT_FOUND,
+    //             });
+    //         }
+
+    //         // const consultantsByBranch = await this.consultantRepository
+    //         //     .createQueryBuilder('consultants')
+    //         //     .where(
+    //         //         'consultants.email != :email OR consultants.email != :email2 OR consultant_branch_id = :branch_id',
+    //         //         {
+    //         //             email: 'ann.chowis613@gmail.com', // who is this...
+    //         //             email2: 'ann@chowis.com',
+    //         //             branch_id: currentConsultant.consultant_branch.id, // who is this...
+    //         //         },
+    //         //     )
+    //         //     .getMany();
+
+    //         const consultantsByBranch = await this.consultantRepository
+    //             .createQueryBuilder('consultants')
+    //             .where('consultants.consultant_branch_id = :branch_id', {
+    //                 branch_id: currentConsultant.consultant_branch.id, // who is this...
+    //             })
+    //             .getMany();
+
+    //         const data: {
+    //             id: number;
+    //             email: string;
+    //             code: string;
+    //             name: string;
+    //             surname: string;
+    //         }[] = consultantsByBranch.map((row) => {
+    //             return {
+    //                 id: row.id,
+    //                 email: row.email,
+    //                 code: row.code,
+    //                 name: row.name,
+    //                 surname: row.surname,
+    //             };
+    //         });
+
+    //         return {
+    //             data,
+    //         };
+    //     } catch (e) {
+    //         throw e;
+    //     }
+    // }
 
     async deleteDiorCompanyConsultant(consultantId: string, locale = 'en') {
         try {

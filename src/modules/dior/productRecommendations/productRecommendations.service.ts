@@ -1023,7 +1023,6 @@ export class ProductRecommendationService {
         //  9 - Shades
 
         const userId = (<{ id: string }>req.user)?.id;
-        console.log('req ====> ', userId);
 
         const splitToken = req.headers.authorization.split(' ');
         const token = splitToken[1];

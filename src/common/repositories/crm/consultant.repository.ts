@@ -172,7 +172,7 @@ export class ConsultantsRepository extends Repository<Consultants> {
             },
         });
     }
-
+    //
     async deleteConsultant(consultant: any) {
         const deleted = await this.remove(consultant);
 
