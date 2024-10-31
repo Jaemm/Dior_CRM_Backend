@@ -69,6 +69,24 @@ export class DiorCompanyBranchesService {
 
         return consultant;
     }
+
+    public async updateCondultantForPos(newUser: any) {
+        const bm = await this.consultantRepository.findByEmail(newUser.name);
+
+        newUser.email = newUser.email ? newUser.email : bm.email;
+        newUser.name = newUser.name ? newUser.name : bm.name;
+        newUser.code = newUser.code ? newUser.code : bm.code;
+        newUser.country = newUser.country ? newUser.country : bm.country;
+        newUser.password = newUser.password ? bcrypt.hash(newUser.password, this.saltRounds) : bm.password_digest;
+        newUser.updatedAt = new Date();
+
+        const updatedBM = await this.consultantRepository.updateConsultant(bm.id, newUser);
+
+        console.log(updatedBM);
+
+        return updatedBM;
+    }
+
     async createBranch(req: Request, body: CreateBranchesDto) {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
@@ -244,6 +262,15 @@ export class DiorCompanyBranchesService {
             branch.updatedAt = new Date();
 
             const savedBranch = await this.consultantBranchesRepository.save(branch);
+
+            if (savedBranch) {
+                this.updateCondultantForPos(savedBranch).catch((e) => {
+                    throw new NotFoundException({
+                        result_code: ErrorStatus.UNEXPECTED_ERROR,
+                        error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
+                    });
+                });
+            }
 
             const reformatBranch: ConsultantBranchesForDiorT = {
                 id: Number(savedBranch.id),

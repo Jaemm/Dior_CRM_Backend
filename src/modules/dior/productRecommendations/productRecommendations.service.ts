@@ -1022,32 +1022,44 @@ export class ProductRecommendationService {
         //  8 - Product Variant Code
         //  9 - Shades
 
-        try {
-            const splitToken = req.headers.authorization.split(' ');
-            const token = splitToken[1];
+        const userId = (<{ id: string }>req.user)?.id;
+        console.log('req ====> ', userId);
 
-            const fileUrl = body.file_url;
-            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+        const splitToken = req.headers.authorization.split(' ');
+        const token = splitToken[1];
+        const fileUrl = body.file_url;
+        // const diorConsultant = await this.consultantRepository.getDiorConsultant();
+        const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
+        const rowCount = worksheet.rowCount + 1;
 
-            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
+        for (let i = 2; i < rowCount; i++) {
+            const row = worksheet.getRow(i);
+            const productCode = row.getCell(1).value as string;
 
-            const rowCount = worksheet.rowCount + 1;
+            const productVariant = productCode
+                ? await this.productRecommendationRepository.findOne({ where: { code: productCode } })
+                : null;
 
-            for (let i = 2; i < rowCount; i++) {
-                const row = worksheet.getRow(i);
-
-                const productCode = row.getCell(8).value as string;
-                const productVariant = productCode
-                    ? await this.productRecommendationRepository.findOne({ where: { code: productCode } })
-                    : null;
-
-                const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
-                const imageUrlText = (<{ text: string }>row.getCell(7).value)?.text ?? null;
-
-                const link = linkText ? linkText : (row.getCell(3).value as string);
-                const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
-
-                const newProduct = this.productRecommendationRepository.create({
+            const imageUrlText = (<{ text: string }>row.getCell(7).value)?.text ?? null;
+            const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
+            // Check if the product already exists in the database
+            let product = await this.productRecommendationRepository.findOne({ where: { code: productCode } });
+            const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
+            const link = linkText ? linkText : (row.getCell(3).value as string);
+            // If the product exists, update it; otherwise, create a new product
+            if (product) {
+                product.name = (row.getCell(2).value as string).trim();
+                product.link = (<{ text: string }>row.getCell(3).value)?.text ?? (row.getCell(3).value as string);
+                product.category = row.getCell(4).value as string;
+                product.collection = row.getCell(5).value as string;
+                product.routine = row.getCell(6).value as string;
+                product.imageUrl = (<{ text: string }>row.getCell(7).value)?.text ?? (row.getCell(7).value as string);
+                product.shades = row.getCell(9).value as string;
+                product.productRecommendationId = productVariant ? Number(productVariant.id) : null;
+                product.consultantId = Number(userId);
+                product.updatedAt = new Date();
+            } else {
+                product = this.productRecommendationRepository.create({
                     code: row.getCell(1).value as string,
                     name: (row.getCell(2).value as string).trim(),
                     link: link,
@@ -1057,18 +1069,64 @@ export class ProductRecommendationService {
                     imageUrl: imageUrl,
                     shades: row.getCell(9).value as string,
                     productRecommendationId: Number(productVariant?.id || null),
-                    consultantId: Number(diorConsultant.id),
+                    consultantId: Number(userId),
                     updatedAt: new Date(),
                     createdAt: new Date(),
                 });
-
-                await this.productRecommendationRepository.save(newProduct);
             }
 
-            return { message: 'Success import data' };
-        } catch (e) {
-            throw e;
+            // Save or update the product
+            await this.productRecommendationRepository.save(product);
         }
+
+        return { message: 'Data imported successfully' };
+        // try {
+        //     const splitToken = req.headers.authorization.split(' ');
+        //     const token = splitToken[1];
+
+        //     const fileUrl = body.file_url;
+        //     const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+        //     const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
+
+        //     const rowCount = worksheet.rowCount + 1;
+
+        //     for (let i = 2; i < rowCount; i++) {
+        //         const row = worksheet.getRow(i);
+
+        //         const productCode = row.getCell(8).value as string;
+        //         const productVariant = productCode
+        //             ? await this.productRecommendationRepository.findOne({ where: { code: productCode } })
+        //             : null;
+
+        //         const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
+        //         const imageUrlText = (<{ text: string }>row.getCell(7).value)?.text ?? null;
+
+        //         const link = linkText ? linkText : (row.getCell(3).value as string);
+        //         const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
+
+        //         const newProduct = this.productRecommendationRepository.create({
+        //             code: row.getCell(1).value as string,
+        //             name: (row.getCell(2).value as string).trim(),
+        //             link: link,
+        //             category: row.getCell(4).value as string,
+        //             collection: row.getCell(5).value as string,
+        //             routine: row.getCell(6).value as string,
+        //             imageUrl: imageUrl,
+        //             shades: row.getCell(9).value as string,
+        //             productRecommendationId: Number(productVariant?.id || null),
+        //             consultantId: Number(diorConsultant.id),
+        //             updatedAt: new Date(),
+        //             createdAt: new Date(),
+        //         });
+
+        //         await this.productRecommendationRepository.save(newProduct);
+        //     }
+
+        //     return { message: 'Success import data' };
+        // } catch (e) {
+        //     throw e;
+        // }
     }
 
     async importProductTranslations(req: Request, body: ImportTranslationsDto, locale = 'en') {
