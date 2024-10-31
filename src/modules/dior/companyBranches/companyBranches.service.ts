@@ -445,11 +445,11 @@ export class DiorCompanyBranchesService {
                     updatedAt: new Date(),
                 });
 
-                if (newBranch) {
-                    this.createCondultantForPos(body);
+                console.log('========> ', newBranch);
+                const registredPos = await this.consultantBranchesRepository.save(newBranch);
+                if (registredPos) {
+                    this.createCondultantForPos(registredPos);
                 }
-
-                await this.consultantBranchesRepository.save(newBranch);
             }
 
             return {
