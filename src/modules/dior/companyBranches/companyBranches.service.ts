@@ -73,7 +73,8 @@ export class DiorCompanyBranchesService {
     public async updateCondultantForPos(newUser: any) {
         const bm = await this.consultantRepository.findByEmail(newUser.email);
 
-        console.log('====>', bm);
+        delete newUser.consultantCompanyId;
+        delete newUser.createdAt;
 
         newUser.email = newUser.email ? newUser.email : bm.email;
         newUser.name = newUser.name ? newUser.name : bm.name;
@@ -84,7 +85,7 @@ export class DiorCompanyBranchesService {
 
         const updatedBM = await this.consultantRepository.updateConsultant(bm.id, newUser);
 
-        console.log(updatedBM);
+        console.log(newUser);
 
         return updatedBM;
     }
