@@ -57,7 +57,7 @@ export class DiorCompanyBranchesService {
         const consultant = await this.consultantRepository.createConsultantForPOS({
             name: newUser.name,
             consultant_company_id: 213,
-            password_digest: await bcrypt.hash(newUser.password, this.saltRounds),
+            password_digest: await bcrypt.hash(newUser.password, 10),
             email: newUser.email,
             unconfirmed_email: newUser.email,
             app_id: 88,
@@ -94,7 +94,7 @@ export class DiorCompanyBranchesService {
         newUser.name = newUser?.name ? newUser.name : bm.name;
         newUser.code = newUser?.code ? newUser.code : bm.code;
         newUser.country = newUser?.country ? newUser.country : bm.country;
-        newUser.password_digest = await bcrypt.hash(newUser.password, this.saltRounds);
+        newUser.password_digest = await bcrypt.hash(newUser.password, 10);
         newUser.updated_at = new Date();
         newUser.consultant_branch_id = newUser.id;
 
@@ -478,6 +478,8 @@ export class DiorCompanyBranchesService {
             await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
 
             const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
+
+            console.log('baseUrl', baseUrl);
             const downloadUrl = `${baseUrl}/api/dior/company_branches/files/${hash}`;
 
             await this.presignRepository.saveNewPresignEntity({
@@ -543,3 +545,4 @@ export class DiorCompanyBranchesService {
         });
     }
 }
+
