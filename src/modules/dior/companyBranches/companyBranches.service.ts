@@ -86,7 +86,6 @@ export class DiorCompanyBranchesService {
         newUser.password_digest = await bcrypt.hash(newUser.password, this.saltRounds);
         newUser.updated_at = new Date();
 
-        console.log('============>', newUser.password_digest);
         delete newUser.password;
         const updatedBM = await this.consultantRepository.updateConsultant(bm.id, newUser);
 
