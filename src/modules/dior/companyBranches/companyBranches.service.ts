@@ -446,7 +446,7 @@ export class DiorCompanyBranchesService {
                 });
 
                 if (newBranch) {
-                    this.createCondultantForPos(body);
+                    this.createCondultantForPos(newBranch);
                 }
 
                 await this.consultantBranchesRepository.save(newBranch);
