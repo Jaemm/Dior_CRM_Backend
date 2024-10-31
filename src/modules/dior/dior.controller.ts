@@ -1,21 +1,6 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
-import {
-    Controller,
-    Get,
-    Req,
-    Query,
-    Post,
-    Body,
-    Headers,
-    Header,
-    Res,
-    UseInterceptors,
-    UploadedFile,
-    Param,
-    BadRequestException,
-} from '@nestjs/common';
+import { Controller, Get, Req, Query, Post, Body, Headers, Header, Res } from '@nestjs/common';
 
 import { DiorService } from './dior.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
