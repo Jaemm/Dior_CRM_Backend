@@ -81,11 +81,9 @@ export class DiorCompanyBranchesService {
         newUser.code = newUser.code ? newUser.code : bm.code;
         newUser.country = newUser.country ? newUser.country : bm.country;
         newUser.password = newUser.password ? bcrypt.hash(newUser.password, this.saltRounds) : bm.password_digest;
-        newUser.updatedAt = new Date();
+        newUser.updated_at = new Date();
 
         const updatedBM = await this.consultantRepository.updateConsultant(bm.id, newUser);
-
-        console.log(newUser);
 
         return updatedBM;
     }
@@ -270,7 +268,7 @@ export class DiorCompanyBranchesService {
             if (savedBranch) {
                 await this.updateCondultantForPos(savedBranch).catch((error) => {
                     console.log('===>', error);
-                    throw new NotFoundException({
+                    throw new BadRequestException({
                         result_code: ErrorStatus.UNEXPECTED_ERROR,
                         error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
                     });
