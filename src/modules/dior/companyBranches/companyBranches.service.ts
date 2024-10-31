@@ -69,6 +69,29 @@ export class DiorCompanyBranchesService {
 
         return consultant;
     }
+
+    public async updateCondultantForPos(newUser: any) {
+        const bm = await this.consultantRepository.findByEmail(newUser.email);
+
+        delete newUser.consultantCompanyId;
+        delete newUser.createdAt;
+        delete newUser.updatedAt;
+        delete newUser.id;
+        delete newUser.countryId;
+
+        newUser.email = newUser?.email ? newUser.email : bm.email;
+        newUser.name = newUser?.name ? newUser.name : bm.name;
+        newUser.code = newUser?.code ? newUser.code : bm.code;
+        newUser.country = newUser?.country ? newUser.country : bm.country;
+        newUser.password_digest = await bcrypt.hash(newUser.password, this.saltRounds);
+        newUser.updated_at = new Date();
+
+        delete newUser.password;
+        const updatedBM = await this.consultantRepository.updateConsultant(bm.id, newUser);
+
+        return updatedBM;
+    }
+
     async createBranch(req: Request, body: CreateBranchesDto) {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
@@ -244,6 +267,17 @@ export class DiorCompanyBranchesService {
             branch.updatedAt = new Date();
 
             const savedBranch = await this.consultantBranchesRepository.save(branch);
+
+            console.log(savedBranch);
+            if (savedBranch) {
+                await this.updateCondultantForPos(savedBranch).catch((error) => {
+                    console.log('===>', error);
+                    throw new BadRequestException({
+                        result_code: ErrorStatus.UNEXPECTED_ERROR,
+                        error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
+                    });
+                });
+            }
 
             const reformatBranch: ConsultantBranchesForDiorT = {
                 id: Number(savedBranch.id),

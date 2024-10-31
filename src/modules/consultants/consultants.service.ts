@@ -229,6 +229,7 @@ export class ConsultantsService {
 
     // Method to verify password based on the hashing algorithm used
     async verifyPassword(enteredPassword: string, storedHash: string): Promise<boolean> {
+        console.log(storedHash, enteredPassword);
         const hashAlgorithm = this.determineHashAlgorithm(storedHash);
 
         console.log(hashAlgorithm);

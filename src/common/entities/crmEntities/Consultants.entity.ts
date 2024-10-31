@@ -227,7 +227,7 @@ export class Consultants {
     })
     @JoinColumn([{ name: 'consultant_shop_id', referencedColumnName: 'id' }])
     'consultant_shop': ConsultantShops;
-
+    //
     @ManyToOne(() => ConsultantBranches, (branches: ConsultantBranches) => branches.consultants, {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
