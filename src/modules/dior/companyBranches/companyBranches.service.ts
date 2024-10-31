@@ -54,6 +54,7 @@ export class DiorCompanyBranchesService {
             await this.updateCondultantForPos(newUser);
         }
 
+        console.log('newUser ====>', newUser);
         const consultant = await this.consultantRepository.createConsultantForPOS({
             name: newUser.name,
             consultant_company_id: 213,
