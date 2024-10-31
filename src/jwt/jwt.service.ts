@@ -63,7 +63,6 @@ export class JwtService {
         return new Promise((resolve, rejects) => {
             Jwt.verify(token, secret, options, (error, payload: T) => {
                 if (error) {
-                    console.log(error);
                     rejects(error);
                     return;
                 }
@@ -158,8 +157,6 @@ export class JwtService {
         token: string,
         tokenType: TokenTypeEnum,
     ): Promise<T> {
-        console.log('---00000000000000000-->', this.domain);
-
         const jwtOptions: Jwt.VerifyOptions = {
             issuer: this.issuer,
             audience: new RegExp(this.domain),

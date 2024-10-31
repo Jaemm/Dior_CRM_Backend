@@ -113,8 +113,6 @@ export class ProductRecommendationSelectedsService {
                     product.collection,
                 );
 
-                console.log(categoryTranslations);
-
                 return {
                     ...product.getBasicInfo,
                     is_principal: selected.isPrincipal,
@@ -137,7 +135,6 @@ export class ProductRecommendationSelectedsService {
     }
 
     async selectProducts(body: SelectProductsDto) {
-        
         const { batch_id, customer_id, products_selected } = body;
         try {
             const whereCondition: any = { batchId: batch_id };
@@ -145,7 +142,7 @@ export class ProductRecommendationSelectedsService {
             if (customer_id !== null && customer_id !== undefined) {
                 whereCondition.customerId = customer_id;
             }
-            
+
             const prevProductSelected = await this.prSelectedRepository.find({
                 where: whereCondition,
             });

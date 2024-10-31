@@ -68,7 +68,6 @@ export class ProductRecommendationController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     async getAutomaticProductByBatchId(@Res() res: Response, @Query() query: AutomaticProductByBatchIdDto) {
-        console.log(query);
         const recommendation = await this.productRecommendationsService.getAutomaticProductByBatchId(query);
         return res.status(200).send(recommendation);
     }

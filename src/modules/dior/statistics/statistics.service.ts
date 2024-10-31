@@ -209,8 +209,6 @@ export class StatisticsService {
 
             const arrayOfDevice = Array.isArray(deviceArray) ? devices?.map((d) => d.id) : [devices];
 
-            console.log(arrayOfDevice);
-
             const deviceQuery = this.devicesRepository
                 .createQueryBuilder('devices')
                 .where('devices.optic_number NOT IN (:...opticNumbers)', {

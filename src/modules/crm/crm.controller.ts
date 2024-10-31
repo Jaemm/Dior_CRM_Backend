@@ -64,7 +64,6 @@ export class CRMController {
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         const userId = Number((<{ id: string }>req['user']).id);
-        console.log('check', body);
 
         const result = await this.crmService.createCustomer(userId, body, locale);
         return res.status(200).send(result);
@@ -134,8 +133,7 @@ export class CRMController {
     @Roles(Role.Consultant)
     @Put('customers/update_consent_form')
     async updateConsentForm(@Res() res: Response, @Body() body: UpdateConsentForm): Promise<any> {
-        
-        body.customer_id = body?.customer_id ? body.customer_id : 0
+        body.customer_id = body?.customer_id ? body.customer_id : 0;
         const result = await this.crmService.updateConsentForm(body);
         return res.status(200).send(result);
     }

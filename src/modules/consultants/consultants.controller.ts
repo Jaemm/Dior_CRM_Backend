@@ -158,7 +158,7 @@ export class ConsultantsController {
         @Req() req: Request,
     ) {
         const userId = Number((<{ id: string }>req['user']).id);
-        console.log(body);
+
         if (!body?.consultant_id) body.consultant_id = userId;
         const result = await this.consultants.createSalesConnection(body, locale);
         return res.status(200).send(result);

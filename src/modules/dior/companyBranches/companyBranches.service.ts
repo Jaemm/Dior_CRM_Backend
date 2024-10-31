@@ -49,12 +49,15 @@ export class DiorCompanyBranchesService {
         const consultantData: any = newUser;
         consultantData['email_confirmed'] = true;
 
-        // consultantData.password = await bcrypt.hash(newUser.password, 10);
+        const bm = await this.consultantRepository.findByEmail(newUser.email);
+        if (bm) {
+            await this.updateCondultantForPos(newUser);
+        }
 
         const consultant = await this.consultantRepository.createConsultantForPOS({
             name: newUser.name,
             consultant_company_id: 213,
-            password_digest: await bcrypt.hash(newUser.password, this.saltRounds),
+            password_digest: await bcrypt.hash(newUser.password, 10),
             email: newUser.email,
             unconfirmed_email: newUser.email,
             app_id: 88,
@@ -70,23 +73,33 @@ export class DiorCompanyBranchesService {
         return consultant;
     }
 
+    public async deleteCondultantForPos(newUser: any) {
+        const bm = await this.consultantRepository.findByEmail(newUser.email);
+
+        await this.consultantRepository.deleteConsultant(newUser.email);
+
+        return;
+    }
+
     public async updateCondultantForPos(newUser: any) {
         const bm = await this.consultantRepository.findByEmail(newUser.email);
 
         delete newUser.consultantCompanyId;
         delete newUser.createdAt;
         delete newUser.updatedAt;
-        delete newUser.id;
+
         delete newUser.countryId;
 
         newUser.email = newUser?.email ? newUser.email : bm.email;
         newUser.name = newUser?.name ? newUser.name : bm.name;
         newUser.code = newUser?.code ? newUser.code : bm.code;
         newUser.country = newUser?.country ? newUser.country : bm.country;
-        newUser.password_digest = await bcrypt.hash(newUser.password, this.saltRounds);
+        newUser.password_digest = await bcrypt.hash(newUser.password, 10);
         newUser.updated_at = new Date();
+        newUser.consultant_branch_id = newUser.id;
 
         delete newUser.password;
+        delete newUser.id;
         const updatedBM = await this.consultantRepository.updateConsultant(bm.id, newUser);
 
         return updatedBM;
@@ -268,7 +281,6 @@ export class DiorCompanyBranchesService {
 
             const savedBranch = await this.consultantBranchesRepository.save(branch);
 
-            console.log(savedBranch);
             if (savedBranch) {
                 await this.updateCondultantForPos(savedBranch).catch((error) => {
                     console.log('===>', error);
@@ -431,6 +443,10 @@ export class DiorCompanyBranchesService {
                     updatedAt: new Date(),
                 });
 
+                if (newBranch) {
+                    this.createCondultantForPos(body);
+                }
+
                 await this.consultantBranchesRepository.save(newBranch);
             }
 
@@ -462,6 +478,8 @@ export class DiorCompanyBranchesService {
             await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
 
             const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
+
+            console.log('baseUrl', baseUrl);
             const downloadUrl = `${baseUrl}/api/dior/company_branches/files/${hash}`;
 
             await this.presignRepository.saveNewPresignEntity({
@@ -522,9 +540,9 @@ export class DiorCompanyBranchesService {
                     reject(err);
                     return;
                 }
-
                 resolve(output);
             });
         });
     }
 }
+

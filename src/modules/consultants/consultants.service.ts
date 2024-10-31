@@ -229,10 +229,8 @@ export class ConsultantsService {
 
     // Method to verify password based on the hashing algorithm used
     async verifyPassword(enteredPassword: string, storedHash: string): Promise<boolean> {
-        console.log(storedHash, enteredPassword);
         const hashAlgorithm = this.determineHashAlgorithm(storedHash);
 
-        console.log(hashAlgorithm);
         switch (hashAlgorithm) {
             case 'bcrypt':
                 return this.verifyPasswordBcrypt(enteredPassword, storedHash);
@@ -1964,7 +1962,6 @@ export class ConsultantsService {
                 };
             }
         } catch (e) {
-            console.log(e);
             return e.response;
         }
     }
@@ -2227,10 +2224,8 @@ export class ConsultantsService {
     }
 
     public async getCompanyDetails(data: ConsultantCompanyDetailsDto) {
-        console.log('data: ', data);
         const { consultant_company_id: id } = data;
 
-        console.log('getOneCompany', id);
         const company: any = await this.consultantCompaniesRepository.getOneCompany(Number(id) ?? null);
 
         const file = await this.activeStorageAttchRepository.getCompaniesFiles(id ?? String(1));
@@ -3682,7 +3677,6 @@ export class ConsultantsService {
     // @Cron('* * * * *')
     // @Cron(CronExpression.EVERY_DAY_AT_1AM)
     async transferFileToServer() {
-        console.log('checking');
         const date = new Date();
         const formattedDate = moment(date).format('YYYY-MM-DD');
 
