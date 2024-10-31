@@ -78,6 +78,7 @@ export class DiorCompanyBranchesService {
         delete newUser.updatedAt;
         delete newUser.password;
         delete newUser.id;
+        delete newUser.countryId;
 
         newUser.email = newUser.email ? newUser.email : bm.email;
         newUser.name = newUser.name ? newUser.name : bm.name;
