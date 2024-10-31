@@ -1045,6 +1045,8 @@ export class ProductRecommendationService {
             let product = await this.productRecommendationRepository.findOne({ where: { code: productCode } });
             const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
             const link = linkText ? linkText : (row.getCell(3).value as string);
+
+            console.log('product ----> ', product);
             // If the product exists, update it; otherwise, create a new product
             if (product) {
                 product.name = (row.getCell(2).value as string).trim();
@@ -1528,4 +1530,3 @@ export class ProductRecommendationService {
         };
     }
 }
-
