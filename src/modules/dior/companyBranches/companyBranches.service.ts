@@ -79,11 +79,13 @@ export class DiorCompanyBranchesService {
         delete newUser.id;
         delete newUser.countryId;
 
-        newUser.email = newUser.email ? newUser.email : bm.email;
-        newUser.name = newUser.name ? newUser.name : bm.name;
-        newUser.code = newUser.code ? newUser.code : bm.code;
-        newUser.country = newUser.country ? newUser.country : bm.country;
-        newUser.password = newUser.password ? bcrypt.hash(newUser.password, this.saltRounds) : bm.password_digest;
+        newUser.email = newUser?.email ? newUser.email : bm.email;
+        newUser.name = newUser?.name ? newUser.name : bm.name;
+        newUser.code = newUser?.code ? newUser.code : bm.code;
+        newUser.country = newUser?.country ? newUser.country : bm.country;
+        newUser.password_digest = newUser?.password
+            ? bcrypt.hash(newUser.password, this.saltRounds)
+            : bm.password_digest;
         newUser.updated_at = new Date();
 
         delete newUser.password;
