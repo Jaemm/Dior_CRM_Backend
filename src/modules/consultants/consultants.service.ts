@@ -642,9 +642,14 @@ export class ConsultantsService {
                 consultant_company_id: consultant.consultant_company.id,
             });
         }
-
+        //
         if (consultant?.consultant_branch) {
-            consultant.consultant_branch = consultant?.consultant_branch;
+            consultant.consultant_branch.id = Number(consultant?.consultant_branch.id);
+            delete consultant.consultant_branch.consultantCompanyId;
+            delete consultant.consultant_branch.createdAt;
+            delete consultant.consultant_branch.updatedAt;
+            delete consultant.consultant_branch.password;
+            delete consultant.consultant_branch.countryId;
         }
 
         if (consultant?.country_details) {
@@ -654,7 +659,6 @@ export class ConsultantsService {
         }
 
         if (consultant?.consultant_position_id) {
-            //positiom
             consultant.consultant_position = await this.consultantPositionRepository.checkConsultantPosition(
                 consultant?.consultant_position_id,
             );
