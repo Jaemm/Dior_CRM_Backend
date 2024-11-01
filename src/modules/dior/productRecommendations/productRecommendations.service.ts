@@ -1039,26 +1039,30 @@ export class ProductRecommendationService {
             (await this.findByCodes(productCodes)).map((variant) => [variant.code, variant.id]),
         );
 
-        const productVariant = rows.map((row) => ({
-            productVariantsMap: productVariantsMap.get(row),
-        }));
+        const newProducts: any[] = [];
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const productVariantId = productVariantsMap.get(row[7]) || null;
 
-        console.log('productVariant ======> ', productVariant);
-
-        const newProducts: any[] = rows.map((row) => ({
-            code: row[1],
-            name: (row[2] || '').trim(),
-            link: row[3],
-            category: row[4],
-            collection: row[5],
-            routine: row[6],
-            imageUrl: row[7],
-            shades: row[9],
-            productRecommendationId: productVariantsMap.get(row[8]) || null,
-            consultantId: Number(userId),
-            updatedAt: new Date(),
-            createdAt: new Date(),
-        }));
+            const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
+            const link = linkText ? linkText : (row.getCell(3).value as string);
+            const imageUrlText = (<{ text: string }>row.getCell(8).value)?.text ?? null;
+            const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
+            newProducts.push({
+                code: row[1],
+                name: (row[2] || '').trim(),
+                link: link,
+                category: row[4],
+                collection: row[5],
+                routine: row[6],
+                imageUrl: imageUrl,
+                shades: row[9],
+                consultantId: Number(userId),
+                productRecommendationId: productVariantId,
+                updatedAt: new Date(),
+                createdAt: new Date(),
+            });
+        }
 
         await this.bulkSave(newProducts);
         return { message: 'Data imported successfully' };
