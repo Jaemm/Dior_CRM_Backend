@@ -2820,7 +2820,7 @@ export class ConsultantsService {
             device.lng = long;
             device.lat = latt;
 
-            console.log(device);
+            // console.log(device);
 
             // await this.deviceRepository.save(device);
 
