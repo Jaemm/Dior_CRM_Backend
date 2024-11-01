@@ -298,7 +298,7 @@ export class Consultants {
             products: this.products && this.products.length > 0 ? this.products.map((p) => p.getBasicInfo) : [],
             consultant_company: this.consultant_company ? this.consultant_company.getBasicInfo : null,
             consultant_position: this.getPosition,
-            // consultant_branch: this.consultant_branch,
+            consultant_branch: this.consultant_branch,
         };
     }
 
@@ -379,7 +379,7 @@ export class Consultants {
     'afterLoad'() {
         this.id = Number(this.id);
         if (this.consultant_company_id) this.consultant_company_id = Number(this.consultant_company_id);
-        if (this.consultant_branch_id) this.consultant_branch_id = Number(this.consultant_branch_id);
+        if (this.consultant_branch) this.consultant_branch_id = Number(this.consultant_branch.id);
         if (this.consultant_shop_id) this.consultant_shop_id = Number(this.consultant_shop_id);
         if (this.consultant_position_id) this.consultant_position_id = Number(this.consultant_position_id);
         if (this.consultant_store_id) this.consultant_store_id = Number(this.consultant_store_id);
