@@ -2836,7 +2836,10 @@ export class ConsultantsService {
 
             // console.log(device);
 
-            // await this.deviceRepository.save(device);
+            await this.deviceRepository.update(device.id, {
+                lng: long,
+                lat: latt,
+            });
 
             return {
                 result_code: '0',
