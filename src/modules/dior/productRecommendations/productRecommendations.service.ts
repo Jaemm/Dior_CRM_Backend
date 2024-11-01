@@ -1011,6 +1011,8 @@ export class ProductRecommendationService {
     }
 
     async importProductRecommendtaion(req: Request, body: ImportProductRecommendtaionDto, locale = 'en') {
+        const userId = (<{ id: string }>req.user).id;
+
         //  Columns
         //  1 - Product Code
         //  2 - Product Name
@@ -1047,6 +1049,9 @@ export class ProductRecommendationService {
             imageUrl: row[7],
             shades: row[9],
             productRecommendationId: productVariantsMap.get(row[8]) || null,
+            consultantId: Number(userId),
+            updatedAt: new Date(),
+            createdAt: new Date(),
         }));
 
         await this.bulkSave(newProducts);
