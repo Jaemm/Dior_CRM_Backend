@@ -1078,6 +1078,7 @@ export class ProductRecommendationService {
         const variantProducts: any = [];
 
         rows.forEach((row) => {
+            console.log(row[8]);
             if (!row[8]) {
                 // Rows without product variant code
                 mainProducts.push({
@@ -1140,7 +1141,7 @@ export class ProductRecommendationService {
         let hasMainProducts = false;
         let hasVariantProducts = false;
 
-        rows.forEach((row) => {
+        rows.forEach(async (row) => {
             if (!row[8]) {
                 hasMainProducts = true;
             } else {
@@ -1149,10 +1150,10 @@ export class ProductRecommendationService {
         });
 
         if (hasMainProducts && hasVariantProducts) {
-            this.importProductRecommendtaion(req, body);
+            await this.importProductRecommendtaion(req, body);
         }
-
-        this.importProductRecommendtaionGeneral(req, body);
+        await this.importProductRecommendtaionGeneral(req, body);
+        // Only call `importProductRecommendation` if both types are present
     }
 
     async importProductTranslations(req: Request, body: ImportTranslationsDto, locale = 'en') {
