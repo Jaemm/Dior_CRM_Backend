@@ -2812,13 +2812,17 @@ export class ConsultantsService {
                 if (!product.first_use_date || product.first_use_date === null) {
                     product.first_use_date = product.use_date;
                 }
+
+                console.log(product);
                 await this.productsRepository.save(product);
             }
 
             device.lng = long;
             device.lat = latt;
 
-            await this.deviceRepository.save(device);
+            console.log(device);
+
+            // await this.deviceRepository.save(device);
 
             return {
                 result_code: '0',

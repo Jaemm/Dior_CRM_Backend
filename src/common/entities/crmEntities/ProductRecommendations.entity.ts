@@ -32,7 +32,7 @@ export class ProductRecommendations {
 
     @Column('integer', { name: 'consultant_id', nullable: true })
     consultantId: number | null;
-
+    //
     @Column('character varying', { name: 'image_url', nullable: true })
     imageUrl: string | null;
 
