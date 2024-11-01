@@ -1148,11 +1148,12 @@ export class ProductRecommendationService {
             }
         });
 
+        // Only call `importProductRecommendation` if both types are present
         if (hasMainProducts && hasVariantProducts) {
-            this.importProductRecommendtaion(req, body);
+            await this.importProductRecommendtaion(req, body);
         }
 
-        this.importProductRecommendtaionGeneral(req, body);
+        await this.importProductRecommendtaionGeneral(req, body);
     }
 
     async importProductTranslations(req: Request, body: ImportTranslationsDto, locale = 'en') {
