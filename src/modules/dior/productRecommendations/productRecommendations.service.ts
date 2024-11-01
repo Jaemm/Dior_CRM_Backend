@@ -1043,12 +1043,12 @@ export class ProductRecommendationService {
             // const productVariantId = productVariantsMap.get(row_[7]) || null;
 
             const productVariant = await this.findByCodes(productCodes);
-            console.log('==========>', productVariant?.id);
 
             const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
             const link = linkText ? linkText : (row.getCell(3).value as string);
             const imageUrlText = (<{ text: string }>row.getCell(8).value)?.text ?? null;
             const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
+
             newProducts.push({
                 code: row.getCell(1).value as string,
                 name: ((row.getCell(2).value as string) || '').trim(),
