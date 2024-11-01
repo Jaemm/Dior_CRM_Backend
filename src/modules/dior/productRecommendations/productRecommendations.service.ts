@@ -1033,7 +1033,7 @@ export class ProductRecommendationService {
             const productCode = row.getCell(8).value as string;
             const productVariant = await this.findByCode(productCode);
 
-            console.log('productCode ===> ', productVariant);
+            // console.log('productCode ===> ', productVariant);
             const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
             const link = linkText ? linkText : (row.getCell(3).value as string);
             const imageUrlText = (<{ text: string }>row.getCell(8).value)?.text ?? null;
@@ -1056,6 +1056,7 @@ export class ProductRecommendationService {
         }
 
         const filteredData = newProducts.filter((item) => item.code !== null && item.name !== '');
+        console.log('filteredData', filteredData);
         await this.bulkSave(filteredData);
 
         return { message: 'Data imported successfully' };
@@ -1455,7 +1456,6 @@ export class ProductRecommendationService {
 
             const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
 
-            console.log('baseUrl ====> ', baseUrl);
             const downloadUrl = `${baseUrl}/api/dior/product_recommendations/files/${hash}`;
 
             await this.presignRepository.saveNewPresignEntity({
