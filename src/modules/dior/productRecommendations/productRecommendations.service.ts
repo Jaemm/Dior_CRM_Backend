@@ -1066,7 +1066,8 @@ export class ProductRecommendationService {
             });
         }
 
-        await this.bulkSave(newProducts);
+        const checking = await this.bulkSave(newProducts);
+        console.log(checking);
         return { message: 'Data imported successfully' };
         // try {
         //     const splitToken = req.headers.authorization.split(' ');
