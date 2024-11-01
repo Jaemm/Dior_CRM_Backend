@@ -1035,9 +1035,6 @@ export class ProductRecommendationService {
 
         const productCodes = rows.map((row) => row[8]).filter(Boolean);
 
-        const productVariantsMap = new Map(
-            (await this.findByCodes(productCodes)).map((variant) => [variant.code, variant.id]),
-        );
         const rowCount = worksheet.rowCount + 1;
         const newProducts: any[] = [];
         for (let i = 2; i < rowCount; i++) {
@@ -1046,7 +1043,7 @@ export class ProductRecommendationService {
             // const productVariantId = productVariantsMap.get(row_[7]) || null;
 
             const productVariant = await this.findByCodes(productCodes);
-            console.log('==========>', productVariant);
+            console.log('==========>', productVariant?.id);
 
             const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
             const link = linkText ? linkText : (row.getCell(3).value as string);
@@ -1061,15 +1058,15 @@ export class ProductRecommendationService {
                 routine: row.getCell(6).value as string,
                 imageUrl: imageUrl,
                 shades: row.getCell(9).value as string,
-                productRecommendationId: Number(productVariant[i]?.id || null),
+                productRecommendationId: Number(productVariant?.id || null),
                 consultantId: Number(userId),
                 updatedAt: new Date(),
                 createdAt: new Date(),
             });
         }
 
-        // const filteredData = newProducts.filter((item) => item.code !== null && item.name !== '');
-        // const checking = await this.bulkSave(filteredData);
+        const filteredData = newProducts.filter((item) => item.code !== null && item.name !== '');
+        const checking = await this.bulkSave(filteredData);
         // console.log('========>', checking);
         return { message: 'Data imported successfully' };
         // try {
@@ -1530,6 +1527,6 @@ export class ProductRecommendationService {
     }
 
     async findByCodes(codes: string[]) {
-        return await this.productRecommendationRepository.find({ where: { code: In(codes) } });
+        return await this.productRecommendationRepository.findOne({ where: { code: In(codes) } });
     }
 }
