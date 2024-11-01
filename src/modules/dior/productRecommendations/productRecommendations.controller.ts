@@ -106,7 +106,7 @@ export class ProductRecommendationController {
         @Res() res: Response,
         @Body() body: ImportProductRecommendtaionDto,
     ) {
-        const result = await this.productRecommendationsService.importProduct(req, body);
+        const result = await this.productRecommendationsService.importProductRecommendtaion(req, body);
         return res.status(200).send(result);
     }
 
