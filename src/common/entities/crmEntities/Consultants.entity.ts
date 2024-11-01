@@ -298,6 +298,7 @@ export class Consultants {
             products: this.products && this.products.length > 0 ? this.products.map((p) => p.getBasicInfo) : [],
             consultant_company: this.consultant_company ? this.consultant_company.getBasicInfo : null,
             consultant_position: this.getPosition,
+            consultant_branch: this.consultant_branch,
         };
     }
 

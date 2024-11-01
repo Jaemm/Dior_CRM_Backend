@@ -197,6 +197,7 @@ export class ConsultantsController {
     ): Promise<any> {
         body.email = body.email.toLowerCase();
         const loginResult = await this.consultants.loginRuby(body, locale);
+
         return res.status(200).send({ ...loginResult });
     }
 
