@@ -1039,7 +1039,11 @@ export class ProductRecommendationService {
             (await this.findByCodes(productCodes)).map((variant) => [variant.code, variant.id]),
         );
 
-        console.log(productVariantsMap);
+        const productVariant = rows.map((row) => ({
+            productVariantsMap: productVariantsMap.get(row[8]),
+        }));
+
+        console.log('productVariant ======> ', productVariant);
 
         const newProducts: any[] = rows.map((row) => ({
             code: row[1],
