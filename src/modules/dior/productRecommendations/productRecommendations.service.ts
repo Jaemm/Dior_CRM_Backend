@@ -1057,7 +1057,7 @@ export class ProductRecommendationService {
 
         const filteredData = newProducts.filter((item) => item.code !== null && item.name !== '');
         await this.bulkSave(filteredData);
-        // console.log('========>', checking);
+
         return { message: 'Data imported successfully' };
     }
     // save one buy one and check save productRecommendationId to the following that contains CODE
@@ -1127,7 +1127,6 @@ export class ProductRecommendationService {
     }
 
     async importProduct(req: Request, body: ImportProductRecommendtaionDto, locale = 'en') {
-        const userId = (<{ id: string }>req.user).id;
         const token = req.headers.authorization.split(' ')[1];
         const fileUrl = body.file_url;
 
