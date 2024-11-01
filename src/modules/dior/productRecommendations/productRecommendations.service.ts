@@ -1039,6 +1039,8 @@ export class ProductRecommendationService {
             (await this.findByCodes(productCodes)).map((variant) => [variant.code, variant.id]),
         );
 
+        console.log(productVariantsMap);
+
         const newProducts: any[] = rows.map((row) => ({
             code: row[1],
             name: (row[2] || '').trim(),
