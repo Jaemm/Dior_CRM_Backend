@@ -1011,6 +1011,8 @@ export class ProductRecommendationService {
     }
 
     async importProductRecommendtaion(req: Request, body: ImportProductRecommendtaionDto, locale = 'en') {
+        const userId = (<{ id: string }>req.user).id;
+
         //  Columns
         //  1 - Product Code
         //  2 - Product Name
@@ -1021,65 +1023,51 @@ export class ProductRecommendationService {
         //  7 - Image URL
         //  8 - Product Variant Code
         //  9 - Shades
-
-        const userId = (<{ id: string }>req.user)?.id;
-
         const splitToken = req.headers.authorization.split(' ');
         const token = splitToken[1];
         const fileUrl = body.file_url;
-        // const diorConsultant = await this.consultantRepository.getDiorConsultant();
         const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
+
+        const rows: any[] = [];
+        worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber > 1) rows.push(row.values); // Skip header row
+        });
+
+        const productCodes = rows.map((row) => row[8]).filter(Boolean);
+
         const rowCount = worksheet.rowCount + 1;
-
+        const newProducts: any[] = [];
         for (let i = 2; i < rowCount; i++) {
+            // const row_ = rows[i];
             const row = worksheet.getRow(i);
-            const productCode = row.getCell(1).value as string;
+            // const productVariantId = productVariantsMap.get(row_[7]) || null;
 
-            const productVariant = productCode
-                ? await this.productRecommendationRepository.findOne({ where: { code: productCode } })
-                : null;
+            const productVariant = await this.findByCodes(productCodes);
 
-            const imageUrlText = (<{ text: string }>row.getCell(7).value)?.text ?? null;
-            const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
-            // Check if the product already exists in the database
-            let product = await this.productRecommendationRepository.findOne({ where: { code: productCode } });
             const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
             const link = linkText ? linkText : (row.getCell(3).value as string);
+            const imageUrlText = (<{ text: string }>row.getCell(8).value)?.text ?? null;
+            const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
 
-            console.log('product ----> ', product);
-            // If the product exists, update it; otherwise, create a new product
-            if (product) {
-                product.name = (row.getCell(2).value as string).trim();
-                product.link = (<{ text: string }>row.getCell(3).value)?.text ?? (row.getCell(3).value as string);
-                product.category = row.getCell(4).value as string;
-                product.collection = row.getCell(5).value as string;
-                product.routine = row.getCell(6).value as string;
-                product.imageUrl = (<{ text: string }>row.getCell(7).value)?.text ?? (row.getCell(7).value as string);
-                product.shades = row.getCell(9).value as string;
-                product.productRecommendationId = productVariant ? Number(productVariant.id) : null;
-                product.consultantId = Number(userId);
-                product.updatedAt = new Date();
-            } else {
-                product = this.productRecommendationRepository.create({
-                    code: row.getCell(1).value as string,
-                    name: (row.getCell(2).value as string).trim(),
-                    link: link,
-                    category: row.getCell(4).value as string,
-                    collection: row.getCell(5).value as string,
-                    routine: row.getCell(6).value as string,
-                    imageUrl: imageUrl,
-                    shades: row.getCell(9).value as string,
-                    productRecommendationId: Number(productVariant?.id || null),
-                    consultantId: Number(userId),
-                    updatedAt: new Date(),
-                    createdAt: new Date(),
-                });
-            }
-
-            // Save or update the product
-            await this.productRecommendationRepository.save(product);
+            newProducts.push({
+                code: row.getCell(1).value as string,
+                name: ((row.getCell(2).value as string) || '').trim(),
+                link: link,
+                category: row.getCell(4).value as string,
+                collection: row.getCell(5).value as string,
+                routine: row.getCell(6).value as string,
+                imageUrl: imageUrl,
+                shades: row.getCell(9).value as string,
+                productRecommendationId: Number(productVariant?.id || null),
+                consultantId: Number(userId),
+                updatedAt: new Date(),
+                createdAt: new Date(),
+            });
         }
 
+        const filteredData = newProducts.filter((item) => item.code !== null && item.name !== '');
+        const checking = await this.bulkSave(filteredData);
+        // console.log('========>', checking);
         return { message: 'Data imported successfully' };
         // try {
         //     const splitToken = req.headers.authorization.split(' ');
@@ -1528,5 +1516,17 @@ export class ProductRecommendationService {
             data,
             translatedData,
         };
+    }
+
+    async bulkSave(products: ProductRecommendations[]) {
+        return await this.productRecommendationRepository.save(products); // Bulk insert
+    }
+
+    async bulkUpdate(products: ProductRecommendations[]) {
+        return await this.productRecommendationRepository.save(products); // Bulk update
+    }
+
+    async findByCodes(codes: string[]) {
+        return await this.productRecommendationRepository.findOne({ where: { code: In(codes) } });
     }
 }
