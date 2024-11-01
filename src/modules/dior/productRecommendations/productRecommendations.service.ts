@@ -1040,7 +1040,7 @@ export class ProductRecommendationService {
         );
 
         const productVariant = rows.map((row) => ({
-            productVariantsMap: productVariantsMap.get(row[8]),
+            productVariantsMap: productVariantsMap.get(row),
         }));
 
         console.log('productVariant ======> ', productVariant);
