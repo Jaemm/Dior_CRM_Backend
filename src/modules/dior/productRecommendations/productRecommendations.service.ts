@@ -1056,7 +1056,6 @@ export class ProductRecommendationService {
         }
 
         const filteredData = newProducts.filter((item) => item.code !== null && item.name !== '');
-        console.log('filteredData', filteredData);
         await this.bulkSave(filteredData);
 
         return { message: 'Data imported successfully' };
