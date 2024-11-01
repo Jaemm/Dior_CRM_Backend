@@ -1023,36 +1023,55 @@ export class ProductRecommendationService {
             if (rowNumber > 1) rows.push(row.values); // Skip header row
         });
 
-        // Get all unique Product Variant Codes for a single query
-        const productCodes = rows.map((row) => row[8]).filter(Boolean);
-        const productVariantsMap = new Map(
-            (await this.findByCodes(productCodes)).map((variant) => [variant.code, variant.id]),
-        );
+        const productCodes = rows.map((row) => row[1]).filter(Boolean); // Get all product codes
+        const mainProducts: any = [];
+        const variantProducts: any = [];
 
-        const newProducts = rows.map((row) => {
-            const productCode = row[8] as string;
-            const linkText = (<{ text: string }>row[3])?.text ?? row[3];
-            const imageUrlText = (<{ text: string }>row[7])?.text ?? row[7];
-
-            return {
-                code: row[1] as string,
-                name: ((row[2] as string) || '').trim(),
-                link: linkText,
-                category: row[4] as string,
-                collection: row[5] as string,
-                routine: row[6] as string,
-                imageUrl: imageUrlText,
-                shades: row[9] as string,
-                productRecommendationId: productVariantsMap.get(productCode) || null,
-                consultantId: userId,
-                updatedAt: new Date(),
-                createdAt: new Date(),
-            };
+        rows.forEach((row) => {
+            if (!row[8]) {
+                // Rows without product variant code
+                mainProducts.push({
+                    code: row[1] as string,
+                    name: ((row[2] as string) || '').trim(),
+                    link: row[3]?.text || row[3],
+                    category: row[4] as string,
+                    collection: row[5] as string,
+                    routine: row[6] as string,
+                    imageUrl: row[7]?.text || row[7],
+                    shades: row[9] as string,
+                    consultantId: userId,
+                    updatedAt: new Date(),
+                    createdAt: new Date(),
+                });
+            } else {
+                variantProducts.push(row);
+            }
         });
 
-        // Filter valid data and save in bulk
-        const filteredData: any = newProducts.filter((item) => item.code && item.name);
+        // Save main products and map their IDs
+        const savedMainProducts = await this.bulkSave(mainProducts);
+        const mainProductsMap = new Map(savedMainProducts.map((product) => [product.code, product.id]));
+
+        // Prepare variant products, linking main product IDs
+        const newProducts = variantProducts.map((row: any) => ({
+            code: row[1] as string,
+            name: ((row[2] as string) || '').trim(),
+            link: row[3]?.text || row[3],
+            category: row[4] as string,
+            collection: row[5] as string,
+            routine: row[6] as string,
+            imageUrl: row[7]?.text || row[7],
+            shades: row[9] as string,
+            productRecommendationId: mainProductsMap.get(row[8]) || null,
+            consultantId: userId,
+            updatedAt: new Date(),
+            createdAt: new Date(),
+        }));
+
+        // Save variant products in bulk
+        const filteredData: any = newProducts.filter((item: any) => item.code && item.name);
         await this.bulkSave(filteredData);
+        // await this.bulkSave(newProducts);
 
         return { message: 'Data imported successfully' };
         // try {
