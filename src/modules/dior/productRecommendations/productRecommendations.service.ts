@@ -1151,8 +1151,11 @@ export class ProductRecommendationService {
 
         if (hasMainProducts && hasVariantProducts) {
             await this.importProductRecommendtaion(req, body);
+            return;
+        } else {
+            await this.importProductRecommendtaionGeneral(req, body);
+            return;
         }
-        await this.importProductRecommendtaionGeneral(req, body);
         // Only call `importProductRecommendation` if both types are present
     }
 
