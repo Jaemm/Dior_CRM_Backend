@@ -1010,64 +1010,50 @@ export class ProductRecommendationService {
         }
     }
 
+    // save one buy one and check save productRecommendationId to the following that contains CODE
     async importProductRecommendtaion(req: Request, body: ImportProductRecommendtaionDto, locale = 'en') {
         const userId = (<{ id: string }>req.user).id;
-
-        //  Columns
-        //  1 - Product Code
-        //  2 - Product Name
-        //  3 - Product Link
-        //  4 - Category
-        //  5 - Collection
-        //  6 - Axis
-        //  7 - Image URL
-        //  8 - Product Variant Code
-        //  9 - Shades
-        const splitToken = req.headers.authorization.split(' ');
-        const token = splitToken[1];
+        const token = req.headers.authorization.split(' ')[1];
         const fileUrl = body.file_url;
-        const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
+        const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
         const rows: any[] = [];
+
         worksheet.eachRow((row, rowNumber) => {
             if (rowNumber > 1) rows.push(row.values); // Skip header row
         });
 
+        // Get all unique Product Variant Codes for a single query
         const productCodes = rows.map((row) => row[8]).filter(Boolean);
+        const productVariantsMap = new Map(
+            (await this.findByCodes(productCodes)).map((variant) => [variant.code, variant.id]),
+        );
 
-        const rowCount = worksheet.rowCount + 1;
-        const newProducts: any[] = [];
-        for (let i = 2; i < rowCount; i++) {
-            // const row_ = rows[i];
-            const row = worksheet.getRow(i);
-            // const productVariantId = productVariantsMap.get(row_[7]) || null;
+        const newProducts = rows.map((row) => {
+            const productCode = row[8] as string;
+            const linkText = (<{ text: string }>row[3])?.text ?? row[3];
+            const imageUrlText = (<{ text: string }>row[7])?.text ?? row[7];
 
-            const productVariant = await this.findByCodes(productCodes);
-
-            const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
-            const link = linkText ? linkText : (row.getCell(3).value as string);
-            const imageUrlText = (<{ text: string }>row.getCell(8).value)?.text ?? null;
-            const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
-
-            newProducts.push({
-                code: row.getCell(1).value as string,
-                name: ((row.getCell(2).value as string) || '').trim(),
-                link: link,
-                category: row.getCell(4).value as string,
-                collection: row.getCell(5).value as string,
-                routine: row.getCell(6).value as string,
-                imageUrl: imageUrl,
-                shades: row.getCell(9).value as string,
-                productRecommendationId: Number(productVariant?.id || null),
-                consultantId: Number(userId),
+            return {
+                code: row[1] as string,
+                name: ((row[2] as string) || '').trim(),
+                link: linkText,
+                category: row[4] as string,
+                collection: row[5] as string,
+                routine: row[6] as string,
+                imageUrl: imageUrlText,
+                shades: row[9] as string,
+                productRecommendationId: productVariantsMap.get(productCode) || null,
+                consultantId: userId,
                 updatedAt: new Date(),
                 createdAt: new Date(),
-            });
-        }
+            };
+        });
 
-        const filteredData = newProducts.filter((item) => item.code !== null && item.name !== '');
-        const checking = await this.bulkSave(filteredData);
-        // console.log('========>', checking);
+        // Filter valid data and save in bulk
+        const filteredData: any = newProducts.filter((item) => item.code && item.name);
+        await this.bulkSave(filteredData);
+
         return { message: 'Data imported successfully' };
         // try {
         //     const splitToken = req.headers.authorization.split(' ');
@@ -1527,6 +1513,6 @@ export class ProductRecommendationService {
     }
 
     async findByCodes(codes: string[]) {
-        return await this.productRecommendationRepository.findOne({ where: { code: In(codes) } });
+        return await this.productRecommendationRepository.find({ where: { code: In(codes) } });
     }
 }
