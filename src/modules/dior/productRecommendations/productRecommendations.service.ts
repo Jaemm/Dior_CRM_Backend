@@ -1048,7 +1048,7 @@ export class ProductRecommendationService {
                 routine: row.getCell(6).value as string,
                 imageUrl: imageUrl,
                 shades: row.getCell(9).value as string,
-                productRecommendationId: Number(productVariant?.id || null),
+                productRecommendationId: productVariant?.id ? Number(productVariant?.id) : null,
                 consultantId: Number(userId),
                 updatedAt: new Date(),
                 createdAt: new Date(),
@@ -1078,6 +1078,7 @@ export class ProductRecommendationService {
         const variantProducts: any = [];
 
         rows.forEach((row) => {
+            console.log(row[8]);
             if (!row[8]) {
                 // Rows without product variant code
                 mainProducts.push({
@@ -1140,7 +1141,7 @@ export class ProductRecommendationService {
         let hasMainProducts = false;
         let hasVariantProducts = false;
 
-        rows.forEach((row) => {
+        rows.forEach(async (row) => {
             if (!row[8]) {
                 hasMainProducts = true;
             } else {
@@ -1148,12 +1149,14 @@ export class ProductRecommendationService {
             }
         });
 
-        // Only call `importProductRecommendation` if both types are present
         if (hasMainProducts && hasVariantProducts) {
             await this.importProductRecommendtaion(req, body);
+            return;
+        } else {
+            await this.importProductRecommendtaionGeneral(req, body);
+            return;
         }
-
-        await this.importProductRecommendtaionGeneral(req, body);
+        // Only call `importProductRecommendation` if both types are present
     }
 
     async importProductTranslations(req: Request, body: ImportTranslationsDto, locale = 'en') {
