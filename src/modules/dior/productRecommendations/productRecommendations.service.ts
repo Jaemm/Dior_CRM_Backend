@@ -1044,18 +1044,20 @@ export class ProductRecommendationService {
             const row = rows[i];
             const productVariantId = productVariantsMap.get(row[7]) || null;
 
-            const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
-            const link = linkText ? linkText : (row.getCell(3).value as string);
-            const imageUrlText = (<{ text: string }>row.getCell(8).value)?.text ?? null;
-            const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
+            console.log('==========>', productVariantId);
+
+            // const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
+            // const link = linkText ? linkText : (row.getCell(3).value as string);
+            // const imageUrlText = (<{ text: string }>row.getCell(8).value)?.text ?? null;
+            // const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
             newProducts.push({
                 code: row[1],
                 name: (row[2] || '').trim(),
-                link: link,
+                link: row[3],
                 category: row[4],
                 collection: row[5],
                 routine: row[6],
-                imageUrl: imageUrl,
+                imageUrl: row[7],
                 shades: row[9],
                 consultantId: Number(userId),
                 productRecommendationId: productVariantId,
