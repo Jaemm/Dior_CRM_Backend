@@ -198,7 +198,7 @@ export class DiorCompanyConsultantsService {
         }
     }
 
-    async getConsultantByBranchesConsultant(req: Request, locale = 'en'): Promise<any[]> {
+    async getConsultantByBranchesConsultant(req: Request, locale = 'en') {
         const currentConsultantId = (<{ id: string }>req.user).id;
         const currentConsultant = await this.consultantRepository.findOne({
             where: { id: Number(currentConsultantId) },
@@ -219,7 +219,7 @@ export class DiorCompanyConsultantsService {
         });
 
         // Filter out specific emails
-        return consultants
+        const finalData = consultants
             .filter(
                 (consultant) =>
                     consultant.email.toLowerCase() !== 'ann.chowis613@gmail.com' &&
@@ -232,6 +232,26 @@ export class DiorCompanyConsultantsService {
                 name: consultant.name,
                 surname: consultant.surname,
             }));
+
+        const data: {
+            id: number;
+            email: string;
+            code: string;
+            name: string;
+            surname: string;
+        }[] = finalData.map((row) => {
+            return {
+                id: row.id,
+                email: row.email,
+                code: row.code,
+                name: row.name,
+                surname: row.surname,
+            };
+        });
+
+        return {
+            data,
+        };
     }
 
     // async getConsultantByBranchesConsultant(req: Request, locale = 'en') {
