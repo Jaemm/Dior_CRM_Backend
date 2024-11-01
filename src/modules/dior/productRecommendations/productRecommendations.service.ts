@@ -1061,7 +1061,7 @@ export class ProductRecommendationService {
                 routine: row.getCell(6).value as string,
                 imageUrl: imageUrl,
                 shades: row.getCell(9).value as string,
-                productRecommendationId: Number(productVariant[i].id || null),
+                productRecommendationId: Number(productVariant[i]?.id || null),
                 consultantId: Number(userId),
                 updatedAt: new Date(),
                 createdAt: new Date(),
