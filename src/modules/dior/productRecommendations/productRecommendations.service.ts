@@ -1041,11 +1041,12 @@ export class ProductRecommendationService {
         const rowCount = worksheet.rowCount + 1;
         const newProducts: any[] = [];
         for (let i = 2; i < rowCount; i++) {
-            const row_ = rows[i];
+            // const row_ = rows[i];
             const row = worksheet.getRow(i);
-            const productVariantId = productVariantsMap.get(row_[7]) || null;
+            // const productVariantId = productVariantsMap.get(row_[7]) || null;
 
-            console.log('==========>', productVariantId);
+            // console.log('==========>', productVariantId);
+            const productVariant = await this.findByCodes(productCodes);
 
             const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
             const link = linkText ? linkText : (row.getCell(3).value as string);
@@ -1060,7 +1061,7 @@ export class ProductRecommendationService {
                 routine: row.getCell(6).value as string,
                 imageUrl: imageUrl,
                 shades: row.getCell(9).value as string,
-                productRecommendationId: Number(productVariantId || null),
+                productRecommendationId: Number(productVariant[i].id || null),
                 consultantId: Number(userId),
                 updatedAt: new Date(),
                 createdAt: new Date(),
