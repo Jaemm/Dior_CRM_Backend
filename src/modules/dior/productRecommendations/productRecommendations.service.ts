@@ -1054,7 +1054,7 @@ export class ProductRecommendationService {
             const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
             newProducts.push({
                 code: row.getCell(1).value as string,
-                name: (row.getCell(2).value as string).trim(),
+                name: ((row.getCell(2).value as string) || '').trim(),
                 link: link,
                 category: row.getCell(4).value as string,
                 collection: row.getCell(5).value as string,
@@ -1069,7 +1069,7 @@ export class ProductRecommendationService {
         }
 
         const checking = await this.bulkSave(newProducts);
-        console.log(checking);
+        console.log('====>', checking);
         return { message: 'Data imported successfully' };
         // try {
         //     const splitToken = req.headers.authorization.split(' ');
