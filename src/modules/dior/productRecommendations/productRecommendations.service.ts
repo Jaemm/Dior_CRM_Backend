@@ -1038,29 +1038,30 @@ export class ProductRecommendationService {
         const productVariantsMap = new Map(
             (await this.findByCodes(productCodes)).map((variant) => [variant.code, variant.id]),
         );
-
+        const rowCount = worksheet.rowCount + 1;
         const newProducts: any[] = [];
-        for (let i = 1; i < rows.length; i++) {
-            const row = rows[i];
-            const productVariantId = productVariantsMap.get(row[7]) || null;
+        for (let i = 2; i < rowCount; i++) {
+            const row_ = rows[i];
+            const row = worksheet.getRow(i);
+            const productVariantId = productVariantsMap.get(row_[7]) || null;
 
             console.log('==========>', productVariantId);
 
-            // const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
-            // const link = linkText ? linkText : (row.getCell(3).value as string);
-            // const imageUrlText = (<{ text: string }>row.getCell(8).value)?.text ?? null;
-            // const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
+            const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
+            const link = linkText ? linkText : (row.getCell(3).value as string);
+            const imageUrlText = (<{ text: string }>row.getCell(8).value)?.text ?? null;
+            const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
             newProducts.push({
-                code: row[1],
-                name: (row[2] || '').trim(),
-                link: row[3],
-                category: row[4],
-                collection: row[5],
-                routine: row[6],
-                imageUrl: row[7],
-                shades: row[9],
+                code: row.getCell(1).value as string,
+                name: (row.getCell(2).value as string).trim(),
+                link: link,
+                category: row.getCell(4).value as string,
+                collection: row.getCell(5).value as string,
+                routine: row.getCell(6).value as string,
+                imageUrl: imageUrl,
+                shades: row.getCell(9).value as string,
+                productRecommendationId: Number(productVariantId || null),
                 consultantId: Number(userId),
-                productRecommendationId: productVariantId,
                 updatedAt: new Date(),
                 createdAt: new Date(),
             });
