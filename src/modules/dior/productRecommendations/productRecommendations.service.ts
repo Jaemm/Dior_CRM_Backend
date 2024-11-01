@@ -1010,8 +1010,58 @@ export class ProductRecommendationService {
         }
     }
 
+    async importProductRecommendtaionGeneral(req: Request, body: ImportProductRecommendtaionDto, locale = 'en') {
+        const userId = (<{ id: string }>req.user).id;
+        const splitToken = req.headers.authorization.split(' ');
+        const token = splitToken[1];
+        const fileUrl = body.file_url;
+        const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
+
+        const rows: any[] = [];
+        worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber > 1) rows.push(row.values); // Skip header row
+        });
+
+        // const productCodes = rows.map((row) => row[8]).filter(Boolean);
+
+        const rowCount = worksheet.rowCount + 1;
+        const newProducts: any[] = [];
+        for (let i = 2; i < rowCount; i++) {
+            // const row_ = rows[i];
+            const row = worksheet.getRow(i);
+            // const productVariantId = productVariantsMap.get(row_[7]) || null;
+            const productCode = row.getCell(8).value as string;
+            const productVariant = await this.findByCode(productCode);
+
+            // console.log('productCode ===> ', productVariant);
+            const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
+            const link = linkText ? linkText : (row.getCell(3).value as string);
+            const imageUrlText = (<{ text: string }>row.getCell(8).value)?.text ?? null;
+            const imageUrl = imageUrlText ? imageUrlText : (row.getCell(7).value as string);
+
+            newProducts.push({
+                code: row.getCell(1).value as string,
+                name: ((row.getCell(2).value as string) || '').trim(),
+                link: link,
+                category: row.getCell(4).value as string,
+                collection: row.getCell(5).value as string,
+                routine: row.getCell(6).value as string,
+                imageUrl: imageUrl,
+                shades: row.getCell(9).value as string,
+                productRecommendationId: Number(productVariant?.id || null),
+                consultantId: Number(userId),
+                updatedAt: new Date(),
+                createdAt: new Date(),
+            });
+        }
+
+        const filteredData = newProducts.filter((item) => item.code !== null && item.name !== '');
+        await this.bulkSave(filteredData);
+
+        return { message: 'Data imported successfully' };
+    }
     // save one buy one and check save productRecommendationId to the following that contains CODE
-    async importProductRecommendtaion(req: Request, body: ImportProductRecommendtaionDto, locale = 'en') {
+    async importProductRecommendtaion(req: Request, body: ImportProductRecommendtaionDto) {
         const userId = (<{ id: string }>req.user).id;
         const token = req.headers.authorization.split(' ')[1];
         const fileUrl = body.file_url;
@@ -1074,6 +1124,35 @@ export class ProductRecommendationService {
         // await this.bulkSave(newProducts);
 
         return { message: 'Data imported successfully' };
+    }
+
+    async importProduct(req: Request, body: ImportProductRecommendtaionDto, locale = 'en') {
+        const token = req.headers.authorization.split(' ')[1];
+        const fileUrl = body.file_url;
+
+        const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
+        const rows: any[] = [];
+
+        worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber > 1) rows.push(row.values); // Skip header row
+        });
+
+        let hasMainProducts = false;
+        let hasVariantProducts = false;
+
+        rows.forEach((row) => {
+            if (!row[8]) {
+                hasMainProducts = true;
+            } else {
+                hasVariantProducts = true;
+            }
+        });
+
+        if (hasMainProducts && hasVariantProducts) {
+            this.importProductRecommendtaion(req, body);
+        }
+
+        this.importProductRecommendtaionGeneral(req, body);
     }
 
     async importProductTranslations(req: Request, body: ImportTranslationsDto, locale = 'en') {
@@ -1376,7 +1455,6 @@ export class ProductRecommendationService {
 
             const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
 
-            console.log('baseUrl ====> ', baseUrl);
             const downloadUrl = `${baseUrl}/api/dior/product_recommendations/files/${hash}`;
 
             await this.presignRepository.saveNewPresignEntity({
@@ -1486,5 +1564,9 @@ export class ProductRecommendationService {
 
     async findByCodes(codes: string[]) {
         return await this.productRecommendationRepository.find({ where: { code: In(codes) } });
+    }
+
+    async findByCode(codes: string) {
+        return await this.productRecommendationRepository.findOne({ where: { code: codes } });
     }
 }
