@@ -123,12 +123,15 @@ export class ConsultantsRepository extends Repository<Consultants> {
                 'consultant_shop',
                 'country_details',
                 'consultant_company',
+                'consultant_branch',
                 'consultant_position',
                 'products',
                 'products.device',
                 'products.device.consultant_company',
             ],
         });
+
+        // console.log(consultant);
 
         return consultant;
     }

@@ -58,10 +58,8 @@ let Client = require('ssh2-sftp-client');
 import {
     Consultants,
     Notifications,
-    PasswordEmailDetails,
     Devices,
     ProductRecommendations,
-    ConsultantCompanies,
     Identities,
     HealthTips,
     Customers,
@@ -118,7 +116,7 @@ import {
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 import { LicenseHistoriesRepository } from '@/src/common/repositories/crm/licenseHistories.repository';
 import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repository';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { promisify } from 'util';
 @Injectable()
 export class ConsultantsService {
@@ -645,6 +643,10 @@ export class ConsultantsService {
             });
         }
 
+        if (consultant?.consultant_branch) {
+            consultant.consultant_branch = consultant?.consultant_branch;
+        }
+
         if (consultant?.country_details) {
             consultant.country_id = consultant.country_details?.id ?? '';
             consultant.country = consultant.country_details?.name ?? '';
@@ -863,6 +865,7 @@ export class ConsultantsService {
 
         const consultant: Consultants = await this.validateUser(email, Number(app_id), password);
 
+        // console.log(consultant);
         // ONLY APP_ID IS NULL
         if (consultant.app_id === null) {
             consultant.app_id = Number(data.app_id);
