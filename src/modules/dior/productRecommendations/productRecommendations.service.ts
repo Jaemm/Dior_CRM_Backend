@@ -1046,7 +1046,7 @@ export class ProductRecommendationService {
             // const productVariantId = productVariantsMap.get(row_[7]) || null;
 
             const productVariant = await this.findByCodes(productCodes);
-            console.log('==========>', productVariant[i]);
+            console.log('==========>', productVariant);
 
             const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
             const link = linkText ? linkText : (row.getCell(3).value as string);
@@ -1068,9 +1068,9 @@ export class ProductRecommendationService {
             });
         }
 
-        const filteredData = newProducts.filter((item) => item.code !== null && item.name !== '');
-        const checking = await this.bulkSave(filteredData);
-        console.log('========>', checking);
+        // const filteredData = newProducts.filter((item) => item.code !== null && item.name !== '');
+        // const checking = await this.bulkSave(filteredData);
+        // console.log('========>', checking);
         return { message: 'Data imported successfully' };
         // try {
         //     const splitToken = req.headers.authorization.split(' ');
