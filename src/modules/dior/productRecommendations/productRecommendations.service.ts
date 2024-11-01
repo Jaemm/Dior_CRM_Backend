@@ -1033,6 +1033,7 @@ export class ProductRecommendationService {
             const productCode = row.getCell(8).value as string;
             const productVariant = await this.findByCode(productCode);
 
+            console.log('productCode ===> ', productVariant);
             const linkText = (<{ text: string }>row.getCell(3).value)?.text ?? null;
             const link = linkText ? linkText : (row.getCell(3).value as string);
             const imageUrlText = (<{ text: string }>row.getCell(8).value)?.text ?? null;
@@ -1055,7 +1056,7 @@ export class ProductRecommendationService {
         }
 
         const filteredData = newProducts.filter((item) => item.code !== null && item.name !== '');
-        const checking = await this.bulkSave(filteredData);
+        await this.bulkSave(filteredData);
         // console.log('========>', checking);
         return { message: 'Data imported successfully' };
     }
