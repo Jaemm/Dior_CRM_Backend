@@ -197,9 +197,11 @@ export class ConsultantsService {
         return result;
     }
 
-    async verifyPasswordBcrypt(enteredPassword: string, bcryptHash: string): Promise<boolean> {
+    async verifyPasswordBcrypt(enteredPassword: string, bcryptHash: string, locale: string): Promise<boolean> {
         try {
-            return await bcrypt.compare(enteredPassword, bcryptHash);
+            const result = await bcrypt.compare(enteredPassword, bcryptHash);
+
+            return result;
         } catch (error) {
             throw new InternalServerErrorException({
                 result_code: ErrorStatus.SERVER_ERROR,
@@ -226,12 +228,12 @@ export class ConsultantsService {
     }
 
     // Method to verify password based on the hashing algorithm used
-    async verifyPassword(enteredPassword: string, storedHash: string): Promise<boolean> {
+    async verifyPassword(enteredPassword: string, storedHash: string, locale: string): Promise<boolean> {
         const hashAlgorithm = this.determineHashAlgorithm(storedHash);
 
         switch (hashAlgorithm) {
             case 'bcrypt':
-                return this.verifyPasswordBcrypt(enteredPassword, storedHash);
+                return this.verifyPasswordBcrypt(enteredPassword, storedHash, locale);
             case 'argon2':
                 return this.verifyPasswordArgon2(enteredPassword, storedHash);
             default:
@@ -727,7 +729,7 @@ export class ConsultantsService {
     async validateUser(email: string, app_id: number, password: string) {
         const user = await this.checkConsultant(Number(app_id), email);
 
-        const confirmPwd = await this.verifyPassword(password, user?.password_digest ?? null);
+        const confirmPwd = await this.verifyPassword(password, user?.password_digest ?? null, 'en');
 
         if (confirmPwd) {
             return user;
@@ -1268,7 +1270,7 @@ export class ConsultantsService {
         }
 
         if (data.new_password) {
-            const confirmPwd = await this.verifyPassword(data.new_password, consultant.password_digest ?? null);
+            const confirmPwd = await this.verifyPassword(data.new_password, consultant.password_digest ?? null, 'en');
             if (!confirmPwd) {
                 throw new UnauthorizedException({
                     result_code: ErrorStatus.UNAUTHORIZED,
@@ -1773,7 +1775,7 @@ export class ConsultantsService {
             });
         }
 
-        const confirmPwd = await this.verifyPassword(password, consultant.password_digest ?? null);
+        const confirmPwd = await this.verifyPassword(password, consultant.password_digest ?? null, 'en');
 
         if (!confirmPwd) {
             throw new BadRequestException({

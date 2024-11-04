@@ -278,123 +278,141 @@ export class PartnerDbService {
     }
 
     async loginDiorConsultant(body: LoginDiorConsultantDto, locale: string = 'en') {
-        try {
-            const { app_id, email, password } = body;
+        let { email, password } = body;
 
-            let consultant;
+        let consultant;
 
-            if (app_id) {
-                consultant = await this.consultantRepository.getConsultantEmailAndAppId(email, app_id);
+        const app_id = body?.app_id ?? '88';
+        // if (app_id) {
+        consultant = await this.consultantRepository.getConsultantEmailAndAppId(email, app_id);
 
-                if (!consultant) {
-                    consultant = await this.consultantRepository.getConsultantEmailAndAppId(email);
+        // if (!consultant) {
+        consultant = await this.consultantRepository.getConsultantEmailAndAppId(email);
 
-                    if (!consultant) {
-                        throw new NotFoundException({});
-                    }
-
-                    if (!consultant.password_digest || consultant.password_digest === '') {
-                        throw new UnauthorizedException({
-                            result_code: ErrorStatus.LOGIN_FAILED,
-                            error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
-                        });
-                    }
-
-                    consultant.app_id = Number(app_id);
-                    consultant = await this.consultantRepository.save(consultant);
-
-                    await this.consultantService.verifyPassword(password, consultant.password_digest);
-                }
-            } else {
-                const consultants = await this.consultantRepository.find({
-                    where: {
-                        email: email,
-                    },
-                });
-
-                if (!consultants && consultants.length < 1) {
-                    throw new NotFoundException({});
-                }
-
-                for (let i = 0; i < consultants.length; i++) {
-                    const c = consultants[i];
-
-                    if (c.password_digest) {
-                        this.consultantService.verifyPassword(password, c.password_digest);
-                        consultant = c;
-                        break;
-                    }
-                }
-            }
-
-            if (!consultant) {
-                throw new UnauthorizedException({
-                    result_code: ErrorStatus.LOGIN_FAILED,
-                    error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
-                });
-            }
-
-            if (!consultant.email_confirmed) {
-                throw new UnauthorizedException({
-                    result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
-                    error: this.commonService.createLocaleErrorMessage(locale, 'not_confirmed'),
-                });
-            }
-
-            if (Number(consultant.consultant_position) === PositionsIds.BRAND_MANAGER) {
-                throw new UnauthorizedException({
-                    result_code: ErrorStatus.UNAUTHORIZED,
-                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
-                });
-            }
-
-            const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
-                { id: consultant.id, email: consultant.email, role: Role.Consultant },
-                '',
-            );
-
-            consultant.token = accessToken;
-            consultant = await this.consultantRepository.save(consultant);
-
-            const consultants = await this.consultantRepository.find({
-                where: {
-                    email: email,
-                },
+        if (!consultant) {
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.LOGIN_FAILED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
             });
-
-            const appIds = consultants.map((c) => c.app_id);
-
-            const applications = await this.applicationRepository.find({
-                where: {
-                    id: In(appIds),
-                },
-            });
-
-            const apps = applications.map((appl) => {
-                return {
-                    id: appl.id,
-                    name: appl.name,
-                };
-            });
-
-            return {
-                id: consultant.id,
-                email: consultant.email,
-                name: consultant.name,
-                location: consultant.address,
-                language: consultant.language,
-                token: consultant.token,
-                logged_in: new Date(),
-                consultant_company: consultant.consultant_company ? consultant.consultant_company?.getBasicInfo : null,
-                consultant_position: consultant.consultant_position ?? null,
-                app_id: consultant.app_id,
-                applications: apps,
-                consultant_country: consultant.country || consultant?.consultant_branch?.country,
-                countries: consultant?.countries || [],
-            };
-        } catch (e) {
-            throw e;
         }
+
+        if (!consultant.password_digest || consultant.password_digest === '') {
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.LOGIN_FAILED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
+            });
+        }
+
+        consultant.app_id = Number(app_id);
+        consultant = await this.consultantRepository.save(consultant);
+
+        const passWordCheck = await this.consultantService.verifyPassword(password, consultant.password_digest, locale);
+
+        if (!passWordCheck) {
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.LOGIN_FAILED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
+            });
+        }
+        // }
+        // }
+
+        // else {
+        //     const consultants = await this.consultantRepository.find({
+        //         where: {
+        //             email: email,
+        //         },
+        //     });
+
+        //     if (!consultants && consultants.length < 1) {
+        //         throw new UnauthorizedException({
+        //             result_code: ErrorStatus.LOGIN_FAILED,
+        //             error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
+        //         });
+        //         if (passWordCheck === true) {
+        //             throw new UnauthorizedException({
+        //                 result_code: ErrorStatus.LOGIN_FAILED,
+        //                 error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
+        //             });
+        //         }
+        //     }
+
+        //     for (let i = 0; i < consultants.length; i++) {
+        //         const c = consultants[i];
+
+        //         if (c.password_digest) {
+        //             this.consultantService.verifyPassword(password, c.password_digest, locale);
+        //             consultant = c;
+        //             break;
+        //         }
+        //     }
+        // }
+
+        if (!consultant) {
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.LOGIN_FAILED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
+            });
+        }
+
+        if (!consultant.email_confirmed) {
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'not_confirmed'),
+            });
+        }
+
+        if (Number(consultant.consultant_position) === PositionsIds.BRAND_MANAGER) {
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.UNAUTHORIZED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+            });
+        }
+
+        const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
+            { id: consultant.id, email: consultant.email, role: Role.Consultant },
+            '',
+        );
+
+        consultant.token = accessToken;
+        consultant = await this.consultantRepository.save(consultant);
+
+        const consultants = await this.consultantRepository.find({
+            where: {
+                email: email,
+            },
+        });
+
+        const appIds = consultants.map((c) => c.app_id);
+
+        const applications = await this.applicationRepository.find({
+            where: {
+                id: In(appIds),
+            },
+        });
+
+        const apps = applications.map((appl) => {
+            return {
+                id: appl.id,
+                name: appl.name,
+            };
+        });
+
+        return {
+            id: consultant.id,
+            email: consultant.email,
+            name: consultant.name,
+            location: consultant.address,
+            language: consultant.language,
+            token: consultant.token,
+            logged_in: new Date(),
+            consultant_company: consultant.consultant_company ? consultant.consultant_company?.getBasicInfo : null,
+            consultant_position: consultant.consultant_position ?? null,
+            app_id: consultant.app_id,
+            applications: apps,
+            consultant_country: consultant.country || consultant?.consultant_branch?.country,
+            countries: consultant?.countries || [],
+        };
     }
 
     async getAnalysisHistories(req: Request, customerId: string, query: GetAnalysisHistoriesDto, locale = 'en') {
