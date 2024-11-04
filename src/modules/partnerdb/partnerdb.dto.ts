@@ -26,7 +26,6 @@ export class GetCustomerByConsultantDto {
 export class LoginDiorConsultantDto {
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
     app_id: string;
 
     @ApiProperty()
