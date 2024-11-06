@@ -1151,10 +1151,10 @@ export class ProductRecommendationService {
 
         if (hasMainProducts && hasVariantProducts) {
             await this.importProductRecommendtaion(req, body);
-            return;
+            return { message: 'Updated Succesfull' };
         } else {
             await this.importProductRecommendtaionGeneral(req, body);
-            return;
+            return { message: 'Updated Succesfull' };
         }
         // Only call `importProductRecommendation` if both types are present
     }

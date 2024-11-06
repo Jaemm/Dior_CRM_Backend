@@ -349,4 +349,21 @@ export class AnalysisDataReplicationService {
             ohioRepos,
         };
     }
+
+    async getLastAnalysisDate(consultant: number[]) {
+        return this.globalcndpSkinRepository
+            .createQueryBuilder('analysis')
+            .select('analysis.created_time')
+            .where((qb) => {
+                const coalesceCondition = `COALESCE(
+            NULLIF(analysis.args->>'consultant_id', '')::NUMERIC, 
+            NULLIF(analysis.args->>'id', '')::NUMERIC
+        )`;
+                return `${coalesceCondition} IN (:...ids)`;
+            })
+            .setParameter('ids', consultant)
+            .orderBy('analysis.batch_id', 'DESC')
+            .limit(1)
+            .getRawOne();
+    }
 }
