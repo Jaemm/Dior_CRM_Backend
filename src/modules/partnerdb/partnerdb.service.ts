@@ -215,7 +215,7 @@ export class PartnerDbService {
                     }),
                 );
             }
-
+            //
             if (filter_by) {
                 let filterByOrder = 'ASC';
                 let filterByField = filter_by.toString();
