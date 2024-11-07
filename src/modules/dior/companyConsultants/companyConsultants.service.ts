@@ -496,7 +496,9 @@ export class DiorCompanyConsultantsService {
 
                 console.log('------>', newConsultant);
 
-                await this.consultantRepository.save(newConsultant);
+                const saved = await this.consultantRepository.save(newConsultant);
+
+                console.log('------>', saved);
             }
 
             return {
