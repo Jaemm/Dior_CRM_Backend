@@ -476,6 +476,8 @@ export class DiorCompanyConsultantsService {
                 //     continue;
                 // }
 
+                console.log('----->====>', row.getCell(5).value);
+
                 const branch = await this.consultantBranchesRepository.findOneBy({
                     code: posCode,
                 });
@@ -497,8 +499,6 @@ export class DiorCompanyConsultantsService {
                 console.log('------>', newConsultant);
 
                 const saved = await this.consultantRepository.save(newConsultant);
-
-                console.log('------>', saved);
             }
 
             return {
