@@ -2179,6 +2179,7 @@ export class ConsultantsService {
             countryName: country_name,
             answer1: answer1,
             answer2: answer2,
+            updatedAt: new Date(),
         });
 
         try {

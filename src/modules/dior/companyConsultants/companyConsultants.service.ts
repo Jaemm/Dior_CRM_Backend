@@ -21,13 +21,16 @@ import {
 import { ConsultantForDiorT } from '@/src/common/types/entities/consultants.type';
 import { Consultants } from '@/src/common/entities/crmEntities';
 import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
+import { ConsultantsService } from '../../consultants/consultants.service';
 
 @Injectable()
 export class DiorCompanyConsultantsService {
+    private readonly saltRounds = 10;
+
     constructor(
         private commonService: CommonService,
         private analysisDataReplicationService: AnalysisDataReplicationService,
-
+        // private consultant: ConsultantsService,
         // Repos
         private readonly customersRepository: CustomersRepository,
         private readonly consultantBranchesRepository: ConsultantBranchesRepository,
@@ -38,7 +41,7 @@ export class DiorCompanyConsultantsService {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
-            // const hashedPassword = await argon2.hash(body.password);
+            // const hashedPassword = this.consultant.bcryptHashPassword(body.)
 
             const newConsultant = this.consultantRepository.create({
                 name: body.name,
@@ -465,13 +468,15 @@ export class DiorCompanyConsultantsService {
                 const bcCode = row.getCell(3).value.toLocaleString();
                 const posCode = row.getCell(2).value.toLocaleString();
 
-                const consultant = await this.consultantRepository.findOneBy({
-                    code: bcCode,
-                });
+                // const consultant = await this.consultantRepository.findOneBy({
+                //     code: bcCode,
+                // });
 
-                if (consultant) {
-                    continue;
-                }
+                // if (consultant) {
+                //     continue;
+                // }
+
+                console.log('----->====>', row.getCell(5).value);
 
                 const branch = await this.consultantBranchesRepository.findOneBy({
                     code: posCode,
@@ -491,7 +496,9 @@ export class DiorCompanyConsultantsService {
                     updated_at: new Date(),
                 });
 
-                await this.consultantRepository.save(newConsultant);
+                console.log('------>', newConsultant);
+
+                const saved = await this.consultantRepository.save(newConsultant);
             }
 
             return {

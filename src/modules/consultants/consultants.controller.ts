@@ -153,7 +153,7 @@ export class ConsultantsController {
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async createSalesConnection(
         @Res() res: Response,
-        @Body() body: any,
+        @Body() body: CreateSalesConnectionDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
     ) {

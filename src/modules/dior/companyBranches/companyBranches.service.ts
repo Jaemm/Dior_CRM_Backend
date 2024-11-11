@@ -27,8 +27,9 @@ import { CommonService } from '@/src/common/common.service';
 import { ConsultantBranches } from '@/src/common/entities/crmEntities';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 import { ConfigService } from '@nestjs/config';
-import { ConsultantsService } from '../../consultants/consultants.service';
+
 import * as bcrypt from 'bcrypt';
+import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
 
 @Injectable()
 export class DiorCompanyBranchesService {
@@ -37,7 +38,7 @@ export class DiorCompanyBranchesService {
         private commonService: CommonService,
         private configService: ConfigService,
         private awsS3Service: AwsS3Service,
-
+        private analysis: AnalysisDataReplicationService,
         //repos
         private readonly consultantRepository: ConsultantsRepository,
         private readonly consultantBranchesRepository: ConsultantBranchesRepository,
@@ -45,6 +46,20 @@ export class DiorCompanyBranchesService {
         private readonly presignRepository: PresignRepository,
     ) {}
 
+    async getCustomerRecentCustomer(branchId: number | string) {
+        const numberId = Number(branchId);
+
+        const consultants = await this.consultantBranchesRepository
+            .createQueryBuilder('consultant_branches')
+            .select('c.id')
+            .leftJoin('consultant_branches.consultants', 'c')
+            .where('consultant_branches.id = :branchId', { branchId: numberId })
+            .getRawMany();
+
+        const consultantIds = consultants.map((row) => row.c_id);
+        console.log(consultants);
+        return this.analysis.getLastAnalysisDate(consultantIds);
+    }
     public async createCondultantForPos(newUser: any) {
         const consultantData: any = newUser;
         consultantData['email_confirmed'] = true;
@@ -225,9 +240,17 @@ export class DiorCompanyBranchesService {
                 .take(searchPer)
                 .getManyAndCount();
 
-            const reformatBranches: Promise<ConsultantBranchesForDiorT>[] = branches.map(async (branch) => {
-                const totalDevices = await this.productsRepository.getNewOpticNumbersCountByBranch(branch.id);
+            const reformatBranches: Promise<ConsultantBranchesForDiorT>[] = branches.map(async (branch, i) => {
+                // const totalDevices: any = await this.productsRepository.getNewOpticNumbersCountByBranch(branch.id);
 
+                const [totalDevices, latestCustomer] = await Promise.all([
+                    this.productsRepository.getNewOpticNumbersCountByBranch(branch.id),
+                    this.getCustomerRecentCustomer(branch.id),
+                ]);
+
+                // console.log(latestCustomer);
+
+                console.log(latestCustomer);
                 const reformatBranch: ConsultantBranchesForDiorT = {
                     id: Number(branch.id),
                     name: branch.name,
@@ -236,8 +259,8 @@ export class DiorCompanyBranchesService {
                     created_at: branch.createdAt,
                     country: branch.country,
                     password: branch.password,
-                    total_devices: totalDevices,
-                    last_consultation_date: '01-03-2022',
+                    total_devices: totalDevices, //totalDevices[1],
+                    last_consultation_date: '2022-01-01', //latestCustomer?.created_time ?? null,
                 };
 
                 return reformatBranch;
@@ -548,4 +571,3 @@ export class DiorCompanyBranchesService {
         });
     }
 }
-
