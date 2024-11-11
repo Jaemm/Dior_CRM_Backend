@@ -469,7 +469,6 @@ export class DiorCompanyBranchesService {
                     updatedAt: new Date(),
                 });
 
-                console.log('========> ', newBranch);
                 const registredPos = await this.consultantBranchesRepository.save(newBranch);
                 if (registredPos) {
                     this.createCondultantForPos(registredPos);
@@ -571,3 +570,4 @@ export class DiorCompanyBranchesService {
         });
     }
 }
+

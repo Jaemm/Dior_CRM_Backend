@@ -19,7 +19,7 @@ import {
 import { AttributeRoutine, AutomaticProductByBatchIdDto, SearchProductRecommendationDto } from '../dior.dto';
 import { CommonService } from '@/src/common/common.service';
 import { ProductAttributes, ProductRecommendations } from '@/src/common/entities/crmEntities';
-import { Not, In, Equal } from 'typeorm';
+import { Not, In, Equal, IsNull } from 'typeorm';
 import { AutomaticProductDiorGenerator } from './automaticProductDiorGenerator';
 import {
     CreateProductRecommendationDto,
@@ -1232,20 +1232,36 @@ export class ProductRecommendationService {
                 const product = await this.productRecommendationRepository.findOne({
                     where: {
                         code: productCode,
+                        consultantId: Not(IsNull()),
                     },
                 });
 
+                // if (product) {
+                //     let productCountries = product.countries || [];
+                //     if (excludeInCountry) {
+                //         productCountries = productCountries.filter((c) => c !== country);
+                //     } else {
+                //         if (!productCountries.includes(country)) {
+                //             productCountries.push(country);
+                //         }
+                //     }
+                //     product.countries = productCountries;
+                //     await this.productRecommendationRepository.save(product);
+                // }
+
                 if (product) {
-                    let productCountries = product.countries;
+                    let productCountries = product.countries || [];
+
                     if (excludeInCountry) {
-                        productCountries = productCountries.filter((c) => c !== country);
+                        productCountries = productCountries.filter((name) => name !== country);
                     } else {
                         if (!productCountries.includes(country)) {
                             productCountries.push(country);
                         }
                     }
                     product.countries = productCountries;
-                    await this.productRecommendationRepository.save(product);
+
+                    const fianal = await this.productRecommendationRepository.save(product);
                 }
             }
 
@@ -1574,3 +1590,4 @@ export class ProductRecommendationService {
         return await this.productRecommendationRepository.findOne({ where: { code: codes } });
     }
 }
+
