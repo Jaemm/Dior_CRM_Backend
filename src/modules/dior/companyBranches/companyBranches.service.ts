@@ -260,7 +260,7 @@ export class DiorCompanyBranchesService {
                     country: branch.country,
                     password: branch.password,
                     total_devices: totalDevices, //totalDevices[1],
-                    last_consultation_date: latestCustomer?.created_time ?? null,
+                    last_consultation_date: '2022-01-01', //latestCustomer?.created_time ?? null,
                 };
 
                 return reformatBranch;
