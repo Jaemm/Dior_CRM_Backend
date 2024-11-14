@@ -13,8 +13,10 @@ import {
 } from '@/src/common/repositories/crm';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 import { CommonService } from '@/src/common/common.service';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
+    imports: [HttpModule],
     controllers: [ProductRecommendationController],
     providers: [
         ProductRecommendationService,
@@ -34,3 +36,4 @@ import { CommonService } from '@/src/common/common.service';
     ],
 })
 export class ProductRecommendationModule {}
+

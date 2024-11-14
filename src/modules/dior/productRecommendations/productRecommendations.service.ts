@@ -32,16 +32,19 @@ import {
     UpdateProductRecommendationDto,
 } from './productRecommendation.dto';
 import { ProductRecommendationT, ProductTranslationT } from '@/src/common/types/entities';
+import { ProductTranslations } from '@/src/common/entities/crmEntities';
 import axios from 'axios';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 import { ConfigService } from '@nestjs/config';
+import { lastValueFrom } from 'rxjs';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class ProductRecommendationService {
     constructor(
         private readonly commonService: CommonService,
         private readonly configService: ConfigService,
-
+        private readonly httpService: HttpService,
         private readonly awsS3Service: AwsS3Service,
 
         private readonly consultantCountriesRepository: ConsultantCountriesRepository,
@@ -460,7 +463,15 @@ export class ProductRecommendationService {
                     relations: ['productAttributeTranslations'],
                 });
 
-                const paTranslations = attribute.productAttributeTranslations;
+                if (!attribute) {
+                    throw new NotFoundException({
+                        message: `${foundRecommendtaion.collection} Collection Does Not Exist`,
+                    });
+                }
+
+                const paTranslations = attribute?.productAttributeTranslations;
+
+                console.log('paTranslations ====>', paTranslations);
 
                 await this.paTranslationsRepository.remove(paTranslations);
 
@@ -1159,52 +1170,166 @@ export class ProductRecommendationService {
         // Only call `importProductRecommendation` if both types are present
     }
 
+    // async importProductTranslations(req: Request, body: ImportTranslationsDto, locale = 'en') {
+    //     try {
+    //         const splitToken = req.headers.authorization.split(' ');
+    //         const token = splitToken[1];
+
+    //         const fileUrl = body.file_url;
+    //         const country = body.country;
+
+    //         const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
+
+    //         const headers = worksheet.getRow(1);
+
+    //         const rowCount = worksheet.rowCount + 1;
+
+    //         // const newBranches = [];
+
+    //         // const diorConsultant = await this.consultantRepository.getDiorConsultant();
+
+    //         // let rows = [];
+    //         const productCode: string[] = [];
+    //         for (let i = 2; i < rowCount; i++) {
+    //             const rows = worksheet.getRow(i);
+    //             const codeValue = rows.getCell(1).value;
+    //             if (codeValue !== undefined) {
+    //                 productCode.push(String(codeValue));
+    //             }
+    //         }
+
+    //         const products = await this.productRecommendationRepository
+    //             .createQueryBuilder('product')
+    //             .where('product.code IN (:...codes)', { codes: productCode.map(String) })
+    //             .getMany();
+
+    //         const translationsToUpdate = [];
+    //         const translationsToCreate = [];
+
+    //         console.log('code', productCode);
+    //         for (let i = 2; i < rowCount; i++) {
+    //             console.log('======>', '======>', products);
+
+    //             const row = worksheet.getRow(i);
+    //             const productCode = row.getCell(1).value as string;
+    //             const translationProductName = row.getCell(2).value as string;
+
+    //             console.log(String(productCode));
+    //             const product = products.find((p) => p.code === String(productCode));
+    //             console.log('product ====>', product);
+
+    //             // const product = diorConsultant?.productRecommendations.find((pr) => pr.code === productCode);
+    //             if (product) {
+    //                 let translation = await this.productTranslationsRepository.findOne({
+    //                     where: {
+    //                         productRecommendationId: product.id,
+    //                         language: country,
+    //                     },
+    //                 });
+    //                 // let translation = product.productTranslations.find(
+    //                 //     (pt) => pt.fieldName === 'product_name' && pt.language === country,
+    //                 // );
+
+    //                 console.log('product', translation);
+
+    //                 if (translation) {
+    //                     translation.value = translationProductName;
+    //                     translationsToUpdate.push(translation);
+    //                 } else {
+    //                     translationsToCreate.push(
+    //                         this.productTranslationsRepository.create({
+    //                             fieldName: 'product_name',
+    //                             language: country,
+    //                             value: translationProductName,
+    //                             productRecommendationId: product.id,
+    //                         }),
+    //                     );
+    //                 }
+    //             }
+    //         }
+
+    //         const upTranslations = await this.productTranslationsRepository.save(translationsToUpdate);
+    //         const creTranslation = await this.productTranslationsRepository.save(translationsToCreate);
+
+    //         console.log('upTranslations ===>', upTranslations, 'creTranslation ===> ', creTranslation);
+
+    //         return {
+    //             message: 'Success import data',
+    //         };
+    //     } catch (e) {
+    //         throw e;
+    //     }
+    // }
+
     async importProductTranslations(req: Request, body: ImportTranslationsDto, locale = 'en') {
         try {
-            const splitToken = req.headers.authorization.split(' ');
-            const token = splitToken[1];
+            const token = req.headers.authorization.split(' ')[1];
+            const { file_url: fileUrl, country } = body;
 
-            const fileUrl = body.file_url;
-            const country = body.country;
-
+            // Fetch worksheet
             const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
-
-            const headers = worksheet.getRow(1);
-
             const rowCount = worksheet.rowCount + 1;
 
-            const newBranches = [];
+            // Collect product codes from worksheet rows
+            const productCodes = [];
+            for (let i = 2; i < rowCount; i++) {
+                const codeValue = worksheet.getRow(i).getCell(1).value;
+                if (codeValue !== undefined) {
+                    productCodes.push(String(codeValue));
+                }
+            }
 
-            const diorConsultant = await this.consultantRepository.getDiorConsultant();
+            // Fetch all products with given codes
+            const products = await this.productRecommendationRepository
+                .createQueryBuilder('product')
+                .where('product.code IN (:...codes)', { codes: productCodes })
+                .getMany();
 
+            // Fetch existing translations for the provided country and product IDs
+            const productIds = products.map((product) => product.id);
+            const existingTranslations = await this.productTranslationsRepository.find({
+                where: { productRecommendationId: In(productIds), language: country },
+            });
+            const translationMap = new Map(
+                existingTranslations.map((t) => [`${t.productRecommendationId}_${country}`, t]),
+            );
+
+            // Prepare translations to create or update
+            const translationsToUpdate = [];
+            const translationsToCreate = [];
             for (let i = 2; i < rowCount; i++) {
                 const row = worksheet.getRow(i);
                 const productCode = row.getCell(1).value as string;
                 const translationProductName = row.getCell(2).value as string;
 
-                const product = diorConsultant?.productRecommendations.find((pr) => pr.code === productCode);
+                const product = products.find((p) => p.code === String(productCode));
                 if (product) {
-                    let translation = product.productTranslations.find(
-                        (pt) => pt.fieldName === 'product_name' && pt.language === country,
-                    );
-                    if (translation) {
-                        translation.value = translationProductName;
-                        await this.productTranslationsRepository.save(translation);
+                    const key = `${product.id}_${country}`;
+                    const existingTranslation = translationMap.get(key);
+
+                    if (existingTranslation) {
+                        existingTranslation.value = translationProductName;
+                        translationsToUpdate.push(existingTranslation);
                     } else {
-                        translation = this.productTranslationsRepository.create({
-                            fieldName: 'product_name',
-                            language: country,
-                            value: translationProductName,
-                            productRecommendationId: product.id,
-                        });
-                        await this.productTranslationsRepository.save(translation);
+                        translationsToCreate.push(
+                            this.productTranslationsRepository.create({
+                                fieldName: 'product_name',
+                                language: country,
+                                value: translationProductName,
+                                productRecommendationId: product.id,
+                                createdAt: new Date(),
+                                updatedAt: new Date(),
+                            }),
+                        );
                     }
                 }
             }
 
-            return {
-                message: 'Success import data',
-            };
+            console.log('====>', translationsToUpdate, translationsToCreate);
+            // Bulk save translations
+            await this.productTranslationsRepository.save([...translationsToUpdate, ...translationsToCreate]);
+
+            return { message: 'Success import data' };
         } catch (e) {
             throw e;
         }
@@ -1273,37 +1398,60 @@ export class ProductRecommendationService {
         }
     }
 
+    async imageExists(url: string) {
+        try {
+            const response = await lastValueFrom(this.httpService.get(url, { responseType: 'arraybuffer' }));
+
+            const contentType = response.headers['content-type'];
+
+            console.log('response headers ===>', response.headers['content-disposition']);
+            const fileName = response.headers['content-disposition'];
+
+            // Check if the content type starts with "image"
+            return { fileName: fileName, check: contentType.startsWith('image') };
+        } catch (error) {
+            console.log(error);
+            // Handle any errors, such as invalid URL or non-image responses
+            return { fileName: '', check: false };
+        }
+    }
+
+    extractCodeFromFileName(fileName: string): string | null {
+        const match = fileName.match(/filename="([A-Z0-9]+)\.png"/);
+        return match ? match[1] : null;
+    }
     async importPictures(body: ImportPicturesDto) {
         try {
-            const fileUrl = body.file_url;
+            const fileUrls = body.file_url;
 
-            const isArray = Array.isArray(fileUrl);
+            const isArray = Array.isArray(fileUrls);
 
-            const urlList = isArray ? fileUrl : [fileUrl];
+            const urlList = isArray ? fileUrls : [fileUrls];
+            for (const fileUrl of urlList) {
+                // Check if the file URL is a valid image
+                const isValidImage = await this.imageExists(fileUrl);
 
-            const saveUrlPromise = urlList.map(async (url) => {
-                const response = await axios.get(url);
-
-                const isExistImage = response.headers['content-type'].toLocaleString().startsWith('image');
-
-                if (!isExistImage) {
-                    throw new Error('not exist image');
+                if (!isValidImage['check']) {
+                    throw new BadRequestException('One of the file URLs is not a valid image!');
                 }
 
-                const fileName = path.basename(url, path.extname(url));
-                const productCode = fileName.slice(37);
-
-                const diorConsultant = await this.consultantRepository.getDiorConsultant();
-
-                const product = diorConsultant.productRecommendations.find((pr) => pr.code === productCode);
+                // Extract product code
+                const fileName = isValidImage.fileName; // Get file name from URL
+                if (!fileName) continue;
+                const productCode = this.extractCodeFromFileName(fileName); // Remove first 36 characters to get code
+                // Find product recommendation by code
+                const product = await this.productRecommendationRepository.findOne({
+                    where: {
+                        code: productCode,
+                    },
+                });
 
                 if (product) {
-                    product.imageUrl = url;
-                    await this.productRecommendationRepository.save(product);
+                    product.imageUrl = fileUrl;
+                    // Update image URL if product exists
+                    await this.productRecommendationRepository.update(product.id, { imageUrl: fileUrl });
                 }
-            });
-
-            await Promise.all(saveUrlPromise);
+            }
 
             return {
                 message: 'Success import data',
