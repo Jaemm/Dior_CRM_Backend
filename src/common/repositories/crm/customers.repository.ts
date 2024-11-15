@@ -20,7 +20,12 @@ export class CustomersRepository extends Repository<Customers> {
                 // created_at: Between(startOfToday, endOfToday),
                 id: In(ids),
             },
-            relations: ['prSelecteds', 'prSelecteds.productRecommendation', 'consultant'],
+            relations: [
+                'prSelecteds',
+                'prSelecteds.productRecommendation',
+                'consultant',
+                'consultant.consultant_branch',
+            ],
         });
 
         return customers;

@@ -76,6 +76,7 @@ import {
     EthnicitiesRepository,
     SkinColorGroupsRepository,
     PasswordEmailDetailsRepository,
+    ProductRecommendationSelectedRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
@@ -171,6 +172,7 @@ import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repos
         RefreshTokensRepository,
         NotificationsRepository,
         ProductsRepository,
+        ProductRecommendationSelectedRepository,
         SalesConnectionRepository,
         SkinColorGroupsRepository,
         LicensesRepository,

@@ -49,3 +49,5 @@ export class GetListOfRecommendationListDto {
     @IsString()
     per: string;
 }
+
+// For products change as following -> productRecommendationSelecteds.find({where: batch_id}) and then maap with customer by result.customer_id

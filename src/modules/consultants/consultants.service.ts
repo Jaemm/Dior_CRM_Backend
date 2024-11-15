@@ -96,6 +96,7 @@ import {
     GendersRepository,
     NotificationsRepository,
     PasswordEmailDetailsRepository,
+    ProductRecommendationSelectedRepository,
     ProductsRepository,
     RefreshTokensRepository,
     SalesConnectionRepository,
@@ -133,6 +134,10 @@ export class ConsultantsService {
     constructor(
         @InjectRepository(ProductRecommendations)
         private readonly productRecommendationsRepository: Repository<ProductRecommendations>,
+
+        // @InjectRepository(ProductRecommendationSelectedRepository)
+        // private readonly ProductRecommendationSelectedRepository: Repository<ProductRecommendationSelectedRepository>,
+
         @InjectRepository(HealthTips)
         private readonly healthTipsRespository: Repository<HealthTips>,
         @InjectRepository(Identities)
@@ -172,7 +177,7 @@ export class ConsultantsService {
         private readonly ethnicitiesRepository: EthnicitiesRepository,
         private readonly licensesRepository: LicensesRepository,
         private readonly licenseHistoriesRepository: LicenseHistoriesRepository,
-
+        private readonly ProductRecommendationSelectedRepository: ProductRecommendationSelectedRepository,
         private readonly passwordDetailRepository: PasswordEmailDetailsRepository,
     ) {
         this.jwtConfig = this.configService.get<IJwt>('jwt');
@@ -3185,152 +3190,219 @@ export class ConsultantsService {
     //     }
     // }
 
+    async uploadToSFTPServer(excelData: any) {
+        await this.ftpconnect({
+            host: process.env.SFTP_HOST || '',
+            port: Number(process.env.SFTP_PORT),
+            username: process.env.SFTP_USER || '',
+            password: process.env.SFTP_PASS || '',
+        });
+
+        try {
+            // Connect to the SFTP server
+            // await sftp.connect(sftpConfig);
+
+            // Define the remote directory path
+            const remoteDirectoryPath = './analysis_data/PROD/';
+
+            // Check if the remote directory exists; if not, create it
+            try {
+                await this.client.mkdir(remoteDirectoryPath, true); // 'true' makes the directory recursively
+            } catch (err) {
+                console.log('Directory may already exist', err.message);
+            }
+
+            // Define the filename and path
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const dateString = `${yyyy}-${mm}-${dd}`;
+            const fileName = `${dateString}.json`;
+            const remoteFilePath = path.join(remoteDirectoryPath, fileName);
+
+            // const rootDirectoryPath = process.cwd();
+
+            // const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
+
+            // Convert the data to JSON format
+            const jsonData = JSON.stringify(excelData);
+
+            // Write the JSON data to a temporary local file
+            const tempFilePath = path.join(process.cwd(), 'temp', fileName);
+            await fs.mkdir(path.dirname(tempFilePath), { recursive: true });
+            await fs.writeFile(tempFilePath, jsonData);
+
+            // Upload the file to the SFTP server
+            await this.uploadFile(tempFilePath, remoteFilePath);
+            console.log(`${fileName} uploaded successfully to SFTP server`);
+
+            // Clean up the temporary local file
+            await fs.unlink(tempFilePath);
+        } catch (error) {
+            console.error('Error during SFTP upload:', error.message);
+        } finally {
+            await this.disconnect();
+        }
+    }
+
     // @Cron('*/2 * * * *')
     async generateFlatFileDior() {
         const excelData = [];
-        const data_ = {
+        const credentials = {
             app_id: '88',
             email: 'krtest@diormail.com',
             password: process.env.LOGIN_PASSWORD,
             confirmPassword: process.env.LOGIN_PASSWORD,
         };
 
-        const userData = await this.login(data_, 'en');
-        const token = userData.token;
-
+        // Fetch authentication token
+        const { token } = await this.login(credentials, 'en');
         const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
 
-        // Pre-calculate date ranges
-        const startDate = `${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
-        const endDate = `${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
+        // Define date ranges
+        const startDate = '2024-11-13 00:00:00'; //`${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
+        const endDate = '2024-11-13 23:59:59'; //`${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
 
-        // Fetch all required analysis data
-        const data = await this.analysisReplService.getStatisticsConsultantions(startDate, endDate);
+        // Fetch required data
+        const analyses = await this.analysisReplService.getStatisticsConsultantions(startDate, endDate);
+        const customerIds = analyses.map((analysis) => Number(analysis.customerId));
+        const batchIds = analyses.map((analysis) => analysis.batchId);
 
-        // Fetch all customer data in batch
-        const customerIds = data.map((analyseData) => Number(analyseData.customerId));
-        const customers = await this.customersRepository.getTodayCreatedCustomers(customerIds); // Assuming batch fetch implementation
-
-        // Build a map for quick lookup
+        // Fetch customers and map by ID for quick access
+        const customers = await this.customersRepository.getTodayCreatedCustomers(customerIds);
         const customerMap = new Map(customers.map((customer) => [customer.id, customer]));
 
-        // Fetch all consent data in batch for filtering
-        const batchIds = data.map((analyseData) => analyseData.batchId);
+        // Fetch consents and map by customerId + batchId for quick access
+        const consents = await this.diorConsentRepository.find({ where: { batchId: In(batchIds) } });
+        const consentMap = new Map(consents.map((consent) => [`${consent.batchId}`, consent]));
 
-        // const consents = await this.diorConsentRepository.find({
-        //     where: { customerId: In (customer.id), batchId: In(batchIds) },
-        // });
-
-        const consents = await this.diorConsentRepository.find({
-            where: { batchId: In(batchIds), customerId: In(customerIds) },
+        // Fetch product recommendations and group by batchId
+        const productRecommendations = await this.ProductRecommendationSelectedRepository.find({
+            where: { batchId: In(batchIds) },
+            relations: ['productRecommendation'],
+        });
+        const productMap = new Map();
+        productRecommendations.forEach((recommendation) => {
+            const batchProducts = productMap.get(recommendation.batchId) || [];
+            batchProducts.push(recommendation.productRecommendation);
+            productMap.set(recommendation.batchId, batchProducts);
         });
 
-        const consentMap = new Map(consents.map((consent) => [`${consent.customerId}_${consent.batchId}`, consent]));
-
-        // Parallel API requests
+        // Fetch analysis results in parallel
         const analysisResults = await Promise.all(
-            data.map((analyseData) =>
-                axios.get(`${CNDP_SKIN_ANALYSIS_URL}/web-result/cndpskin/${analyseData.batchId}`, {
+            analyses.map((analysis) =>
+                axios.get(`${CNDP_SKIN_ANALYSIS_URL}/web-result/cndpskin/${analysis.batchId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 }),
             ),
         );
 
-        // console.log(analysisResults);
-
-        // Iterate over the fetched data
-        for (const [index, analyseData] of data.entries()) {
-            const customer = customerMap.get(Number(analyseData.customerId));
-            console.log(customer);
+        // Process data
+        for (const [index, analysis] of analyses.entries()) {
+            const customer = customerMap.get(Number(analysis.customerId));
             if (!customer) continue;
 
             const bc = customer.consultant;
-            const pos = bc?.consultant_branch?.code;
+            const pos = bc?.consultant_branch?.code || null;
+            const result = analysisResults[index]?.data;
+            const products = (productMap.get(analysis.batchId) || []).map((product: any) => ({
+                name: product?.name ?? null,
+                link: product?.link ?? null,
+                imageUrl: product?.imageUrl ?? null,
+                category: product?.category ?? null,
+                collection: product?.collection ?? null,
+                code: product?.code ?? null,
+            }));
 
-            const result = analysisResults[index].data;
-            // console.log(result);
-            // Prepare products for the customer
-            const products = customer.prSelecteds
-                .map((p: any) => p.productRecommendation)
-                .filter(Boolean)
-                .map((product: any) => ({
-                    name: product.name,
-                    link: product.link,
-                    imageUrl: product.imageUrl,
-                    category: product.category,
-                    collection: product.collection,
-                    code: product.code,
-                }));
+            const consent = consentMap.get(`${analysis.batchId}`);
+            // console.log(`${customer.id}_${analysis.batchId}`, '========>', consent);
+            const consentAnswers = consent?.consentFormAnswers;
 
-            const newData = {
-                batchId: analyseData.batchId,
-                createdTime: analyseData.createdTime,
-                results: result.body, // Assuming response data is in `data`
-                productRecommendation: [...new Set(products.map((p) => p.code))],
+            const newJson = {
+                client_iw_id: customer.external_id,
+                country: bc?.country,
+                consultation_id: customer.consultant.id,
+                pos,
+                bc: customer.consultant.code,
+                consultation_date: analysis.createdTime,
+                opt_in: consent?.fetchOptions,
+                scores: result?.data,
+                recommended_product: products,
             };
 
-            // console.log('====>', newData);
-
-            if (newData.productRecommendation.length > 0) {
-                const consent = consentMap.get(`${customer.id}_${analyseData.batchId}`);
-                const consentAnswers = consent?.consentFormAnswers;
-
-                const newJson: any = {
-                    clientIwId: customer.external_id,
-                    country: customer.country, // Replaced commented out part
-                    consultationId: analyseData.batchId,
-                    pos: pos,
-                    bc: bc?.code,
-                    consultationDate: analyseData.createdTime,
-                    optIn: consent?.fetchOptions,
-                    scores: result.data,
-                    recommendedProduct: newData.productRecommendation,
-                };
-
-                // Handle consent logic
-                if (consent) {
-                    if (consent.consentType === 'without_ipos_consent' && consentAnswers?.[2] === 'No') {
-                        delete newJson.clientIwId;
-                        delete newJson.recommendedProduct;
-                        delete newJson.scores;
-                    }
-                    if (consent.consentType === 'ipos_consent') {
-                        if (consentAnswers?.[2] === 'No') delete newJson.clientIwId;
-                        if (consentAnswers?.[3] === 'No') {
-                            delete newJson.recommendedProduct;
-                            delete newJson.scores;
-                        }
+            // Apply consent logic
+            if (consent) {
+                if (consent.consentType === 'without_ipos_consent' && consentAnswers?.[2] === 'No') {
+                    newJson.client_iw_id = null;
+                    newJson.recommended_product = [];
+                    newJson.scores = [];
+                }
+                if (consent.consentType === 'ipos_consent') {
+                    if (consentAnswers?.[2] === 'No') newJson.client_iw_id = null;
+                    if (consentAnswers?.[3] === 'No') {
+                        newJson.recommended_product = [];
+                        newJson.scores = [];
                     }
                 }
+            }
 
-                // Filtering based on consent answers
-                if ((consentAnswers || []).length === 2 && !consentAnswers.includes('No')) {
+            // Filter data based on consent answers
+            if ((consentAnswers || []).length === 2 && !consentAnswers.includes('No')) {
+                excelData.push(JSON.stringify(newJson));
+            } else if ((consentAnswers || []).length === 4) {
+                if (
+                    !(
+                        consentAnswers[0] === 'Yes' &&
+                        consentAnswers[1] === 'No' &&
+                        consentAnswers[2] === 'No' &&
+                        consentAnswers[3] === 'No'
+                    ) &&
+                    !(
+                        consentAnswers[0] === 'Yes' &&
+                        consentAnswers[1] === 'Yes' &&
+                        consentAnswers[2] === 'No' &&
+                        consentAnswers[3] === 'No'
+                    )
+                ) {
                     excelData.push(JSON.stringify(newJson));
-                } else if ((consentAnswers || []).length === 4) {
-                    if (
-                        !(
-                            consentAnswers[0] === 'Yes' &&
-                            consentAnswers[1] === 'No' &&
-                            consentAnswers[2] === 'No' &&
-                            consentAnswers[3] === 'No'
-                        ) &&
-                        !(
-                            consentAnswers[0] === 'Yes' &&
-                            consentAnswers[1] === 'Yes' &&
-                            consentAnswers[2] === 'No' &&
-                            consentAnswers[3] === 'No'
-                        )
-                    ) {
-                        excelData.push(JSON.stringify(newJson));
-                    }
                 }
             }
         }
 
-        console.log(excelData);
+        // const rootDirectoryPath = process.cwd();
 
-        return excelData;
+        // const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
+
+        // if (!existsSync(flatFilesDirectoryPath)) {
+        //     await fs.mkdir(flatFilesDirectoryPath);
+        // }
+
+        // const today = new Date();
+        // const yyyy = today.getFullYear();
+        // const mm = String(today.getMonth() + 1).padStart(2, '0');
+        // const dd = String(today.getDate()).padStart(2, '0');
+        // const dateString = `${yyyy}-${mm}-${dd}`;
+
+        // const fileName = `${dateString}.json`;
+        // const filePath = path.join(flatFilesDirectoryPath, fileName);
+
+        // const jsonData = excelData; //JSON.stringify(excelData);
+        // // console.log('jsonData ====>', jsonData);
+
+        // fs.writeFile(filePath, jsonData)
+        //     .then(() => console.log(`${fileName} writing success`))
+        //     .catch(() => console.log(`${fileName} writing failed`));
+        console.log('done');
+        await this.uploadToSFTPServer(excelData);
+
+        // console.log(excelData);
+        return true;
     }
+
+    // UPLOAD FILES
+
+    // SENDING JSON
 
     daysLeftFromExpired(licensePeriod: number, firstUseDate: string) {
         let periodLeft = 0;
