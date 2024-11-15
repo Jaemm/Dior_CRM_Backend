@@ -3185,7 +3185,7 @@ export class ConsultantsService {
     //     }
     // }
 
-    @Cron('*/2 * * * *')
+    // @Cron('*/2 * * * *')
     async generateFlatFileDior() {
         const excelData = [];
         const data_ = {
@@ -3214,7 +3214,6 @@ export class ConsultantsService {
         // Build a map for quick lookup
         const customerMap = new Map(customers.map((customer) => [customer.id, customer]));
 
-        // console.log('customerMap==>', customerMap);
         // Fetch all consent data in batch for filtering
         const batchIds = data.map((analyseData) => analyseData.batchId);
 
@@ -3237,16 +3236,19 @@ export class ConsultantsService {
             ),
         );
 
+        // console.log(analysisResults);
+
         // Iterate over the fetched data
         for (const [index, analyseData] of data.entries()) {
             const customer = customerMap.get(Number(analyseData.customerId));
+            console.log(customer);
             if (!customer) continue;
 
             const bc = customer.consultant;
             const pos = bc?.consultant_branch?.code;
 
-            const result = analysisResults[index];
-
+            const result = analysisResults[index].data;
+            // console.log(result);
             // Prepare products for the customer
             const products = customer.prSelecteds
                 .map((p: any) => p.productRecommendation)
@@ -3263,11 +3265,11 @@ export class ConsultantsService {
             const newData = {
                 batchId: analyseData.batchId,
                 createdTime: analyseData.createdTime,
-                results: result.data, // Assuming response data is in `data`
+                results: result.body, // Assuming response data is in `data`
                 productRecommendation: [...new Set(products.map((p) => p.code))],
             };
 
-            console.log(newData);
+            // console.log('====>', newData);
 
             if (newData.productRecommendation.length > 0) {
                 const consent = consentMap.get(`${customer.id}_${analyseData.batchId}`);

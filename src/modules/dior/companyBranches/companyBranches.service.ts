@@ -248,9 +248,6 @@ export class DiorCompanyBranchesService {
                     this.getCustomerRecentCustomer(branch.id),
                 ]);
 
-                // console.log(latestCustomer);
-
-                console.log(latestCustomer);
                 const reformatBranch: ConsultantBranchesForDiorT = {
                     id: Number(branch.id),
                     name: branch.name,
