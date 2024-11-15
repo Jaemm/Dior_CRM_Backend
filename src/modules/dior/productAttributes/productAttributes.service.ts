@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import * as csv from 'csv';
 import { Request } from 'express';
 
@@ -345,7 +345,7 @@ export class DiorProductAttributesService {
             const token = splitToken[1];
 
             const fileUrl = body.file_url;
-            const country = body.file_url;
+            const country = body.country;
 
             const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
@@ -358,7 +358,6 @@ export class DiorProductAttributesService {
 
                 const typ = row.getCell(1).value.toLocaleString();
                 const value = row.getCell(2).value.toLocaleString();
-
                 const attribute = await this.productAttributesRepository.findOne({
                     where: {
                         typ: typ,
@@ -366,16 +365,33 @@ export class DiorProductAttributesService {
                     },
                 });
 
+                if (!attribute) {
+                    throw new BadRequestException({
+                        message: value + ' does not exist',
+                    });
+                }
                 const attributeId = attribute.id;
-
-                const newTranslations = this.productAttributeTranslationsRepository.create({
-                    fieldName: 'product_name',
-                    language: country,
-                    value: row.getCell(3).value.toLocaleString(),
-                    productAttributeId: Number(attributeId),
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
+                const checkAttribut = await this.productAttributeTranslationsRepository.findOne({
+                    where: {
+                        language: country,
+                        productAttributeId: Number(attribute.id),
+                    },
                 });
+
+                let newTranslations;
+                if (checkAttribut) {
+                    checkAttribut.value = row.getCell(3).value.toLocaleString();
+                    newTranslations = checkAttribut;
+                } else {
+                    newTranslations = this.productAttributeTranslationsRepository.create({
+                        fieldName: 'product_name',
+                        language: country,
+                        value: row.getCell(3).value.toLocaleString(),
+                        productAttributeId: Number(attributeId),
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                    });
+                }
 
                 await this.productAttributeTranslationsRepository.save(newTranslations);
             }
@@ -405,3 +421,4 @@ export class DiorProductAttributesService {
         });
     }
 }
+
