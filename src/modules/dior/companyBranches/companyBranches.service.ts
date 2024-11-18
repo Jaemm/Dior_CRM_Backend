@@ -30,6 +30,7 @@ import { ConfigService } from '@nestjs/config';
 
 import * as bcrypt from 'bcrypt';
 import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
+import * as moment from 'moment';
 
 @Injectable()
 export class DiorCompanyBranchesService {
@@ -51,15 +52,20 @@ export class DiorCompanyBranchesService {
 
         const consultants = await this.consultantBranchesRepository
             .createQueryBuilder('consultant_branches')
-            .select('c.id')
-            .leftJoin('consultant_branches.consultants', 'c')
+            .leftJoin('consultant_branches.consultants', 'consultants')
+            .leftJoin('consultants.customers', 'customers')
             .where('consultant_branches.id = :branchId', { branchId: numberId })
+            .select(['consultants.id AS c_id', 'customers.id AS customerId'])
             .getRawMany();
 
-        const consultantIds = consultants.map((row) => row.c_id);
-        console.log(consultants);
+        const consultantIds = consultants.map((row) => ({
+            consultantIds: row.c_id,
+            customerIds: row.customerid,
+        }));
+
         return this.analysis.getLastAnalysisDate(consultantIds);
     }
+
     public async createCondultantForPos(newUser: any) {
         const consultantData: any = newUser;
         consultantData['email_confirmed'] = true;
@@ -257,7 +263,7 @@ export class DiorCompanyBranchesService {
                     country: branch.country,
                     password: branch.password,
                     total_devices: totalDevices, //totalDevices[1],
-                    last_consultation_date: latestCustomer?.created_time ?? null,
+                    last_consultation_date: latestCustomer ?? moment(branch.createdAt).format('YYYY-MM-DD HH:mm:ss'),
                 };
 
                 return reformatBranch;
@@ -567,4 +573,3 @@ export class DiorCompanyBranchesService {
         });
     }
 }
-

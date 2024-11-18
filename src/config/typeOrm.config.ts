@@ -45,7 +45,7 @@ const cndpSkinDBConfig = {
     //   migrationsDir: 'src/common/entities',
     // },
 };
-
+//
 const diorCndpSkinDBConfig = {
     type: 'postgres',
     host: configService.get('POSTGRES_HOST'),

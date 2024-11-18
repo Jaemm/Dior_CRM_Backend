@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Res, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 
 import { ProductRecommendationSelectedsService } from './productRecommendtionSelected.service';
 import {
@@ -19,8 +19,10 @@ export class ProductRecommendationSelectedsController {
     @Post()
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async selectProducts(@Res() res: Response, @Body() body: SelectProductsDto) {
-        const selecteds = await this.productRecommendationSelectedsService.selectProducts(body);
+    async selectProducts(@Req() req: Request, @Res() res: Response, @Body() body: SelectProductsDto) {
+        const userId = Number((<{ id: string }>req['user']).id);
+
+        const selecteds = await this.productRecommendationSelectedsService.selectProducts(body, userId);
         return res.status(200).send(selecteds);
     }
 

@@ -134,7 +134,7 @@ export class ProductRecommendationSelectedsService {
         }
     }
 
-    async selectProducts(body: SelectProductsDto) {
+    async selectProducts(body: SelectProductsDto, userId: number) {
         const { batch_id, customer_id, products_selected } = body;
         try {
             const whereCondition: any = { batchId: batch_id };
@@ -151,16 +151,23 @@ export class ProductRecommendationSelectedsService {
             await Promise.all(deleteList);
 
             const newSelectedList = products_selected.map(async (pid, i) => {
-                const newSelect = this.prSelectedRepository.create({
-                    batchId: batch_id,
-                    customerId: customer_id,
-                    productRecommendationId: pid,
-                    orderNumber: i + 1,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
+                const existingEntry = await this.prSelectedRepository.findOne({
+                    where: { batchId: batch_id, productRecommendationId: pid, consultantId: userId },
                 });
 
-                await this.prSelectedRepository.save(newSelect);
+                if (!existingEntry) {
+                    const newSelect = this.prSelectedRepository.create({
+                        batchId: batch_id,
+                        customerId: customer_id,
+                        productRecommendationId: pid,
+                        orderNumber: i + 1,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                        consultantId: userId,
+                    });
+
+                    await this.prSelectedRepository.save(newSelect);
+                }
             });
 
             await Promise.all(newSelectedList);

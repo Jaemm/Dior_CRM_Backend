@@ -350,20 +350,60 @@ export class AnalysisDataReplicationService {
         };
     }
 
-    async getLastAnalysisDate(consultant: number[]) {
-        return this.globalcndpSkinRepository
-            .createQueryBuilder('analysis')
-            .select('analysis.created_time')
-            .where((qb) => {
-                const coalesceCondition = `COALESCE(
+    // New queries
+
+    async getLastAnalysisDate(consultant: any) {
+        // Define the query conditions based on customer_id and consultant_id
+        const coalesceCondition = `COALESCE(
             NULLIF(analysis.args->>'consultant_id', '')::NUMERIC, 
             NULLIF(analysis.args->>'id', '')::NUMERIC
         )`;
-                return `${coalesceCondition} IN (:...ids)`;
-            })
-            .setParameter('ids', consultant)
-            .orderBy('analysis.batch_id', 'DESC')
-            .limit(1)
-            .getRawOne();
+        const condition = `
+            CASE
+                WHEN analysis.customer_id != 0 THEN analysis.customer_id = ANY($2)
+                ELSE ${coalesceCondition} = ANY($1)
+            END
+        `;
+
+        // Define raw queries for both databases
+        const firstDBQuery = `
+            SELECT analysis.created_time
+            FROM analysis
+            WHERE ${condition}
+            AND analysis.created_time BETWEEN '2020-01-01' AND '2024-09-26'
+            ORDER BY analysis.created_time DESC
+            LIMIT 1
+        `;
+
+        const secondDBQuery = `
+            SELECT analysis.created_time
+            FROM analysis
+            WHERE ${condition}
+            AND analysis.created_time > '2024-09-27'
+            ORDER BY analysis.created_time DESC
+            LIMIT 1
+        `;
+
+        // Extract unique consultantIds and customerIds
+        const consultants = Array.from(new Set(consultant.map((item: any) => item.consultantIds)));
+        const customerValues = consultant
+            .filter((item: any) => item.consultantIds !== null)
+            .map((item: any) => item.customerIds);
+
+        // Run both queries in parallel with the consultants and customerIds as parameters
+        const [firstDBResult, secondDBResult] = await Promise.all([
+            this.globalcndpSkinRepository.query(firstDBQuery, [consultants, customerValues]),
+            this.diorCndpSkinRepository.query(secondDBQuery, [consultants, customerValues]),
+        ]);
+
+        // Extract the created_time from both results and convert to Date
+        const firstDate = firstDBResult[0]?.created_time ? new Date(firstDBResult[0].created_time) : null;
+        const secondDate = secondDBResult[0]?.created_time ? new Date(secondDBResult[0].created_time) : null;
+
+        // Return the latest created_time or null if both are missing
+        if (!firstDate && !secondDate) return null;
+        if (!firstDate) return secondDate.toISOString();
+        if (!secondDate) return firstDate.toISOString();
+        return firstDate > secondDate ? firstDate.toISOString() : secondDate.toISOString();
     }
 }

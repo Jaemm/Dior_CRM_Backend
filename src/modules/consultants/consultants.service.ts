@@ -119,6 +119,7 @@ import { LicenseHistoriesRepository } from '@/src/common/repositories/crm/licens
 import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repository';
 import { Cron } from '@nestjs/schedule';
 import { promisify } from 'util';
+import { lowerCase, toLower } from 'lodash';
 @Injectable()
 export class ConsultantsService {
     private readonly readFile = promisify(fs.readFile);
@@ -2183,6 +2184,7 @@ export class ConsultantsService {
             answer1: answer1,
             answer2: answer2,
             updatedAt: new Date(),
+            createdAt: new Date(),
         });
 
         try {
@@ -2725,6 +2727,25 @@ export class ConsultantsService {
         };
     }
 
+    private errorTranslation(locale: string) {
+        const device_not_exist: any = {
+            'en': 'Device does not exist',
+            'ko': '존재하지 않는 정보',
+            'ar': 'الجهاز غير موجود',
+            'zh-hans': '设备不存在', // simplified
+            'zh-hant': '設備不存在',
+            'zh-tw': '設備不存在', // tw
+            'id': 'Perangkat tidak ada',
+            'fr': "L'appareil n'existe pas",
+            'ru': 'Устройство не существует',
+            'ja': 'デバイスが存在しません',
+            'th': 'อุปกรณ์ไม่มีอยู่',
+            'vi': 'device_not_exist',
+        };
+
+        const normalizedLocale = locale.toLowerCase();
+        return device_not_exist[normalizedLocale] || device_not_exist['en'];
+    }
     public async enterProducts(req: Request, data: EnterProductDto, locale: string = 'en') {
         try {
             const consultantId = Number((<{ id: string }>req.user).id);
@@ -2732,7 +2753,7 @@ export class ConsultantsService {
             if (!data.optic_number || !data.password || !data.application_id) {
                 throw new BadRequestException('1:필수값 누락');
             }
-
+            const errTranslation = this.errorTranslation(locale);
             const { password, application_id, mac_address, lat, lng } = data;
 
             const macAddress = mac_address ?? null;
@@ -2765,14 +2786,16 @@ export class ConsultantsService {
             });
 
             // console.log('device', consultant);
-
             if (!device) {
-                throw new BadRequestException('2:존재하지 않는 정보');
+                throw new BadRequestException(`2: ${errTranslation}`);
             }
 
             if (device.use_yn !== 'Y') {
                 throw new BadRequestException('3:존재하지 않는 정보');
             }
+
+            // Wrong information Error
+            // Product credentials are required.
 
             if (device.consultant_company === null) {
                 device.consultant_company = consultant.consultant_company;
@@ -2787,7 +2810,7 @@ export class ConsultantsService {
             );
 
             if (!product || (product && !product.license)) {
-                throw new BadRequestException('5:존재하지 않는 정보');
+                throw new BadRequestException(`5: ${errTranslation}`);
             }
 
             if (product.consultant && product.consultant_id != consultant.id) {
