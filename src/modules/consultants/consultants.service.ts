@@ -675,13 +675,15 @@ export class ConsultantsService {
         const products = await this.productsRepository.getCompaniesFiles(consultant?.id ?? null, Number(app_id));
 
         const promises: Promise<any>[] = [];
-        products.map((p) => {
-            if (p.device.consultant_company_id) {
-                promises.push(
-                    this.getCompanyDetails({ consultant_company_id: String(p.device.consultant_company_id) }),
-                );
-            }
-        });
+        if (products.length > 0) {
+            products.map((p) => {
+                if (p?.device?.consultant_company_id) {
+                    promises.push(
+                        this.getCompanyDetails({ consultant_company_id: String(p.device.consultant_company_id) }),
+                    );
+                }
+            });
+        }
 
         const result = await Promise.all(promises);
         const optic_number: string[] = [];
@@ -2819,7 +2821,7 @@ export class ConsultantsService {
 
             const beforeUseDate = product.use_date;
 
-            product.consultant_id = consultant.id;
+            product.consultant_id = Number(consultant?.id);
             product.use_date = useDate;
             product.use_time = useTime;
             product.mac_address = macAddress;
@@ -2827,7 +2829,13 @@ export class ConsultantsService {
             // comments
 
             try {
-                await this.productsRepository.save(product);
+                await this.productsService.updateProduct(product.id, {
+                    consultant_id: consultant.id,
+                    use_date: useDate,
+                    use_time: useTime,
+                    mac_address: macAddress,
+                    app_use_yn: 'Y',
+                });
             } catch (e) {
                 throw new Error('6:사용등록오류');
             }
@@ -2838,6 +2846,8 @@ export class ConsultantsService {
                 currentConsultant.consultant_company_id = consultantCompanyId;
                 await this.consultantsRepository.save(currentConsultant);
             }
+
+            // console.log("===>",consultant.id);
 
             if (!beforeUseDate && product.use_date && !isFirstUseDate) {
                 if (!product.first_use_date || product.first_use_date === null) {
@@ -2932,15 +2942,16 @@ export class ConsultantsService {
                     },
                 },
             };
-        } catch (e) {
-            const splitMessage = e.message.split(':');
+        } catch (error) {
+            console.log(error);
+            const splitMessage = error.message.split(':');
             if (splitMessage.length > 1) {
                 return {
                     result_code: splitMessage[0],
                     error: splitMessage[1],
                 };
             }
-            throw e;
+            throw error;
         }
     }
 
