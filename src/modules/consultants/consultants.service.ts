@@ -2180,6 +2180,8 @@ export class ConsultantsService {
             answer1: answer1,
             answer2: answer2,
             updatedAt: new Date(),
+            createdAt: new Date(),
+
         });
 
         try {
