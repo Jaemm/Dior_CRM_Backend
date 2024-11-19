@@ -106,6 +106,10 @@ export class DiorModule {
                     path: 'dior/company_branches/files/:hash',
                     method: RequestMethod.GET,
                 },
+                {
+                    path: 'dior/product_recommendation_selecteds',
+                    method: RequestMethod.GET,
+                },
             )
             .forRoutes({
                 path: 'dior/*',

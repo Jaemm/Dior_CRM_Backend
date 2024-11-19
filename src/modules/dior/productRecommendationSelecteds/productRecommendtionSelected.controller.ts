@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query, Res, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Res, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Response, Request } from 'express';
 
@@ -10,6 +10,7 @@ import {
 } from './productRecommendtionSelected.dto';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
+import { StaticTokenGuard } from '@/src/common/guards/staticToken.guard';
 
 @ApiTags('Dior-Product Recommendation Selecteds')
 @Controller('dior/product_recommendation_selecteds')
@@ -36,7 +37,8 @@ export class ProductRecommendationSelectedsController {
 
     @Get()
     @ApiBearerAuth()
-    @Roles(Role.Consultant)
+    // @UseGuards(StaticTokenGuard)
+    // @Roles(Role.Consultant)
     async getProductRecommendationSelecteds(@Res() res: Response, @Query() query: GetRecommendationSelectedDto) {
         const selecteds = await this.productRecommendationSelectedsService.getProductRecommendationSelecteds(query);
         return res.status(200).send(selecteds);
