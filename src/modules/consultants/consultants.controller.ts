@@ -368,11 +368,19 @@ export class ConsultantsController {
     }
 
     // @ApiBearerAuth()
-    @Roles(Role.Consultant)
+    // @Roles(Role.Consultant)
+
     @Get('generate_flat_file_dior')
     async generateFlatFileDior(@Req() req: Request, @Res() res: Response) {
-        const result = await this.consultants.generateFlatFileDior();
-        return res.status(200).send(result);
+        const startDate = new Date('2024-07-08');
+        const endDate = new Date('2024-10-31');
+
+        const date = this.consultants.getDates(startDate, endDate);
+        for (let i = 0; i < date.length; i++) {
+            console.log(date[i]);
+            const result = await this.consultants.generateFlatFileDior(date[i]);
+        }
+        return res.status(200).send('OK');
     }
 
     @Get('confirm_email/:id')

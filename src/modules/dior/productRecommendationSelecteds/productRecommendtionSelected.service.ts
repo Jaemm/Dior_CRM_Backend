@@ -30,18 +30,37 @@ export class ProductRecommendationSelectedsService {
         try {
             const { customer_id, batch_id } = query;
 
+            // const prsQuery = this.prSelectedRepository
+            //     .createQueryBuilder('prSelected')
+            //     .where('prSelected.customer_id = :customerId', { customerId: Number(customer_id) })
+            //     .orderBy('order_number')
+            //     .leftJoinAndSelect('prSelected.productRecommendation', 'productRecommendation');
+
             const prsQuery = this.prSelectedRepository
                 .createQueryBuilder('prSelected')
-                .where('prSelected.customer_id = :customerId', { customerId: Number(customer_id) })
+                .where('prSelected.batch_id = :batchId', { batchId: batch_id })
+                .andWhere(
+                    `DATE(prSelected.createdAt) = (
+                    SELECT DATE(p.created_at)
+                    FROM product_recommendation_selecteds p
+                    WHERE p.batch_id = :batchId
+                    ORDER by p.id DESC
+                    LIMIT 1
+                )`,
+                )
                 .orderBy('order_number')
                 .leftJoinAndSelect('prSelected.productRecommendation', 'productRecommendation');
 
-            if (customer_id && batch_id) {
+            if (customer_id) {
+                prsQuery.andWhere('prSelected.customer_id = :customerId', { customerId: Number(customer_id) });
+            }
+            if (batch_id) {
                 prsQuery.andWhere('prSelected.batch_id = :batchId', { batchId: batch_id });
             } else if (customer_id && !batch_id) {
                 prsQuery.andWhere('prSelected.batch_id IS NULL');
             }
 
+            prsQuery.orderBy('prSelected.order_number', 'ASC');
             const productRecommendationSelecteds = await prsQuery.getMany();
 
             const data = productRecommendationSelecteds.map(async (selected) => {

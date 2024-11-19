@@ -3071,160 +3071,15 @@ export class ConsultantsService {
         });
     }
 
-    // CRON;
-    // @Cron('* * * * *')
-    // async generateFlatFileDior() {
-    //     try {
-    //         const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
-
-    //         const data = {
-    //             app_id: '88',
-    //             email: 'krtest@diormail.com',
-    //             password: process.env.LOGIN_PASSWORD,
-    //             confirmPassword: process.env.LOGIN_PASSWORD,
-    //         };
-    //         const userData = await this.login(data, 'en');
-    //         const token = userData.token;
-
-    //         // if (!token) {
-    //         //     throw new UnauthorizedException({
-    //         //         result_code: ErrorStatus.UNAUTHORIZED,
-    //         //         error: this.commonService.createLocaleErrorMessage('en', 'unauthorized'),
-    //         //     });
-    //         // }
-
-    //         const customers = await this.customersRepository.getTodayCreatedCustomers();
-
-    //         const customerIds = customers.map((row) => String(row.id));
-
-    //         if (customerIds.length < 1) {
-    //             return;
-    //         }
-
-    //         const diorAnalysis = await this.analysisReplService.getDiorAnalysisByCustomerIds(customerIds);
-
-    //         const promiseData = diorAnalysis.map(async (analysis) => {
-    //             const batchId = analysis.batchId;
-
-    //             const response = await axios.get(`${CNDP_SKIN_ANALYSIS_URL}/web-result/cndpskin/${batchId}`, {
-    //                 headers: {
-    //                     Authorization: `Bearer ${token}`,
-    //                 },
-    //             });
-
-    //             const responseData = response.data;
-    //             const responseBody = responseData.body;
-
-    //             console.log('responseData ----->', responseData);
-
-    //             const customer = await this.customersRepository.findOne({
-    //                 where: {
-    //                     id: Number(analysis.customerId),
-    //                 },
-    //                 relations: [
-    //                     'prSelecteds',
-    //                     'prSelecteds.productRecommendation',
-    //                     'conslutant',
-    //                     'conslutant.consultant_branch',
-    //                 ],
-    //             });
-
-    //             const products: any[] = [];
-
-    //             customer.prSelecteds.forEach((prSelect) => {
-    //                 const recomm = prSelect.productRecommendation;
-    //                 products.push({
-    //                     name: recomm.name,
-    //                     link: recomm.link,
-    //                     image_url: recomm.imageUrl,
-    //                     category: recomm.category,
-    //                     collection: recomm.collection,
-    //                     code: recomm.code,
-    //                 });
-    //             });
-
-    //             const consent = await this.diorConsentRepository.findOne({
-    //                 where: {
-    //                     customerId: customer.id,
-    //                     batchId: batchId,
-    //                 },
-    //             });
-
-    //             const returnData = {
-    //                 client_iw_id: customer.id,
-    //                 country: customer.country,
-    //                 consultation_id: batchId,
-    //                 pos: customer.consultant?.consultant_branch?.code || null,
-    //                 bc: customer.consultant?.code || null,
-    //                 consultation_date: analysis.createdTime,
-    //                 opt_in: consent?.fetchOptions || null,
-    //                 scores: responseBody,
-    //                 recommended_product: products,
-    //             };
-
-    //             if (consent) {
-    //                 const consentAnswers = consent.consentFormAnswers;
-    //                 if (consent.consentType === 'without_ipos_consent') {
-    //                     if (consentAnswers && consentAnswers[2] === 'No') {
-    //                         returnData.client_iw_id = null;
-    //                         returnData.recommended_product = null;
-    //                         returnData.scores = null;
-    //                     }
-    //                 }
-
-    //                 if (consent.consentType === 'ipos_consent') {
-    //                     if (consentAnswers && consentAnswers[2] === 'No') {
-    //                         returnData.client_iw_id = null;
-    //                     }
-
-    //                     if (consentAnswers && consentAnswers[3] === 'No') {
-    //                         returnData.recommended_product = null;
-    //                         returnData.scores = null;
-    //                     }
-    //                 }
-    //             }
-
-    //             return returnData;
-    //         });
-
-    //         console.log('promiseData -----> ', promiseData);
-    //         const result = await Promise.all(promiseData);
-
-    //         const rootDirectoryPath = process.cwd();
-
-    //         const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
-
-    //         if (!existsSync(flatFilesDirectoryPath)) {
-    //             await fs.mkdir(flatFilesDirectoryPath);
-    //         }
-
-    //         //
-    //         const today = new Date();
-    //         const yyyy = today.getFullYear();
-    //         const mm = String(today.getMonth() + 1).padStart(2, '0');
-    //         const dd = String(today.getDate()).padStart(2, '0');
-    //         const dateString = `${yyyy}-${mm}-${dd}`;
-
-    //         const fileName = `${dateString}.json`;
-    //         const filePath = path.join(flatFilesDirectoryPath, fileName);
-
-    //         const jsonData = JSON.stringify(result);
-    //         console.log('jsonData ====>', jsonData);
-
-    //         fs.writeFile(filePath, jsonData)
-    //             .then(() => console.log(`${fileName} writing success`))
-    //             .catch(() => console.log(`${fileName} writing failed`));
-
-    //         return {
-    //             data: result,
-    //         };
-    //     } catch (e) {
-    //         console.log(e);
-    //         throw e;
-    //     }
-    // }
-
-    async uploadToSFTPServer(excelData: any) {
+    async checkFileExistence(outputPath: string) {
+        try {
+            await fs.access(outputPath); // This is the asynchronous equivalent of checking file existence
+            console.log('File exists');
+        } catch (error) {
+            console.log('File does not exist');
+        }
+    }
+    async uploadToSFTPServer(fileName: string, tempFilePath: string) {
         await this.ftpconnect({
             host: process.env.SFTP_HOST || '',
             port: Number(process.env.SFTP_PORT),
@@ -3232,12 +3087,14 @@ export class ConsultantsService {
             password: process.env.SFTP_PASS || '',
         });
 
+        console.log(`${fileName}\n, ${tempFilePath}\n`);
+
         try {
             // Connect to the SFTP server
             // await sftp.connect(sftpConfig);
 
             // Define the remote directory path
-            const remoteDirectoryPath = './analysis_data/PROD/';
+            const remoteDirectoryPath = './analysis_data/PROD';
 
             // Check if the remote directory exists; if not, create it
             try {
@@ -3247,41 +3104,45 @@ export class ConsultantsService {
             }
 
             // Define the filename and path
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const dateString = `${yyyy}-${mm}-${dd}`;
-            const fileName = `${dateString}.json`;
-            const remoteFilePath = path.join(remoteDirectoryPath, fileName);
+            // const today = new Date();
+            // const yyyy = today.getFullYear();
+            // const mm = String(today.getMonth() + 1).padStart(2, '0');
+            // const dd = String(today.getDate()).padStart(2, '0');
+            // const dateString = `${yyyy}-${mm}-${dd}`;
+            // const fileName = `${dateString}.json`;
+            const remoteFilePath = `${remoteDirectoryPath}/${fileName}`; //path.join(remoteDirectoryPath, fileName);
 
             // const rootDirectoryPath = process.cwd();
 
             // const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
 
             // Convert the data to JSON format
-            const jsonData = JSON.stringify(excelData);
+            // const jsonData = JSON.stringify(excelData);
 
             // Write the JSON data to a temporary local file
-            const tempFilePath = path.join(process.cwd(), 'temp', fileName);
-            await fs.mkdir(path.dirname(tempFilePath), { recursive: true });
-            await fs.writeFile(tempFilePath, jsonData);
+            // const tempFilePath = path.join(process.cwd(), 'temp', fileName);
+            // await fs.mkdir(path.dirname(tempFilePath), { recursive: true });
+            // await fs.writeFile(tempFilePath, jsonData);
 
+            console.log('remoteFilePath ------------>', remoteFilePath);
+            // await fs.access(remoteFilePath).then(() => console.log('checking'));
             // Upload the file to the SFTP server
+            const fileTransfered = tempFilePath;
             await this.uploadFile(tempFilePath, remoteFilePath);
-            console.log(`${fileName} uploaded successfully to SFTP server`);
+            // console.log(`${fileName} uploaded successfully to SFTP server`);
 
             // Clean up the temporary local file
-            await fs.unlink(tempFilePath);
+            // await fs.unlink(tempFilePath);
         } catch (error) {
-            console.error('Error during SFTP upload:', error.message);
+            console.error('Error during SFTP upload:', error);
+            // throw new Error(error);
         } finally {
             await this.disconnect();
         }
     }
 
     // @Cron('*/2 * * * *')
-    async generateFlatFileDior() {
+    async generateFlatFileDior(date: string) {
         const excelData = [];
         const credentials = {
             app_id: '88',
@@ -3295,8 +3156,8 @@ export class ConsultantsService {
         const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
 
         // Define date ranges
-        const startDate = '2024-11-13 00:00:00'; //`${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
-        const endDate = '2024-11-13 23:59:59'; //`${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
+        const startDate = date + ' 00:00:00'; //`${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
+        const endDate = date + ' 23:59:59'; //`${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
 
         // Fetch required data
         const analyses = await this.analysisReplService.getStatisticsConsultantions(startDate, endDate);
@@ -3356,10 +3217,10 @@ export class ConsultantsService {
             const newJson = {
                 client_iw_id: customer.external_id,
                 country: bc?.country,
-                consultation_id: customer.consultant.id,
+                consultation_id: customer?.consultant?.id,
                 pos,
-                bc: customer.consultant.code,
-                consultation_date: analysis.createdTime,
+                bc: customer?.consultant?.code,
+                consultation_date: analysis?.createdTime,
                 opt_in: consent?.fetchOptions,
                 scores: result?.data,
                 recommended_product: products,
@@ -3383,7 +3244,7 @@ export class ConsultantsService {
 
             // Filter data based on consent answers
             if ((consentAnswers || []).length === 2 && !consentAnswers.includes('No')) {
-                excelData.push(JSON.stringify(newJson));
+                excelData.push(newJson);
             } else if ((consentAnswers || []).length === 4) {
                 if (
                     !(
@@ -3399,38 +3260,44 @@ export class ConsultantsService {
                         consentAnswers[3] === 'No'
                     )
                 ) {
-                    excelData.push(JSON.stringify(newJson));
+                    excelData.push(newJson);
                 }
             }
         }
 
-        // const rootDirectoryPath = process.cwd();
+        const rootDirectoryPath = process.cwd();
 
-        // const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
+        const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
 
-        // if (!existsSync(flatFilesDirectoryPath)) {
-        //     await fs.mkdir(flatFilesDirectoryPath);
-        // }
+        if (!existsSync(flatFilesDirectoryPath)) {
+            await fs.mkdir(flatFilesDirectoryPath);
+        }
 
-        // const today = new Date();
-        // const yyyy = today.getFullYear();
-        // const mm = String(today.getMonth() + 1).padStart(2, '0');
-        // const dd = String(today.getDate()).padStart(2, '0');
-        // const dateString = `${yyyy}-${mm}-${dd}`;
+        const dateString = moment(startDate).format('YYYY-MM-DD');
 
-        // const fileName = `${dateString}.json`;
-        // const filePath = path.join(flatFilesDirectoryPath, fileName);
+        const fileName = `${dateString}.json`;
+        const filePath = path.join(flatFilesDirectoryPath, fileName);
 
-        // const jsonData = excelData; //JSON.stringify(excelData);
-        // // console.log('jsonData ====>', jsonData);
+        const jsonData = excelData; //JSON.stringify(excelData);
 
-        // fs.writeFile(filePath, jsonData)
-        //     .then(() => console.log(`${fileName} writing success`))
-        //     .catch(() => console.log(`${fileName} writing failed`));
-        console.log('done');
-        await this.uploadToSFTPServer(excelData);
+        let file = JSON.stringify(jsonData, null, 2);
 
-        // console.log(excelData);
+        try {
+            // Write file to the specified path
+            await fs.writeFile(filePath, file);
+            console.log(`${fileName} writing success`);
+
+            // Only proceed with upload if writing succeeds
+            await this.uploadToSFTPServer(fileName, filePath);
+            // console.log(`${fileName} upload success`);
+        } catch (error) {
+            // Catch any error during the process
+            console.error(`${fileName} writing or upload failed`, error);
+        } finally {
+            // Log completion message regardless of success or failure
+            console.log('process done');
+        }
+
         return true;
     }
 
@@ -3608,50 +3475,6 @@ export class ConsultantsService {
         return totalUpgradeCost;
     }
 
-    async extendLicenseCost(licenseId: number, duration: number, type: string, applicationId: number) {
-        // const al = await this.licenceService.findApplicationLicence({
-        //     applicationId: applicationId,
-        //     licenseId: licenseId,
-        // });
-        // if (!al) {
-        //     this.commonService.throwNotFoundError();
-        // }
-        // let cost;
-        // switch (type.toLowerCase()) {
-        //     case 'months':
-        //         cost = al.licenseExtendOneMonthPrice * duration;
-        //         break;
-        //     case 'years':
-        //         switch (duration) {
-        //             case 3:
-        //                 cost = al.licenseExtendThreeYearPrice;
-        //                 break;
-        //             case 2:
-        //                 cost = al.licenseExtendTwoYearPrice;
-        //                 break;
-        //             case 1:
-        //                 cost = al.licenseExtendOneYearPrice;
-        //                 break;
-        //             default:
-        //                 throw new BadRequestException({
-        //                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //                     error: ResponseMessages.LicenseCanNotExtend,
-        //                 });
-        //         }
-        //         break;
-        //     case 'days':
-        //         const cal = Number((al.licenseExtendOneMonthPrice / 30).toFixed(3));
-        //         cost = cal * duration;
-        //         break;
-        //     default:
-        //         throw new BadRequestException({
-        //             result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //             error: ResponseMessages.InvalidTimeType,
-        //         });
-        // }
-        // return cost;
-    }
-
     findBatchIdByAnalysis(batchIds: { analysis_type: string; batch_id: string }[], analysisType: string) {
         return batchIds.find((b) => b.analysis_type === analysisType)?.batch_id;
     }
@@ -3738,18 +3561,6 @@ export class ConsultantsService {
         }
     }
 
-    readJsonFile(file: string) {
-        try {
-            const bufferData = fs.readFile(file);
-            const stData = bufferData.toString();
-            const data = JSON.parse(stData);
-            return data;
-        } catch (err) {
-            console.error(`Error reading or parsing JSON file (${file}):`, err);
-            throw err;
-        }
-    }
-
     async ftpconnect(options: { host: string; port: number; username: string; password: string }) {
         console.log(`Connecting to ${options.host}:${options.port}`);
         try {
@@ -3786,47 +3597,6 @@ export class ConsultantsService {
     }
     // @Cron('* * * * *')
     // @Cron(CronExpression.EVERY_DAY_AT_1AM)
-    async transferFileToServer() {
-        const date = new Date();
-        const formattedDate = moment(date).format('YYYY-MM-DD');
-
-        try {
-            await this.ftpconnect({
-                host: process.env.SFTP_HOST || '',
-                port: Number(process.env.SFTP_PORT),
-                username: process.env.SFTP_USER || '',
-                password: process.env.SFTP_PASS || '',
-            });
-
-            const outputPath = `/home/ubuntu/repositories/BE_dior_v2_crm/public/dior-flat-files/${formattedDate}.json`;
-
-            if (this.fileExists(outputPath)) {
-                const json = this.readJsonFile(outputPath);
-                const result = json.map((jsonData: any) => {
-                    // Assuming jsonData is an object, not a string
-                    const jsonString = JSON.stringify(jsonData);
-                    const cleanedJsonString = jsonString.replace(/\\/g, '');
-                    return JSON.parse(cleanedJsonString);
-                });
-
-                if (this.fileExists(outputPath)) {
-                    await this.uploadFile(outputPath, `./analysis_data/PROD/${formattedDate}.json`);
-                    console.log('File sent:', formattedDate + '.json');
-                } else {
-                    console.log('File not found:', outputPath);
-                }
-            } else {
-                console.log('File not found:', outputPath);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        } finally {
-            await this.disconnect();
-            console.log('Disconnected');
-        }
-
-        return 'disconnected';
-    }
 }
 
 // "total_size": 5,

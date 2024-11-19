@@ -308,10 +308,10 @@ export class ConsultantsModule {
                 path: 'consultants/health_tips/by_company',
                 method: RequestMethod.GET,
             },
-            {
-                path: 'consultants/generate_flat_file_dior',
-                method: RequestMethod.GET,
-            },
+            // {
+            //     path: 'consultants/generate_flat_file_dior',
+            //     method: RequestMethod.GET,
+            // },
         );
     }
 }
