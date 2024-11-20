@@ -254,6 +254,9 @@ export class DiorCompanyBranchesService {
                     this.getCustomerRecentCustomer(branch.id),
                 ]);
 
+                const consultantionDate = latestCustomer
+                    ? moment(latestCustomer).format('YYYY-MM-DD HH:mm:ss')
+                    : moment(branch.createdAt).format('YYYY-MM-DD HH:mm:ss');
                 const reformatBranch: ConsultantBranchesForDiorT = {
                     id: Number(branch.id),
                     name: branch.name,
@@ -263,7 +266,7 @@ export class DiorCompanyBranchesService {
                     country: branch.country,
                     password: branch.password,
                     total_devices: totalDevices, //totalDevices[1],
-                    last_consultation_date: latestCustomer ?? moment(branch.createdAt).format('YYYY-MM-DD HH:mm:ss'),
+                    last_consultation_date: consultantionDate,
                 };
 
                 return reformatBranch;
