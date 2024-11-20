@@ -101,6 +101,7 @@ export class StatisticsService {
             let customer;
             let totalClients;
             let products;
+
             if ([PositionsIds.BRAND_MANAGER, PositionsIds.ADMIN].includes(currentConsultant.consultant_position_id)) {
                 const consultantQuery = await this.consultantRepository
                     .createQueryBuilder('consultants')
@@ -181,7 +182,7 @@ export class StatisticsService {
                     const [customerList, total, consultation_, products] = await Promise.all([
                         customerQuery.getMany(), // Fetch customers
                         customerQuery.getCount(), // Fetch customer count (could be done with `getManyAndCount`)
-                        this.analysisDataReplicationService.getConsultantions(), // Fetch consultation stats
+                        this.analysisDataReplicationService.getConsultations(), // Fetch consultation stats
                         this.productRepository.find({
                             where: {
                                 consultant_id: In(consultants.map((consultant) => consultant.id)),

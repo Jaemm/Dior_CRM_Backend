@@ -127,25 +127,73 @@ export class AnalysisDataReplicationService {
         }
     }
 
-    async getConsultantions(startDate?: string, endDate?: string) {
+    //     To combine the results from both `diorCndpSkinRepository` and `globalcndpSkinRepository` based on the date criteria, you can modify your function like this:
+
+    // ```typescript
+    async getConsultations(startDate?: string, endDate?: string) {
         try {
-            const consultationQuery = await this.diorCndpSkinRepository
+            // const startDateTime = startDate ? `${startDate} 00:00:00` : undefined;
+            // const endDateTime = endDate ? `${endDate} 23:59:59` : undefined;
+
+            // Create query promises
+            const diorQueryPromise = this.diorCndpSkinRepository
                 .createQueryBuilder('analysis')
                 .where("analysis.args->>'status' LIKE '%true'");
 
             if (startDate && endDate) {
-                consultationQuery.andWhere(
+                diorQueryPromise.andWhere(
                     `analysis.created_time BETWEEN ${startDate} 00:00:00 AND ${endDate} 23:59:59`,
                 );
             }
 
-            const consultations = await consultationQuery.getMany();
+            const globalQueryPromise = this.globalcndpSkinRepository
+                .createQueryBuilder('analysis')
+                .where("analysis.args->>'status' LIKE '%true'");
 
-            return consultations;
+            if (startDate && endDate) {
+                globalQueryPromise.andWhere(
+                    `analysis.created_time BETWEEN ${startDate} 00:00:00 AND ${endDate} 23:59:59`,
+                );
+            }
+
+            // Await both promises in parallel
+            const [diorConsultations, globalConsultations] = await Promise.all([
+                diorQueryPromise.getMany(), // or getRawMany() if raw results are needed
+                globalQueryPromise.getMany(),
+            ]);
+
+            // Combine results
+            const combinedConsultations = [...diorConsultations, ...globalConsultations];
+
+            return combinedConsultations;
         } catch (e) {
             throw e;
         }
     }
+
+    // async getConsultantions(startDate?: string, endDate?: string) {
+    //     try {
+    //         // combine two DB results for this API in a way date
+    //         // diorCndpSkinRepository analysis.created_time BETWEEN '2020-01-01' AND 'Today'
+    //         // globalcndpSkinRepository  analysis.created_time > '2024-02-'
+
+    //         const consultationQuery = await this.diorCndpSkinRepository
+    //             .createQueryBuilder('analysis')
+    //             .where("analysis.args->>'status' LIKE '%true'");
+
+    //         if (startDate && endDate) {
+    //             consultationQuery.andWhere(
+    //                 `analysis.created_time BETWEEN ${startDate} 00:00:00 AND ${endDate} 23:59:59`,
+    //             );
+    //         }
+
+    //         const consultations = await consultationQuery.getMany();
+
+    //         return consultations;
+    //     } catch (e) {
+    //         throw e;
+    //     }
+    // }
 
     async getConsultantIds(startDate?: string, endDate?: string): Promise<any> {
         try {
