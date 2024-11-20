@@ -36,6 +36,7 @@ export class ProductRecommendationSelectedsService {
             //     .orderBy('order_number')
             //     .leftJoinAndSelect('prSelected.productRecommendation', 'productRecommendation');
 
+            console.log(customer_id, customer_id !== null);
             const prsQuery = this.prSelectedRepository
                 .createQueryBuilder('prSelected')
                 .where('prSelected.batch_id = :batchId', { batchId: batch_id })
@@ -51,12 +52,13 @@ export class ProductRecommendationSelectedsService {
                 .orderBy('order_number')
                 .leftJoinAndSelect('prSelected.productRecommendation', 'productRecommendation');
 
-            if (customer_id) {
-                prsQuery.andWhere('prSelected.customer_id = :customerId', { customerId: Number(customer_id) });
-            }
-            if (batch_id) {
-                prsQuery.andWhere('prSelected.batch_id = :batchId', { batchId: batch_id });
-            } else if (customer_id && !batch_id) {
+            // if (customer_id || customer_id !== null || customer_id !== 'null') {
+            //     prsQuery.andWhere('prSelected.customer_id = :customerId', { customerId: Number(customer_id) });
+            // }
+            // if (batch_id) {
+            //     prsQuery.andWhere('prSelected.batch_id = :batchId', { batchId: batch_id });
+            // } else
+            if (customer_id && !batch_id) {
                 prsQuery.andWhere('prSelected.batch_id IS NULL');
             }
 
