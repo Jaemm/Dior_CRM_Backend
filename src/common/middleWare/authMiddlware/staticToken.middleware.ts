@@ -4,6 +4,7 @@ import { Request, Response, NextFunction } from 'express';
 @Injectable()
 export class StaticTokenMiddleware implements NestMiddleware {
     private readonly staticToken = process.env.staticToken; // Replace with your static token
+    private readonly secretKey = process.env.CRM_ACCESS_TOKEN_SECRET;
 
     use(req: Request, res: Response, next: NextFunction) {
         let token = req.headers.authorization?.split(' ')[1] ?? ''; // Assuming token is sent in the Authorization header
