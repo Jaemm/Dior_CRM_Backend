@@ -372,8 +372,8 @@ export class ConsultantsController {
 
     @Get('generate_flat_file_dior')
     async generateFlatFileDior(@Req() req: Request, @Res() res: Response) {
-        const startDate = new Date('2024-09-28');
-        const endDate = new Date('2024-10-31');
+        const startDate = new Date('2024-11-19');
+        const endDate = new Date('2024-11-21');
 
         const date = this.consultants.getDates(startDate, endDate);
         for (let i = 0; i < date.length; i++) {

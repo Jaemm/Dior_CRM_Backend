@@ -3141,7 +3141,7 @@ export class ConsultantsService {
         }
     }
 
-    // @Cron('*/2 * * * *')
+    @Cron('0 0 0 * * *')
     async generateFlatFileDior(date: string) {
         const excelData = [];
         const credentials = {
