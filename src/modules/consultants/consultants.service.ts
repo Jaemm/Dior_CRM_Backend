@@ -3141,7 +3141,8 @@ export class ConsultantsService {
         }
     }
 
-    @Cron('0 0 0 * * *')
+    // @Cron('0 0 0 * * *')
+    @Cron('* * * * * *')
     async generateFlatFileDior(date: string) {
         const excelData = [];
         const credentials = {
@@ -3156,8 +3157,11 @@ export class ConsultantsService {
         const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
 
         // Define date ranges
-        const startDate = date + ' 00:00:00'; //`${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
-        const endDate = date + ' 23:59:59'; //`${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
+        // const startDate = date + ' 00:00:00'; //`${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
+        // const endDate = date + ' 23:59:59'; //`${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
+
+        const startDate = `${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
+        const endDate = `${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
 
         // Fetch required data
         const analyses = await this.analysisReplService.getStatisticsConsultantions(startDate, endDate);
