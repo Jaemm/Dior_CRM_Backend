@@ -3087,14 +3087,14 @@ export class ConsultantsService {
             password: process.env.SFTP_PASS || '',
         });
 
-        console.log(`${fileName}\n, ${tempFilePath}\n`);
+        console.log(`${fileName}\n, "tempFilePath: ====>",${tempFilePath}\n`);
 
         try {
             // Connect to the SFTP server
             // await sftp.connect(sftpConfig);
 
             // Define the remote directory path
-            const remoteDirectoryPath = './analysis_data/PROD';
+            const remoteDirectoryPath = './analysis_data/PROD/bak';
 
             // Check if the remote directory exists; if not, create it
             try {
@@ -3103,26 +3103,7 @@ export class ConsultantsService {
                 console.log('Directory may already exist', err.message);
             }
 
-            // Define the filename and path
-            // const today = new Date();
-            // const yyyy = today.getFullYear();
-            // const mm = String(today.getMonth() + 1).padStart(2, '0');
-            // const dd = String(today.getDate()).padStart(2, '0');
-            // const dateString = `${yyyy}-${mm}-${dd}`;
-            // const fileName = `${dateString}.json`;
             const remoteFilePath = `${remoteDirectoryPath}/${fileName}`; //path.join(remoteDirectoryPath, fileName);
-
-            // const rootDirectoryPath = process.cwd();
-
-            // const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
-
-            // Convert the data to JSON format
-            // const jsonData = JSON.stringify(excelData);
-
-            // Write the JSON data to a temporary local file
-            // const tempFilePath = path.join(process.cwd(), 'temp', fileName);
-            // await fs.mkdir(path.dirname(tempFilePath), { recursive: true });
-            // await fs.writeFile(tempFilePath, jsonData);
 
             console.log('remoteFilePath ------------>', remoteFilePath);
             // await fs.access(remoteFilePath).then(() => console.log('checking'));
@@ -3160,9 +3141,10 @@ export class ConsultantsService {
         // const startDate = date + ' 00:00:00'; //`${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
         // const endDate = date + ' 23:59:59'; //`${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
 
-        const startDate = `${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
-        const endDate = `${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
+        const startDate = date ? date + ' 00:00:00' : `${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
+        const endDate = date ? date + ' 23:59:59' : `${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
 
+        console.log(startDate, endDate);
         // Fetch required data
         const analyses = await this.analysisReplService.getStatisticsConsultantions(startDate, endDate);
         const customerIds = analyses.map((analysis) => Number(analysis.customerId));

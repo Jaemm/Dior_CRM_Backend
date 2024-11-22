@@ -370,10 +370,10 @@ export class ConsultantsController {
     // @ApiBearerAuth()
     // @Roles(Role.Consultant)
 
-    @Get('generate_flat_file_dior')
-    async generateFlatFileDior(@Req() req: Request, @Res() res: Response) {
-        const startDate = new Date('2024-11-19');
-        const endDate = new Date('2024-11-21');
+    @Post('generate_flat_file_dior')
+    async generateFlatFileDior(@Body() body: { startDate: string; endDate: string }, @Res() res: Response) {
+        const startDate = new Date(body.startDate);
+        const endDate = new Date(body.endDate);
 
         const date = this.consultants.getDates(startDate, endDate);
         for (let i = 0; i < date.length; i++) {
