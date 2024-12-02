@@ -108,9 +108,8 @@ export class DiorAdminsService {
                 });
             }
 
-            if (is_admin) {
-                adminUser.consultant_position_id = this.getPositionId(is_admin);
-            }
+            adminUser.consultant_position_id = this.getPositionId(is_admin);
+
             const savedAdmin = await this.consultantsRepository.save(adminUser);
 
             const reformatAdmin: AdminsForDiorT = {
@@ -304,3 +303,4 @@ export class DiorAdminsService {
         return 6;
     }
 }
+

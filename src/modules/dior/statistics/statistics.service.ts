@@ -741,7 +741,7 @@ export class StatisticsService {
                         `device.refresh_date BETWEEN ${start_date} 00:00:00 AND ${end_date} 23:59:59`,
                     );
                 }
-
+                //
                 jsonData['unknown_country'] = await unknownQuery
                     .where("device.country_code IS NULL OR device.country_code = ''")
                     .getCount();
@@ -792,6 +792,7 @@ export class StatisticsService {
                     }
                     countryConsultantMap[country].push(consultant.id);
                 }
+                console.log(countryConsultantMap);
 
                 // Use Promise.all to get counts for all countries concurrently
                 const countPromises = Object.keys(countryConsultantMap).map(async (country) => {

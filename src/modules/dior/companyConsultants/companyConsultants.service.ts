@@ -83,7 +83,8 @@ export class DiorCompanyConsultantsService {
 
     async getDiorCompanyConsultants(req: Request, query: GetDiorCompanyConsultantsDto, locale: string = 'en') {
         try {
-            const { search, country, filter_by, filter_by2, page, per } = query;
+            console.log(query);
+            const { search, country, filter_by, filter_by_2, page, per } = query;
 
             const userId = (<{ id: string }>req.user).id;
 
@@ -141,9 +142,10 @@ export class DiorCompanyConsultantsService {
                 });
             }
 
-            if (filter_by2) {
-                consultantsQuery.andWhere('consultants.consultant_branch_id = :filterBy2', {
-                    filterBy2: filter_by2,
+            console.log('========>', filter_by_2);
+            if (filter_by_2) {
+                consultantsQuery.andWhere('consultants.consultant_branch_id = :filter_by_2', {
+                    filter_by_2: filter_by_2,
                 });
             }
 

@@ -196,6 +196,8 @@ export class DiorDevicesService {
                 },
             });
 
+            console.log('===>', productCount);
+
             let product;
             if (productCount > 1) {
                 product = await this.productsRepository.findOne({
@@ -220,6 +222,7 @@ export class DiorDevicesService {
             }
 
             const result = await this.productsRepository.connectReset(product);
+
             const logResult = await this.productLogsRepository.saveLogs(
                 product,
                 `done by ${currentConsultant.email}(BM) - connect reset`,

@@ -170,7 +170,8 @@ export class ProductsRepository extends Repository<Products> {
         return deviceData;
     }
 
-    async connectReset(product: Products) {
+    async connectReset(product: Products): Promise<boolean> {
+        // Reset product fields
         product.consultant_id = null;
         product.customer_id = null;
         product.use_date = null;
@@ -178,12 +179,28 @@ export class ProductsRepository extends Repository<Products> {
         product.mac_address = null;
         product.app_use_yn = null;
 
+        console.log('product --------> ', product);
+
         try {
-            await this.save(product);
+            const result = await this.update(
+                { id: product.id }, // Specify the product by ID
+                {
+                    consultant_id: null,
+                    customer_id: null,
+                    use_date: null,
+                    use_time: null,
+                    mac_address: null,
+                    app_use_yn: null,
+                }, // Only update the fields you want
+            );
+
+            console.log('Product updated: ', result); //
         } catch (e) {
-            return false;
+            // Log the error for debugging purposes
+            console.error('Error saving product:', e);
+            return false; // Return false to indicate failure
         }
 
-        return true;
+        return true; // Return true if save is successful
     }
 }

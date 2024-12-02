@@ -23,6 +23,7 @@ export class DiorAdminsController {
     @Roles(Role.Consultant)
     @Post()
     async createAdmin(@Res() res: Response, @Body() body: CreateAdminDto) {
+        console.log(body);
         const result = await this.diorAdminsService.createAdmin(body);
         return res.status(200).send(result);
     }
@@ -62,3 +63,4 @@ export class DiorAdminsController {
         return res.send(resultFile);
     }
 }
+
