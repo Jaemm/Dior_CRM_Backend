@@ -29,9 +29,19 @@ export class AnalysisDataReplicationService {
                 status: '%true%',
             });
 
+        let _countQueryGlobal = this.globalcndpSkinRepository
+            .createQueryBuilder('analysis')
+            .where("args->>'status' LIKE :status", {
+                status: '%true%',
+            });
         // Apply date range filter if start_date and end_date are provided
         if (start_date && end_date) {
             _countQuery = _countQuery.andWhere('created_time BETWEEN :start AND :end', {
+                start: start_date,
+                end: end_date,
+            });
+
+            _countQueryGlobal = _countQueryGlobal.andWhere('created_time BETWEEN :start AND :end', {
                 start: start_date,
                 end: end_date,
             });
@@ -40,12 +50,19 @@ export class AnalysisDataReplicationService {
         // Prepare the IDs for the SQL query
         const likeIds = _ids.map((id) => (String(id).startsWith('%') ? String(id) : `%${id}`));
 
-        // Count the matching analyses based on consultant IDs
-        const count = await _countQuery
-            .andWhere("args->>'consultant_id' LIKE ANY (ARRAY[:...ids])", { ids: likeIds })
-            .getCount();
+        _countQuery.andWhere(
+            "COALESCE(NULLIF(analysis.args->>'consultant_id', '')::NUMERIC, NULLIF(analysis.args->>'id', '')::NUMERIC)::TEXT LIKE ANY (ARRAY[:...ids])",
+            { ids: likeIds },
+        );
 
-        return count;
+        _countQueryGlobal.andWhere(
+            "COALESCE(NULLIF(analysis.args->>'consultant_id', '')::NUMERIC, NULLIF(analysis.args->>'id', '')::NUMERIC)::TEXT LIKE ANY (ARRAY[:...ids])",
+            { ids: likeIds },
+        );
+        // // Execute queries in parallel
+        const [count, count_] = await Promise.all([_countQuery.getCount(), _countQueryGlobal.getCount()]);
+
+        return count + count_;
     }
 
     async getDiorAnalysisByCustomerIds(customerIds: string[]) {
@@ -195,20 +212,76 @@ export class AnalysisDataReplicationService {
     //     }
     // }
 
+    // Update this this query to combine result from different DB globalcndpSkinRepository from 2020-01-01' AND '2024-09-26' and diorCndpSkinRepository >  '2024-09-26'
+    // async getConsultantIds(startDate?: string, endDate?: string): Promise<any> {
+    //     try {
+    //         //
+    //         const consultantQuery = await this.diorCndpSkinRepository
+    //             .createQueryBuilder('analysis')
+    //             .select("analysis.args-> 'consultant_id' ", 'consultantId')
+    //             .where("analysis.args->>'status' LIKE '%true'");
+
+    //         if (startDate && endDate) {
+    //             consultantQuery.andWhere(`analysis.created_time BETWEEN ${startDate} 00:00:00 AND ${endDate} 23:59:59`);
+    //         }
+
+    //         const consultants = await consultantQuery.getRawMany();
+
+    //         console.log(consultants);
+    //         return consultants;
+    //     } catch (e) {
+    //         throw e;
+    //     }
+    // }
+
     async getConsultantIds(startDate?: string, endDate?: string): Promise<any> {
         try {
-            const consultantQuery = await this.diorCndpSkinRepository
+            // Define COALESCE condition
+            const coalesceCondition = `
+            COALESCE(
+                NULLIF(analysis.args->>'consultant_id', '')::NUMERIC,
+                NULLIF(analysis.args->>'id', '')::NUMERIC
+            ) AS "consultantId"
+        `;
+
+            // Define the CASE condition
+            const condition = `analysis.args->>'status' LIKE :status`;
+
+            // Define date ranges
+            const globalDateRange = {
+                start: '2020-01-01 00:00:00',
+                end: '2024-09-26 23:59:59',
+            };
+            const diorDateStart = '2024-09-27 00:00:00';
+
+            // Global Consultant Query
+            const globalQueryBuilder = this.globalcndpSkinRepository
                 .createQueryBuilder('analysis')
-                .select("analysis.args-> 'consultant_id' ", 'consultantId')
-                .where("analysis.args->>'status' LIKE '%true'");
+                .select(coalesceCondition)
+                .where(condition, { status: '%true%' })
+                .andWhere('analysis.created_time BETWEEN :start AND :end', globalDateRange);
 
-            if (startDate && endDate) {
-                consultantQuery.andWhere(`analysis.created_time BETWEEN ${startDate} 00:00:00 AND ${endDate} 23:59:59`);
-            }
+            // Dior Consultant Query
+            const diorQueryBuilder = this.diorCndpSkinRepository
+                .createQueryBuilder('analysis')
+                .select(coalesceCondition)
+                .where(condition, { status: '%true%' })
+                .andWhere('analysis.created_time > :start', { start: diorDateStart });
 
-            const consultants = await consultantQuery.getRawMany();
+            // Execute queries in parallel
+            const [globalResult, diorResult] = await Promise.all([
+                globalQueryBuilder.getRawMany(),
+                diorQueryBuilder.getRawMany(),
+            ]);
 
-            return consultants;
+            // globalResult.push(...diorResult);
+            const cosnsultant = globalResult.map((item) => ({
+                consultantId: Number(item.consultantId),
+            }));
+
+            // console.log(cosnsultant);
+            // Combine results
+            return cosnsultant;
         } catch (e) {
             throw e;
         }
