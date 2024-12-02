@@ -196,6 +196,7 @@ export class DiorDevicesService {
                 },
             });
 
+            // console.log('========>', productCount);
             let product;
             if (productCount > 1) {
                 product = await this.productsRepository.findOne({
