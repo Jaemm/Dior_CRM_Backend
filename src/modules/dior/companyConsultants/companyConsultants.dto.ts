@@ -10,7 +10,7 @@ export class GetDiorCompanyConsultantsDto {
     @ApiPropertyOptional()
     @IsOptional()
     @IsString()
-    filter_by2: string;
+    filter_by_2: string;
 
     @ApiPropertyOptional()
     @IsOptional()
