@@ -40,6 +40,11 @@ export class AnalysisDataReplicationService {
                 start: start_date,
                 end: end_date,
             });
+
+            _countQueryGlobal = _countQueryGlobal.andWhere('created_time BETWEEN :start AND :end', {
+                start: start_date,
+                end: end_date,
+            });
         }
 
         // Prepare the IDs for the SQL query
@@ -56,14 +61,7 @@ export class AnalysisDataReplicationService {
         );
         // // Execute queries in parallel
         const [count, count_] = await Promise.all([_countQuery.getCount(), _countQueryGlobal.getCount()]);
-        // Count the matching analyses based on consultant IDs
-        // const count_ = await _countQuery
-        //     .andWhere(
-        //         " COALESCE(NULLIF(analysis.args->>'consultant_id', '')::NUMERIC, NULLIF(analysis.args->>'id', '')::NUMERIC) LIKE ANY (ARRAY[:...ids])",
-        //         { ids: likeIds },
-        //     )
-        //     .getCount();
-        console.log(count_);
+
         return count + count_;
     }
 
