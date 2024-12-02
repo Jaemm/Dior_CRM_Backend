@@ -220,6 +220,7 @@ export class DiorDevicesService {
             }
 
             const result = await this.productsRepository.connectReset(product);
+
             const logResult = await this.productLogsRepository.saveLogs(
                 product,
                 `done by ${currentConsultant.email}(BM) - connect reset`,
