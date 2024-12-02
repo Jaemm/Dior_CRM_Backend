@@ -32,7 +32,7 @@ export class ProductRecommendationSelectedsModule {
 
             .forRoutes({
                 path: 'dior/product_recommendation_selecteds',
-                method: RequestMethod.ALL,
+                method: RequestMethod.GET,
             });
         // consumer.apply(AuthMiddleware).forRoutes({
         //     path: 'dior/company_consultants/by_consultant',
