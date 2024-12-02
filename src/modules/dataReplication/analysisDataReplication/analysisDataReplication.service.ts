@@ -22,18 +22,26 @@ export class AnalysisDataReplicationService {
     ) {}
 
     async statististic(_ids: any[], start_date: string, end_date: string) {
+        const globalDateRange = {
+            start: '2020-01-01 00:00:00',
+            end: '2024-09-26 23:59:59',
+        };
+        const diorDateStart = '2024-09-27 00:00:00';
+
         // Count analyses where status is true
         let _countQuery = this.diorCndpSkinRepository
             .createQueryBuilder('analysis')
             .where("args->>'status' LIKE :status", {
                 status: '%true%',
-            });
+            })
+            .andWhere('analysis.created_time > :start', { start: diorDateStart });
 
         let _countQueryGlobal = this.globalcndpSkinRepository
             .createQueryBuilder('analysis')
             .where("args->>'status' LIKE :status", {
                 status: '%true%',
-            });
+            })
+            .andWhere('analysis.created_time BETWEEN :start AND :end', globalDateRange);
         // Apply date range filter if start_date and end_date are provided
         if (start_date && end_date) {
             _countQuery = _countQuery.andWhere('created_time BETWEEN :start AND :end', {
