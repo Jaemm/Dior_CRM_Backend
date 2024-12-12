@@ -246,6 +246,8 @@ export class DiorCompanyBranchesService {
                 .take(searchPer)
                 .getManyAndCount();
 
+                console.log(branches)
+
             const reformatBranches: Promise<ConsultantBranchesForDiorT>[] = branches.map(async (branch, i) => {
                 // const totalDevices: any = await this.productsRepository.getNewOpticNumbersCountByBranch(branch.id);
 

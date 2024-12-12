@@ -69,7 +69,7 @@ export class DiorCompanyConsultantsService {
                 id: savedConsultant.id,
                 name: savedConsultant.name,
                 code: savedConsultant.code,
-                email: savedConsultant.email,
+                email: savedConsultant.email,     
                 created_at: savedConsultant.created_at,
                 country: savedConsultant.country,
                 status: savedConsultant.convertStatus,
@@ -142,7 +142,6 @@ export class DiorCompanyConsultantsService {
                 });
             }
 
-            console.log('========>', filter_by_2);
             if (filter_by_2) {
                 consultantsQuery.andWhere('consultants.consultant_branch_id = :filter_by_2', {
                     filter_by_2: filter_by_2,
@@ -157,13 +156,12 @@ export class DiorCompanyConsultantsService {
 
             if (search) {
                 consultantsQuery.andWhere(
-                    '(consultants.country LIKE :search OR consultants.code LIKE :search OR consultants.email LIKE :search)',
+                    '(consultants.country LIKE :search OR consultants.code LIKE :search OR consultant_branch.email LIKE :search)',
                     {
                         search: `%${search}%`,
-                    },
+                                            },
                 );
             }
-
             const searchPage = Number(page || 1);
             const searchPer = Number(per || 25);
 
@@ -191,6 +189,8 @@ export class DiorCompanyConsultantsService {
                 };
             });
 
+
+            console.log(reformatConsultantList)
             return {
                 data: reformatConsultantList,
                 total_size: totalCount,
