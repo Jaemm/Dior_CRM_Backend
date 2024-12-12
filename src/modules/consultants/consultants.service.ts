@@ -2743,6 +2743,10 @@ export class ConsultantsService {
             'ja': 'デバイスが存在しません',
             'th': 'อุปกรณ์ไม่มีอยู่',
             'vi': 'device_not_exist',
+            'ka': 'მოწყობილობა არ არსებობს',
+            'ka-GE': 'მოწყობილობა არ არსებობს',
+            'kk': 'Құрылғы жоқ',
+            'kk-KZ': 'Құрылғы жоқ',
         };
 
         const normalizedLocale = locale.toLowerCase();
