@@ -2744,9 +2744,9 @@ export class ConsultantsService {
             'th': 'อุปกรณ์ไม่มีอยู่',
             'vi': 'device_not_exist',
             'ka': 'მოწყობილობა არ არსებობს',
-            'ka-GE': 'მოწყობილობა არ არსებობს',
+            'ka-ge': 'მოწყობილობა არ არსებობს',
             'kk': 'Құрылғы жоқ',
-            'kk-KZ': 'Құрылғы жоқ',
+            'kk-kz': 'Құрылғы жоқ',
         };
 
         const normalizedLocale = locale.toLowerCase();
