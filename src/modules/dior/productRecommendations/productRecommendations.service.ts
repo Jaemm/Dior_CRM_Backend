@@ -128,7 +128,7 @@ export class ProductRecommendationService {
             if (search) {
                 prQuery
                     .andWhere(
-                        'LOWER(productRecommendation.name) LIKE :search OR LOWER(productRecommendation.category)  LIKE :search OR LOWER(productRecommendation.routine) LIKE :search OR LOWER(productRecommendation.code) LIKE :search',
+                        'LOWER(productRecommendation.name) LIKE :search OR LOWER(productRecommendation.category) LIKE :search OR LOWER(productRecommendation.collection) LIKE :search OR LOWER(productRecommendation.routine) LIKE :search OR LOWER(productRecommendation.code) LIKE :search',
                         { search: `%${search.toLowerCase()}%` },
                     )
                     .andWhere('productRecommendation.productRecommendationId IS NULL');
@@ -188,6 +188,8 @@ export class ProductRecommendationService {
             prQuery.orderBy('productRecommendation.code', 'ASC');
 
             const [data, totalCount] = await prQuery.getManyAndCount();
+
+            console.log("totalCount",totalCount)
 
             const result = data.map(async (d) => {
                 const returnFormat = {
@@ -256,7 +258,7 @@ export class ProductRecommendationService {
                 recommendationForShade
                     .filter((forShade) => forShade.shades)
                     .forEach((forShade) => returnFormat.collection_shades.push(forShade.shades));
-
+                
                 // category_translations
                 returnFormat.category_translations = await this.productAttributesRepository.getTranslationsByType(
                     'Category',
