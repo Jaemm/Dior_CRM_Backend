@@ -131,7 +131,7 @@ export class ProductRecommendationService {
                         `
                         (LOWER(productRecommendation.name) LIKE :search OR 
                         LOWER(productRecommendation.category) LIKE :search OR 
-                        (LOWER(productRecommendation.collection) LIKE :search AND productRecommendation.shads IS NOT NULL) OR
+                        (LOWER(productRecommendation.collection) LIKE :search AND productRecommendation.shades IS NOT NULL) OR
                         LOWER(productRecommendation.routine) LIKE :search OR 
                         LOWER(productRecommendation.code) LIKE :search)
                         `,
