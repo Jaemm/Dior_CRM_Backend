@@ -128,7 +128,13 @@ export class ProductRecommendationService {
             if (search) {
                 prQuery
                     .andWhere(
-                        'LOWER(productRecommendation.name) LIKE :search OR LOWER(productRecommendation.category) LIKE :search OR LOWER(productRecommendation.collection) LIKE :search OR LOWER(productRecommendation.routine) LIKE :search OR LOWER(productRecommendation.code) LIKE :search',
+                        `
+                        (LOWER(productRecommendation.name) LIKE :search OR 
+                        LOWER(productRecommendation.category) LIKE :search OR 
+                        LOWER(productRecommendation.collection) LIKE :search OR
+                        LOWER(productRecommendation.routine) LIKE :search OR 
+                        LOWER(productRecommendation.code) LIKE :search)
+                        `,
                         { search: `%${search.toLowerCase()}%` },
                     )
                     .andWhere('productRecommendation.productRecommendationId IS NULL');
