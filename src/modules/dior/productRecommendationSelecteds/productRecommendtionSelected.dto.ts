@@ -7,10 +7,9 @@ export class SelectProductsDto {
     @IsNumber()
     batch_id: number;
 
-    @ApiProperty()
-    @IsNotEmpty()
-    @IsNumber()
-    customer_id: number;
+    @ApiPropertyOptional()
+    @IsOptional()
+    customer_id: any;
 
     @ApiProperty()
     @IsNotEmpty()
@@ -21,8 +20,7 @@ export class SelectProductsDto {
 export class GetRecommendationSelectedDto {
     @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
-    customer_id: string;
+    customer_id: any;
 
     @ApiPropertyOptional()
     @IsOptional()
@@ -51,3 +49,5 @@ export class GetListOfRecommendationListDto {
     @IsString()
     per: string;
 }
+
+// For products change as following -> productRecommendationSelecteds.find({where: batch_id}) and then maap with customer by result.customer_id

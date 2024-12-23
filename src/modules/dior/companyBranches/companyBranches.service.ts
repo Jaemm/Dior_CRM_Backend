@@ -1,11 +1,17 @@
 import { Request } from 'express';
 import * as argon2 from 'argon2';
 import * as csv from 'csv';
-import * as ExcelJS from 'exceljs';
+import { v4 as uuid } from 'uuid';
+import * as path from 'path';
 
 import { In } from 'typeorm';
 
-import { ConsultantBranchesRepository, ConsultantsRepository, ProductsRepository } from '@/src/common/repositories/crm';
+import {
+    ConsultantBranchesRepository,
+    ConsultantsRepository,
+    PresignRepository,
+    ProductsRepository,
+} from '@/src/common/repositories/crm';
 import { ConsultantBranchesForDiorT } from '@/src/common/types/entities';
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import {
@@ -20,18 +26,108 @@ import { ErrorStatus } from '@/src/common/constants/error-status';
 import { CommonService } from '@/src/common/common.service';
 import { ConsultantBranches } from '@/src/common/entities/crmEntities';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
+import { ConfigService } from '@nestjs/config';
+
+import * as bcrypt from 'bcrypt';
+import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
+import * as moment from 'moment';
 
 @Injectable()
 export class DiorCompanyBranchesService {
+    private readonly saltRounds = 10;
     constructor(
         private commonService: CommonService,
+        private configService: ConfigService,
         private awsS3Service: AwsS3Service,
-
+        private analysis: AnalysisDataReplicationService,
         //repos
         private readonly consultantRepository: ConsultantsRepository,
         private readonly consultantBranchesRepository: ConsultantBranchesRepository,
         private readonly productsRepository: ProductsRepository,
+        private readonly presignRepository: PresignRepository,
     ) {}
+
+    async getCustomerRecentCustomer(branchId: number | string) {
+        const numberId = Number(branchId);
+
+        const consultants = await this.consultantBranchesRepository
+            .createQueryBuilder('consultant_branches')
+            .leftJoin('consultant_branches.consultants', 'consultants')
+            .leftJoin('consultants.customers', 'customers')
+            .where('consultant_branches.id = :branchId', { branchId: numberId })
+            .select(['consultants.id AS c_id', 'customers.id AS customerId'])
+            .getRawMany();
+
+        const consultantIds = consultants.map((row) => ({
+            consultantIds: row.c_id,
+            customerIds: row.customerid,
+        }));
+
+        return this.analysis.getLastAnalysisDate(consultantIds);
+    }
+
+    public async createCondultantForPos(newUser: any) {
+        const consultantData: any = newUser;
+        consultantData['email_confirmed'] = true;
+
+        const bm = await this.consultantRepository.findByEmail(newUser.email);
+        if (bm) {
+            await this.updateCondultantForPos(newUser);
+        }
+
+        console.log('newUser ====>', newUser);
+        const consultant = await this.consultantRepository.createConsultantForPOS({
+            name: newUser.name,
+            consultant_company_id: 213,
+            password_digest: await bcrypt.hash(newUser.password, 10),
+            email: newUser.email,
+            unconfirmed_email: newUser.email,
+            app_id: 88,
+            email_confirmed: true,
+            rememberCreatedAt: new Date(),
+            code: newUser.code,
+            consultant_branch_id: newUser?.consultant_branch_id ?? String(newUser.id),
+            country: newUser.country,
+            updated_at: new Date(),
+            created_at: new Date(),
+        });
+
+        return consultant;
+    }
+
+    public async deleteCondultantForPos(newUser: any) {
+        const bm = await this.consultantRepository.findByEmail(newUser.email);
+
+        await this.consultantRepository.deleteConsultant(newUser.email);
+
+        return;
+    }
+
+    public async updateCondultantForPos(newUser: any) {
+        const bm = await this.consultantRepository.findByEmail(newUser.email);
+
+        delete newUser.consultantCompanyId;
+        delete newUser.createdAt;
+        delete newUser.updatedAt;
+
+        delete newUser.countryId;
+
+        console.log('newUser ====>', newUser);
+
+        newUser.email = newUser?.email ? newUser.email : bm.email;
+        newUser.name = newUser?.name ? newUser.name : bm.name;
+        newUser.code = newUser?.code ? newUser.code : bm.code;
+        newUser.country = newUser?.country ? newUser.country : bm.country;
+        newUser.password_digest = await bcrypt.hash(newUser.password, 10);
+        newUser.updated_at = new Date();
+        newUser.consultant_branch_id = newUser.id;
+
+        delete newUser.password;
+        delete newUser.id;
+        const updatedBM = await this.consultantRepository.updateConsultant(bm.id, newUser);
+
+        return updatedBM;
+    }
 
     async createBranch(req: Request, body: CreateBranchesDto) {
         try {
@@ -67,6 +163,12 @@ export class DiorCompanyBranchesService {
                 total_devices: 0,
                 last_consultation_date: null,
             };
+
+            // cons
+            body.consultant_branch_id = reformatBranch.id;
+            if (reformatBranch) {
+                this.createCondultantForPos(body);
+            }
 
             return reformatBranch;
         } catch (e) {
@@ -136,17 +238,27 @@ export class DiorCompanyBranchesService {
                 );
             }
 
-            const pageCondition = Number(page || 1);
-            const perCondition = Number(per || 10);
+            const searchPage = Number(page || 1);
+            const searchPer = Number(per || 25);
 
             const [branches, total] = await branchQuery
-                .skip((pageCondition - 1) * perCondition)
-                .take(perCondition)
+                .skip((searchPage - 1) * searchPer)
+                .take(searchPer)
                 .getManyAndCount();
 
-            const reformatBranches: Promise<ConsultantBranchesForDiorT>[] = branches.map(async (branch) => {
-                const totalDevices = await this.productsRepository.getNewOpticNumbersCountByBranch(branch.id);
+                console.log(branches)
 
+            const reformatBranches: Promise<ConsultantBranchesForDiorT>[] = branches.map(async (branch, i) => {
+                // const totalDevices: any = await this.productsRepository.getNewOpticNumbersCountByBranch(branch.id);
+
+                const [totalDevices, latestCustomer] = await Promise.all([
+                    this.productsRepository.getNewOpticNumbersCountByBranch(branch.id),
+                    this.getCustomerRecentCustomer(branch.id),
+                ]);
+
+                const consultantionDate = latestCustomer
+                    ? moment(latestCustomer).format('YYYY-MM-DD HH:mm:ss')
+                    : moment(branch.createdAt).format('YYYY-MM-DD HH:mm:ss');
                 const reformatBranch: ConsultantBranchesForDiorT = {
                     id: Number(branch.id),
                     name: branch.name,
@@ -155,8 +267,8 @@ export class DiorCompanyBranchesService {
                     created_at: branch.createdAt,
                     country: branch.country,
                     password: branch.password,
-                    total_devices: totalDevices,
-                    last_consultation_date: null,
+                    total_devices: totalDevices, //totalDevices[1],
+                    last_consultation_date: consultantionDate,
                 };
 
                 return reformatBranch;
@@ -164,10 +276,10 @@ export class DiorCompanyBranchesService {
 
             return {
                 data: await Promise.all(reformatBranches),
-                total,
-                currentPage: page,
-                pageSize: branches.length,
-                totalPages: Math.ceil(total / perCondition),
+                total_size: total,
+                current_page_size: branches.length,
+                current_page: searchPage,
+                total_pages: Math.ceil(total / searchPer),
             };
         } catch (e) {
             throw e;
@@ -194,16 +306,24 @@ export class DiorCompanyBranchesService {
                 });
             }
 
-            const hashedPassword = password ? await argon2.hash(password) : null;
-
             branch.email = email ? email : branch.email;
             branch.name = name ? name : branch.name;
             branch.code = code ? code : branch.code;
             branch.country = country ? country : branch.country;
-            branch.password = hashedPassword ? hashedPassword : branch.password;
+            branch.password = password ? password : branch.password;
             branch.updatedAt = new Date();
 
             const savedBranch = await this.consultantBranchesRepository.save(branch);
+
+            if (savedBranch) {
+                await this.updateCondultantForPos(savedBranch).catch((error) => {
+                    console.log('===>', error);
+                    throw new BadRequestException({
+                        result_code: ErrorStatus.UNEXPECTED_ERROR,
+                        error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
+                    });
+                });
+            }
 
             const reformatBranch: ConsultantBranchesForDiorT = {
                 id: Number(savedBranch.id),
@@ -324,13 +444,16 @@ export class DiorCompanyBranchesService {
         }
     }
 
-    async importBranches(body: ImportBranchesDto) {
+    async importBranches(req: Request, body: ImportBranchesDto) {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
             const fileUrl = body.file_url;
 
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const splitToken = req.headers.authorization.split(' ');
+            const accssToken = splitToken[1];
+
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, accssToken);
 
             const header = worksheet.getRow(1);
 
@@ -343,20 +466,21 @@ export class DiorCompanyBranchesService {
 
                 const email = emailText ? emailText : (row.getCell(4).value as string);
 
-                const hashedPassword = await argon2.hash(row.getCell(5).value as string);
-
                 const newBranch = await this.consultantBranchesRepository.create({
                     country: row.getCell(1).value as string,
                     code: row.getCell(2).value as string,
                     name: row.getCell(3).value as string,
                     email: email,
-                    password: hashedPassword,
+                    password: row.getCell(5).value as string,
                     consultantCompanyId: String(diorCompanyId),
                     createdAt: new Date(),
                     updatedAt: new Date(),
                 });
 
-                await this.consultantBranchesRepository.save(newBranch);
+                const registredPos = await this.consultantBranchesRepository.save(newBranch);
+                if (registredPos) {
+                    this.createCondultantForPos(registredPos);
+                }
             }
 
             return {
@@ -367,28 +491,77 @@ export class DiorCompanyBranchesService {
         }
     }
 
-    async presignUploadImportFileForBranch(query: PresignedUploadForBranchDto) {
+    async presignUploadImportFileForBranch(req: Request, file: Express.Multer.File) {
         try {
-            const fileName = query.filename;
+            const userId = (<{ id: string }>req.user).id;
+            const { originalname: fileName, mimetype, buffer } = file;
 
-            const result = await this.awsS3Service.getPresignUploadForDiorBranches(fileName);
+            // const result = await this.awsS3Service.getPresignUploadForDiorBranches(fileName);
 
-            return result;
+            const prefix = `uploads/images/dior/import_company_branches`;
+
+            const limit = 8 * 1024 * 1024;
+
+            const hash = uuid();
+
+            const fileExtension = path.extname(fileName);
+
+            const keyForS3 = `${hash}${fileExtension}`;
+
+            await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
+
+            const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
+
+            console.log('baseUrl', baseUrl);
+            const downloadUrl = `${baseUrl}/api/dior/company_branches/files/${hash}`;
+
+            await this.presignRepository.saveNewPresignEntity({
+                hash: hash,
+                fileName: fileName,
+                fileExtension: fileExtension,
+                downloadUrl: downloadUrl,
+                mimeType: mimetype,
+                prefix: prefix,
+                consultantId: Number(userId),
+            });
+
+            return {
+                url: downloadUrl,
+            };
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getBranchesFileFromS3(hash: string) {
+        try {
+            const existFile = await this.presignRepository.findOne({
+                where: {
+                    key: hash,
+                },
+            });
+
+            if (!existFile) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.NOT_FOUND,
+                });
+            }
+
+            const s3Key = `${existFile.prefix}/${hash}${existFile.fileExtension}`;
+
+            const s3File = await this.awsS3Service.getImageCloudS3(s3Key);
+
+            return {
+                binary: s3File.Body,
+                mimeType: existFile.mimeType,
+                fileName: existFile.fileName,
+            };
         } catch (e) {
             throw e;
         }
     }
 
     /** Utils */
-
-    async getWorkSheet(fileUrl: string) {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(fileUrl);
-        const worksheet = workbook.getWorksheet(1);
-
-        return worksheet;
-    }
-
     writeCSVFileForExportByBranches(branches: ConsultantBranches[]) {
         const header = ['POS Country', 'POS Code', 'POS Name', 'Email'];
 
@@ -400,7 +573,6 @@ export class DiorCompanyBranchesService {
                     reject(err);
                     return;
                 }
-
                 resolve(output);
             });
         });

@@ -14,7 +14,7 @@ export class AutomaticProductByBatchIdDto {
     @IsString()
     batch_id: string;
 
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
     @IsString()
     market: string;

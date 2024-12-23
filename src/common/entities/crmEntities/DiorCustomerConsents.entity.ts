@@ -38,6 +38,9 @@ export class DiorCustomerConsents {
     @Column('integer', { name: 'batch_id', nullable: true })
     batchId: number | null;
 
+    @Column('bigint', { name: 'presign_id' })
+    presignId: number;
+
     get fetchOptions() {
         const TWO_QUESTIONS = [
             'Collect and store my personal and sensitive data (e.g. skin pictures) in order to complete the skincare conultation.',

@@ -111,4 +111,33 @@ export class ConsultantCompanies {
     afterLoad() {
         this.id = Number(this.id);
     }
+
+    get getBasicInfo() {
+        return {
+            id: this.id,
+            name: this.name,
+            address: this.address,
+            email: this.email,
+            phone: this.phone,
+            font: this.font,
+            primary_color_code: this.primary_color_code,
+            secondary_color_code: this.secondary_color_code,
+            program_color_code: this.program_color_code,
+            top_color_code: this.top_color_code,
+            text_icon_color_code: this.text_icon_color_code,
+            pie_chart_color_1: this.pie_chart_color_1,
+            pie_chart_color_2: this.pie_chart_color_2,
+            pie_chart_color_3: this.pie_chart_color_3,
+            pie_chart_color_4: this.pie_chart_color_4,
+            pie_chart_color_5: this.pie_chart_color_5,
+            pie_chart_points_color: this.pie_chart_points_color,
+            logo_url: null as null,
+            app_icon_url: null as null,
+            background_image_url: null as null,
+            progressbar_image_1_url: null as null,
+            progressbar_image_2_url: null as null,
+            progressbar_image_3_url: null as null,
+            created_at: this.created_at,
+        };
+    }
 }

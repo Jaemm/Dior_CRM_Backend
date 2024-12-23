@@ -1,10 +1,11 @@
-import { Controller, Get, Headers, Query, Post, Req, Body } from '@nestjs/common';
-import { DiorDevicesService } from './dior_devices.service';
+import { Controller, Get, Headers, Query, Post, Req, Body, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
+import { Request, Response } from 'express';
+
+import { DiorDevicesService } from './dior_devices.service';
 import { Role } from '@/src/common/enums/role.enum';
 import { Roles } from '@/src/common/decorators/roles.decorator';
 import { GetDevicesDto, ResetConnectDto } from './dior_devices.dto';
-import { Request } from 'express';
 
 @ApiTags('Dior-Devices')
 @Controller('dior/devices')
@@ -15,8 +16,14 @@ export class DiorDeivcesConroller {
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    async getDevices(@Req() req: Request, @Query() query: GetDevicesDto, @Headers('X-CHOWIS-LOCALE') locale?: string) {
-        return await this.diorDevicesService.getDevices(req, query, locale);
+    async getDevices(
+        @Req() req: Request,
+        @Res() res: Response,
+        @Query() query: GetDevicesDto,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
+    ) {
+        const devices = await this.diorDevicesService.getDevices(req, query, locale);
+        return res.status(200).send(devices);
     }
 
     @Post('connect-reset')
@@ -25,9 +32,13 @@ export class DiorDeivcesConroller {
     @Roles(Role.Consultant)
     async resetConnect(
         @Req() req: Request,
+        @Res() res: Response,
         @Body() body: ResetConnectDto,
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
-        return await this.diorDevicesService.resetConnect(req, body, locale);
+        console.log('=======>', body);
+        const result = await this.diorDevicesService.resetConnect(req, body, locale);
+        return res.status(200).send(result);
     }
 }
+

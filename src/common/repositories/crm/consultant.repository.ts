@@ -15,8 +15,9 @@ export class ConsultantsRepository extends Repository<Consultants> {
             .leftJoinAndSelect('products.device', 'devices')
             .leftJoinAndSelect('products.application', 'applications')
             .leftJoinAndSelect('consultants.consultant_licenses', 'consultantLicenses')
+            .leftJoinAndSelect('consultants.consultant_position', 'consultantPositions')
+            .leftJoinAndSelect('consultants.consultant_company', 'consultantCompanies')
             .leftJoinAndSelect('consultantLicenses.licenses', 'license')
-            .leftJoinAndSelect('consultants.application', 'application')
             .andWhere('consultants.email = :email', { email: email });
 
         if (app_id) {
@@ -111,17 +112,26 @@ export class ConsultantsRepository extends Repository<Consultants> {
 
     async findConsultant(app_id: number, email: string) {
         const consultant = await this.findOne({
-            where: { app_id: Or(Equal(app_id), null), email },
+            where: [
+                { app_id: app_id, email },
+                {
+                    app_id: Equal(null),
+                    email,
+                },
+            ],
             relations: [
                 'consultant_shop',
                 'country_details',
                 'consultant_company',
+                'consultant_branch',
                 'consultant_position',
                 'products',
                 'products.device',
                 'products.device.consultant_company',
             ],
         });
+
+        // console.log(consultant);
 
         return consultant;
     }
@@ -139,7 +149,7 @@ export class ConsultantsRepository extends Repository<Consultants> {
 
     async createConsultant(newUser: any) {
         const user: any = {
-            password_digest: (await argon2.hash(newUser.password)) ?? null,
+            password_digest: newUser.password ?? null,
             email: newUser.email,
             unconfirmed_email: newUser.email,
             app_id: newUser.app_id,
@@ -151,5 +161,25 @@ export class ConsultantsRepository extends Repository<Consultants> {
 
         const result: any = await this.insertConsultant(user);
         return result;
+    }
+
+    async createConsultantForPOS(newUser: any) {
+        const result: any = await this.insertConsultant(newUser);
+        return result;
+    }
+
+    async findByEmail(email: string) {
+        return await this.findOne({
+            where: {
+                email: email,
+            },
+        });
+    }
+    //
+    async deleteConsultant(consultant: any) {
+        const deleted = await this.remove(consultant);
+
+        console.log(deleted);
+        return deleted;
     }
 }

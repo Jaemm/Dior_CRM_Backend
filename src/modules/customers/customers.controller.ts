@@ -84,7 +84,7 @@ export class CustomersController {
     @Get('me')
     async me(@Req() req: Request, @Res() res: Response): Promise<any> {
         const id = (<{ id: string }>req['user']).id;
-        console.log('---------------------->', req['user']);
+
         const customerDetails = await this.customers.customerDetails(id);
         return res.status(200).send(customerDetails);
     }

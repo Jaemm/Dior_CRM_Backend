@@ -32,7 +32,7 @@ export class ProductRecommendations {
 
     @Column('integer', { name: 'consultant_id', nullable: true })
     consultantId: number | null;
-
+    //
     @Column('character varying', { name: 'image_url', nullable: true })
     imageUrl: string | null;
 
@@ -90,6 +90,46 @@ export class ProductRecommendations {
         return arr.includes('world wide') || arr.includes(market.toLowerCase());
     }
 
+    get getBasicInfo() {
+        return {
+            id: Number(this.id),
+            product_type: this.productType,
+            description: this.description,
+            link: this.link,
+            image_url: this.imageUrl,
+            code: this.code,
+            routine: this.routine,
+            collection: this.collection,
+            category: this.category,
+            countries: this.countries,
+            product_recommendation_id: this.productRecommendationId,
+        };
+    }
+
+    get getVariants() {
+        let variants: any[] = [];
+        if (this.productVariants && this.productVariants.length > 0) {
+            variants = this.productVariants.reverse().map((v) => {
+                return {
+                    id: Number(v.id),
+                    name: v.name,
+                    product_type: v.productType,
+                    description: v.description,
+                    link: v.link,
+                    image_url: v.imageUrl,
+                    code: v.code,
+                    routine: v.routine,
+                    collection: v.collection,
+                    category: v.category,
+                    countries: v.countries,
+                    product_recommendation_id: v.productRecommendationId,
+                    shades: v.shades,
+                };
+            });
+        }
+        return variants;
+    }
+
     getSkinToneFromProduct(skinTone: string) {
         if (!this.productVariant) {
             return this;
@@ -129,7 +169,7 @@ export class ProductRecommendations {
 
     getShade() {
         if (this.productVariants && this.productVariants.length > 0) {
-            return 'Seclet Shade';
+            return 'Select Shade';
         }
 
         return this.shades;

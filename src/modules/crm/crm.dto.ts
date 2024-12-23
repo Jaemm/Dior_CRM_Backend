@@ -9,13 +9,12 @@ export class CRMDto {
 }
 
 export class UpdateConsentForm {
-    @ApiProperty()
+    @ApiPropertyOptional()
     @IsOptional()
-    @IsString()
-    consent_form_answers: string;
+    consent_form_answers: any;
 
     @ApiProperty()
-    @IsNotEmpty()
+    @IsOptional()
     @Validate(IsNumberOrString)
     customer_id: number;
 
@@ -70,19 +69,12 @@ class Measurement {
 export class PresignedUploadDto {
     @ApiProperty()
     @IsNotEmpty()
-    file_name: string;
-
-    @ApiProperty()
-    @IsNotEmpty()
     consent_type: string;
 
-    @ApiProperty()
-    @Validate(IsNumberOrString)
-    @IsNotEmpty()
-    customer_id: string;
-
-    @ApiProperty()
-    file: string;
+    // @ApiProperty()
+    // @Validate(IsNumberOrString)
+    // @IsNotEmpty()
+    // customer_id: string;
 }
 
 export class GetByEmailDto {
@@ -124,10 +116,10 @@ export class GetCustomerDto {
 }
 
 export class CreateCrmCustomerDto {
-    @ApiProperty()
-    @IsNotEmpty()
-    @Validate(IsNumberOrString)
-    consultant_id: number;
+    // @ApiProperty()
+    // @IsNotEmpty()
+    // @Validate(IsNumberOrString)
+    // consultant_id: number;
 
     @ApiProperty()
     @IsOptional()

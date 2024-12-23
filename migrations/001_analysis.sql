@@ -47,7 +47,23 @@ CREATE TABLE product_logs (
   product_id bigint not null,
   message varchar not null,
   consultant_id bigint,
-  created_at date,
-  updated_at date
+  created_at timestamp,
+  updated_at timestamp
+)
+---
+CREATE SEQUENCE presign_id_seq;
+
+CREATE TABLE presign (
+  id bigint primary key DEFAULT nextval('product_logs_id_seq'),
+  key varchar not null,
+  url varchar not null,
+  file_extension varchar not null,
+  file_name varchar not null,
+  mime_type varchar not null,
+  prefix varchar,
+  consultant_id bigint,
+  created_at timestamp,
+  updated_at timestamp
 )
 
+ALTER TABLE dior_customer_consents ADD presign_id bigint;

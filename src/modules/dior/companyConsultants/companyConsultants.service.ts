@@ -2,14 +2,13 @@ import { Request } from 'express';
 import { In, Like } from 'typeorm';
 import * as argon2 from 'argon2';
 import * as csv from 'csv';
-import * as ExcelJS from 'exceljs';
 
 import {
     ConsultantBranchesRepository,
     ConsultantsRepository,
     CustomersRepository,
 } from '@/src/common/repositories/crm';
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CommonService } from '@/src/common/common.service';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { PositionsIds } from '@/src/common/enums/position.enum';
@@ -22,13 +21,16 @@ import {
 import { ConsultantForDiorT } from '@/src/common/types/entities/consultants.type';
 import { Consultants } from '@/src/common/entities/crmEntities';
 import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
+import { ConsultantsService } from '../../consultants/consultants.service';
 
 @Injectable()
 export class DiorCompanyConsultantsService {
+    private readonly saltRounds = 10;
+
     constructor(
         private commonService: CommonService,
         private analysisDataReplicationService: AnalysisDataReplicationService,
-
+        // private consultant: ConsultantsService,
         // Repos
         private readonly customersRepository: CustomersRepository,
         private readonly consultantBranchesRepository: ConsultantBranchesRepository,
@@ -39,13 +41,13 @@ export class DiorCompanyConsultantsService {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
-            const hashedPassword = await argon2.hash(body.password);
+            // const hashedPassword = this.consultant.bcryptHashPassword(body.)
 
             const newConsultant = this.consultantRepository.create({
                 name: body.name,
                 code: body.code,
-                password_digest: hashedPassword,
-                consultant_branch_id: Number(body.consultant_branch_id),
+                // password_digest: hashedPassword,
+                consultant_branch_id: body.consultant_branch_id,
                 consultant_company_id: diorCompanyId,
                 country: body.country,
                 app_id: 88,
@@ -57,14 +59,22 @@ export class DiorCompanyConsultantsService {
 
             const savedConsultant = await this.consultantRepository.save(newConsultant);
 
+            const consultantBranch = await this.consultantBranchesRepository.findOne({
+                where: {
+                    id: String(body.consultant_branch_id),
+                },
+            });
+
             return {
                 id: savedConsultant.id,
                 name: savedConsultant.name,
                 code: savedConsultant.code,
-                email: savedConsultant.email,
+                email: savedConsultant.email,     
                 created_at: savedConsultant.created_at,
                 country: savedConsultant.country,
                 status: savedConsultant.convertStatus,
+                pos_code: consultantBranch ? consultantBranch.code : null,
+                pos_email: consultantBranch ? consultantBranch.email : null,
             };
         } catch (e) {
             throw e;
@@ -73,7 +83,8 @@ export class DiorCompanyConsultantsService {
 
     async getDiorCompanyConsultants(req: Request, query: GetDiorCompanyConsultantsDto, locale: string = 'en') {
         try {
-            const { search, country, filter_by, filter_by2, page, per } = query;
+            console.log(query);
+            const { search, country, filter_by, filter_by_2, page, per } = query;
 
             const userId = (<{ id: string }>req.user).id;
 
@@ -81,8 +92,9 @@ export class DiorCompanyConsultantsService {
                 'consultant_branch',
             ]);
 
-            const diorConsultant = await this.consultantRepository.getDiorConsultant();
-            const diorCompanyId = diorConsultant.consultant_company_id;
+            // const diorConsultant = await this.consultantRepository.getDiorConsultant();
+            console.log('diorConsultant', 8131);
+            const diorCompanyId = 213; // diorConsultant.consultant_company_id;
 
             if (!currentConsultant) {
                 throw new UnauthorizedException({
@@ -93,11 +105,12 @@ export class DiorCompanyConsultantsService {
 
             const consultantsQuery = await this.consultantRepository
                 .createQueryBuilder('consultants')
+                .leftJoinAndSelect('consultants.consultant_branch', 'consultant_branch')
                 .where('consultants.consultant_company_id = :companyId', { companyId: diorCompanyId });
 
             if (Number(currentConsultant.consultant_position_id) === PositionsIds.SUPER_ADMIN) {
                 consultantsQuery.andWhere('consultants.id != :diorConsultantId', {
-                    diorConsultantId: diorConsultant.id,
+                    diorConsultantId: 8131,
                 });
             } else if (Number(currentConsultant.consultant_position_id) === PositionsIds.ADMIN) {
                 consultantsQuery
@@ -105,7 +118,7 @@ export class DiorCompanyConsultantsService {
                         countries: currentConsultant.countries.map((country) => country.toLocaleLowerCase()),
                     })
                     .andWhere('consultants.id != :diorConsultantId', {
-                        diorConsultantId: diorConsultant.id,
+                        diorConsultantId: 8131,
                     });
             } else {
                 consultantsQuery
@@ -113,16 +126,15 @@ export class DiorCompanyConsultantsService {
                         country: currentConsultant.consultant_branch.country.toLocaleLowerCase(),
                     })
                     .andWhere('consultants.id != :diorConsultantId', {
-                        diorConsultantId: diorConsultant.id,
+                        diorConsultantId: 8131,
                     });
             }
 
-            consultantsQuery
-                .andWhere('consultants.hide_for_bc = false')
-                .andWhere('(LOWER (consultants.email) != :email OR LOWER (consultants.email) != :email2)', {
-                    email: 'ann.chowis613@gmail.com',
-                    email2: 'ann@chowis.com',
-                });
+            consultantsQuery.andWhere('consultants.hide_for_bc = false');
+
+            consultantsQuery.andWhere('LOWER(consultants.email) NOT IN (:...excludedEmails)', {
+                excludedEmails: ['ann.chowis613@gmail.com', 'ann@chowis.com'],
+            });
 
             if (filter_by) {
                 consultantsQuery.andWhere('LOWER (consultants.country) = :filterBy', {
@@ -130,9 +142,9 @@ export class DiorCompanyConsultantsService {
                 });
             }
 
-            if (filter_by2) {
-                consultantsQuery.andWhere('consultants.consultant_branch_id = :filterBy2', {
-                    filterBy2: filter_by2,
+            if (filter_by_2) {
+                consultantsQuery.andWhere('consultants.consultant_branch_id = :filter_by_2', {
+                    filter_by_2: filter_by_2,
                 });
             }
 
@@ -144,15 +156,14 @@ export class DiorCompanyConsultantsService {
 
             if (search) {
                 consultantsQuery.andWhere(
-                    '(consultants.country LIKE :search OR consultants.code LIKE :search OR consultants.email LIKE :search)',
+                    '(consultants.country LIKE :search OR consultants.code LIKE :search OR consultant_branch.email LIKE :search)',
                     {
                         search: `%${search}%`,
-                    },
+                                            },
                 );
             }
-
             const searchPage = Number(page || 1);
-            const searchPer = Number(per || 10);
+            const searchPer = Number(per || 25);
 
             const [consultants, totalCount] = await consultantsQuery
                 .skip((searchPage - 1) * searchPer)
@@ -178,6 +189,8 @@ export class DiorCompanyConsultantsService {
                 };
             });
 
+
+            console.log(reformatConsultantList)
             return {
                 data: reformatConsultantList,
                 total_size: totalCount,
@@ -191,60 +204,128 @@ export class DiorCompanyConsultantsService {
     }
 
     async getConsultantByBranchesConsultant(req: Request, locale = 'en') {
-        try {
-            const userId = (<{ id: string }>req.user).id;
+        const currentConsultantId = (<{ id: string }>req.user).id;
+        const currentConsultant = await this.consultantRepository.findOne({
+            where: { id: Number(currentConsultantId) },
+            relations: ['consultant_branch'],
+        });
 
-            const currentConsultant = await this.consultantRepository.findOne({
-                where: { id: Number(userId) },
-                relations: ['consultant_branch'],
-            });
-
-            if (!currentConsultant) {
-                throw new UnauthorizedException({
-                    result_code: ErrorStatus.UNAUTHORIZED,
-                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
-                });
-            }
-
-            const branch = currentConsultant.consultant_branch;
-
-            if (!branch) {
-                throw new NotFoundException({
-                    result_code: ErrorStatus.NOT_FOUND,
-                });
-            }
-
-            const consultantsByBranch = await this.consultantRepository
-                .createQueryBuilder('consultants')
-                .where('consultants.email != :email OR consultants.email != :email2', {
-                    email: 'ann.chowis613@gmail.com', // who is this...
-                    email2: 'ann@chowis.com', // who is this...
-                })
-                .getMany();
-
-            const data: {
-                id: number;
-                email: string;
-                code: string;
-                name: string;
-                surname: string;
-            }[] = consultantsByBranch.map((row) => {
-                return {
-                    id: row.id,
-                    email: row.email,
-                    code: row.code,
-                    name: row.name,
-                    surname: row.surname,
-                };
-            });
-
-            return {
-                data,
-            };
-        } catch (e) {
-            throw e;
+        if (!currentConsultant) {
+            throw new Error('Consultant not found');
         }
+
+        const consultants = await this.consultantRepository.find({
+            where: [
+                {
+                    consultant_branch: { id: currentConsultant?.consultant_branch?.id },
+                },
+                { id: currentConsultant.id },
+            ],
+        });
+
+        // Filter out specific emails
+        const finalData = consultants
+            .filter(
+                (consultant) =>
+                    consultant.email.toLowerCase() !== 'ann.chowis613@gmail.com' &&
+                    consultant.email.toLowerCase() !== 'ann@chowis.com',
+            )
+            .map((consultant) => ({
+                id: consultant.id,
+                email: consultant.email,
+                code: consultant.code,
+                name: consultant.name,
+                surname: consultant.surname,
+            }));
+
+        const data: {
+            id: number;
+            email: string;
+            code: string;
+            name: string;
+            surname: string;
+        }[] = finalData.map((row) => {
+            return {
+                id: row.id,
+                email: row.email,
+                code: row.code,
+                name: row.name,
+                surname: row.surname,
+            };
+        });
+
+        return {
+            data,
+        };
     }
+
+    // async getConsultantByBranchesConsultant(req: Request, locale = 'en') {
+    //     try {
+    //         const userId = (<{ id: string }>req.user).id;
+
+    //         const currentConsultant = await this.consultantRepository.findOne({
+    //             where: { id: Number(userId) },
+    //             relations: ['consultant_branch'],
+    //         });
+
+    //         if (!currentConsultant) {
+    //             throw new UnauthorizedException({
+    //                 result_code: ErrorStatus.UNAUTHORIZED,
+    //                 error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+    //             });
+    //         }
+
+    //         const branch = currentConsultant.consultant_branch;
+    //         console.log('===> ', branch);
+
+    //         if (!branch) {
+    //             throw new NotFoundException({
+    //                 result_code: ErrorStatus.NOT_FOUND,
+    //             });
+    //         }
+
+    //         // const consultantsByBranch = await this.consultantRepository
+    //         //     .createQueryBuilder('consultants')
+    //         //     .where(
+    //         //         'consultants.email != :email OR consultants.email != :email2 OR consultant_branch_id = :branch_id',
+    //         //         {
+    //         //             email: 'ann.chowis613@gmail.com', // who is this...
+    //         //             email2: 'ann@chowis.com',
+    //         //             branch_id: currentConsultant.consultant_branch.id, // who is this...
+    //         //         },
+    //         //     )
+    //         //     .getMany();
+
+    //         const consultantsByBranch = await this.consultantRepository
+    //             .createQueryBuilder('consultants')
+    //             .where('consultants.consultant_branch_id = :branch_id', {
+    //                 branch_id: currentConsultant.consultant_branch.id, // who is this...
+    //             })
+    //             .getMany();
+
+    //         const data: {
+    //             id: number;
+    //             email: string;
+    //             code: string;
+    //             name: string;
+    //             surname: string;
+    //         }[] = consultantsByBranch.map((row) => {
+    //             return {
+    //                 id: row.id,
+    //                 email: row.email,
+    //                 code: row.code,
+    //                 name: row.name,
+    //                 surname: row.surname,
+    //             };
+    //         });
+
+    //         return {
+    //             data,
+    //         };
+    //     } catch (e) {
+    //         throw e;
+    //     }
+    // }
 
     async deleteDiorCompanyConsultant(consultantId: string, locale = 'en') {
         try {
@@ -317,7 +398,7 @@ export class DiorCompanyConsultantsService {
                 .createQueryBuilder('consultants')
                 .leftJoinAndSelect('consultants.consultant_branch', 'consultant_branch')
                 .where('consultants.id != :diorConsultantId', {
-                    diorConsultantId: diorConsultant.id,
+                    diorConsultantId: 8131,
                 });
 
             if ([5, 6].includes(currentConsultant.consultant_position_id)) {
@@ -368,10 +449,14 @@ export class DiorCompanyConsultantsService {
         }
     }
 
-    async importDiorCompanyConsultants(body: ImportDiorCompanyConsultantsDto, locale: string = 'en') {
+    async importDiorCompanyConsultants(req: Request, body: ImportDiorCompanyConsultantsDto, locale: string = 'en') {
         try {
+            const splitToken = req.headers.authorization.split(' ');
+
+            const token = splitToken[1];
+
             const fileUrl = body.file_url;
-            const worksheet = await this.getWorkSheet(fileUrl);
+            const worksheet = await this.commonService.getWorkSheetByHTTP(fileUrl, token);
 
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
@@ -382,23 +467,40 @@ export class DiorCompanyConsultantsService {
             for (let i = 2; i < rowCount; i++) {
                 const row = worksheet.getRow(i);
 
+                const bcCode = row.getCell(3).value.toLocaleString();
+                const posCode = row.getCell(2).value.toLocaleString();
+
+                // const consultant = await this.consultantRepository.findOneBy({
+                //     code: bcCode,
+                // });
+
+                // if (consultant) {
+                //     continue;
+                // }
+
+                console.log('----->====>', row.getCell(5).value);
+
                 const branch = await this.consultantBranchesRepository.findOneBy({
-                    code: row.getCell(2).value.toLocaleString(),
+                    code: posCode,
                 });
+
+                const status = row.getCell(6).value === 'active' ? 0 : 1;
 
                 const newConsultant = this.consultantRepository.create({
                     country: row.getCell(1).value.toLocaleString(),
-                    code: row.getCell(3).value.toLocaleString(),
+                    code: bcCode,
                     name: row.getCell(4).value.toLocaleString(),
-                    status: Number(row.getCell(6).value),
+                    status: status,
                     consultant_branch_id: Number(branch?.id || null),
-                    email: await this.generateEmailForDior(diorCompanyId),
+                    email: row.getCell(5).value.toLocaleString(),
                     consultant_company_id: diorCompanyId,
                     created_at: new Date(),
                     updated_at: new Date(),
                 });
 
-                await this.consultantRepository.save(newConsultant);
+                console.log('------>', newConsultant);
+
+                const saved = await this.consultantRepository.save(newConsultant);
             }
 
             return {
@@ -496,14 +598,5 @@ export class DiorCompanyConsultantsService {
                 resolve(output);
             });
         });
-    }
-
-    async getWorkSheet(fileUrl: string) {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(fileUrl);
-
-        const worksheet = workbook.getWorksheet(1);
-
-        return worksheet;
     }
 }

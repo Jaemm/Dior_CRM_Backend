@@ -19,8 +19,8 @@ export class ConsultantDto {
     // })
     password: string;
 
-    @ApiProperty()
-    @IsString()
+    // @ApiProperty()
+    // @IsString()
     confirmPassword: string;
 }
 
@@ -47,6 +47,11 @@ export class UpdateConsultantRubyDto {
     // @IsString()
     // @IsOptional()
     // password: string;
+
+    @ApiPropertyOptional()
+    @IsString()
+    @IsOptional()
+    birthdate: string;
 
     @ApiPropertyOptional()
     @IsString()
@@ -89,7 +94,7 @@ export class UpdateConsultantRubyDto {
     country_code: string;
 
     @ApiPropertyOptional()
-    @IsString()
+    @Validate(IsNumberOrString)
     @IsOptional()
     app_id: string;
 
@@ -603,19 +608,29 @@ export class LoginSocialDto {
 
 export class CreateSalesConnectionDto {
     @ApiProperty()
-    @IsString()
+    @Validate(IsNumberOrString)
     @IsOptional()
-    consultant_id: string;
+    consultant_id: number;
 
     @ApiProperty()
-    @IsString()
+    @Validate(IsNumberOrString)
     @IsOptional()
-    batch_id: string;
+    batch_id: number;
 
     @ApiProperty()
     @IsString()
     @IsOptional()
     country_name: string;
+
+    @ApiProperty()
+    @Validate(IsNumberOrString)
+    @IsOptional()
+    answer1: string;
+
+    @ApiProperty()
+    @Validate(IsNumberOrString)
+    @IsOptional()
+    answer2: string;
 }
 
 export class FetchSalesConnectionDto {

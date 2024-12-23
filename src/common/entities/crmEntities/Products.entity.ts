@@ -89,7 +89,7 @@ export class Products {
     @JoinColumn([{ name: 'customer_id', referencedColumnName: 'id' }])
     customer: Customers;
 
-    @OneToOne(() => Consultants, (consultants) => consultants.products)
+    @OneToOne(() => Consultants, (consultants) => consultants.products, { eager: true })
     @JoinColumn([{ name: 'consultant_id', referencedColumnName: 'id' }])
     consultant: Consultants;
 
@@ -118,5 +118,30 @@ export class Products {
     @AfterLoad()
     afterLoad() {
         this.id = Number(this.id);
+    }
+
+    get getConsultant() {
+        if (this.consultant) {
+            return this.consultant;
+        }
+
+        return null;
+    }
+
+    get getBasicInfo() {
+        return {
+            id: this.id,
+            first_use_date: this.first_use_date,
+            use_date: this.use_date,
+            use_time: this.use_time,
+            mac_address: this.mac_address,
+            app_use_yn: this.app_use_yn,
+            license_period: this.license_period,
+            created_at: this.created_at,
+            is_expired: this.getIsExpired,
+            device: this.device ? this.device.getBasicInfo : null,
+            license: this.license ? this.license.getBasicInfo : null,
+            application: this.application ? this.application.getBasicInfo : null,
+        };
     }
 }

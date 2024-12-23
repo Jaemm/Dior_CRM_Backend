@@ -32,4 +32,33 @@ export class ProductRecommendationGroups {
 
     @OneToMany(() => ProductRecommendationSelecteds, (prSelecteds) => prSelecteds.prGroup)
     prSelecteds: ProductRecommendationSelecteds[];
+
+    get getBasicInfo() {
+        return {
+            id: Number(this.id),
+            name: this.name,
+            countries: this.countries,
+            products: this.prSelecteds
+                ? this.prSelecteds
+                      .sort((a, b) => a.orderNumber - b.orderNumber)
+                      .map((selected) => {
+                          const product = selected.productRecommendation || null;
+                          return product
+                              ? {
+                                    id: Number(product.id),
+                                    name: product.name,
+                                    product_type: product.productType,
+                                    description: product.description,
+                                    link: product.link,
+                                    image_url: product.imageUrl,
+                                    category: product.category,
+                                    routine: product.routine,
+                                    is_principal: selected.isPrincipal,
+                                }
+                              : null;
+                      })
+                      .filter(Boolean)
+                : [],
+        };
+    }
 }

@@ -1,5 +1,5 @@
-import { Body, Query, Param, Controller, Get, Post, Put, Delete, Res } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Query, Param, Controller, Get, Post, Put, Delete, Res, Req } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { DiorAdminsService } from './diorAdmins.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -14,42 +14,48 @@ export class DiorAdminsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get()
-    async getAdmins(@Query() qeury: GetAdminsDto) {
-        return await this.diorAdminsService.getAdmins(qeury);
+    async getAdmins(@Res() res: Response, @Query() qeury: GetAdminsDto) {
+        const admins = await this.diorAdminsService.getAdmins(qeury);
+        return res.status(200).send(admins);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post()
-    async createAdmin(@Body() body: CreateAdminDto) {
-        return await this.diorAdminsService.createAdmin(body);
+    async createAdmin(@Res() res: Response, @Body() body: CreateAdminDto) {
+        console.log(body);
+        const result = await this.diorAdminsService.createAdmin(body);
+        return res.status(200).send(result);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Put(':id')
-    async updateAdminById(@Param('id') adminId: string, @Body() body: UpdateAdminDto) {
-        return await this.diorAdminsService.updateAdminById(adminId, body);
+    async updateAdminById(@Res() res: Response, @Param('id') adminId: string, @Body() body: UpdateAdminDto) {
+        const updatedAdmin = await this.diorAdminsService.updateAdminById(adminId, body);
+        return res.status(200).send(updatedAdmin);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Delete('delete_multiple/:ids')
-    async deleteMutipleAdmins(@Param('ids') adminIds: string) {
-        return await this.diorAdminsService.deleteMutipleAdmins(adminIds);
+    async deleteMutipleAdmins(@Res() res: Response, @Param('ids') adminIds: string) {
+        const result = await this.diorAdminsService.deleteMutipleAdmins(adminIds);
+        return res.status(200).send(result);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('import')
-    async importAdmins(@Body() body: ImportAdminsDto) {
-        return await this.diorAdminsService.importAdmins(body);
+    async importAdmins(@Req() req: Request, @Res() res: Response, @Body() body: ImportAdminsDto) {
+        const result = await this.diorAdminsService.importAdmins(req, body);
+        return res.status(200).send(result);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Get('export')
-    async exportAdmins(@Query() query: ExportAdminsDto, @Res() res: Response) {
+    async exportAdmins(@Res() res: Response, @Query() query: ExportAdminsDto) {
         const resultFile = await this.diorAdminsService.exportAdmins(query);
 
         res.setHeader('Content-Type', 'text/csv');
@@ -57,3 +63,4 @@ export class DiorAdminsController {
         return res.send(resultFile);
     }
 }
+

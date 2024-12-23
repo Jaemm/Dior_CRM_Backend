@@ -36,6 +36,7 @@ import { PositionsIds } from '@/src/common/enums/position.enum';
 import { Role } from '@/src/common/enums/role.enum';
 import { AuthService } from '../auth/auth.service';
 import { Applications, Devices } from '@/src/common/entities/crmEntities';
+import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class PartnerDbService {
@@ -85,6 +86,8 @@ export class PartnerDbService {
                 country: consultant.country,
                 zip_code: consultant.zip_code,
                 state: consultant.state,
+                token: consultant.token,
+                refresh_token: null as any,
                 birthdate: consultant.birthdate,
                 note: consultant.note,
                 push_token: consultant.push_token,
@@ -129,35 +132,7 @@ export class PartnerDbService {
                           };
                       })
                     : [],
-                consultant_company: consultant.consultant_company
-                    ? {
-                          id: consultant.consultant_company.id,
-                          name: consultant.consultant_company.name,
-                          created_at: consultant.consultant_company.created_at,
-                          updated_at: consultant.consultant_company.updated_at,
-                          address: consultant.consultant_company.address,
-                          email: consultant.consultant_company.email,
-                          phone: consultant.consultant_company.phone,
-                          registeration_date: consultant.consultant_company.registeration_date,
-                          primary_color_code: consultant.consultant_company.primary_color_code,
-                          secondary_color_code: consultant.consultant_company.secondary_color_code,
-                          font: consultant.consultant_company.font,
-                          program_color_code: consultant.consultant_company.program_color_code,
-                          top_color_code: consultant.consultant_company.top_color_code,
-                          text_icon_color_code: consultant.consultant_company.text_icon_color_code,
-                          pie_chart_color_1: consultant.consultant_company.pie_chart_color_1,
-                          pie_chart_color_2: consultant.consultant_company.pie_chart_color_2,
-                          pie_chart_color_3: consultant.consultant_company.pie_chart_color_3,
-                          pie_chart_color_4: consultant.consultant_company.pie_chart_color_4,
-                          pie_chart_color_5: consultant.consultant_company.pie_chart_color_5,
-                          pie_chart_points_color: consultant.consultant_company.pie_chart_points_color,
-                          active: consultant.consultant_company.active,
-                          font_color_1: consultant.consultant_company.font_color_1,
-                          font_color_2: consultant.consultant_company.font_color_2,
-                          data_exchange_url: consultant.consultant_company.data_exchange_url,
-                          pmx: consultant.consultant_company.pmx,
-                      }
-                    : {},
+                consultant_company: consultant.consultant_company ? consultant.consultant_company.getBasicInfo : {},
                 consultant_branch: consultant.consultant_branch
                     ? {
                           id: Number(consultant.consultant_branch.id),
@@ -202,14 +177,7 @@ export class PartnerDbService {
                           updated_at: consultant.consultant_shop.updatedAt,
                       }
                     : {},
-                consultant_position: consultant.consultant_position
-                    ? {
-                          id: consultant.consultant_position.id,
-                          name: consultant.consultant_position.name,
-                          created_at: consultant.consultant_position.created_at,
-                          updated_at: consultant.consultant_position.updated_at,
-                      }
-                    : {},
+                consultant_position: consultant.getPosition,
             };
 
             return reformatConsultant;
@@ -230,7 +198,9 @@ export class PartnerDbService {
                 });
             }
 
-            const customerQuery = this.customerRepository.createQueryBuilder('customers');
+            const customerQuery = this.customerRepository
+                .createQueryBuilder('customer')
+                .where('customer.consultant_id = :consultantId', { consultantId });
 
             if (search) {
                 customerQuery.andWhere(
@@ -245,7 +215,7 @@ export class PartnerDbService {
                     }),
                 );
             }
-
+            //
             if (filter_by) {
                 let filterByOrder = 'ASC';
                 let filterByField = filter_by.toString();
@@ -297,7 +267,7 @@ export class PartnerDbService {
 
             return {
                 data: reformatCustomer,
-                total_count: totalCount,
+                total_size: totalCount,
                 current_page_size: reformatCustomer.length,
                 current_page: searchPage,
                 total_pages: Math.ceil(totalCount / searchPer),
@@ -308,128 +278,146 @@ export class PartnerDbService {
     }
 
     async loginDiorConsultant(body: LoginDiorConsultantDto, locale: string = 'en') {
-        try {
-            const { app_id, email, password } = body;
+        let { email, password } = body;
 
-            let consultant;
+        let consultant;
 
-            if (app_id) {
-                consultant = await this.consultantRepository.getConsultantEmailAndAppId(email, app_id);
+        const app_id = body?.app_id ?? '88';
+        // if (app_id) {
+        consultant = await this.consultantRepository.getConsultantEmailAndAppId(email, app_id);
 
-                if (!consultant) {
-                    consultant = await this.consultantRepository.getConsultantEmailAndAppId(email);
+        // if (!consultant) {
+        consultant = await this.consultantRepository.getConsultantEmailAndAppId(email);
 
-                    if (!consultant) {
-                        throw new NotFoundException({});
-                    }
-
-                    if (!consultant.password_digest || consultant.password_digest === '') {
-                        throw new UnauthorizedException({
-                            result_code: ErrorStatus.LOGIN_FAILED,
-                            error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
-                        });
-                    }
-
-                    consultant.app_id = Number(app_id);
-                    consultant = await this.consultantRepository.save(consultant);
-
-                    await this.consultantService.verifyPassword(password, consultant.password_digest);
-                }
-            } else {
-                const consultants = await this.consultantRepository.find({
-                    where: {
-                        email: email,
-                    },
-                });
-
-                if (!consultants && consultants.length < 1) {
-                    throw new NotFoundException({});
-                }
-
-                for (let i = 0; i < consultants.length; i++) {
-                    const c = consultants[i];
-
-                    if (c.password_digest) {
-                        this.consultantService.verifyPassword(password, c.password_digest);
-                        consultant = c;
-                        break;
-                    }
-                }
-            }
-
-            if (!consultant) {
-                throw new UnauthorizedException({
-                    result_code: ErrorStatus.LOGIN_FAILED,
-                    error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
-                });
-            }
-
-            if (!consultant.email_confirmed) {
-                throw new UnauthorizedException({
-                    result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
-                    error: this.commonService.createLocaleErrorMessage(locale, 'not_confirmed'),
-                });
-            }
-
-            if (Number(consultant.consultant_position) === PositionsIds.BRAND_MANAGER) {
-                throw new UnauthorizedException({
-                    result_code: ErrorStatus.UNAUTHORIZED,
-                    error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
-                });
-            }
-
-            const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
-                { id: consultant.id, email: consultant.email, role: Role.Consultant },
-                '',
-            );
-
-            consultant.token = accessToken;
-            consultant = await this.consultantRepository.save(consultant);
-
-            const consultants = await this.consultantRepository.find({
-                where: {
-                    email: email,
-                },
+        if (!consultant) {
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.LOGIN_FAILED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
             });
-
-            const appIds = consultants.map((c) => c.app_id);
-
-            const applications = await this.applicationRepository.find({
-                where: {
-                    id: In(appIds),
-                },
-            });
-
-            const apps = applications.map((appl) => {
-                return {
-                    id: appl.id,
-                    name: appl.name,
-                };
-            });
-
-            return {
-                id: consultant.id,
-                email: consultant.email,
-                name: consultant.name,
-                location: consultant.address,
-                language: consultant.language,
-                token: consultant.token,
-                logged_in: new Date(),
-                consultant_company: consultant.consultant_company,
-                consultant_position: consultant.consultant_position,
-                app_id: consultant.app_id,
-                applications: apps,
-                consultant_country: consultant.country || consultant?.consultant_branch?.country,
-                countries: consultant?.countries || [],
-            };
-        } catch (e) {
-            throw e;
         }
+
+        if (!consultant.password_digest || consultant.password_digest === '') {
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.LOGIN_FAILED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
+            });
+        }
+
+        consultant.app_id = Number(app_id);
+        consultant = await this.consultantRepository.save(consultant);
+
+        const passWordCheck = await this.consultantService.verifyPassword(password, consultant.password_digest, locale);
+
+        if (!passWordCheck) {
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.LOGIN_FAILED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
+            });
+        }
+        // }
+        // }
+
+        // else {
+        //     const consultants = await this.consultantRepository.find({
+        //         where: {
+        //             email: email,
+        //         },
+        //     });
+
+        //     if (!consultants && consultants.length < 1) {
+        //         throw new UnauthorizedException({
+        //             result_code: ErrorStatus.LOGIN_FAILED,
+        //             error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
+        //         });
+        //         if (passWordCheck === true) {
+        //             throw new UnauthorizedException({
+        //                 result_code: ErrorStatus.LOGIN_FAILED,
+        //                 error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
+        //             });
+        //         }
+        //     }
+
+        //     for (let i = 0; i < consultants.length; i++) {
+        //         const c = consultants[i];
+
+        //         if (c.password_digest) {
+        //             this.consultantService.verifyPassword(password, c.password_digest, locale);
+        //             consultant = c;
+        //             break;
+        //         }
+        //     }
+        // }
+
+        if (!consultant) {
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.LOGIN_FAILED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
+            });
+        }
+
+        if (!consultant.email_confirmed) {
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'not_confirmed'),
+            });
+        }
+
+        if (Number(consultant.consultant_position) === PositionsIds.BRAND_MANAGER) {
+            throw new UnauthorizedException({
+                result_code: ErrorStatus.UNAUTHORIZED,
+                error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+            });
+        }
+
+        const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
+            { id: consultant.id, email: consultant.email, role: Role.Consultant },
+            '',
+        );
+
+        consultant.token = accessToken;
+        consultant = await this.consultantRepository.save(consultant);
+
+        const consultants = await this.consultantRepository.find({
+            where: {
+                email: email,
+            },
+        });
+
+        const appIds = consultants.map((c) => c.app_id);
+
+        const applications = await this.applicationRepository.find({
+            where: {
+                id: In(appIds),
+            },
+        });
+
+        const apps = applications.map((appl) => {
+            return {
+                id: appl.id,
+                name: appl.name,
+            };
+        });
+
+        return {
+            id: consultant.id,
+            email: consultant.email,
+            name: consultant.name,
+            location: consultant.address,
+            language: consultant.language,
+            token: consultant.token,
+            logged_in: new Date(),
+            consultant_company: consultant.consultant_company ? consultant.consultant_company?.getBasicInfo : null,
+            consultant_position: consultant.consultant_position ?? null,
+            app_id: consultant.app_id,
+            applications: apps,
+            consultant_country: consultant.country || consultant?.consultant_branch?.country,
+            countries: consultant?.countries || [],
+        };
     }
 
     async getAnalysisHistories(req: Request, customerId: string, query: GetAnalysisHistoriesDto, locale = 'en') {
         try {
-            const { filter_by: filterBy } = query;
+            const { filter_by: filterBy, page, limit } = query;
 
             const requestHeaders = req.headers;
 
@@ -474,8 +462,8 @@ export class PartnerDbService {
             const analysisHistoryRequestPromise = analysisTypeList.map(async (analysisType) => {
                 let result: any;
 
-                if (['CNDP Skin', 'CNDP Hair', 'FFA', 'HH', 'CMA Skin', 'CMA Hair'].includes(analysisType)) {
-                    const type = analysisType as 'CNDP Skin' | 'CNDP Hair' | 'FFA' | 'HH' | 'CMA Skin' | 'CMA Hair';
+                if (['CNDP Skin'].includes(analysisType)) {
+                    const type = analysisType as 'CNDP Skin';
                     result = await this.analysisHistoryRequest(type, customerId, bearerToken);
                 }
 
@@ -504,8 +492,6 @@ export class PartnerDbService {
                     filterByField = filterBy.replace('-', '');
                 }
 
-                console.log(`filter_by_order => ${filterByOrder}`);
-
                 if (filterByOrder === 'DESC') {
                     filteredData = _.orderBy(filteredData, [filterByField], ['desc']);
                 } else {
@@ -513,7 +499,10 @@ export class PartnerDbService {
                 }
             }
 
-            return filteredData;
+            const searchPage = Number(page || 1);
+            const searchLimit = Number(limit || 25);
+
+            return this.commonService.paginate(filteredData, searchPage, searchLimit);
         } catch (e) {
             throw e;
         }
@@ -529,19 +518,28 @@ export class PartnerDbService {
         try {
             const { analysis_type: analysisType } = query;
 
-            const requestHeaders = req.headers;
+            // const requestHeaders = req.headers;
 
-            const authorization = requestHeaders?.authorization;
+            const authorization: any = req.headers['x-chowis-consultant-token']; //requestHeaders?.authorization;
 
-            const bearerToken = authorization.startsWith('Bearer') ? authorization : null;
+            let bearerToken = authorization ? 'Bearer ' + authorization : null;
+            if (!bearerToken) {
+                bearerToken = req.headers?.authorization;
+            }
 
             let result: any;
 
-            if (['cndpskin', 'cndphair', 'ffa', 'hh', 'cmaskin', 'cmahair'].includes(analysisType)) {
-                const type = analysisType as 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair';
-                result = await this.analysisHistoryRequestByBatchId(type, customerId, batchId, bearerToken);
-            }
+            // if (['cndpskin'].includes(analysisType)) {
+            const type = 'cndpskin';
+            result = await this.analysisHistoryRequestByBatchId(type, customerId, batchId, bearerToken);
+            // }
 
+            if (result.data && result.data.length > 0) {
+                // Remove duplicates by 'hash' key
+                const uniqueData = Array.from(new Map(result.data.map((item: any) => [item['hash'], item])).values());
+
+                result.data = uniqueData;
+            }
             return {
                 data: result,
             };
@@ -568,8 +566,8 @@ export class PartnerDbService {
 
             let result: any;
 
-            if (['cndpskin', 'cndphair', 'ffa', 'hh', 'cmaskin', 'cmahair'].includes(analysisType)) {
-                const type = analysisType as 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair';
+            if (['cndpskin'].includes(analysisType)) {
+                const type = analysisType as 'cndpskin';
                 result = await this.analysisHydrationSebumByBatchId(type, batchId, bearerToken);
             }
 
@@ -581,36 +579,14 @@ export class PartnerDbService {
         }
     }
 
-    async analysisHistoryRequest(
-        analysisType: 'CNDP Skin' | 'CNDP Hair' | 'FFA' | 'HH' | 'CMA Skin' | 'CMA Hair',
-        customerId: string,
-        bearerToken: string,
-    ): Promise<any[]> {
-        const urlObj = {
-            'CNDP Skin': process.env['CNDP_SKIN_ANALYSIS_URL'],
-            'CNDP Hair': process.env['CNDP_HAIR_ANALYSIS_URL'],
-            'FFA': process.env['FFA_ANALYSIS_URL'],
-            'HH': process.env['HH_ANALYSIS_URL'],
-            'CMA Skin': process.env['CMA_SKIN_ANALYSIS_URL'],
-            'CMA Hair': process.env['CMA_HAIR_ANALYSIS_URL'],
-        };
-
-        const baseUrl = urlObj[analysisType];
+    async analysisHistoryRequest(analysisType: 'CNDP Skin', customerId: string, bearerToken: string): Promise<any[]> {
+        const baseUrl = process.env['CNDP_SKIN_ANALYSIS_URL'];
 
         if (!baseUrl) {
             return null;
         }
 
-        const requestUrlObj = {
-            'CNDP Skin': `${baseUrl}/cndpskin/${customerId}/analysis-history?page=1&limit=25`,
-            'CNDP Hair': `${baseUrl}/cndphair/${customerId}/analysis-history?page=1&limit=25`,
-            'FFA': `${baseUrl}/ffa/${customerId}/analysis-history?page=1&limit=25`,
-            'HH': `${baseUrl}/cndphh/${customerId}/analysis-history`,
-            'CMA Skin': `${baseUrl}/cmaskin/${customerId}/analysis-history`,
-            'CMA Hair': `${baseUrl}/cmahair/${customerId}/analysis-history`,
-        };
-
-        const requestUrl = requestUrlObj[analysisType];
+        const requestUrl = `${baseUrl}/cndpskin/${customerId}/analysis-history?page=1&limit=25`;
 
         const response = await axios.get(requestUrl, {
             headers: {
@@ -622,36 +598,21 @@ export class PartnerDbService {
     }
 
     async analysisHistoryRequestByBatchId(
-        analysisType: 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair',
+        analysisType: 'cndpskin',
         customerId: string,
         batchId: string,
         bearerToken: string,
     ): Promise<any[]> {
-        const urlObj = {
-            cndpskin: process.env['CNDP_SKIN_ANALYSIS_URL'],
-            cndphair: process.env['CNDP_HAIR_ANALYSIS_URL'],
-            ffa: process.env['FFA_ANALYSIS_URL'],
-            hh: process.env['HH_ANALYSIS_URL'],
-            cmaskin: process.env['CMA_SKIN_ANALYSIS_URL'],
-            cmahair: process.env['CMA_HAIR_ANALYSIS_URL'],
-        };
-
-        const baseUrl = urlObj[analysisType];
+        const baseUrl = process.env['CNDP_SKIN_ANALYSIS_URL'];
 
         if (!baseUrl) {
             return null;
         }
+        //
 
-        const requestUrlObj = {
-            cndpskin: `${baseUrl}/cndpskin/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
-            cndphair: `${baseUrl}/cndphair/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
-            ffa: `${baseUrl}/ffa/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
-            hh: `${baseUrl}/cndphh/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
-            cmaskin: `${baseUrl}/cmaskin/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
-            cmahair: `${baseUrl}/cmahair/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`,
-        };
+        const requestUrlObj = `${baseUrl}/cndpskin/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`;
 
-        const requestUrl = requestUrlObj[analysisType];
+        const requestUrl = requestUrlObj;
 
         const response = await axios.get(requestUrl, {
             headers: {
@@ -659,39 +620,23 @@ export class PartnerDbService {
             },
         });
 
+        // Return the result as JSON
+
         return response.data || [];
     }
 
     async analysisHydrationSebumByBatchId(
-        analysisType: 'cndpskin' | 'cndphair' | 'ffa' | 'hh' | 'cmaskin' | 'cmahair',
+        analysisType: 'cndpskin',
         batchId: string,
         bearerToken: string,
     ): Promise<any[]> {
-        const urlObj = {
-            cndpskin: process.env['CNDP_SKIN_ANALYSIS_URL'],
-            cndphair: process.env['CNDP_HAIR_ANALYSIS_URL'],
-            ffa: process.env['FFA_ANALYSIS_URL'],
-            hh: process.env['HH_ANALYSIS_URL'],
-            cmaskin: process.env['CMA_SKIN_ANALYSIS_URL'],
-            cmahair: process.env['CMA_HAIR_ANALYSIS_URL'],
-        };
-
-        const baseUrl = urlObj[analysisType];
+        const baseUrl = process.env['CNDP_SKIN_ANALYSIS_URL'];
 
         if (!baseUrl) {
             return null;
         }
 
-        const requestUrlObj = {
-            cndpskin: `${baseUrl}/cndpskin/hydration-sebum?batch_id=${batchId}`,
-            cndphair: `${baseUrl}/cndphair/hydration-sebum?batch_id=${batchId}`,
-            ffa: `${baseUrl}/ffa/hydration-sebum?batch_id=${batchId}`,
-            hh: `${baseUrl}/cndphh/hydration-sebum?batch_id=${batchId}`,
-            cmaskin: `${baseUrl}/cmaskin/hydration-sebum?batch_id=${batchId}`,
-            cmahair: `${baseUrl}/cmahair/hydration-sebum?batch_id=${batchId}`,
-        };
-
-        const requestUrl = requestUrlObj[analysisType];
+        const requestUrl = `${baseUrl}/cndpskin/hydration-sebum?batch_id=${batchId}`;
 
         const response = await axios.get(requestUrl, {
             headers: {
@@ -768,6 +713,58 @@ export class PartnerDbService {
             });
 
             return this.commonService.generateMessage('Success!');
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getCustomerById(customerId: string, locale: string = 'en') {
+        try {
+            const customer = await this.customerRepository.findOne({
+                where: {
+                    id: Number(customerId),
+                },
+                relations: ['skinColorGroup', 'applications'],
+            });
+
+            if (!customer) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.CUSTOMER_NOT_FOUND,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'crm_customer_not_found'),
+                });
+            }
+
+            return {
+                id: customer.id || null,
+                external_id: customer.external_id || null,
+                email: customer.email || null,
+                name: customer.name || null,
+                surname: customer.surname || null,
+                gender: customer.gender || null,
+                age: customer.age || null,
+                os: customer.os || null,
+                language: customer.language || null,
+                phone: customer.phone || null,
+                birth: customer.birth || null,
+                address: customer.address || null,
+                note: customer.note || null,
+                city: customer.city || null,
+                state: customer.state || null,
+                zip_code: customer.zip_code || null,
+                country: customer.country || null,
+                skin_color: customer.skinColorGroup?.code || null,
+                ethnicity: customer.ethnicity || null,
+                notes: customer.notes || null,
+                push_token: customer.push_token || null,
+                app_id: customer.app_id || null,
+                company_id: customer.company_id || null,
+                consultant_id: customer.consultant_id || null,
+                skin_color_group_id: customer.skin_color_group_id || null,
+                ethnicity_id: customer.ethnicity_id || null,
+                sign_in_count: customer.sign_in_count || null,
+                image_url: customer.image_url || null,
+                app_name: customer.applications?.name || null,
+            };
         } catch (e) {
             throw e;
         }

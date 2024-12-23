@@ -1,45 +1,33 @@
-import { Injectable } from '@nestjs/common';
+import * as path from 'path';
+import { v4 as uuid } from 'uuid';
 
-import {
-    NotFoundException,
-    BadRequestException,
-    ConflictException,
-    UnauthorizedException,
-} from '@nestjs/common/exceptions';
+import { ConsoleLogger, Injectable } from '@nestjs/common';
+import { NotFoundException, BadRequestException, ConflictException } from '@nestjs/common/exceptions';
 
-import {
-    ConsultantsRepository,
-    ConsultantCountriesRepository,
-    ConsultantBranchesRepository,
-    CustomersRepository,
-    ProductAttributesRepository,
-    ProductRecommendationRepository,
-    ProductRecommendationSelectedRepository,
-    ProductRecommendationGroupsRepository,
-    ProductAttributeTranslationsRepository,
-    ProductTranslationsRepository,
-    ProductsRepository,
-} from '@/src/common/repositories/crm';
+import { ConsultantsRepository, CustomersRepository, PresignRepository } from '@/src/common/repositories/crm';
 
 import { Request } from 'express';
 
 import { CustomerByConsultantIdDto, CreateCustomerDto, SendWebResultDto } from './dior.dto';
 import { ErrorStatus } from '@/src/common/constants/error-status';
-import { ProductTranslations } from '@/src/common/entities/crmEntities';
+
 import { CommonService } from '@/src/common/common.service';
 import { CustomersT } from '@/src/common/types/entities';
+import { fileName } from 'typeorm-model-generator/dist/src/NamingStrategy';
+import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DiorService {
     constructor(
         private commonService: CommonService,
+        private awsS3Service: AwsS3Service,
+        private configService: ConfigService,
 
         // Repos
         private consultantRepository: ConsultantsRepository,
         private customersRepository: CustomersRepository,
-        private productAttributesRepository: ProductAttributesRepository,
-        private productRecommendationRepository: ProductRecommendationRepository,
-        private prSelectedRepository: ProductRecommendationSelectedRepository,
+        private presignRepository: PresignRepository,
     ) {}
 
     /** Customers */
@@ -185,6 +173,95 @@ export class DiorService {
             }
 
             await this.commonService.justSendMail(email, 'Dior Skin Analyzer Consultation Results', batch_id);
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async fileUpload(file: Express.Multer.File) {
+        try {
+            const { originalname, mimetype, buffer } = file;
+
+            const allowdMimeTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'image/jpeg'];
+
+            const isAllowedFileType = allowdMimeTypes.includes(mimetype);
+
+            if (!isAllowedFileType) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.INVALID_REQUEST,
+                    error: 'file type',
+                });
+            }
+
+            const hash = uuid();
+
+            const fileExtension = path.extname(originalname);
+
+            const keyForS3 = `${hash}${fileExtension}`;
+
+            const prefix = 'upload';
+
+            const uploadData: any = await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
+
+            console.log(uploadData);
+
+            const createFileUrl = (key: string) => {
+                const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
+
+                const url = `${baseUrl}/api/dior/file/${key}`;
+
+                return url;
+            };
+
+            const downloadUrl = createFileUrl(hash);
+
+            const newPresign = this.presignRepository.create({
+                key: hash,
+                fileName: originalname,
+                fileExtension: fileExtension,
+                url: downloadUrl,
+                mimeType: mimetype,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+
+            await this.presignRepository.save(newPresign);
+
+            return {
+                url: downloadUrl,
+            };
+            // ('http://localhost:3100/image/277c7a2f-9236-4759-8d54-3aed0d402506');
+            // 1. param -> 277c7a2f-9236-4759-8d54-3aed0d402506
+            // 2. DB check -->  ext
+            // 3. s3 -> key + .ext
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async getFile(hash: string) {
+        try {
+            const existFile = await this.presignRepository.findOne({
+                where: {
+                    key: hash,
+                },
+            });
+
+            if (!existFile) {
+                throw new NotFoundException({
+                    result_code: ErrorStatus.NOT_FOUND,
+                });
+            }
+
+            const keyForS3 = `upload/${existFile.key}${existFile.fileExtension}`;
+
+            const s3File = await this.awsS3Service.getImageCloudS3(keyForS3);
+
+            return {
+                binary: s3File.Body,
+                mimeType: existFile.mimeType,
+                fileName: existFile.fileName,
+            };
         } catch (e) {
             throw e;
         }

@@ -25,6 +25,9 @@ export class CreateBranchesDto {
     @IsNotEmpty()
     @IsString()
     country: string;
+
+    @IsOptional()
+    consultant_branch_id: any;
 }
 
 export class SearchBranchesDto {

@@ -29,7 +29,7 @@ import {
 
 import { IMessage } from 'src/common/interfaces/message.interface';
 import { CommonService } from 'src/common/common.service';
-import { CustomerDataReplicationService } from '../dataReplication/customerDataReplication/customerDataReplication.service';
+
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 import { ProductsService } from '../products/products.service';
 
@@ -58,7 +58,6 @@ export class CustomersService {
 
         private readonly commonService: CommonService,
 
-        private readonly replicateCustomer: CustomerDataReplicationService,
         @Inject(forwardRef(() => ProductsService)) private readonly productService: ProductsService, // TODO: Resolve dependency issue // private readonly customerConsentsService: CustomerConsentsService,
 
         private readonly skinColorGorupsRepository: SkinColorGroupsRepository,
@@ -368,17 +367,6 @@ export class CustomersService {
             product.expired_date = product.getExpiredDate;
             product.is_expired = product.getIsExpired;
         });
-
-        if (customer === null) {
-            // replicateUserToMasterOperation
-            customer = await this.replicateCustomer.replicateUserToMasterOperation(email, app_id, selections, includes);
-            // customer = await this.replicateCustomer.userExists(email, app_id, selections, includes);
-
-            // throw new BadRequestException({
-            //     result_code: ErrorStatus.LOGIN_FAILED,
-            //     error: ResponseMessages.LoginFailed,
-            // });
-        }
 
         if (customer?.optic_number) customer.optic_number = customer?.getOpticNumbers;
         if (customer?.consultant_name) customer.consultant_name = customer?.getConsultantName;

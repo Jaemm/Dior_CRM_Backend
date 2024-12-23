@@ -49,8 +49,6 @@ import { SkinColorGroups } from '@/src/common/entities/crmEntities/SkinColorGrou
 import { AdminGroups } from '@/src/common/entities/crmEntities/AdminGroups.entity';
 
 import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/ActiveStorageAttachments.entity';
-
-import { CrmDataReplicationModule } from '../dataReplication/consultantDataReplication/consultantDataReplication.module';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 
 import { ProductsModule } from '../products/products.module';
@@ -78,6 +76,7 @@ import {
     EthnicitiesRepository,
     SkinColorGroupsRepository,
     PasswordEmailDetailsRepository,
+    ProductRecommendationSelectedRepository,
 } from '@/src/common/repositories/crm';
 import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataReplication/analysisDataReplication.module';
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
@@ -143,11 +142,7 @@ import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repos
             Versions,
         ]),
         AuthModule,
-
-        CrmDataReplicationModule,
-
         ConsultantsModule,
-
         forwardRef(() => ProductsModule),
         CustomersModule,
         CRMModule,
@@ -177,6 +172,7 @@ import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repos
         RefreshTokensRepository,
         NotificationsRepository,
         ProductsRepository,
+        ProductRecommendationSelectedRepository,
         SalesConnectionRepository,
         SkinColorGroupsRepository,
         LicensesRepository,
@@ -217,7 +213,7 @@ export class ConsultantsModule {
                 method: RequestMethod.GET,
             },
             {
-                path: 'consultants/create_sale_connection',
+                path: 'consultants/create-sales-connection',
                 method: RequestMethod.POST,
             },
             {
@@ -312,10 +308,10 @@ export class ConsultantsModule {
                 path: 'consultants/health_tips/by_company',
                 method: RequestMethod.GET,
             },
-            {
-                path: 'consultants/generate_flat_file_dior',
-                method: RequestMethod.GET,
-            },
+            // {
+            //     path: 'consultants/generate_flat_file_dior',
+            //     method: RequestMethod.GET,
+            // },
         );
     }
 }

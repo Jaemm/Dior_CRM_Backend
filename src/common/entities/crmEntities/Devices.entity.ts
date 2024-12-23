@@ -152,7 +152,7 @@ export class Devices {
     @Column('character varying', { name: 'pwd_digest', nullable: true })
     pwd_digest: string | null;
 
-    @OneToMany(() => Products, (products) => products.device)
+    @OneToMany(() => Products, (products) => products.device, { eager: true })
     products: Products[];
 
     @ManyToOne(() => ConsultantCompanies, (consultantCompanies) => consultantCompanies.devices)
@@ -164,9 +164,28 @@ export class Devices {
         this.id = Number(this.id);
     }
 
+    get getBasicInfo() {
+        return {
+            id: this.id,
+            optic_number: this.optic_number,
+            serial_number: this.serial_number,
+            docking_number: this.docking_number,
+            wb: this.wb,
+            cal: this.cal,
+            refresh_date: this.refresh_date,
+            app_version: this.app_version,
+            app_update_date: this.app_update_date,
+            division: this.division,
+            use_yn: this.use_yn,
+            lat: this.lat,
+            lng: this.lng,
+            consultant_company: this.consultant_company ? this.consultant_company.getBasicInfo : null,
+        };
+    }
+
     getLicensePeriod() {
         if (this.products && this.products.length > 0) {
-            return this.products[0].license_period;
+            return this.products[0]?.license_period ?? null;
         }
 
         return null;
@@ -174,9 +193,28 @@ export class Devices {
 
     getConsultant() {
         if (this.products && this.products.length > 0) {
-            return this.products[0].consultant;
+            return this.products[0]?.consultant ?? null;
         }
-
         return null;
     }
+
+    getConsultantShop() {
+        if (this.products && this.products.length > 0) {
+            return this.products[0]?.consultant?.consultant_branch ?? null;
+        }
+        return null;
+        // getConsultantShop
+    }
 }
+
+// for get consultant it get the value for the productsEntity as foolow
+// consultant is a
+
+// getConsultant() {
+//     console.log('==========> DEVICES', this.products ?? null);
+//     if (this.products && this.products.length > 0) {
+//         return this.products[0].consultant;
+//     }
+
+//     return null;
+// }

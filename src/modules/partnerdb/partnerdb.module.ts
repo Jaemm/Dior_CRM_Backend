@@ -39,9 +39,22 @@ import { ConsultantsModule } from '../consultants/consultants.module';
 })
 export class PartnerDbModule {
     configure(consumer: MiddlewareConsumer) {
-        consumer.apply(AuthMiddleware).forRoutes({
-            path: 'partnerdb/*',
-            method: RequestMethod.ALL,
-        });
+        consumer
+            .apply(AuthMiddleware)
+            .exclude(
+                {
+                    path: 'partnerdb/consultants/dior_login',
+                    method: RequestMethod.POST,
+                },
+                {
+                    path: 'partnerdb/consultants/password',
+                    method: RequestMethod.POST,
+                },
+            )
+            .forRoutes({
+                path: 'partnerdb/*',
+                method: RequestMethod.ALL,
+            });
     }
 }
+//

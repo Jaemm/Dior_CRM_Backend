@@ -1,8 +1,7 @@
 import * as path from 'path';
-import { createWriteStream, existsSync } from 'fs';
+import { createWriteStream, existsSync, fsync } from 'fs';
 import * as csv from 'csv';
-
-import admin, { app } from 'firebase-admin';
+import * as moment from 'moment';
 
 import {
     BadRequestException,
@@ -14,7 +13,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Or, Equal, Repository, Between } from 'typeorm';
+import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Repository } from 'typeorm';
 import { TokenTypeEnum } from 'src/jwt/enums/auth-token.enum';
 
 import { AuthService } from '../auth/auth.service';
@@ -55,20 +54,18 @@ import {
     FetchSalesConnectionDto,
     LoginConsultantDto,
 } from '@/src/modules/consultants/consultants.dto';
-
+let Client = require('ssh2-sftp-client');
 import {
     Consultants,
     Notifications,
-    PasswordEmailDetails,
     Devices,
     ProductRecommendations,
-    ConsultantCompanies,
     Identities,
     HealthTips,
     Customers,
 } from '@/src/common/entities/crmEntities';
 import { CommonService } from 'src/common/common.service';
-import { CrmDataReplicationService } from '../dataReplication/consultantDataReplication/consultantDataReplication.service';
+
 import * as fs from 'fs/promises';
 import * as handlebars from 'handlebars';
 
@@ -99,6 +96,7 @@ import {
     GendersRepository,
     NotificationsRepository,
     PasswordEmailDetailsRepository,
+    ProductRecommendationSelectedRepository,
     ProductsRepository,
     RefreshTokensRepository,
     SalesConnectionRepository,
@@ -119,14 +117,28 @@ import {
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 import { LicenseHistoriesRepository } from '@/src/common/repositories/crm/licenseHistories.repository';
 import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repository';
-
+import { Cron } from '@nestjs/schedule';
+import { promisify } from 'util';
+import { lowerCase, toLower } from 'lodash';
 @Injectable()
 export class ConsultantsService {
+    private readonly readFile = promisify(fs.readFile);
     private readonly jwtConfig: IJwt;
+    private readonly saltRounds = 10;
+    client = new Client();
+
+    // Disconnecting
+    async disconnect() {
+        await this.client.end();
+    }
 
     constructor(
         @InjectRepository(ProductRecommendations)
         private readonly productRecommendationsRepository: Repository<ProductRecommendations>,
+
+        // @InjectRepository(ProductRecommendationSelectedRepository)
+        // private readonly ProductRecommendationSelectedRepository: Repository<ProductRecommendationSelectedRepository>,
+
         @InjectRepository(HealthTips)
         private readonly healthTipsRespository: Repository<HealthTips>,
         @InjectRepository(Identities)
@@ -140,7 +152,6 @@ export class ConsultantsService {
         private readonly jwtService: JwtService,
 
         private readonly commonService: CommonService,
-        private readonly dataReplication: CrmDataReplicationService,
 
         private readonly analysisReplService: AnalysisDataReplicationService,
 
@@ -167,13 +178,16 @@ export class ConsultantsService {
         private readonly ethnicitiesRepository: EthnicitiesRepository,
         private readonly licensesRepository: LicensesRepository,
         private readonly licenseHistoriesRepository: LicenseHistoriesRepository,
-
+        private readonly ProductRecommendationSelectedRepository: ProductRecommendationSelectedRepository,
         private readonly passwordDetailRepository: PasswordEmailDetailsRepository,
     ) {
         this.jwtConfig = this.configService.get<IJwt>('jwt');
     }
 
     // Account
+    async bcryptHashPassword(password: string): Promise<string> {
+        return bcrypt.hash(password, this.saltRounds);
+    }
 
     public async sendAccountConfimationEmail(token: string, email: string, locale: string) {
         const subject = await this.commonService.translate('confirm_email_subject', locale);
@@ -189,9 +203,11 @@ export class ConsultantsService {
         return result;
     }
 
-    async verifyPasswordBcrypt(enteredPassword: string, bcryptHash: string): Promise<boolean> {
+    async verifyPasswordBcrypt(enteredPassword: string, bcryptHash: string, locale: string): Promise<boolean> {
         try {
-            return await bcrypt.compare(enteredPassword, bcryptHash);
+            const result = await bcrypt.compare(enteredPassword, bcryptHash);
+
+            return result;
         } catch (error) {
             throw new InternalServerErrorException({
                 result_code: ErrorStatus.SERVER_ERROR,
@@ -214,16 +230,16 @@ export class ConsultantsService {
 
     // Method to determine which hashing algorithm was used for a stored password
     determineHashAlgorithm(storedHash: string): 'bcrypt' | 'argon2' {
-        return storedHash.startsWith('$2a$') ? 'bcrypt' : 'argon2';
+        return storedHash.startsWith('$2') ? 'bcrypt' : 'argon2';
     }
 
     // Method to verify password based on the hashing algorithm used
-    async verifyPassword(enteredPassword: string, storedHash: string): Promise<boolean> {
+    async verifyPassword(enteredPassword: string, storedHash: string, locale: string): Promise<boolean> {
         const hashAlgorithm = this.determineHashAlgorithm(storedHash);
 
         switch (hashAlgorithm) {
             case 'bcrypt':
-                return this.verifyPasswordBcrypt(enteredPassword, storedHash);
+                return this.verifyPasswordBcrypt(enteredPassword, storedHash, locale);
             case 'argon2':
                 return this.verifyPasswordArgon2(enteredPassword, storedHash);
             default:
@@ -310,7 +326,7 @@ export class ConsultantsService {
             this.consultantsRepository.updateConsultant(consultantData.id, {
                 confirm_token: confirmationToken,
                 token: refreshToken,
-                confirmation_sent_at: new Date(),
+                // confirmation_sent_at: new Date(),
             }),
         ]);
 
@@ -327,91 +343,88 @@ export class ConsultantsService {
     }
 
     public async signUpRuby(newUser: ConsultantDto, locale: string = 'en') {
-        try {
-            const existUser = await this.consultantsRepository.findConsultant(Number(newUser.app_id), newUser.email);
+        const existUser = await this.consultantsRepository.findConsultant(Number(newUser.app_id), newUser.email);
 
-            if (existUser) {
-                throw new ConflictException({
-                    result_code: ErrorStatus.BAD_REQUEST,
-                    error: ResponseMessages.EmailAlreadyExist,
-                });
-            }
-
-            const consultantData: any = newUser;
-
-            if (newUser.email.includes('@chowistest.com')) {
-                consultantData['email_confirmed'] = true;
-            }
-
-            const consultant: Consultants = await this.consultantsRepository.createConsultant(consultantData);
-
-            const [confirmationToken, token] = await Promise.all([
-                this.jwtService.generateToken(
-                    { id: consultant.id, email: consultant.email, role: Role.Consultant },
-                    TokenTypeEnum.CONFIRMATION,
-                    null,
-                ),
-                this.authService.generateAuthTokens(
-                    { id: consultant.id, email: consultant.email, role: Role.Consultant },
-                    '',
-                ),
-            ]);
-
-            const [accessToken, refreshToken] = token;
-
-            await Promise.all([
-                this.sendAccountConfimationEmail(confirmationToken, consultant.email, locale),
-                this.consultantsRepository.updateConsultant(consultant.id, {
-                    confirm_token: confirmationToken,
-                    token: refreshToken,
-                }),
-            ]);
-
-            const consultantResponseData = await this.consultantsRepository.findOne({
-                where: {
-                    id: consultant.id,
-                },
-                relations: ['country_details', 'products', 'products.device'],
+        if (existUser !== null) {
+            throw new ConflictException({
+                result_code: ErrorStatus.BAD_REQUEST,
+                error: ResponseMessages.EmailAlreadyExist,
             });
-
-            return {
-                id: consultantResponseData.id,
-                email: consultantResponseData.email,
-                name: consultantResponseData.name,
-                surname: consultantResponseData.surname,
-                gender: consultantResponseData.gender,
-                os: consultantResponseData.os,
-                language: consultantResponseData.language,
-                phone: consultantResponseData.phone,
-                address: consultantResponseData.address,
-                city: consultantResponseData.city,
-                country: consultantResponseData.country,
-                zip_code: consultantResponseData.zip_code,
-                state: consultantResponseData.state,
-                birthdate: consultantResponseData.birthdate,
-                note: consultantResponseData.note,
-                push_token: consultantResponseData.push_token,
-                memo: consultantResponseData.memo,
-                app_id: consultantResponseData.app_id,
-                company_name: consultantResponseData.company_name,
-                company_address: consultantResponseData.company_address,
-                branch: consultantResponseData.branch,
-                position: consultantResponseData.position,
-                skin_color_group_id: consultantResponseData.skin_color_group_id,
-                ethnicity_id: consultantResponseData.ethnicity_id,
-                callback_url: consultantResponseData.callback_url,
-                code: consultantResponseData.code,
-                token: accessToken,
-                refresh_token: refreshToken,
-                social: consultantResponseData.social,
-                country_code: consultantResponseData.country_details?.code,
-                store: consultantResponseData.consultant_shop,
-                optic_number: consultantResponseData.getOpticNumbers,
-                password_update_needed: consultantResponseData.password_update_needed,
-            };
-        } catch (e) {
-            throw e;
         }
+
+        const consultantData: any = newUser;
+
+        if (newUser.email.includes('@chowistest.com')) {
+            consultantData['email_confirmed'] = true;
+        }
+
+        consultantData.password = await this.bcryptHashPassword(consultantData.password);
+        const consultant: Consultants = await this.consultantsRepository.createConsultant(consultantData);
+
+        const [confirmationToken, token] = await Promise.all([
+            this.jwtService.generateToken(
+                { id: consultant.id, email: consultant.email, role: Role.Consultant },
+                TokenTypeEnum.CONFIRMATION,
+                null,
+            ),
+            this.authService.generateAuthTokens(
+                { id: consultant.id, email: consultant.email, role: Role.Consultant },
+                '',
+            ),
+        ]);
+
+        const [accessToken, refreshToken] = token;
+
+        await Promise.all([
+            this.sendAccountConfimationEmail(confirmationToken, consultant.email, locale),
+            this.consultantsRepository.updateConsultant(consultant.id, {
+                confirm_token: confirmationToken,
+                token: refreshToken,
+            }),
+        ]);
+
+        const consultantResponseData = await this.consultantsRepository.findOne({
+            where: {
+                id: consultant.id,
+            },
+            relations: ['country_details', 'products', 'products.device'],
+        });
+
+        return {
+            id: consultantResponseData.id,
+            email: consultantResponseData.email,
+            name: consultantResponseData.name,
+            surname: consultantResponseData.surname,
+            gender: consultantResponseData.gender,
+            os: consultantResponseData.os,
+            language: consultantResponseData.language,
+            phone: consultantResponseData.phone,
+            address: consultantResponseData.address,
+            city: consultantResponseData.city,
+            country: consultantResponseData.country,
+            zip_code: consultantResponseData.zip_code,
+            state: consultantResponseData.state,
+            birthdate: consultantResponseData.birthdate,
+            note: consultantResponseData.note,
+            push_token: consultantResponseData.push_token,
+            memo: consultantResponseData.memo,
+            app_id: consultantResponseData.app_id,
+            company_name: consultantResponseData.company_name,
+            company_address: consultantResponseData.company_address,
+            branch: consultantResponseData.branch,
+            position: consultantResponseData.position,
+            skin_color_group_id: consultantResponseData.skin_color_group_id,
+            ethnicity_id: consultantResponseData.ethnicity_id,
+            callback_url: consultantResponseData.callback_url,
+            code: consultantResponseData.code,
+            token: accessToken,
+            refresh_token: refreshToken,
+            social: consultantResponseData.social,
+            country_code: consultantResponseData.country_details?.code,
+            store: consultantResponseData.consultant_shop,
+            optic_number: consultantResponseData.getOpticNumbers,
+            password_update_needed: consultantResponseData.password_update_needed,
+        };
     }
 
     public async updateConsultantRuby(req: Request, body: UpdateConsultantRubyDto, locale: string = 'en') {
@@ -422,6 +435,7 @@ export class ConsultantsService {
                 name,
                 surname,
                 phone_country_code,
+                birthdate,
                 language,
                 os,
                 address,
@@ -456,6 +470,7 @@ export class ConsultantsService {
             currentConsultant.phone = phone ? phone : currentConsultant.phone;
             currentConsultant.name = name ? name : currentConsultant.name;
             currentConsultant.surname = surname ? surname : currentConsultant.surname;
+            currentConsultant.birthdate = birthdate ? birthdate : currentConsultant.birthdate;
             currentConsultant.address = address ? address : currentConsultant.address;
             currentConsultant.language = language ? language : currentConsultant.language;
             currentConsultant.os = os ? os : currentConsultant.os;
@@ -470,45 +485,13 @@ export class ConsultantsService {
                 where: {
                     id: currentConsultant.id,
                 },
-                relations: ['products', 'country_details', 'consultant_position'],
+                relations: ['products', 'country_details', 'consultant_position', 'consultant_company'],
             });
 
             return {
-                id: updatedConsultant.id,
-                email: updatedConsultant.email,
-                name: updatedConsultant.name,
-                surname: updatedConsultant.surname,
-                gender: updatedConsultant.gender,
-                os: updatedConsultant.os,
-                language: updatedConsultant.language,
-                phone: updatedConsultant.phone,
-                address: updatedConsultant.address,
-                city: updatedConsultant.city,
-                country: updatedConsultant.country,
-                zip_code: updatedConsultant.zip_code,
-                state: updatedConsultant.state,
-                birthdate: updatedConsultant.birthdate,
-                note: updatedConsultant.note,
-                push_token: updatedConsultant.push_token,
-                memo: updatedConsultant.memo,
-                app_id: updatedConsultant.app_id,
-                company_name: updatedConsultant.company_name,
-                company_address: updatedConsultant.company_address,
-                branch: updatedConsultant.branch,
-                position: updatedConsultant.position,
-                skin_color_group_id: updatedConsultant.skin_color_group_id,
-                ethnicity_id: updatedConsultant.ethnicity_id,
-                callback_url: updatedConsultant.callback_url,
-                code: updatedConsultant.code,
+                ...updatedConsultant.getConsultantsInfo,
                 token: updatedConsultant.token,
                 refresh_token: null as null,
-                social: updatedConsultant.social,
-                country_code: updatedConsultant.getContryCode,
-                store: updatedConsultant.getStoreName,
-                optic_number: updatedConsultant.getOpticNumbers,
-                password_update_needed: updatedConsultant.password_update_needed,
-                products: updatedConsultant.getProducts,
-                consultant_position: updatedConsultant.getPosition,
             };
         } catch (e) {
             throw e;
@@ -526,7 +509,6 @@ export class ConsultantsService {
                 where: {
                     id: Number(userId),
                 },
-                relations: ['consultant_company', 'consultant_company.healthTips'],
             });
 
             if (!currentConsultant) {
@@ -536,21 +518,27 @@ export class ConsultantsService {
                 });
             }
 
-            let healthTips = currentConsultant.consultant_company.healthTips ?? [];
-            let totalCount;
+            const healthTipQuery = this.healthTipsRespository
+                .createQueryBuilder('healthTip')
+                .where('healthTip.consultantCompanyId = :companyId', {
+                    companyId: currentConsultant.consultant_company_id,
+                });
 
             if (appId) {
-                const queryBuilder = this.healthTipsRespository.createQueryBuilder('healthTip');
-                queryBuilder.where(`healthTip.appId = :appId`, { appId });
-
-                [healthTips, totalCount] = await queryBuilder
-                    .take(limit)
-                    .skip((page - 1) * limit)
-                    .getManyAndCount();
+                healthTipQuery.andWhere(`healthTip.appId = :appId`, { appId });
             }
+
+            const [healthTips, totalCount] = await healthTipQuery
+                .take(limit)
+                .skip((page - 1) * limit)
+                .getManyAndCount();
 
             return {
                 data: healthTips,
+                total_size: totalCount,
+                current_page_size: healthTips.length,
+                current_page: page,
+                total_pages: Math.ceil(totalCount / limit),
             };
         } catch (e) {
             throw e;
@@ -563,28 +551,27 @@ export class ConsultantsService {
         const page = req.query.page ? parseInt(query.page) : 1;
         const limit = req.query.limit ? parseInt(query.limit as string) : 10;
         try {
-            const foundCompany = await this.consultantCompaniesRepository.findOne({
-                where: {
-                    id: Number(companyId),
-                },
-                relations: ['healthTips'],
-            });
-
-            let healthTips = foundCompany?.healthTips ?? [];
-            let totalCount;
+            const healthTipQuery = this.healthTipsRespository
+                .createQueryBuilder('healthTip')
+                .where('healthTip.consultantCompanyId = :companyId', {
+                    companyId,
+                });
 
             if (appId) {
-                const queryBuilder = this.healthTipsRespository.createQueryBuilder('healthTip');
-                queryBuilder.where(`healthTip.appId = :appId`, { appId });
-
-                [healthTips, totalCount] = await queryBuilder
-                    .take(limit)
-                    .skip((page - 1) * limit)
-                    .getManyAndCount();
+                healthTipQuery.andWhere(`healthTip.appId = :appId`, { appId });
             }
+
+            const [healthTips, totalCount] = await healthTipQuery
+                .take(limit)
+                .skip((page - 1) * limit)
+                .getManyAndCount();
 
             return {
                 data: healthTips,
+                total_size: totalCount,
+                current_page_size: healthTips.length,
+                current_page: page,
+                total_pages: Math.ceil(totalCount / limit),
             };
         } catch (e) {
             throw e;
@@ -601,22 +588,6 @@ export class ConsultantsService {
                 : ['id', 'email', 'app_id', 'name'],
             relations: includes ? includes : [],
         });
-
-        if (!consultant && conditions.email && conditions.app_id) {
-            const newConsultant = await this.dataReplication.replicateUserToMasterOperation(
-                conditions.email,
-                conditions.app_id,
-            );
-
-            const consultant = await this.consultantsRepository.findOne({
-                where: { id: newConsultant['id'] },
-                select: selections
-                    ? (selections as FindOptionsSelectByString<Consultants>)
-                    : ['id', 'email', 'app_id', 'name'],
-                relations: includes ? includes : [],
-            });
-            return consultant;
-        }
 
         return consultant;
     }
@@ -679,6 +650,15 @@ export class ConsultantsService {
                 consultant_company_id: consultant.consultant_company.id,
             });
         }
+        //
+        if (consultant?.consultant_branch) {
+            consultant.consultant_branch.id = Number(consultant?.consultant_branch.id);
+            delete consultant.consultant_branch.consultantCompanyId;
+            delete consultant.consultant_branch.createdAt;
+            delete consultant.consultant_branch.updatedAt;
+            delete consultant.consultant_branch.password;
+            delete consultant.consultant_branch.countryId;
+        }
 
         if (consultant?.country_details) {
             consultant.country_id = consultant.country_details?.id ?? '';
@@ -687,7 +667,6 @@ export class ConsultantsService {
         }
 
         if (consultant?.consultant_position_id) {
-            //positiom
             consultant.consultant_position = await this.consultantPositionRepository.checkConsultantPosition(
                 consultant?.consultant_position_id,
             );
@@ -696,13 +675,15 @@ export class ConsultantsService {
         const products = await this.productsRepository.getCompaniesFiles(consultant?.id ?? null, Number(app_id));
 
         const promises: Promise<any>[] = [];
-        products.map((p) => {
-            if (p.device.consultant_company_id) {
-                promises.push(
-                    this.getCompanyDetails({ consultant_company_id: String(p.device.consultant_company_id) }),
-                );
-            }
-        });
+        if (products.length > 0) {
+            products.map((p) => {
+                if (p?.device?.consultant_company_id) {
+                    promises.push(
+                        this.getCompanyDetails({ consultant_company_id: String(p.device.consultant_company_id) }),
+                    );
+                }
+            });
+        }
 
         const result = await Promise.all(promises);
         const optic_number: string[] = [];
@@ -754,7 +735,7 @@ export class ConsultantsService {
     async validateUser(email: string, app_id: number, password: string) {
         const user = await this.checkConsultant(Number(app_id), email);
 
-        const confirmPwd = await this.verifyPassword(password, user?.password_digest ?? null);
+        const confirmPwd = await this.verifyPassword(password, user?.password_digest ?? null, 'en');
 
         if (confirmPwd) {
             return user;
@@ -800,8 +781,6 @@ export class ConsultantsService {
         const { app_id, password, email } = data;
         const consultant = await this.validateUser(email, Number(app_id), password);
         const checkToken = this.authService.isTokenExpired(consultant.token);
-
-        console.log(consultant);
 
         if (!consultant.email_confirmed) {
             if (!checkToken) {
@@ -894,74 +873,40 @@ export class ConsultantsService {
     }
 
     async loginRuby(data: LoginConsultantDto, locale: string = 'en') {
-        try {
-            const { app_id, password, email } = data;
-            const consultant: Consultants = await this.validateUser(email, Number(app_id), password);
+        let { app_id, password, email } = data;
 
-            // ONLY APP_ID IS NULL
-            if (consultant.app_id === null) {
-                consultant.app_id = Number(data.app_id);
+        const consultant: Consultants = await this.validateUser(email, Number(app_id), password);
 
-                await this.consultantsRepository.save(consultant);
-            }
+        // console.log(consultant);
+        // ONLY APP_ID IS NULL
+        if (consultant.app_id === null) {
+            consultant.app_id = Number(data.app_id);
 
-            if (!consultant.email_confirmed) {
-                throw new BadRequestException({
-                    result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
-                    error: ResponseMessages.EmailNotConfirmed,
-                });
-            }
-
-            const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
-                { id: consultant.id, email: consultant.email, role: Role.Consultant },
-                '',
-            );
-
-            consultant.token = accessToken;
             await this.consultantsRepository.save(consultant);
-
-            await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
-
-            return {
-                id: consultant.id,
-                email: consultant.email,
-                name: consultant.name,
-                surname: consultant.surname,
-                gender: consultant.gender,
-                os: consultant.os,
-                language: consultant.language,
-                phone: consultant.phone,
-                address: consultant.address,
-                city: consultant.city,
-                country: consultant.country,
-                zip_code: consultant.zip_code,
-                state: consultant.state,
-                birthdate: consultant.birthdate,
-                note: consultant.note,
-                push_token: consultant.push_token,
-                memo: consultant.memo,
-                app_id: consultant.app_id,
-                company_name: consultant.company_name,
-                company_address: consultant.company_address,
-                branch: consultant.branch,
-                position: consultant.position,
-                skin_color_group_id: consultant.skin_color_group_id,
-                ethnicity_id: consultant.ethnicity_id,
-                callback_url: consultant.callback_url,
-                code: consultant.code,
-                token: accessToken,
-                refresh_token: refreshToken,
-                social: consultant.social,
-                country_code: consultant.country_details?.code || null,
-                store: consultant.consultant_shop,
-                optic_number: consultant.products[0]?.device.optic_number || ([] as any[]),
-                password_update_needed: consultant.password_update_needed,
-                products: consultant.products,
-                consultant_position: consultant?.consultant_position || null,
-            };
-        } catch (e) {
-            throw e;
         }
+
+        if (!consultant.email_confirmed) {
+            throw new BadRequestException({
+                result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
+                error: ResponseMessages.EmailNotConfirmed,
+            });
+        }
+
+        const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
+            { id: consultant.id, email: consultant.email, role: Role.Consultant },
+            '',
+        );
+
+        consultant.token = accessToken;
+        await this.consultantsRepository.save(consultant);
+
+        await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
+
+        return {
+            token: accessToken,
+            refresh_token: refreshToken,
+            ...consultant.getConsultantsInfo,
+        };
     }
 
     async logout(id: number) {
@@ -1078,7 +1023,15 @@ export class ConsultantsService {
                 where: {
                     id: currentUserID,
                 },
-                relations: ['products', 'products.device', 'country_details', 'consultant_position'],
+                relations: [
+                    'products',
+                    'products.device',
+                    'products.license',
+                    'products.application',
+                    'country_details',
+                    'consultant_position',
+                    'consultant_company',
+                ],
             });
 
             if (!consultants) {
@@ -1089,41 +1042,9 @@ export class ConsultantsService {
             }
 
             return {
-                id: consultants.id,
-                email: consultants.email,
-                name: consultants.name,
-                surname: consultants.surname,
-                gender: consultants.gender,
-                os: consultants.os,
-                language: consultants.language,
-                phone: consultants.phone,
-                address: consultants.address,
-                city: consultants.city,
-                country: consultants.country,
-                zip_code: consultants.zip_code,
-                state: consultants.state,
-                birthdate: consultants.birthdate,
-                note: consultants.note,
-                push_token: consultants.push_token,
-                memo: consultants.memo,
-                app_id: consultants.app_id,
-                company_name: consultants.company_name,
-                company_address: consultants.company_address,
-                branch: consultants.branch,
-                position: consultants.position,
-                skin_color_group_id: consultants.skin_color_group_id,
-                ethnicity_id: consultants.ethnicity_id,
-                callback_url: consultants.callback_url,
-                code: consultants.code,
+                ...consultants.getConsultantsInfo,
                 token: consultants.token,
                 refresh_token: null as null,
-                social: consultants.social,
-                country_code: consultants.country_details?.code,
-                store: consultants.consultant_shop,
-                optic_number: consultants.products[0]?.device.optic_number || ([] as any[]),
-                password_update_needed: consultants.password_update_needed,
-                products: consultants.products,
-                consultant_position: consultants.consultant_position,
             };
         } catch (e) {
             throw e;
@@ -1355,7 +1276,7 @@ export class ConsultantsService {
         }
 
         if (data.new_password) {
-            const confirmPwd = await this.verifyPassword(data.new_password, consultant.password_digest ?? null);
+            const confirmPwd = await this.verifyPassword(data.new_password, consultant.password_digest ?? null, 'en');
             if (!confirmPwd) {
                 throw new UnauthorizedException({
                     result_code: ErrorStatus.UNAUTHORIZED,
@@ -1363,7 +1284,7 @@ export class ConsultantsService {
                 });
             }
 
-            consultant.password_digest = await argon2.hash(data.new_password);
+            consultant.password_digest = await this.bcryptHashPassword(data.new_password); //await argon2.hash(data.new_password);
 
             const subject = await this.commonService.translate('password_reset_subject', locale);
 
@@ -1815,7 +1736,7 @@ export class ConsultantsService {
             await this.passwordDetailRepository.save({ email: email, createdAt: new Date(), updatedAt: new Date() });
 
             const password = this.commonService.generateRandomPassword(12);
-            const hashedPassword = await argon2.hash(password);
+            const hashedPassword = await this.bcryptHashPassword(password); //await argon2.hash(password);
 
             await this.consultantsRepository.updateConsultant(consultant.id, { password_digest: hashedPassword });
 
@@ -1860,7 +1781,7 @@ export class ConsultantsService {
             });
         }
 
-        const confirmPwd = await this.verifyPassword(password, consultant.password_digest ?? null);
+        const confirmPwd = await this.verifyPassword(password, consultant.password_digest ?? null, 'en');
 
         if (!confirmPwd) {
             throw new BadRequestException({
@@ -1869,7 +1790,7 @@ export class ConsultantsService {
             });
         }
 
-        const password_digest = await argon2.hash(new_password);
+        const password_digest = await this.bcryptHashPassword(new_password); //await argon2.hash(new_password);
 
         const updatedConsultant = await this.consultantsRepository.updateConsultant(consultantId, {
             password_digest,
@@ -1955,7 +1876,7 @@ export class ConsultantsService {
             });
         }
 
-        const hashedPassword = await argon2.hash(password);
+        const hashedPassword = await this.bcryptHashPassword(password); //await argon2.hash(password);
 
         await this.consultantsRepository.updateConsultant(consultant.id, {
             password_digest: hashedPassword,
@@ -2028,7 +1949,7 @@ export class ConsultantsService {
                 analysis: results,
             };
 
-            const url = currentConsultant.consultant_company?.data_exchange_url;
+            const url = currentConsultant?.consultant_company?.data_exchange_url || null;
 
             let returnMessage: string;
             if (url) {
@@ -2224,7 +2145,7 @@ export class ConsultantsService {
     }
 
     async createSalesConnection(body: CreateSalesConnectionDto, locale = 'en') {
-        const { consultant_id, batch_id, country_name } = body;
+        let { consultant_id, batch_id, country_name, answer1, answer2 } = body;
 
         if (!consultant_id) {
             throw new BadRequestException({
@@ -2247,20 +2168,25 @@ export class ConsultantsService {
             });
         }
         if (!country_name) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.CUSTOM_ERROR,
-                error: this.commonService.createLocaleErrorMessage(
-                    locale,
-                    'custom_error',
-                    'Country name missing! country_name param needed',
-                ),
-            });
+            country_name = '';
+            // throw new BadRequestException({
+            //     result_code: ErrorStatus.CUSTOM_ERROR,
+            //     error: this.commonService.createLocaleErrorMessage(
+            //         locale,
+            //         'custom_error',
+            //         'Country name missing! country_name param needed',
+            //     ),
+            // });
         }
 
         const newSaleConnection = this.salesConnectionRepository.create({
             consultantId: Number(consultant_id),
             batchId: Number(batch_id),
             countryName: country_name,
+            answer1: answer1,
+            answer2: answer2,
+            updatedAt: new Date(),
+            createdAt: new Date(),
         });
 
         try {
@@ -2315,10 +2241,8 @@ export class ConsultantsService {
     }
 
     public async getCompanyDetails(data: ConsultantCompanyDetailsDto) {
-        console.log('data: ', data);
         const { consultant_company_id: id } = data;
 
-        console.log('getOneCompany', id);
         const company: any = await this.consultantCompaniesRepository.getOneCompany(Number(id) ?? null);
 
         const file = await this.activeStorageAttchRepository.getCompaniesFiles(id ?? String(1));
@@ -2575,36 +2499,36 @@ export class ConsultantsService {
             if (social_provider === 'apple') {
                 if (email && app_id) {
                     consultant = await this.consultantsRepository.findOne({
-                        where: { app_id: Number(app_id), email: email },
+                        where: { app_id, email },
+                        relations: ['identities'],
                     });
                     identity = await this.identityRepository.findOne({
                         where: {
-                            metaType: 'Consultant',
                             socialId: social_id,
                             socialProvider: social_provider,
+                            metaId: consultant.id,
                         },
                     });
                 } else {
                     identity = await this.identityRepository.findOne({
-                        where: {
-                            metaType: 'Consultant',
-                            socialId: social_id,
-                            socialProvider: social_provider,
-                        },
+                        where: { socialId: social_id, socialProvider: social_provider },
+                        relations: ['consultant'],
                     });
                     consultant = identity?.consultants;
                 }
             } else {
                 consultant = await this.consultantsRepository.findOne({
-                    where: { app_id: Number(app_id), email: email },
+                    where: { app_id, email },
                     relations: ['identities'],
                 });
-
-                identity = consultant?.identities.find(
-                    (consulatntsIdentity) =>
-                        consulatntsIdentity.socialId === social_id &&
-                        consulatntsIdentity.socialProvider === social_provider,
-                );
+                if (consultant) {
+                    identity = await this.identityRepository.findOne({
+                        where: {
+                            socialId: social_id,
+                            socialProvider: social_provider,
+                        },
+                    });
+                }
             }
 
             if (consultant && identity) {
@@ -2614,6 +2538,8 @@ export class ConsultantsService {
                     socialProvider: social_provider,
                     metaId: consultant.id,
                     metaType: 'Consultant',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
                 });
                 await this.identityRepository.save(identity);
             } else {
@@ -2622,6 +2548,8 @@ export class ConsultantsService {
                         name: name,
                         app_id: Number(app_id),
                         email: email,
+                        created_at: new Date(),
+                        updated_at: new Date(),
                     });
                     consultant = await this.consultantsRepository.save(newConsultant);
                     const newIdentity = this.identityRepository.create({
@@ -2629,6 +2557,8 @@ export class ConsultantsService {
                         socialProvider: social_provider,
                         metaId: consultant.id,
                         metaType: 'consultant',
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
                     });
                     try {
                         identity = await this.identityRepository.save(newIdentity);
@@ -2656,45 +2586,17 @@ export class ConsultantsService {
 
             await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
 
+            const loginConsultant = await this.consultantsRepository.findOne({
+                where: {
+                    id: consultant.id,
+                },
+                relations: ['products', 'products.device', 'consultant_company', 'consultant_position'],
+            });
+
             return {
-                id: consultant.id,
-                email: consultant.email,
                 token: accessToken,
                 refresh_token: refreshToken,
-                name: consultant.name,
-                surname: consultant.surname,
-                // phone_country_code: consultant.phone_country_code,
-                os: consultant.os,
-                language: consultant.language,
-                phone: consultant.phone,
-                address: consultant.address,
-                city: consultant.city,
-                zip_code: consultant.zip_code,
-                state: consultant.state,
-                note: consultant.note,
-                push_token: consultant.push_token,
-                memo: consultant.memo,
-                app_id: consultant.app_id,
-                company_name: consultant.company_name,
-                company_address: consultant.company_address,
-                branch: consultant.branch,
-                position: consultant.position,
-                skin_color_group_id: consultant.skin_color_group_id,
-                ethnicity_id: consultant.ethnicity_id,
-                callback_url: consultant.callback_url,
-                code: consultant.code,
-                // country_id: consultant?.country_id ? Number(consultant?.country_id) : null,
-                country: consultant.country_details?.name ?? null,
-                gender: consultant.gender,
-                social: consultant.social,
-                country_code: consultant.getContryCode,
-                store: consultant.consultant_shop?.name ?? null,
-                consultant_shop: consultant.consultant_shop,
-                country_details: consultant.country_details,
-                optic_number: consultant.getOpticNumbers,
-                products: consultant.products,
-                consultant_company: consultant.consultant_company,
-                consultant_position: consultant.consultant_position,
+                ...loginConsultant.getConsultantsInfo,
             };
         } catch (e) {
             throw e;
@@ -2756,8 +2658,10 @@ export class ConsultantsService {
 
             return {
                 data: productRecommendations,
-                currentPage: page,
-                totalPages: Math.ceil(total / limit),
+                total_size: total,
+                current_page: page,
+                current_page_size: productRecommendations.length,
+                total_pages: Math.ceil(total / limit),
             };
         } catch (e) {
             throw e;
@@ -2825,6 +2729,29 @@ export class ConsultantsService {
         };
     }
 
+    private errorTranslation(locale: string) {
+        const device_not_exist: any = {
+            'en': 'Device does not exist',
+            'ko': '존재하지 않는 정보',
+            'ar': 'الجهاز غير موجود',
+            'zh-hans': '设备不存在', // simplified
+            'zh-hant': '設備不存在',
+            'zh-tw': '設備不存在', // tw
+            'id': 'Perangkat tidak ada',
+            'fr': "L'appareil n'existe pas",
+            'ru': 'Устройство не существует',
+            'ja': 'デバイスが存在しません',
+            'th': 'อุปกรณ์ไม่มีอยู่',
+            'vi': 'device_not_exist',
+            'ka': 'მოწყობილობა არ არსებობს',
+            'ka-ge': 'მოწყობილობა არ არსებობს',
+            'kk': 'Құрылғы жоқ',
+            'kk-kz': 'Құрылғы жоқ',
+        };
+
+        const normalizedLocale = locale.toLowerCase();
+        return device_not_exist[normalizedLocale] || device_not_exist['en'];
+    }
     public async enterProducts(req: Request, data: EnterProductDto, locale: string = 'en') {
         try {
             const consultantId = Number((<{ id: string }>req.user).id);
@@ -2832,7 +2759,7 @@ export class ConsultantsService {
             if (!data.optic_number || !data.password || !data.application_id) {
                 throw new BadRequestException('1:필수값 누락');
             }
-
+            const errTranslation = this.errorTranslation(locale);
             const { password, application_id, mac_address, lat, lng } = data;
 
             const macAddress = mac_address ?? null;
@@ -2851,19 +2778,33 @@ export class ConsultantsService {
             }
 
             const device = await this.deviceRepository.findOne({
-                where: {
-                    optic_number: optic_number,
-                    pwd: password,
-                },
+                where: [
+                    {
+                        optic_number: optic_number,
+                        pwd: password, // OR serial_number: password
+                    },
+                    {
+                        optic_number: optic_number,
+                        serial_number: password, // assuming password matches serial_number
+                    },
+                ],
                 relations: ['consultant_company'],
             });
 
+            // console.log('device', consultant);
             if (!device) {
-                throw new BadRequestException('2:존재하지 않는 정보');
+                throw new BadRequestException(`2: ${errTranslation}`);
             }
 
             if (device.use_yn !== 'Y') {
                 throw new BadRequestException('3:존재하지 않는 정보');
+            }
+
+            // Wrong information Error
+            // Product credentials are required.
+
+            if (device.consultant_company === null) {
+                device.consultant_company = consultant.consultant_company;
             }
 
             const device_id = device.id;
@@ -2875,7 +2816,7 @@ export class ConsultantsService {
             );
 
             if (!product || (product && !product.license)) {
-                throw new BadRequestException('5:존재하지 않는 정보');
+                throw new BadRequestException(`5: ${errTranslation}`);
             }
 
             if (product.consultant && product.consultant_id != consultant.id) {
@@ -2884,7 +2825,7 @@ export class ConsultantsService {
 
             const beforeUseDate = product.use_date;
 
-            product.consultant_id = consultant.id;
+            product.consultant_id = Number(consultant?.id);
             product.use_date = useDate;
             product.use_time = useTime;
             product.mac_address = macAddress;
@@ -2892,27 +2833,44 @@ export class ConsultantsService {
             // comments
 
             try {
-                await this.productsRepository.save(product);
+                await this.productsService.updateProduct(product.id, {
+                    consultant_id: consultant.id,
+                    use_date: useDate,
+                    use_time: useTime,
+                    mac_address: macAddress,
+                    app_use_yn: 'Y',
+                });
             } catch (e) {
                 throw new Error('6:사용등록오류');
             }
 
-            const consultantCompanyId = device.consultant_company_id;
+            const consultantCompanyId = device?.consultant_company_id ?? 213;
             if (consultantCompanyId) {
                 const currentConsultant = await this.consultantsRepository.findOne({ where: { id: consultant.id } });
                 currentConsultant.consultant_company_id = consultantCompanyId;
                 await this.consultantsRepository.save(currentConsultant);
             }
 
+            // console.log("===>",consultant.id);
+
             if (!beforeUseDate && product.use_date && !isFirstUseDate) {
-                product.first_use_date = product.use_date;
+                if (!product.first_use_date || product.first_use_date === null) {
+                    product.first_use_date = product.use_date;
+                }
+
+                console.log(product);
                 await this.productsRepository.save(product);
             }
 
             device.lng = long;
             device.lat = latt;
 
-            await this.deviceRepository.save(device);
+            // console.log(device);
+
+            await this.deviceRepository.update(device.id, {
+                lng: long,
+                lat: latt,
+            });
 
             return {
                 result_code: '0',
@@ -2941,30 +2899,30 @@ export class ConsultantsService {
                         lat: device.lat,
                         lng: device.lng,
                         consultant_company: {
-                            id: device.consultant_company.id,
-                            name: device.consultant_company.name,
-                            address: device.consultant_company.address,
-                            email: device.consultant_company.email,
-                            phone: device.consultant_company.phone,
-                            font: device.consultant_company.font,
-                            primary_color_code: device.consultant_company.primary_color_code,
-                            secondary_color_code: device.consultant_company.secondary_color_code,
-                            program_color_code: device.consultant_company.program_color_code,
-                            top_color_code: device.consultant_company.top_color_code,
-                            text_icon_color_code: device.consultant_company.text_icon_color_code,
-                            pie_chart_color_1: device.consultant_company.pie_chart_color_1,
-                            pie_chart_color_2: device.consultant_company.pie_chart_color_2,
-                            pie_chart_color_3: device.consultant_company.pie_chart_color_3,
-                            pie_chart_color_4: device.consultant_company.pie_chart_color_4,
-                            pie_chart_color_5: device.consultant_company.pie_chart_color_5,
-                            pie_chart_points_color: device.consultant_company.pie_chart_points_color,
+                            id: device?.consultant_company?.id ?? 213,
+                            name: device?.consultant_company?.name ?? 'Dior',
+                            address: device?.consultant_company?.address ?? '',
+                            email: device?.consultant_company?.email ?? '',
+                            phone: device?.consultant_company?.phone ?? '',
+                            font: device?.consultant_company?.font ?? '',
+                            primary_color_code: device?.consultant_company?.primary_color_code ?? '',
+                            secondary_color_code: device?.consultant_company?.secondary_color_code ?? '',
+                            program_color_code: device.consultant_company?.program_color_code ?? '',
+                            top_color_code: device?.consultant_company?.top_color_code ?? null,
+                            text_icon_color_code: device?.consultant_company?.text_icon_color_code ?? null,
+                            pie_chart_color_1: device?.consultant_company?.pie_chart_color_1 ?? null,
+                            pie_chart_color_2: device?.consultant_company?.pie_chart_color_2 ?? null,
+                            pie_chart_color_3: device?.consultant_company?.pie_chart_color_3 ?? null,
+                            pie_chart_color_4: device?.consultant_company?.pie_chart_color_4 ?? null,
+                            pie_chart_color_5: device.consultant_company?.pie_chart_color_5 ?? null,
+                            pie_chart_points_color: device?.consultant_company?.pie_chart_points_color ?? null,
                             logo_url: null as null,
                             app_icon_url: null as null,
                             background_image_url: null as null,
                             progressbar_image_1_url: null as null,
                             progressbar_image_2_url: null as null,
                             progressbar_image_3_url: null as null,
-                            created_at: device.consultant_company.created_at,
+                            created_at: device?.consultant_company?.created_at ?? null,
                         },
                     },
                     license: {
@@ -2988,15 +2946,16 @@ export class ConsultantsService {
                     },
                 },
             };
-        } catch (e) {
-            const splitMessage = e.message.split(':');
+        } catch (error) {
+            console.log(error);
+            const splitMessage = error.message.split(':');
             if (splitMessage.length > 1) {
                 return {
                     result_code: splitMessage[0],
                     error: splitMessage[1],
                 };
             }
-            throw e;
+            throw error;
         }
     }
 
@@ -3116,144 +3075,225 @@ export class ConsultantsService {
         });
     }
 
-    async generateFlatFileDior(req: Request) {
+    async checkFileExistence(outputPath: string) {
         try {
-            const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
-            // const CNDP_SKIN_ANALYSIS_URL = 'http://localhost:3444';
-
-            const token = req.headers.authorization.split(' ')[1];
-
-            if (!token) {
-                throw new UnauthorizedException({
-                    result_code: ErrorStatus.UNAUTHORIZED,
-                    error: this.commonService.createLocaleErrorMessage('en', 'unauthorized'),
-                });
-            }
-
-            const customers = await this.customersRepository.getTodayCreatedCustomers();
-
-            const customerIds = customers.map((row) => String(row.id));
-
-            if (customerIds.length < 1) {
-                return;
-            }
-
-            const diorAnalysis = await this.analysisReplService.getDiorAnalysisByCustomerIds(customerIds);
-
-            const promiseData = diorAnalysis.map(async (analysis) => {
-                const batchId = analysis.batchId;
-
-                const response = await axios.get(`${CNDP_SKIN_ANALYSIS_URL}/web-result/cndpskin/${batchId}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                const responseData = response.data;
-                const responseBody = responseData.body;
-
-                const customer = await this.customersRepository.findOne({
-                    where: {
-                        id: Number(analysis.customerId),
-                    },
-                    relations: [
-                        'prSelecteds',
-                        'prSelecteds.productRecommendation',
-                        'conslutant',
-                        'conslutant.consultant_branch',
-                    ],
-                });
-
-                const products: any[] = [];
-
-                customer.prSelecteds.forEach((prSelect) => {
-                    const recomm = prSelect.productRecommendation;
-                    products.push({
-                        name: recomm.name,
-                        link: recomm.link,
-                        image_url: recomm.imageUrl,
-                        category: recomm.category,
-                        collection: recomm.collection,
-                        code: recomm.code,
-                    });
-                });
-
-                const consent = await this.diorConsentRepository.findOne({
-                    where: {
-                        customerId: customer.id,
-                        batchId: batchId,
-                    },
-                });
-
-                const returnData = {
-                    client_iw_id: customer.id,
-                    country: customer.country,
-                    consultation_id: batchId,
-                    pos: customer.consultant?.consultant_branch?.code || null,
-                    bc: customer.consultant?.code || null,
-                    consultation_date: analysis.createdTime,
-                    opt_in: consent?.fetchOptions || null,
-                    scores: responseBody,
-                    recommended_product: products,
-                };
-
-                if (consent) {
-                    const consentAnswers = consent.consentFormAnswers;
-                    if (consent.consentType === 'without_ipos_consent') {
-                        if (consentAnswers && consentAnswers[2] === 'No') {
-                            returnData.client_iw_id = null;
-                            returnData.recommended_product = null;
-                            returnData.scores = null;
-                        }
-                    }
-
-                    if (consent.consentType === 'ipos_consent') {
-                        if (consentAnswers && consentAnswers[2] === 'No') {
-                            returnData.client_iw_id = null;
-                        }
-
-                        if (consentAnswers && consentAnswers[3] === 'No') {
-                            returnData.recommended_product = null;
-                            returnData.scores = null;
-                        }
-                    }
-                }
-
-                return returnData;
-            });
-
-            const result = await Promise.all(promiseData);
-
-            const rootDirectoryPath = process.cwd();
-
-            const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
-
-            if (!existsSync(flatFilesDirectoryPath)) {
-                await fs.mkdir(flatFilesDirectoryPath);
-            }
-
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const dateString = `${yyyy}-${mm}-${dd}`;
-
-            const fileName = `${dateString}.json`;
-            const filePath = path.join(flatFilesDirectoryPath, fileName);
-
-            const jsonData = JSON.stringify(result);
-
-            fs.writeFile(filePath, jsonData)
-                .then(() => console.log(`${fileName} writing success`))
-                .catch(() => console.log(`${fileName} writing failed`));
-
-            return {
-                data: result,
-            };
-        } catch (e) {
-            throw e;
+            await fs.access(outputPath); // This is the asynchronous equivalent of checking file existence
+            console.log('File exists');
+        } catch (error) {
+            console.log('File does not exist');
         }
     }
+    async uploadToSFTPServer(fileName: string, tempFilePath: string) {
+        await this.ftpconnect({
+            host: process.env.SFTP_HOST || '',
+            port: Number(process.env.SFTP_PORT),
+            username: process.env.SFTP_USER || '',
+            password: process.env.SFTP_PASS || '',
+        });
+
+        console.log(`${fileName}\n, "tempFilePath: ====>",${tempFilePath}\n`);
+
+        try {
+            // Connect to the SFTP server
+            // await sftp.connect(sftpConfig);
+
+            // Define the remote directory path
+            const remoteDirectoryPath = './analysis_data/PROD/bak';
+
+            // Check if the remote directory exists; if not, create it
+            try {
+                await this.client.mkdir(remoteDirectoryPath, true); // 'true' makes the directory recursively
+            } catch (err) {
+                console.log('Directory may already exist', err.message);
+            }
+
+            const remoteFilePath = `${remoteDirectoryPath}/${fileName}`; //path.join(remoteDirectoryPath, fileName);
+
+            console.log('remoteFilePath ------------>', remoteFilePath);
+            // await fs.access(remoteFilePath).then(() => console.log('checking'));
+            // Upload the file to the SFTP server
+            const fileTransfered = tempFilePath;
+            await this.uploadFile(tempFilePath, remoteFilePath);
+            // console.log(`${fileName} uploaded successfully to SFTP server`);
+
+            // Clean up the temporary local file
+            // await fs.unlink(tempFilePath);
+        } catch (error) {
+            console.error('Error during SFTP upload:', error);
+            // throw new Error(error);
+        } finally {
+            await this.disconnect();
+        }
+    }
+
+    @Cron('0 0 0 * * *')
+    // @Cron('* * * * * *')
+    async generateFlatFileDior(date: string) {
+        const excelData = [];
+        const credentials = {
+            app_id: '88',
+            email: 'krtest@diormail.com',
+            password: process.env.LOGIN_PASSWORD,
+            confirmPassword: process.env.LOGIN_PASSWORD,
+        };
+
+        // Fetch authentication token
+        const { token } = await this.login(credentials, 'en');
+        const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
+
+        // Define date ranges
+        // const startDate = date + ' 00:00:00'; //`${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
+        // const endDate = date + ' 23:59:59'; //`${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
+
+        const startDate = date ? date + ' 00:00:00' : `${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
+        const endDate = date ? date + ' 23:59:59' : `${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
+
+        console.log(startDate, endDate);
+        // Fetch required data
+        const analyses = await this.analysisReplService.getStatisticsConsultantions(startDate, endDate);
+        const customerIds = analyses.map((analysis) => Number(analysis.customerId));
+        const batchIds = analyses.map((analysis) => analysis.batchId);
+
+        // Fetch customers and map by ID for quick access
+        const customers = await this.customersRepository.getTodayCreatedCustomers(customerIds);
+        const customerMap = new Map(customers.map((customer) => [customer.id, customer]));
+
+        // Fetch consents and map by customerId + batchId for quick access
+        const consents = await this.diorConsentRepository.find({ where: { batchId: In(batchIds) } });
+        const consentMap = new Map(consents.map((consent) => [`${consent.batchId}`, consent]));
+
+        // Fetch product recommendations and group by batchId
+        const productRecommendations = await this.ProductRecommendationSelectedRepository.find({
+            where: { batchId: In(batchIds) },
+            relations: ['productRecommendation'],
+        });
+        const productMap = new Map();
+        productRecommendations.forEach((recommendation) => {
+            const batchProducts = productMap.get(recommendation.batchId) || [];
+            batchProducts.push(recommendation.productRecommendation);
+            productMap.set(recommendation.batchId, batchProducts);
+        });
+
+        // Fetch analysis results in parallel
+        const analysisResults = await Promise.all(
+            analyses.map((analysis) =>
+                axios.get(`${CNDP_SKIN_ANALYSIS_URL}/web-result/cndpskin/${analysis.batchId}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                }),
+            ),
+        );
+
+        // Process data
+        for (const [index, analysis] of analyses.entries()) {
+            const customer = customerMap.get(Number(analysis.customerId));
+            if (!customer) continue;
+
+            const bc = customer.consultant;
+            const pos = bc?.consultant_branch?.code || null;
+            const result = analysisResults[index]?.data;
+            const products = (productMap.get(analysis.batchId) || []).map((product: any) => ({
+                name: product?.name ?? null,
+                link: product?.link ?? null,
+                imageUrl: product?.imageUrl ?? null,
+                category: product?.category ?? null,
+                collection: product?.collection ?? null,
+                code: product?.code ?? null,
+            }));
+
+            const consent = consentMap.get(`${analysis.batchId}`);
+            // console.log(`${customer.id}_${analysis.batchId}`, '========>', consent);
+            const consentAnswers = consent?.consentFormAnswers;
+
+            const newJson = {
+                client_iw_id: customer.external_id,
+                country: bc?.country,
+                consultation_id: customer?.consultant?.id,
+                pos,
+                bc: customer?.consultant?.code,
+                consultation_date: analysis?.createdTime,
+                opt_in: consent?.fetchOptions,
+                scores: result?.data,
+                recommended_product: products,
+            };
+
+            // Apply consent logic
+            if (consent) {
+                if (consent.consentType === 'without_ipos_consent' && consentAnswers?.[2] === 'No') {
+                    newJson.client_iw_id = null;
+                    newJson.recommended_product = [];
+                    newJson.scores = [];
+                }
+                if (consent.consentType === 'ipos_consent') {
+                    if (consentAnswers?.[2] === 'No') newJson.client_iw_id = null;
+                    if (consentAnswers?.[3] === 'No') {
+                        newJson.recommended_product = [];
+                        newJson.scores = [];
+                    }
+                }
+            }
+
+            // Filter data based on consent answers
+            if ((consentAnswers || []).length === 2 && !consentAnswers.includes('No')) {
+                excelData.push(newJson);
+            } else if ((consentAnswers || []).length === 4) {
+                if (
+                    !(
+                        consentAnswers[0] === 'Yes' &&
+                        consentAnswers[1] === 'No' &&
+                        consentAnswers[2] === 'No' &&
+                        consentAnswers[3] === 'No'
+                    ) &&
+                    !(
+                        consentAnswers[0] === 'Yes' &&
+                        consentAnswers[1] === 'Yes' &&
+                        consentAnswers[2] === 'No' &&
+                        consentAnswers[3] === 'No'
+                    )
+                ) {
+                    excelData.push(newJson);
+                }
+            }
+        }
+
+        const rootDirectoryPath = process.cwd();
+
+        const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
+
+        if (!existsSync(flatFilesDirectoryPath)) {
+            await fs.mkdir(flatFilesDirectoryPath);
+        }
+
+        const dateString = moment(startDate).format('YYYY-MM-DD');
+
+        const fileName = `${dateString}.json`;
+        const filePath = path.join(flatFilesDirectoryPath, fileName);
+
+        const jsonData = excelData; //JSON.stringify(excelData);
+
+        let file = JSON.stringify(jsonData, null, 2);
+
+        try {
+            // Write file to the specified path
+            await fs.writeFile(filePath, file);
+            console.log(`${fileName} writing success`);
+
+            // Only proceed with upload if writing succeeds
+            await this.uploadToSFTPServer(fileName, filePath);
+            // console.log(`${fileName} upload success`);
+        } catch (error) {
+            // Catch any error during the process
+            console.error(`${fileName} writing or upload failed`, error);
+        } finally {
+            // Log completion message regardless of success or failure
+            console.log('process done');
+        }
+
+        return true;
+    }
+
+    // UPLOAD FILES
+
+    // SENDING JSON
 
     daysLeftFromExpired(licensePeriod: number, firstUseDate: string) {
         let periodLeft = 0;
@@ -3267,277 +3307,6 @@ export class ConsultantsService {
             periodLeft = licensePeriod;
         }
         return periodLeft;
-    }
-
-    async newChangeLicenseCost(
-        newLicenseId: string,
-        oldLicenseId: string,
-        applicationId: number,
-        firstUseDate: string,
-        productId: number,
-        licensePeriod: number,
-        remainingDays: number,
-    ) {
-        // let cost = 0;
-        // const applicationLicense = await this.licenceService.findApplicationLicence({
-        //     applicationId: applicationId,
-        //     licenseId: newLicenseId,
-        // });
-        // const oldApplicationLicense = await this.licenceService.findApplicationLicence({
-        //     applicationId: applicationId,
-        //     licenseId: oldLicenseId,
-        // });
-        // if (!applicationLicense || !oldApplicationLicense) {
-        //     throw new BadRequestException({
-        //         result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //         error: `License cost is not defined by admin for this application (application_id = ${
-        //             applicationId ? applicationId : ''
-        //         })`,
-        //     });
-        // }
-        // // check if device is used or not
-        // const licenseHistories = await this.licenceService.findLicenceHistories(
-        //     { licensableId: productId, licensableType: LicenseType.Product },
-        //     { createdAt: { direction: 'DESC' } },
-        // );
-        // const licenseHistory = licenseHistories[licenseHistories.length - 1];
-        // if (firstUseDate) {
-        //     // Check for license history
-        //     if (licenseHistory) {
-        //         const extendedDays = this.expectedDaysIncrease(
-        //             licenseHistory.extended,
-        //             licenseHistory.extendType,
-        //             firstUseDate,
-        //             licensePeriod,
-        //         );
-        //         if (licenseHistories.length > 1) {
-        //             let initialCost, newCost, extendedPrice, newExtendedPrice;
-        //             let initialDays = this.getInitialDaysSumFromHistory(licenseHistories, firstUseDate, licensePeriod);
-        //             initialDays = this.getInitialDays(initialDays, licensePeriod);
-        //             switch (initialDays) {
-        //                 case 1095:
-        //                     initialCost = oldApplicationLicense.licenseChangeThreeYearPrice;
-        //                     newCost = applicationLicense.licenseChangeThreeYearPrice;
-        //                     extendedPrice = oldApplicationLicense.licenseExtendThreeYearPrice;
-        //                     newExtendedPrice = applicationLicense.licenseExtendThreeYearPrice;
-        //                     break;
-        //                 case 730:
-        //                     initialCost = oldApplicationLicense.licenseChangeTwoYearPrice;
-        //                     newCost = applicationLicense.licenseChangeTwoYearPrice;
-        //                     extendedPrice = oldApplicationLicense.licenseExtendTwoYearPrice;
-        //                     newExtendedPrice = applicationLicense.licenseExtendTwoYearPrice;
-        //                     break;
-        //                 case 365:
-        //                     initialCost = oldApplicationLicense.licenseChangeOneYearPrice;
-        //                     newCost = applicationLicense.licenseChangeOneYearPrice;
-        //                     extendedPrice = oldApplicationLicense.licenseExtendOneYearPrice;
-        //                     newExtendedPrice = applicationLicense.licenseExtendOneYearPrice;
-        //                     break;
-        //                 case 30:
-        //                     initialCost = oldApplicationLicense.licenseChangeOneMonthPrice;
-        //                     newCost = applicationLicense.licenseChangeOneMonthPrice;
-        //                     extendedPrice = oldApplicationLicense.licenseExtendOneMonthPrice;
-        //                     newExtendedPrice = applicationLicense.licenseExtendOneMonthPrice;
-        //                     break;
-        //                 default:
-        //                     throw new BadRequestException({
-        //                         result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //                         error: ResponseMessages.InvalidInitialDays,
-        //                     });
-        //             }
-        //             if (remainingDays === extendedDays) {
-        //                 cost = newCost - extendedPrice;
-        //             } else if (remainingDays < extendedDays) {
-        //                 let extensionUsedDays = extendedDays - remainingDays;
-        //                 let totalDays = extendedDays - extensionUsedDays;
-        //                 cost = totalDays * (newCost / extendedDays) - totalDays * (extendedPrice / extendedDays);
-        //             } else if (remainingDays >= extendedDays) {
-        //                 let upgradeCosts = this.getUpgradeCosts(applicationLicense);
-        //                 cost = await this.calculateUpgradeCost(
-        //                     upgradeCosts,
-        //                     initialCost,
-        //                     productId,
-        //                     firstUseDate,
-        //                     licensePeriod,
-        //                 );
-        //             }
-        //         } else {
-        //             let initialCost, newCost, extendedPrice, newExtendedPrice;
-        //             const initialDays = this.getInitialDays(extendedDays, licensePeriod);
-        //             switch (initialDays) {
-        //                 case 1095:
-        //                     initialCost = oldApplicationLicense.licenseChangeThreeYearPrice;
-        //                     newCost = applicationLicense.licenseChangeThreeYearPrice;
-        //                     extendedPrice = oldApplicationLicense.licenseExtendThreeYearPrice;
-        //                     newExtendedPrice = applicationLicense.licenseExtendThreeYearPrice;
-        //                     break;
-        //                 case 730:
-        //                     initialCost = oldApplicationLicense.licenseChangeTwoYearPrice;
-        //                     newCost = applicationLicense.licenseChangeTwoYearPrice;
-        //                     extendedPrice = oldApplicationLicense.licenseExtendTwoYearPrice;
-        //                     newExtendedPrice = applicationLicense.licenseExtendTwoYearPrice;
-        //                     break;
-        //                 case 365:
-        //                     initialCost = oldApplicationLicense.licenseChangeOneYearPrice;
-        //                     newCost = applicationLicense.licenseChangeOneYearPrice;
-        //                     extendedPrice = oldApplicationLicense.licenseExtendOneYearPrice;
-        //                     newExtendedPrice = applicationLicense.licenseExtendOneYearPrice;
-        //                     break;
-        //                 case 30:
-        //                     initialCost = oldApplicationLicense.licenseChangeOneMonthPrice;
-        //                     newCost = applicationLicense.licenseChangeOneMonthPrice;
-        //                     extendedPrice = oldApplicationLicense.licenseExtendOneMonthPrice;
-        //                     newExtendedPrice = applicationLicense.licenseExtendOneMonthPrice;
-        //                     break;
-        //                 default:
-        //                     throw new BadRequestException({
-        //                         result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //                         error: ResponseMessages.InvalidInitialDays,
-        //                     });
-        //             }
-        //             if (remainingDays === extendedDays) {
-        //                 cost = newCost - extendedPrice;
-        //             } else if (remainingDays < extendedDays) {
-        //                 let totalDays = remainingDays;
-        //                 cost = totalDays * (newCost / extendedDays) - totalDays * (extendedPrice / extendedDays);
-        //             } else if (remainingDays >= extendedDays) {
-        //                 const pendingDays = remainingDays - extendedDays;
-        //                 const perDayCost = pendingDays * (initialCost / initialDays);
-        //                 cost = newCost - initialCost * perDayCost;
-        //             }
-        //         }
-        //     } else {
-        //         const initialDays = this.getInitialDays(0, licensePeriod);
-        //         let initialCost, newCost;
-        //         switch (initialDays) {
-        //             case 1095:
-        //                 initialCost = oldApplicationLicense.licenseChangeThreeYearPrice;
-        //                 newCost = applicationLicense.licenseChangeThreeYearPrice;
-        //                 break;
-        //             case 730:
-        //                 initialCost = oldApplicationLicense.licenseChangeTwoYearPrice;
-        //                 newCost = applicationLicense.licenseChangeTwoYearPrice;
-        //                 break;
-        //             case 365:
-        //                 initialCost = oldApplicationLicense.licenseChangeOneYearPrice;
-        //                 newCost = applicationLicense.licenseChangeOneYearPrice;
-        //                 break;
-        //             case 30:
-        //                 initialCost = oldApplicationLicense.licenseChangeOneMonthPrice;
-        //                 newCost = applicationLicense.licenseChangeOneMonthPrice;
-        //                 break;
-        //             default:
-        //                 throw new BadRequestException({
-        //                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //                     error: ResponseMessages.InvalidInitialDays,
-        //                 });
-        //         }
-        //         cost = newCost - remainingDays * (initialCost / initialDays);
-        //     }
-        // } else {
-        //     // Check for license history
-        //     if (licenseHistory) {
-        //         const daysIncreased = this.expectedDaysIncrease(
-        //             licenseHistory.extended,
-        //             licenseHistory.extendType,
-        //             firstUseDate,
-        //             licensePeriod,
-        //         );
-        //         let extendedPrice, newExtendedPrice;
-        //         switch (licenseHistory.extendType.toLowerCase()) {
-        //             case 'years':
-        //                 if (licenseHistory.extended === 1) {
-        //                     extendedPrice = oldApplicationLicense.licenseExtendOneYearPrice;
-        //                     newExtendedPrice = applicationLicense.licenseExtendOneYearPrice;
-        //                 } else if (licenseHistory.extended === 2) {
-        //                     extendedPrice = oldApplicationLicense.licenseExtendTwoYearPrice;
-        //                     newExtendedPrice = applicationLicense.licenseExtendTwoYearPrice;
-        //                 } else if (licenseHistory.extended === 3) {
-        //                     extendedPrice = oldApplicationLicense.licenseExtendThreeYearPrice;
-        //                     newExtendedPrice = applicationLicense.licenseExtendThreeYearPrice;
-        //                 } else {
-        //                     extendedPrice = oldApplicationLicense.licenseExtendOneYearPrice * licenseHistory.extended;
-        //                     newExtendedPrice = applicationLicense.licenseExtendOneYearPrice * licenseHistory.extended;
-        //                 }
-        //                 break;
-        //             case 'months':
-        //                 extendedPrice = oldApplicationLicense.licenseExtendOneMonthPrice * licenseHistory.extended;
-        //                 newExtendedPrice = applicationLicense.licenseExtendOneMonthPrice * licenseHistory.extended;
-        //                 break;
-        //             case 'days':
-        //                 extendedPrice =
-        //                     Number((oldApplicationLicense.licenseExtendOneMonthPrice / 30).toFixed(2)) *
-        //                     licenseHistory.extended;
-        //                 newExtendedPrice =
-        //                     Number((applicationLicense.licenseExtendOneMonthPrice / 30).toFixed(2)) *
-        //                     licenseHistory.extended;
-        //                 break;
-        //             default:
-        //                 throw new BadRequestException({
-        //                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //                     error: ResponseMessages.InvalidExtendedType,
-        //                 });
-        //         }
-        //         const initialDays = this.getInitialDays(daysIncreased, licensePeriod);
-        //         switch (initialDays) {
-        //             case 1095:
-        //                 cost =
-        //                     applicationLicense.licenseChangeThreeYearPrice +
-        //                     newExtendedPrice -
-        //                     (oldApplicationLicense.licenseChangeThreeYearPrice + extendedPrice);
-        //                 break;
-        //             case 730:
-        //                 cost =
-        //                     applicationLicense.licenseChangeTwoYearPrice +
-        //                     newExtendedPrice -
-        //                     (oldApplicationLicense.licenseChangeTwoYearPrice + extendedPrice);
-        //                 break;
-        //             case 365:
-        //                 cost =
-        //                     applicationLicense.licenseChangeOneYearPrice +
-        //                     newExtendedPrice -
-        //                     (oldApplicationLicense.licenseChangeOneYearPrice + extendedPrice);
-        //                 break;
-        //             case 30:
-        //                 cost =
-        //                     applicationLicense.licenseChangeOneMonthPrice +
-        //                     newExtendedPrice -
-        //                     (oldApplicationLicense.licenseChangeOneMonthPrice + extendedPrice);
-        //                 break;
-        //             default:
-        //                 throw new BadRequestException({
-        //                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //                     error: ResponseMessages.InvalidInitialDays,
-        //                 });
-        //         }
-        //     } else {
-        //         // No license history
-        //         switch (licensePeriod) {
-        //             case 1095:
-        //                 cost = Number(oldApplicationLicense.licenseChangeThreeYearPrice.toFixed(2));
-        //                 cost = applicationLicense.licenseChangeThreeYearPrice - remainingDays * (cost / 1095);
-        //                 break;
-        //             case 730:
-        //                 cost = Number(oldApplicationLicense.licenseChangeTwoYearPrice.toFixed(2));
-        //                 cost = applicationLicense.licenseChangeTwoYearPrice - remainingDays * (cost / 730);
-        //                 break;
-        //             case 365:
-        //                 cost = Number(oldApplicationLicense.licenseChangeOneYearPrice.toFixed(2));
-        //                 cost = applicationLicense.licenseChangeOneYearPrice - remainingDays * (cost / 365);
-        //                 break;
-        //             case 30:
-        //                 cost = Number(oldApplicationLicense.licenseChangeOneMonthPrice.toFixed(2));
-        //                 cost = applicationLicense.licenseChangeOneMonthPrice - remainingDays * (cost / 30);
-        //                 break;
-        //             default:
-        //                 throw new BadRequestException({
-        //                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //                     error: ResponseMessages.InvalidLicensePeriod,
-        //                 });
-        //         }
-        //     }
-        // }
-        // return cost;
     }
 
     expiredDate(firstUseDate: string, licensePeriod: number) {
@@ -3696,50 +3465,6 @@ export class ConsultantsService {
         return totalUpgradeCost;
     }
 
-    async extendLicenseCost(licenseId: number, duration: number, type: string, applicationId: number) {
-        // const al = await this.licenceService.findApplicationLicence({
-        //     applicationId: applicationId,
-        //     licenseId: licenseId,
-        // });
-        // if (!al) {
-        //     this.commonService.throwNotFoundError();
-        // }
-        // let cost;
-        // switch (type.toLowerCase()) {
-        //     case 'months':
-        //         cost = al.licenseExtendOneMonthPrice * duration;
-        //         break;
-        //     case 'years':
-        //         switch (duration) {
-        //             case 3:
-        //                 cost = al.licenseExtendThreeYearPrice;
-        //                 break;
-        //             case 2:
-        //                 cost = al.licenseExtendTwoYearPrice;
-        //                 break;
-        //             case 1:
-        //                 cost = al.licenseExtendOneYearPrice;
-        //                 break;
-        //             default:
-        //                 throw new BadRequestException({
-        //                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //                     error: ResponseMessages.LicenseCanNotExtend,
-        //                 });
-        //         }
-        //         break;
-        //     case 'days':
-        //         const cal = Number((al.licenseExtendOneMonthPrice / 30).toFixed(3));
-        //         cost = cal * duration;
-        //         break;
-        //     default:
-        //         throw new BadRequestException({
-        //             result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //             error: ResponseMessages.InvalidTimeType,
-        //         });
-        // }
-        // return cost;
-    }
-
     findBatchIdByAnalysis(batchIds: { analysis_type: string; batch_id: string }[], analysisType: string) {
         return batchIds.find((b) => b.analysis_type === analysisType)?.batch_id;
     }
@@ -3790,6 +3515,78 @@ export class ConsultantsService {
             });
         }
     }
+
+    // FTP TRANSFERT
+
+    async listFiles(remoteDir: any, fileGlob: any) {
+        console.log(`Listing ${remoteDir} ...`);
+        let fileObjects;
+        try {
+            fileObjects = await this.client.list(remoteDir, fileGlob);
+        } catch (err) {
+            console.log('Listing failed:', err);
+        }
+
+        const fileNames: any[] = [];
+
+        for (const file of fileObjects) {
+            if (file.type === 'd') {
+                console.log(`${new Date(file.modifyTime).toISOString()} PRE ${file.name}`);
+            } else {
+                console.log(`${new Date(file.modifyTime).toISOString()} ${file.size} ${file.name}`);
+            }
+            fileNames.push(file.name);
+        }
+
+        return fileNames;
+    }
+
+    // Transfering file
+    async uploadFile(localFile: any, remoteFile: any) {
+        console.log(`Uploading ${localFile} to ${remoteFile} ...`);
+        try {
+            await this.client.put(localFile, remoteFile);
+        } catch (err) {
+            console.error('Uploading failed:', err);
+        }
+    }
+
+    async ftpconnect(options: { host: string; port: number; username: string; password: string }) {
+        console.log(`Connecting to ${options.host}:${options.port}`);
+        try {
+            const response = await this.client.connect(options);
+            console.log('Connected successfully');
+            return response; // Return the response if needed
+        } catch (err) {
+            console.error('Failed to connect:', err);
+            throw err; // Propagate the error
+        }
+    }
+
+    getDates(startDate: Date, endDate: Date): string[] {
+        const dateArray: any[] = [];
+        const currentDate = new Date(startDate);
+
+        while (currentDate <= endDate) {
+            const formattedDate = currentDate.toISOString().split('T')[0];
+            dateArray.push(formattedDate);
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        return dateArray;
+    }
+
+    async fileExists(filePath: string): Promise<boolean> {
+        try {
+            // Check if the file exists using fs.access()
+            await fs.access(filePath);
+            return true; // File exists
+        } catch (error) {
+            return false; // File does not exist
+        }
+    }
+    // @Cron('* * * * *')
+    // @Cron(CronExpression.EVERY_DAY_AT_1AM)
 }
 
 // "total_size": 5,
