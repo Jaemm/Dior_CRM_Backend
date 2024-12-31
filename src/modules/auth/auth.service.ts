@@ -12,15 +12,58 @@ import { ResetPasswordDto, sendTokenDto } from 'src/common/Dto/auth/authToken.dt
 // import { EmailService } from 'src/modules/Email/email.service';
 import * as crypto from 'crypto';
 import * as Jwt from 'jsonwebtoken';
+import * as Saml2Js from 'saml2-js';
 
 @Injectable()
 export class AuthService {
+    private samlValidator: Saml2Js.ServiceProvider;
     constructor(
         private readonly jwtService: JwtService,
         // private readonly userService: UserService,
         private readonly common: CommonService, // private EmailService: EmailService,
-    ) {}
+    ) {
+        this.samlValidator = new Saml2Js.ServiceProvider({
+            entity_id: 'process.env.EMAIL_URL',
+            assert_endpoint: 'http://localhost:3000/v1/api/callback', // The callback endpoint for SAML responses
+            private_key: null,
+            certificate: null,
+        });
+    }
 
+    /**
+     * Validate the SAML Response sent by OKTA
+     * @param samlResponse Base64-encoded SAML Response
+     * @returns Decoded user information from SAML assertion
+     */
+    async validateSAMLResponse(samlResponse: string) {
+        const identityProvider = new Saml2Js.IdentityProvider({
+            sso_login_url: process.env.OKTA_ENTRY_POINT, // OKTA SAML URL
+            sso_logout_url: 'https://dev-6xtwqqsv4j2h02u0.us.auth0.com/logout', // OKTA logout URL (or placeholder)
+            certificates: process.env.OKTA_CERT,
+        });
+
+        return new Promise((resolve, reject) => {
+            this.samlValidator.post_assert(
+                identityProvider,
+                {
+                    request_body: {
+                        SAMLResponse: samlResponse, // The SAMLResponse is part of the request_body
+                    },
+                }, // Use 'response' as the property name instead of 'SAMLResponse'
+                (error, response) => {
+                    if (error) return reject(error);
+                    resolve(response);
+                },
+            );
+        });
+    }
+
+    async loginWithUsernameAndPassword(username: string, password: string) {
+        if (username === 'test@example.com' && password === 'password123') {
+            return { id: 1, username, token: 'mock-jwt-token' };
+        }
+        throw new Error('Invalid username or password');
+    }
     async generateAuthTokens(user: any, domain?: string, tokenId?: string): Promise<[string, string]> {
         return Promise.all([
             this.jwtService.generateToken(user, TokenTypeEnum.ACCESS, domain, tokenId),
