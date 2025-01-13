@@ -2747,6 +2747,7 @@ export class ConsultantsService {
             'ka-ge': 'მოწყობილობა არ არსებობს',
             'kk': 'Құрылғы жоқ',
             'kk-kz': 'Құрылғы жоқ',
+            'az': 'Cihaz mövcud deyi',
         };
 
         const normalizedLocale = locale.toLowerCase();
