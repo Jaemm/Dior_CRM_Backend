@@ -153,21 +153,30 @@ export class AutomaticProductDiorGenerator {
         const recommanded = foundMarket?.defaultRecommendation ?? '';
 
         let product: ProductRecommendationSelecteds[];
+       
         if (market.toLocaleLowerCase() === 'japan') {
             product = await this.getProductsFromMarketJapan(result);
-        } else if (recommanded.includes('western') || recommanded.includes('europe')) {
+            console.log(product)
+        } else if (recommanded.includes('western') || recommanded.includes('europe')|| recommanded.includes('france'))  {
             product = await this.getProductsFromMarketWestern(result);
+            console.log(product)
         }
-
-        // else if (this.routineRecommendation === '3') {
+        //  else if (this.routineRecommendation === '3') {
         //     product = await this.getProductsFromMarketWestern(result);
-        // } else if (this.routineRecommendation === '5') {
-        //     product = await this.getProductsFromMarketAsia(result);
-        // }
+        // } 
+        else if (this.routineRecommendation === '3') {
+            product = await this.getProductsFromMarketAsia(result);
+            console.log('here')
+        }
+        else if (this.routineRecommendation === '5') {
+            product = await this.getProductsFromMarketAsia(result);
+            console.log('here2')
+        }
         else {
             // Default from asia
             product = await this.getProductsFromMarketAsia(result);
         }
+        console.log(market)
 
         return product;
     }
