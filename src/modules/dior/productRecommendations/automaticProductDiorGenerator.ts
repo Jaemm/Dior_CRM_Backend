@@ -166,7 +166,7 @@ export class AutomaticProductDiorGenerator {
         //     product = await this.getProductsFromMarketWestern(result);
         // } 
         else if (this.routineRecommendation === '3') {
-            product = await this.getProductsFromMarketAsia(result);
+            product = await this.getProductsFromMarketWestern(result);
             console.log('here')
         }
         else if (this.routineRecommendation === '5') {
@@ -327,7 +327,7 @@ export class AutomaticProductDiorGenerator {
         const isNonPremium =
             result[2]['answers'].filter((x) => nonPremium.includes(x)).length === result[2]['answers'].length;
 
-        let skincareProducts: ProductRecommendationSelecteds[];
+            let skincareProducts: ProductRecommendationSelecteds[] = [];
         const addSkincareRoutine = async (routine: number) => {
             skincareProducts = await this.getSkinCareRoutine(routine, 'western skincare');
         };
