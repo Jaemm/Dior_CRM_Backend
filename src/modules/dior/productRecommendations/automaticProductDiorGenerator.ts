@@ -165,7 +165,7 @@ export class AutomaticProductDiorGenerator {
         //     product = await this.getProductsFromMarketWestern(result);
         // } 
         else if (this.routineRecommendation === '3') {
-            product = await this.getProductsFromMarketAsia(result);
+            product = await this.getProductsFromMarketWestern(result);
             console.log('here')
         }
         else if (this.routineRecommendation === '5') {
