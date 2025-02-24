@@ -748,7 +748,7 @@ export class ProductRecommendationService {
                     let recommendation = productRecommendationSelected.productRecommendation;
 
                     const isPrincipal = productRecommendationSelected.isPrincipal;
-                    const shades = recommendation.getShade();
+                    const shades = recommendation?.getShade?.() || 'defaultShade';
                     const collectionShades = (
                         await this.productRecommendationRepository
                             .createQueryBuilder('pr')

@@ -241,12 +241,17 @@ export class DiorCompanyBranchesService {
             const searchPage = Number(page || 1);
             const searchPer = Number(per || 25);
 
-            const [branches, total] = await branchQuery
+            // const [branches, total] = await branchQuery
+            //     .skip((searchPage - 1) * searchPer)
+            //     .take(searchPer)
+            //     .getManyAndCount();
+
+            //     console.log(branches)
+            const total = await branchQuery.getCount();
+            const branches = await branchQuery
                 .skip((searchPage - 1) * searchPer)
                 .take(searchPer)
-                .getManyAndCount();
-
-                console.log(branches)
+                .getMany();
 
             const reformatBranches: Promise<ConsultantBranchesForDiorT>[] = branches.map(async (branch, i) => {
                 // const totalDevices: any = await this.productsRepository.getNewOpticNumbersCountByBranch(branch.id);

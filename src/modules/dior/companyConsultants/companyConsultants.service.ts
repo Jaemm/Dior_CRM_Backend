@@ -81,101 +81,195 @@ export class DiorCompanyConsultantsService {
         }
     }
 
+    // async getDiorCompanyConsultants(req: Request, query: GetDiorCompanyConsultantsDto, locale: string = 'en') {
+    //     try {
+    //         console.log(query);
+    //         const { search, country, filter_by, filter_by_2, page, per } = query;
+
+    //         const userId = (<{ id: string }>req.user).id;
+
+    //         const currentConsultant = await this.consultantRepository.getConsultantById(Number(userId), [
+    //             'consultant_branch',
+    //         ]);
+
+    //         // const diorConsultant = await this.consultantRepository.getDiorConsultant();
+    //         console.log('diorConsultant', 8131);
+    //         const diorCompanyId = 213; // diorConsultant.consultant_company_id;
+
+    //         if (!currentConsultant) {
+    //             throw new UnauthorizedException({
+    //                 result_code: ErrorStatus.UNAUTHORIZED,
+    //                 error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+    //             });
+    //         }
+
+    //         const consultantsQuery = await this.consultantRepository
+    //             .createQueryBuilder('consultants')
+    //             .leftJoinAndSelect('consultants.consultant_branch', 'consultant_branch')
+    //             .where('consultants.consultant_company_id = :companyId', { companyId: diorCompanyId });
+
+    //         if (Number(currentConsultant.consultant_position_id) === PositionsIds.SUPER_ADMIN) {
+    //             consultantsQuery.andWhere('consultants.id != :diorConsultantId', {
+    //                 diorConsultantId: 8131,
+    //             });
+    //         } else if (Number(currentConsultant.consultant_position_id) === PositionsIds.ADMIN) {
+    //             consultantsQuery
+    //                 .andWhere('LOWER (consultants.country) IN (:...countries)', {
+    //                     countries: currentConsultant.countries.map((country) => country.toLocaleLowerCase()),
+    //                 })
+    //                 .andWhere('consultants.id != :diorConsultantId', {
+    //                     diorConsultantId: 8131,
+    //                 });
+    //         } else {
+    //             consultantsQuery
+    //                 .andWhere('LOWER (consultants.country) = :country', {
+    //                     country: currentConsultant.consultant_branch.country.toLocaleLowerCase(),
+    //                 })
+    //                 .andWhere('consultants.id != :diorConsultantId', {
+    //                     diorConsultantId: 8131,
+    //                 });
+    //         }
+
+    //         consultantsQuery.andWhere('consultants.hide_for_bc = false');
+
+    //         consultantsQuery.andWhere('LOWER(consultants.email) NOT IN (:...excludedEmails)', {
+    //             excludedEmails: ['ann.chowis613@gmail.com', 'ann@chowis.com'],
+    //         });
+
+    //         if (filter_by) {
+    //             consultantsQuery.andWhere('LOWER (consultants.country) = :filterBy', {
+    //                 filterBy: filter_by.toLocaleLowerCase(),
+    //             });
+    //         }
+
+    //         if (filter_by_2) {
+    //             consultantsQuery.andWhere('consultants.consultant_branch_id = :filter_by_2', {
+    //                 filter_by_2: filter_by_2,
+    //             });
+    //         }
+
+    //         if (country) {
+    //             consultantsQuery.andWhere('LOWER (consultants.country) = :country', {
+    //                 country: country.toLocaleLowerCase(),
+    //             });
+    //         }
+
+    //         if (search) {
+    //             consultantsQuery.andWhere(
+    //                 '(consultants.country LIKE :search OR consultants.code LIKE :search OR consultant_branch.email LIKE :search)',
+    //                 {
+    //                     search: `%${search}%`,
+    //                                         },
+    //             );
+    //         }
+    //         const searchPage = Number(page || 1);
+    //         const searchPer = Number(per || 25);
+
+    //         const [consultants, totalCount] = await consultantsQuery
+    //             .skip((searchPage - 1) * searchPer)
+    //             .take(searchPer)
+    //             .getManyAndCount();
+
+    //         const reformatConsultantList: ConsultantForDiorT[] = consultants.map((consultant) => {
+    //             const branch = consultant.consultant_branch;
+
+    //             const posCode = branch ? branch.code : null;
+    //             const posEmail = branch ? branch.email : null;
+
+    //             return {
+    //                 id: consultant.id,
+    //                 name: consultant.name,
+    //                 code: consultant.code,
+    //                 email: consultant.email,
+    //                 country: consultant.country,
+    //                 status: consultant.convertStatus,
+    //                 created_at: consultant.created_at,
+    //                 pos_code: posCode,
+    //                 pos_email: posEmail,
+    //             };
+    //         });
+
+
+    //         console.log(reformatConsultantList)
+    //         return {
+    //             data: reformatConsultantList,
+    //             total_size: totalCount,
+    //             current_page_size: reformatConsultantList.length,
+    //             current_page: searchPage,
+    //             total_pages: Math.ceil(totalCount / searchPer),
+    //         };
+    //     } catch (e) {
+    //         throw e;
+    //     }
+    // }
     async getDiorCompanyConsultants(req: Request, query: GetDiorCompanyConsultantsDto, locale: string = 'en') {
         try {
             console.log(query);
             const { search, country, filter_by, filter_by_2, page, per } = query;
-
+    
             const userId = (<{ id: string }>req.user).id;
-
-            const currentConsultant = await this.consultantRepository.getConsultantById(Number(userId), [
-                'consultant_branch',
-            ]);
-
-            // const diorConsultant = await this.consultantRepository.getDiorConsultant();
-            console.log('diorConsultant', 8131);
-            const diorCompanyId = 213; // diorConsultant.consultant_company_id;
-
+            const currentConsultant = await this.consultantRepository.getConsultantById(Number(userId), ['consultant_branch']);
+    
+            const diorCompanyId = 213;
+    
             if (!currentConsultant) {
                 throw new UnauthorizedException({
                     result_code: ErrorStatus.UNAUTHORIZED,
                     error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
                 });
             }
-
-            const consultantsQuery = await this.consultantRepository
+    
+            const consultantsQuery = this.consultantRepository
                 .createQueryBuilder('consultants')
-                .leftJoinAndSelect('consultants.consultant_branch', 'consultant_branch')
-                .where('consultants.consultant_company_id = :companyId', { companyId: diorCompanyId });
-
+                .where('consultants.consultant_company_id = :companyId', { companyId: diorCompanyId })
+                .andWhere('consultants.hide_for_bc = false')
+                .andWhere('LOWER(consultants.email) NOT IN (:...excludedEmails)', {
+                    excludedEmails: ['ann.chowis613@gmail.com', 'ann@chowis.com'],
+                });
+    
             if (Number(currentConsultant.consultant_position_id) === PositionsIds.SUPER_ADMIN) {
-                consultantsQuery.andWhere('consultants.id != :diorConsultantId', {
-                    diorConsultantId: 8131,
-                });
+                consultantsQuery.andWhere('consultants.id != :diorConsultantId', { diorConsultantId: 8131 });
             } else if (Number(currentConsultant.consultant_position_id) === PositionsIds.ADMIN) {
-                consultantsQuery
-                    .andWhere('LOWER (consultants.country) IN (:...countries)', {
-                        countries: currentConsultant.countries.map((country) => country.toLocaleLowerCase()),
-                    })
-                    .andWhere('consultants.id != :diorConsultantId', {
-                        diorConsultantId: 8131,
-                    });
+                consultantsQuery.andWhere('LOWER (consultants.country) IN (:...countries)', {
+                    countries: currentConsultant.countries.map((country) => country.toLocaleLowerCase()),
+                }).andWhere('consultants.id != :diorConsultantId', { diorConsultantId: 8131 });
             } else {
-                consultantsQuery
-                    .andWhere('LOWER (consultants.country) = :country', {
-                        country: currentConsultant.consultant_branch.country.toLocaleLowerCase(),
-                    })
-                    .andWhere('consultants.id != :diorConsultantId', {
-                        diorConsultantId: 8131,
-                    });
-            }
-
-            consultantsQuery.andWhere('consultants.hide_for_bc = false');
-
-            consultantsQuery.andWhere('LOWER(consultants.email) NOT IN (:...excludedEmails)', {
-                excludedEmails: ['ann.chowis613@gmail.com', 'ann@chowis.com'],
-            });
-
-            if (filter_by) {
-                consultantsQuery.andWhere('LOWER (consultants.country) = :filterBy', {
-                    filterBy: filter_by.toLocaleLowerCase(),
-                });
-            }
-
-            if (filter_by_2) {
-                consultantsQuery.andWhere('consultants.consultant_branch_id = :filter_by_2', {
-                    filter_by_2: filter_by_2,
-                });
-            }
-
-            if (country) {
                 consultantsQuery.andWhere('LOWER (consultants.country) = :country', {
-                    country: country.toLocaleLowerCase(),
-                });
+                    country: currentConsultant.consultant_branch.country.toLocaleLowerCase(),
+                }).andWhere('consultants.id != :diorConsultantId', { diorConsultantId: 8131 });
             }
-
+    
+            if (filter_by) {
+                consultantsQuery.andWhere('LOWER (consultants.country) = :filterBy', { filterBy: filter_by.toLocaleLowerCase() });
+            }
+    
+            if (filter_by_2) {
+                consultantsQuery.andWhere('consultants.consultant_branch_id = :filter_by_2', { filter_by_2 });
+            }
+    
+            if (country) {
+                consultantsQuery.andWhere('LOWER (consultants.country) = :country', { country: country.toLocaleLowerCase() });
+            }
+    
             if (search) {
                 consultantsQuery.andWhere(
-                    '(consultants.country LIKE :search OR consultants.code LIKE :search OR consultant_branch.email LIKE :search)',
-                    {
-                        search: `%${search}%`,
-                                            },
+                    '(consultants.country ILIKE :search OR consultants.code ILIKE :search OR consultant_branch.email ILIKE :search)',
+                    { search: `%${search}%` }
                 );
             }
+    
+            // 🚀 개수 먼저 가져오기
+            const totalCount = await consultantsQuery.getCount();
+    
             const searchPage = Number(page || 1);
             const searchPer = Number(per || 25);
-
-            const [consultants, totalCount] = await consultantsQuery
-                .skip((searchPage - 1) * searchPer)
-                .take(searchPer)
-                .getManyAndCount();
-
+    
+            consultantsQuery.skip((searchPage - 1) * searchPer).take(searchPer);
+    
+            // 🚀 데이터 조회 (JOIN 최소화)
+            const consultants = await consultantsQuery.getMany();
+    
             const reformatConsultantList: ConsultantForDiorT[] = consultants.map((consultant) => {
-                const branch = consultant.consultant_branch;
-
-                const posCode = branch ? branch.code : null;
-                const posEmail = branch ? branch.email : null;
-
                 return {
                     id: consultant.id,
                     name: consultant.name,
@@ -184,13 +278,11 @@ export class DiorCompanyConsultantsService {
                     country: consultant.country,
                     status: consultant.convertStatus,
                     created_at: consultant.created_at,
-                    pos_code: posCode,
-                    pos_email: posEmail,
+                    pos_code: consultant.consultant_branch?.code || null,
+                    pos_email: consultant.consultant_branch?.email || null,
                 };
             });
-
-
-            console.log(reformatConsultantList)
+    
             return {
                 data: reformatConsultantList,
                 total_size: totalCount,
@@ -202,7 +294,7 @@ export class DiorCompanyConsultantsService {
             throw e;
         }
     }
-
+    
     async getConsultantByBranchesConsultant(req: Request, locale = 'en') {
         const currentConsultantId = (<{ id: string }>req.user).id;
         const currentConsultant = await this.consultantRepository.findOne({

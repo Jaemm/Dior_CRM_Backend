@@ -154,32 +154,35 @@ export class AutomaticProductDiorGenerator {
 
         let product: ProductRecommendationSelecteds[];
        
-        if (market.toLocaleLowerCase() === 'japan') {
-            product = await this.getProductsFromMarketJapan(result);
-            console.log(product)
+        if (recommanded.toLowerCase().includes('japan')) {
+            // product = await this.getProductsFromMarketJapan(result);
+            product = await this.getProductsFromMarketAsia(result);
+            console.log('market japan');
         } 
-        else if (recommanded.includes('western') || recommanded.includes('europe')|| recommanded.includes('france'))  {
+        else if (recommanded.toLowerCase().includes('western') || recommanded.toLowerCase().includes('europe')) {
             product = await this.getProductsFromMarketWestern(result);
-            console.log(product)
-        }
-        //  else if (this.routineRecommendation === '3') {
-        //     product = await this.getProductsFromMarketWestern(result);
-        // } 
-        else if (this.routineRecommendation === '3') {
-            product = await this.getProductsFromMarketWestern(result);
-            console.log('here')
-            console.log('product', product)
-        }
-        else if (this.routineRecommendation === '5') {
+            console.log('market western');
+        } 
+        else if (recommanded.toLowerCase().includes('asia')) {
             product = await this.getProductsFromMarketAsia(result);
-            console.log('here2')
-            console.log('product', product)
-        }
+            console.log('market asia');
+        } 
         else {
-            // Default from asia
-            product = await this.getProductsFromMarketAsia(result);
+            if (this.routineRecommendation === '3') {
+                product = await this.getProductsFromMarketWestern(result);
+                console.log('routineRecommendation 3');
+            } 
+            else if (this.routineRecommendation === '5') {
+                product = await this.getProductsFromMarketAsia(result);
+                console.log('routineRecommendation 5');
+            } 
+            else {
+                product = await this.getProductsFromMarketAsia(result);
+                console.log('else asia');
+            }
         }
-        console.log(market)
+        console.log('market===',market)
+        console.log('recommanded===',recommanded)
 
         return product;
     }

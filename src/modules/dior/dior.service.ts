@@ -93,69 +93,133 @@ export class DiorService {
         }
     }
 
-    async createCustomers(body: CreateCustomerDto) {
-        try {
-            const { email, consultant_id, name, external_id, surname } = body;
+    // async createCustomers(body: CreateCustomerDto) {
+    //     try {
+    //         const { email, consultant_id, name, external_id, surname } = body;
 
-            const existCustomer = await this.customersRepository.find({
-                where: {
-                    email: email,
-                    consultant_id: Number(consultant_id),
-                    external_id: external_id,
-                },
-            });
+    //         const existCustomer = await this.customersRepository.find({
+    //             where: {
+    //                 email: email,
+    //                 consultant_id: Number(consultant_id),
+    //                 external_id: external_id,
+    //             },
+    //         });
 
-            if (existCustomer.length > 0) {
-                throw new ConflictException({
-                    result_code: 409,
-                    error: `Data already Exists.`,
-                });
-            }
+    //         if (existCustomer.length > 0) {
+    //             throw new ConflictException({
+    //                 result_code: 409,
+    //                 error: `Data already Exists.`,
+    //             });
+    //         }
 
-            const newCustomer = this.customersRepository.create({
+    //         const newCustomer = this.customersRepository.create({
+    //             email: email,
+    //             consultant_id: Number(consultant_id),
+    //             name: name,
+    //             external_id: external_id,
+    //             surname: surname,
+    //             created_at: new Date(),
+    //             updated_at: new Date(),
+    //         });
+
+    //         const savedCustomer = await this.customersRepository.save(newCustomer);
+
+    //         const reformatCustomer: CustomersT = {
+    //             id: savedCustomer.id,
+    //             email: savedCustomer.email,
+    //             name: savedCustomer.name,
+    //             surname: savedCustomer.surname,
+    //             os: savedCustomer.os,
+    //             language: savedCustomer.language,
+    //             phone: savedCustomer.phone,
+    //             birth: savedCustomer.birth,
+    //             address: savedCustomer.address,
+    //             city: savedCustomer.city,
+    //             state: savedCustomer.state,
+    //             zip_code: savedCustomer.zip_code,
+    //             country: savedCustomer.country,
+    //             notes: savedCustomer.notes,
+    //             push_token: savedCustomer.push_token,
+    //             app_id: savedCustomer.app_id,
+    //             company_id: savedCustomer.company_id,
+    //             consultant_id: savedCustomer.consultant_id,
+    //             skin_color_group_id: savedCustomer.skin_color_group_id,
+    //             ethnicity_id: savedCustomer.ethnicity_id,
+    //             gender: savedCustomer.gender,
+    //             sign_in_count: savedCustomer.sign_in_count,
+    //             image_url: savedCustomer.image_url,
+    //             external_id: savedCustomer.external_id,
+    //         };
+
+    //         return reformatCustomer;
+    //     } catch (e) {
+    //         throw e;
+    //     }
+    // }
+    async createCustomers(body: CreateCustomerDto): Promise<CustomersT> {
+        const { email, consultant_id, name, external_id, surname } = body;
+    
+        // 중복 고객 확인
+        const existCustomer = await this.customersRepository.findOne({
+            where: {
                 email: email,
                 consultant_id: Number(consultant_id),
-                name: name,
                 external_id: external_id,
-                surname: surname,
-                created_at: new Date(),
-                updated_at: new Date(),
-            });
-
-            const savedCustomer = await this.customersRepository.save(newCustomer);
-
-            const reformatCustomer: CustomersT = {
-                id: savedCustomer.id,
-                email: savedCustomer.email,
-                name: savedCustomer.name,
-                surname: savedCustomer.surname,
-                os: savedCustomer.os,
-                language: savedCustomer.language,
-                phone: savedCustomer.phone,
-                birth: savedCustomer.birth,
-                address: savedCustomer.address,
-                city: savedCustomer.city,
-                state: savedCustomer.state,
-                zip_code: savedCustomer.zip_code,
-                country: savedCustomer.country,
-                notes: savedCustomer.notes,
-                push_token: savedCustomer.push_token,
-                app_id: savedCustomer.app_id,
-                company_id: savedCustomer.company_id,
-                consultant_id: savedCustomer.consultant_id,
-                skin_color_group_id: savedCustomer.skin_color_group_id,
-                ethnicity_id: savedCustomer.ethnicity_id,
-                gender: savedCustomer.gender,
-                sign_in_count: savedCustomer.sign_in_count,
-                image_url: savedCustomer.image_url,
-                external_id: savedCustomer.external_id,
-            };
-
-            return reformatCustomer;
-        } catch (e) {
-            throw e;
+            },
+        });
+    
+        if (existCustomer) {
+            // 중복 고객이 있는 경우 해당 고객 반환
+            return this.reformatCustomer(existCustomer);
         }
+    
+        // 새 고객 생성 및 저장
+        const currentDate = new Date();
+        const newCustomer = this.customersRepository.create({
+            email,
+            consultant_id: Number(consultant_id),
+            name,
+            external_id,
+            surname,
+            created_at: currentDate,
+            updated_at: currentDate,
+        });
+    
+        const savedCustomer = await this.customersRepository.save(newCustomer);
+    
+        // 저장된 고객 데이터 반환
+        return this.reformatCustomer(savedCustomer);
     }
+    
+    private reformatCustomer(customer: CustomersT): CustomersT {
+        return {
+            id: customer.id,
+            email: customer.email,
+            name: customer.name,
+            surname: customer.surname,
+            os: customer.os,
+            language: customer.language,
+            phone: customer.phone,
+            birth: customer.birth,
+            address: customer.address,
+            city: customer.city,
+            state: customer.state,
+            zip_code: customer.zip_code,
+            country: customer.country,
+            notes: customer.notes,
+            push_token: customer.push_token,
+            app_id: customer.app_id,
+            company_id: customer.company_id,
+            consultant_id: customer.consultant_id,
+            skin_color_group_id: customer.skin_color_group_id,
+            ethnicity_id: customer.ethnicity_id,
+            gender: customer.gender,
+            sign_in_count: customer.sign_in_count,
+            image_url: customer.image_url,
+            external_id: customer.external_id,
+        };
+    }
+    
 
     async sendWebResult(body: SendWebResultDto, locale: string = 'en') {
         try {

@@ -55,6 +55,7 @@ export class SearchBranchesDto {
     @IsOptional()
     @IsString()
     per: string;
+
 }
 
 export class UpdateBranchesDto {
