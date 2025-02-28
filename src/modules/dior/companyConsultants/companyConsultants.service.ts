@@ -69,7 +69,7 @@ export class DiorCompanyConsultantsService {
                 id: savedConsultant.id,
                 name: savedConsultant.name,
                 code: savedConsultant.code,
-                email: savedConsultant.email,     
+                email: savedConsultant.email,
                 created_at: savedConsultant.created_at,
                 country: savedConsultant.country,
                 status: savedConsultant.convertStatus,
@@ -159,7 +159,7 @@ export class DiorCompanyConsultantsService {
                     '(consultants.country LIKE :search OR consultants.code LIKE :search OR consultant_branch.email LIKE :search)',
                     {
                         search: `%${search}%`,
-                                            },
+                    },
                 );
             }
             const searchPage = Number(page || 1);
@@ -189,8 +189,7 @@ export class DiorCompanyConsultantsService {
                 };
             });
 
-
-            console.log(reformatConsultantList)
+            console.log(reformatConsultantList);
             return {
                 data: reformatConsultantList,
                 total_size: totalCount,
@@ -218,6 +217,7 @@ export class DiorCompanyConsultantsService {
             where: [
                 {
                     consultant_branch: { id: currentConsultant?.consultant_branch?.id },
+                    country: currentConsultant?.consultant_branch?.country,
                 },
                 { id: currentConsultant.id },
             ],
@@ -236,6 +236,7 @@ export class DiorCompanyConsultantsService {
                 code: consultant.code,
                 name: consultant.name,
                 surname: consultant.surname,
+                country: consultant.country,
             }));
 
         const data: {
@@ -251,6 +252,7 @@ export class DiorCompanyConsultantsService {
                 code: row.code,
                 name: row.name,
                 surname: row.surname,
+                country: row.country,
             };
         });
 
