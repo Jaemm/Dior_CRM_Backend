@@ -235,7 +235,7 @@ export class DiorCompanyBranchesService {
             if (search) {
                 const searchLower = `%${search.toLowerCase()}%`;
                 branchQuery.andWhere(
-                    '(branch.country LIKE :search OR branch.code LIKE :search OR branch.name LIKE :search OR branch.email LIKE :search)',
+                    '(branch.country ILIKE :search OR branch.code ILIKE :search OR branch.name ILIKE :search OR branch.email ILIKE :search)',
                     { search: searchLower },
                 );
             }
@@ -253,7 +253,13 @@ export class DiorCompanyBranchesService {
             const branches = await branchQuery
                 .skip((searchPage - 1) * searchPer)
                 .take(searchPer)
+<<<<<<< HEAD
                 .getMany();
+=======
+                .getManyAndCount();
+
+            console.log(branches);
+>>>>>>> stg_main
 
             const reformatBranches: Promise<ConsultantBranchesForDiorT>[] = branches.map(async (branch, i) => {
                 // const totalDevices: any = await this.productsRepository.getNewOpticNumbersCountByBranch(branch.id);
