@@ -104,7 +104,9 @@ export class DiorCompanyBranchesService {
     }
 
     public async updateCondultantForPos(newUser: any) {
+        console.log(`Searching for consultant with email: ${newUser.email}`);
         const bm = await this.consultantRepository.findByEmail(newUser.email);
+        console.log('Query result:', bm);
 
         delete newUser.consultantCompanyId;
         delete newUser.createdAt;
