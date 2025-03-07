@@ -296,42 +296,47 @@ export class DiorCompanyBranchesService {
     async updateBranch(branchId: string, body: UpdateBranchesDto, locale = 'en') {
         try {
             const { email, name, code, password, country } = body;
-
+    
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
-
+    
             const branch = await this.consultantBranchesRepository.findOne({
                 where: {
                     id: branchId,
                     consultantCompanyId: String(diorCompanyId),
                 },
             });
-
+    
             if (!branch) {
+                console.error(`Branch with ID ${branchId} not found.`);
                 throw new NotFoundException({
                     result_code: ErrorStatus.RECORD_NOT_FOUND,
                     error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
                 });
             }
-
-            branch.email = email ? email : branch.email;
-            branch.name = name ? name : branch.name;
-            branch.code = code ? code : branch.code;
-            branch.country = country ? country : branch.country;
-            branch.password = password ? password : branch.password;
+    
+            // 업데이트할 값 설정 (새 값이 없으면 기존 값 유지)
+            branch.email = email || branch.email;
+            branch.name = name || branch.name;
+            branch.code = code || branch.code;
+            branch.country = country || branch.country;
+            branch.password = password || branch.password;
             branch.updatedAt = new Date();
-
+    
+            // 브랜치 저장 (컨설턴트 여부와 상관없이 실행)
             const savedBranch = await this.consultantBranchesRepository.save(branch);
-
-            if (savedBranch) {
-                await this.updateCondultantForPos(savedBranch).catch((error) => {
-                    console.log('===>', error);
-                    throw new BadRequestException({
-                        result_code: ErrorStatus.UNEXPECTED_ERROR,
-                        error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
-                    });
-                });
+            console.log(`Branch ${savedBranch.id} updated successfully.`);
+    
+            // 컨설턴트 정보 확인 (있으면 업데이트, 없으면 건너뜀)
+            const existingConsultant = await this.consultantRepository.findByEmail(savedBranch.email.toLowerCase());
+    
+            if (existingConsultant) {
+                console.log(`Consultant ${existingConsultant.id} found. Updating consultant data...`);
+                await this.updateCondultantForPos(savedBranch);
+            } else {
+                console.warn(`Consultant with email ${savedBranch.email} not found. Skipping POS update.`);
             }
-
+    
+            // 응답 데이터 재구성 (컨설턴트 없이도 브랜치 정보 반환)
             const reformatBranch: ConsultantBranchesForDiorT = {
                 id: Number(savedBranch.id),
                 name: savedBranch.name,
@@ -343,12 +348,14 @@ export class DiorCompanyBranchesService {
                 total_devices: 0,
                 last_consultation_date: null,
             };
-
+    
             return reformatBranch;
         } catch (e) {
+            console.error('Exception in updateBranch:', e);
             throw e;
         }
     }
+    
 
     async deleteBranch(branchId: string, locale = 'en') {
         try {
