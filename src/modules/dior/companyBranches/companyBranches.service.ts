@@ -175,10 +175,35 @@ export class DiorCompanyBranchesService {
             throw e;
         }
     }
+    async formatBranchData(
+        branch: ConsultantBranches,
+        productsRepository: ProductsRepository,
+    ): Promise<ConsultantBranchesForDiorT> {
+        const [totalDevices, latestCustomer] = await Promise.all([
+            productsRepository.getNewOpticNumbersCountByBranch(branch.id),
+            this.getCustomerRecentCustomer(branch.id),
+        ]);
+
+        const consultantionDate = latestCustomer
+            ? moment(latestCustomer).format('YYYY-MM-DD HH:mm:ss')
+            : moment(branch.createdAt).format('YYYY-MM-DD HH:mm:ss');
+
+        return {
+            id: Number(branch.id),
+            name: branch.name,
+            code: branch.code,
+            email: branch.email,
+            created_at: branch.createdAt,
+            country: branch.country,
+            password: branch.password,
+            total_devices: totalDevices,
+            last_consultation_date: consultantionDate,
+        };
+    }
 
     async searchBranches(req: Request, query: SearchBranchesDto, locale = 'en') {
         try {
-            const { filter_by: filterBy, search, country, page, per } = query;
+            const { filter_by: filterBy, search, country, page, per, is_bc } = query;
 
             const userId = (<{ id: string }>req.user).id;
             // const userId = 8131;
@@ -248,38 +273,16 @@ export class DiorCompanyBranchesService {
 
             console.log(branches);
 
-            const reformatBranches: Promise<ConsultantBranchesForDiorT>[] = branches.map(async (branch, i) => {
-                // const totalDevices: any = await this.productsRepository.getNewOpticNumbersCountByBranch(branch.id);
-
-                const [totalDevices, latestCustomer] = await Promise.all([
-                    this.productsRepository.getNewOpticNumbersCountByBranch(branch.id),
-                    this.getCustomerRecentCustomer(branch.id),
-                ]);
-
-                const consultantionDate = latestCustomer
-                    ? moment(latestCustomer).format('YYYY-MM-DD HH:mm:ss')
-                    : moment(branch.createdAt).format('YYYY-MM-DD HH:mm:ss');
-                const reformatBranch: ConsultantBranchesForDiorT = {
-                    id: Number(branch.id),
-                    name: branch.name,
-                    code: branch.code,
-                    email: branch.email,
-                    created_at: branch.createdAt,
-                    country: branch.country,
-                    password: branch.password,
-                    total_devices: totalDevices, //totalDevices[1],
-                    last_consultation_date: consultantionDate,
-                };
-
-                return reformatBranch;
-            });
+            const reformatBranches: Promise<ConsultantBranchesForDiorT>[] = is_bc
+                ? []
+                : branches.map((branch) => this.formatBranchData(branch, this.productsRepository));
 
             return {
-                data: await Promise.all(reformatBranches),
                 total_size: total,
                 current_page_size: branches.length,
                 current_page: searchPage,
                 total_pages: Math.ceil(total / searchPer),
+                data: is_bc ? branches : await Promise.all(reformatBranches),
             };
         } catch (e) {
             throw e;
@@ -289,16 +292,16 @@ export class DiorCompanyBranchesService {
     async updateBranch(branchId: string, body: UpdateBranchesDto, locale = 'en') {
         try {
             const { email, name, code, password, country } = body;
-    
+
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
-    
+
             const branch = await this.consultantBranchesRepository.findOne({
                 where: {
                     id: branchId,
                     consultantCompanyId: String(diorCompanyId),
                 },
             });
-    
+
             if (!branch) {
                 console.error(`Branch with ID ${branchId} not found.`);
                 throw new NotFoundException({
@@ -306,7 +309,7 @@ export class DiorCompanyBranchesService {
                     error: this.commonService.createLocaleErrorMessage(locale, 'record_not_found'),
                 });
             }
-    
+
             // 업데이트할 값 설정 (새 값이 없으면 기존 값 유지)
             branch.email = email || branch.email;
             branch.name = name || branch.name;
@@ -314,21 +317,21 @@ export class DiorCompanyBranchesService {
             branch.country = country || branch.country;
             branch.password = password || branch.password;
             branch.updatedAt = new Date();
-    
+
             // 브랜치 저장 (컨설턴트 여부와 상관없이 실행)
             const savedBranch = await this.consultantBranchesRepository.save(branch);
             console.log(`Branch ${savedBranch.id} updated successfully.`);
-    
+
             // 컨설턴트 정보 확인 (있으면 업데이트, 없으면 건너뜀)
             const existingConsultant = await this.consultantRepository.findByEmail(savedBranch.email.toLowerCase());
-    
+
             if (existingConsultant) {
                 console.log(`Consultant ${existingConsultant.id} found. Updating consultant data...`);
                 await this.updateCondultantForPos(savedBranch);
             } else {
                 console.warn(`Consultant with email ${savedBranch.email} not found. Skipping POS update.`);
             }
-    
+
             // 응답 데이터 재구성 (컨설턴트 없이도 브랜치 정보 반환)
             const reformatBranch: ConsultantBranchesForDiorT = {
                 id: Number(savedBranch.id),
@@ -341,14 +344,13 @@ export class DiorCompanyBranchesService {
                 total_devices: 0,
                 last_consultation_date: null,
             };
-    
+
             return reformatBranch;
         } catch (e) {
             console.error('Exception in updateBranch:', e);
             throw e;
         }
     }
-    
 
     async deleteBranch(branchId: string, locale = 'en') {
         try {
