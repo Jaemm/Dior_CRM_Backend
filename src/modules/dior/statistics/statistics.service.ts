@@ -818,9 +818,13 @@ export class StatisticsService {
                     end_date,
                 );
 
+                // Sum of all consultation
+                const total = Object.values(jsonData).reduce((sum, value) => sum + value, 0);
+
                 // Final data structure
                 data = {
                     total_count: totalConsultation,
+                    total_consultation: total,
                     data: jsonData,
                 };
             } else if (stat_type === 'clients') {
@@ -902,8 +906,10 @@ export class StatisticsService {
 
                 delete jsonData['0'];
                 // Return the final response data
+
                 data = {
                     total_count: totalClients,
+
                     data: jsonData,
                 };
             }

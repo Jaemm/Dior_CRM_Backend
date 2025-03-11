@@ -191,11 +191,11 @@ export class DiorCompanyConsultantsService {
 
             console.log(reformatConsultantList);
             return {
-                data: reformatConsultantList,
                 total_size: totalCount,
                 current_page_size: reformatConsultantList.length,
                 current_page: searchPage,
                 total_pages: Math.ceil(totalCount / searchPer),
+                data: reformatConsultantList,
             };
         } catch (e) {
             throw e;
