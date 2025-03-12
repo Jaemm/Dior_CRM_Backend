@@ -20,7 +20,7 @@ import {
     SalesConnectionRepository,
 } from '@/src/common/repositories/crm';
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { In, Not, Repository } from 'typeorm';
+import { Brackets, In, Not, Repository } from 'typeorm';
 import { AnalysisDataReplicationService } from '../../dataReplication/analysisDataReplication/analysisDataReplication.service';
 import {
     GetInfographStatDetails,
@@ -778,7 +778,13 @@ export class StatisticsService {
                     .createQueryBuilder('consultants')
                     .select('consultants.id, lower(consultants.country) as country')
                     .where('consultants.id IN (:...ids)', { ids: consultantIds })
-                    .andWhere('lower(consultants.country) IN (:...countries)', { countries: countryNames })
+                    .andWhere(
+                        new Brackets((qb) => {
+                            qb.where('lower(consultants.country) IN (:...countries)', {
+                                countries: countryNames,
+                            }).orWhere('consultants.country IS NULL');
+                        }),
+                    )
                     .getRawMany();
 
                 // Prepare a map to hold the counts per country

@@ -33,8 +33,8 @@ export class AnalysisDataReplicationService {
             .createQueryBuilder('analysis')
             .where("args->>'status' LIKE :status", {
                 status: '%true%',
-            })
-            .andWhere('analysis.created_time > :start', { start: diorDateStart });
+            });
+        //  .andWhere('analysis.created_time > :start', { start: diorDateStart });
 
         let _countQueryGlobal = this.globalcndpSkinRepository
             .createQueryBuilder('analysis')
