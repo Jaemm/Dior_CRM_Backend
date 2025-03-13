@@ -44,7 +44,6 @@ export class DiorController {
         @Body() body: SendWebResultDto,
     ) {
         const result = await this.diorService.sendWebResult(body, locale);
-
         return res.status(200).send(result);
     }
 }
