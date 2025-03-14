@@ -827,10 +827,11 @@ export class StatisticsService {
                 // Sum of all consultation
                 const total = Object.values(jsonData).reduce((sum, value) => sum + value, 0);
 
+                jsonData['null'] = jsonData['null'] + (totalConsultation - total);
+
                 // Final data structure
                 data = {
                     total_count: totalConsultation,
-                    total_consultation: total,
                     data: jsonData,
                 };
             } else if (stat_type === 'clients') {
