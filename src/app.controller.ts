@@ -68,7 +68,6 @@ export class AppController {
         return res.status(200).send({ countries: countriesList });
     }
 
-    // CUSTOMER
     @ApiTags('Customers')
     @ApiBearerAuth()
     @Get('basic-details-customers')
@@ -110,8 +109,8 @@ export class AppController {
     // @Get
 
     @Get('/callback')
-    @UseGuards(GoogleOauthGuard)
+    // @UseGuards(GoogleOauthGuard)
     async handleRedirect(@Req() req: any) {
-        return req.user;
+        return req?.user;
     }
 }

@@ -12,6 +12,7 @@ import {
     Req,
     Res,
     UnauthorizedException,
+    UseGuards,
 } from '@nestjs/common';
 import { Response, Request, query } from 'express';
 import { ConsultantsService } from './consultants.service';
@@ -62,6 +63,7 @@ import { Roles } from '@/src/common/decorators/roles.decorator';
 import { Role } from '@/src/common/enums/role.enum';
 import { Public } from '@/src/common/decorators/public-route.decorator';
 import { CRMService } from '../crm/crm.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @ApiTags('Consultants')
 @Controller('consultants')
@@ -189,12 +191,21 @@ export class ConsultantsController {
     }
 
     @Post('login')
+    @UseGuards(AuthGuard('saml'))
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async login(
+        @Req() req: Request,
         @Res() res: Response,
         @Body() body: LoginConsultantDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
+        const userFromSaml = req.user;
+        const samlResponse = 'BASE64_ENCODED_SAML_RESPONSE';
+        console.log(userFromSaml);
+        // In case you need app_id validation from OKTA
+        // if (userFromSaml.app_id !== body.app_id) {
+        //     return res.status(400).json({ message: 'Invalid app_id from OKTA' });
+        // }
         body.email = body.email.toLowerCase();
         const loginResult = await this.consultants.loginRuby(body, locale);
 
