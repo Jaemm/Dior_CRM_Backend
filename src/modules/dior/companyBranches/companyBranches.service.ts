@@ -104,7 +104,9 @@ export class DiorCompanyBranchesService {
     }
 
     public async updateCondultantForPos(newUser: any) {
+        console.log(`Searching for consultant with email: ${newUser.email}`);
         const bm = await this.consultantRepository.findByEmail(newUser.email);
+        console.log('Query result:', bm);
 
         delete newUser.consultantCompanyId;
         delete newUser.createdAt;
@@ -266,12 +268,17 @@ export class DiorCompanyBranchesService {
             const searchPage = Number(page || 1);
             const searchPer = Number(per || 25);
 
-            const [branches, total] = await branchQuery
+            // const [branches, total] = await branchQuery
+            //     .skip((searchPage - 1) * searchPer)
+            //     .take(searchPer)
+            //     .getManyAndCount();
+
+            //     console.log(branches)
+            const total = await branchQuery.getCount();
+            const branches = await branchQuery
                 .skip((searchPage - 1) * searchPer)
                 .take(searchPer)
-                .getManyAndCount();
-
-            console.log(branches);
+                .getMany();
 
             const reformatBranches: Promise<ConsultantBranchesForDiorT>[] = is_bc
                 ? []
