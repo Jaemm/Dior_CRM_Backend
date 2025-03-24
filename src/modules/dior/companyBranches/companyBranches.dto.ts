@@ -56,6 +56,10 @@ export class SearchBranchesDto {
     @IsString()
     per: string;
 
+    @ApiPropertyOptional()
+    @IsOptional()
+    @IsString()
+    is_bc: boolean;
 }
 
 export class UpdateBranchesDto {

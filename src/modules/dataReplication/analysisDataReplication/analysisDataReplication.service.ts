@@ -33,8 +33,8 @@ export class AnalysisDataReplicationService {
             .createQueryBuilder('analysis')
             .where("args->>'status' LIKE :status", {
                 status: '%true%',
-            })
-            .andWhere('analysis.created_time > :start', { start: diorDateStart });
+            });
+        //  .andWhere('analysis.created_time > :start', { start: diorDateStart });
 
         let _countQueryGlobal = this.globalcndpSkinRepository
             .createQueryBuilder('analysis')
@@ -355,6 +355,11 @@ export class AnalysisDataReplicationService {
                 .select('COUNT(batch_id)', 'cnt')
                 .where("(analysis.args->>'status' LIKE '%true')");
 
+            const countQueryGlobal = this.globalcndpSkinRepository
+                .createQueryBuilder('analysis')
+                .select('COUNT(batch_id)', 'cnt')
+                .where("(analysis.args->>'status' LIKE '%true')");
+
             if (startDate && endDate) {
                 countQuery.andWhere(`(analysis.create_time BETWEEN ${startDate} 00:00:00 AND ${endDate} 23:59:59)`);
             }
@@ -366,7 +371,7 @@ export class AnalysisDataReplicationService {
                 }
             }
 
-            return await countQuery.getCount();
+            return (await countQuery.getCount()) + (await countQueryGlobal.getCount());
         } catch (e) {
             throw e;
         }

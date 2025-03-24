@@ -98,6 +98,7 @@ export class DiorCompanyConsultantsController {
         @Param('id') consultantId: string,
     ) {
         const result = await this.diorCompanyConsultantsService.deleteDiorCompanyConsultant(consultantId, locale);
+
         return res.status(200).send(result);
     }
 
@@ -114,3 +115,4 @@ export class DiorCompanyConsultantsController {
         return res.status(200).send(result);
     }
 }
+
