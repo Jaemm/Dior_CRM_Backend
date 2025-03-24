@@ -26,7 +26,6 @@ export class AnalysisDataReplicationService {
             start: '2020-01-01 00:00:00',
             end: '2024-09-26 23:59:59',
         };
-        const diorDateStart = '2024-09-27 00:00:00';
 
         // Count analyses where status is true
         let _countQuery = this.diorCndpSkinRepository
@@ -42,6 +41,7 @@ export class AnalysisDataReplicationService {
                 status: '%true%',
             })
             .andWhere('analysis.created_time BETWEEN :start AND :end', globalDateRange);
+
         // Apply date range filter if start_date and end_date are provided
         if (start_date && end_date) {
             _countQuery = _countQuery.andWhere('created_time BETWEEN :start AND :end', {
@@ -304,49 +304,47 @@ export class AnalysisDataReplicationService {
                     ELSE (analysis.args->>'id')::NUMERIC
                 END
             ) AS "consultantId"`;
-    
+
             // 정확한 비교로 LIKE 제거
             const condition = `analysis.args->>'status' = 'true'`;
-    
+
             // 날짜 범위 설정
             const globalDateRange = {
                 start: '2020-01-01 00:00:00',
                 end: '2024-09-26 23:59:59',
             };
             const diorDateStart = '2024-09-27 00:00:00';
-    
+
             // 글로벌 컨설턴트 조회 쿼리
             const globalQueryBuilder = this.globalcndpSkinRepository
                 .createQueryBuilder('analysis')
                 .select(coalesceCondition)
                 .where(condition)
                 .andWhere('analysis.created_time BETWEEN :start AND :end', globalDateRange);
-    
+
             // Dior 컨설턴트 조회 쿼리
             const diorQueryBuilder = this.diorCndpSkinRepository
                 .createQueryBuilder('analysis')
                 .select(coalesceCondition)
-                .where(condition)
-                .andWhere('analysis.created_time > :start', { start: diorDateStart });
-    
+                .where(condition);
+            //.andWhere('analysis.created_time > :start', { start: diorDateStart });
+
             // Promise.all() 최적화
             const [globalResult, diorResult] = await Promise.all([
                 globalQueryBuilder.getRawMany(),
                 diorQueryBuilder.getRawMany(),
             ]);
-    
+
             // 결과 매핑
-            const consultantIds = globalResult.concat(diorResult).map(item => ({
+            const consultantIds = globalResult.concat(diorResult).map((item) => ({
                 consultantId: Number(item.consultantId),
             }));
-    
+
             return consultantIds;
         } catch (e) {
             throw e;
         }
     }
-    
-
 
     async getConsultantCountsForStatDetails(consultantIds?: string[], startDate?: string, endDate?: string) {
         try {
