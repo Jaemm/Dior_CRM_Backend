@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { ApiBearerAuth, ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Controller, Get, Req, Query, Post, Body, Headers, Header, Res } from '@nestjs/common';
+import { Controller, Get, Req, Query, Post, Body, Headers, Header, Res, ValidationPipe  } from '@nestjs/common';
 
 import { DiorService } from './dior.service';
 import { Roles } from '@/src/common/decorators/roles.decorator';
@@ -28,10 +28,13 @@ export class DiorController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('customers')
-    async createCustomers(@Res() res: Response, @Body() body: CreateCustomerDto) {
-        const result = await this.diorService.createCustomers(body);
-        return res.status(200).send(result);
-    }
+  async createCustomers(
+    @Res() res: Response,
+    @Body(new ValidationPipe({ transform: true })) body: CreateCustomerDto, // ✅ transform 활성화
+  ) {
+    const result = await this.diorService.createCustomers(body);
+    return res.status(200).send(result);
+  }
     //
 
     @Post('send-web-result')

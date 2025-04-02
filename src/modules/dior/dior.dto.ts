@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-
+import { Type } from 'class-transformer';
 export type AttributeRoutine = 'Makeup' | 'Skincare';
 
 export class AutomaticProductByBatchIdDto {
@@ -62,6 +62,7 @@ export class CreateCustomerDto {
     @ApiProperty()
     @IsNotEmpty()
     @IsNumber()
+    @Type(() => Number)
     consultant_id: number;
 
     @ApiPropertyOptional()
