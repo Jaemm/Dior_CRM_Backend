@@ -29,8 +29,8 @@ async function bootstrap() {
             .setTitle('Dior User management and Login V1/API')
             .setDescription('Dior User management and Login V1/API')
             .setDescription(
-                `<b>Production</b>: https://crm-dior.chowis.cloud/v1/api <br>
-                <b>Stagging</b>: https://stg-dior.chowis.cloud/v1/api <br>
+                `<b>Production</b>: https://crm-dior.chowis.cloud <br>
+                <b>Stagging</b>: https://stg-dior.chowis.cloud <br>
                `,
             )
             .setVersion('1.0.0')
