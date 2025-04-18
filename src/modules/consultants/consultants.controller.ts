@@ -64,6 +64,7 @@ import { Role } from '@/src/common/enums/role.enum';
 import { Public } from '@/src/common/decorators/public-route.decorator';
 import { CRMService } from '../crm/crm.service';
 import { AuthGuard } from '@nestjs/passport';
+import { AuthService } from '../auth/auth.service';
 
 @ApiTags('Consultants')
 @Controller('consultants')
@@ -72,10 +73,12 @@ import { AuthGuard } from '@nestjs/passport';
 //     required: false,
 // })
 export class ConsultantsController {
+    [x: string]: any;
     constructor(
         private readonly consultants: ConsultantsService,
         private jwtService: JwtService,
         private readonly crmService: CRMService,
+        private readonly authService: AuthService,
     ) {}
 
     @ApiBearerAuth()
@@ -191,18 +194,15 @@ export class ConsultantsController {
     }
 
     @Post('login')
-    @UseGuards(AuthGuard('saml'))
+    // @UseGuards(AuthGuard('saml'))
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async login(
-        @Req() req: Request,
+        // @Req() req: Request,
         @Res() res: Response,
         @Body() body: LoginConsultantDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
-        const userFromSaml = req.user;
-        const samlResponse = 'BASE64_ENCODED_SAML_RESPONSE';
-        console.log(userFromSaml);
-        // In case you need app_id validation from OKTA
+        // const userFromSaml = req.user as any;
         // if (userFromSaml.app_id !== body.app_id) {
         //     return res.status(400).json({ message: 'Invalid app_id from OKTA' });
         // }
@@ -210,6 +210,27 @@ export class ConsultantsController {
         const loginResult = await this.consultants.loginRuby(body, locale);
 
         return res.status(200).send({ ...loginResult });
+    }
+
+    @Get('login/okta')
+    @UseGuards(AuthGuard('saml'))
+    loginSaml(): void {}
+
+    @Post('login/callback')
+    @UseGuards(AuthGuard('saml'))
+    async samlCallback(@Req() req: Request, @Res() res: Response) {
+
+        const user = req.user as any;
+        const loginResult = await this.consultants.loginRuby(
+            {
+                email: user.email.toLowerCase(),
+                app_id: user.app_id,
+                password: '',
+            },
+            req.headers['x-chowis-locale'] as string,
+        );
+
+        return res.status(200).json(loginResult);
     }
 
     @Put('/update')

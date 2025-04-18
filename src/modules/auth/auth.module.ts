@@ -14,6 +14,6 @@ import { SsoSamlStrategy } from './sso-saml.strategy';
         // TypeOrmModule.forFeature([AdminUsers, AdminUserToken]),
     ],
     providers: [AuthService, JwtService, SsoSamlStrategy],
-    exports: [],
+    exports: [AuthService],
 })
 export class AuthModule {}

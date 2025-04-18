@@ -720,6 +720,7 @@ export class TokenRefreshDto {
     refresh_token: string;
 
     @ApiProperty()
+    @IsOptional()
     @IsString()
     token: string;
 }
