@@ -11,6 +11,7 @@ import {
     InternalServerErrorException,
     NotFoundException,
     UnauthorizedException,
+    ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Repository } from 'typeorm';
@@ -732,20 +733,38 @@ export class ConsultantsService {
         return consultant;
     }
 
+    // async validateUser(email: string, app_id: number, password: string) {
+    //     const user = await this.checkConsultant(Number(app_id), email);
+
+    //     const confirmPwd = await this.verifyPassword(password, user?.password_digest ?? null, 'en');
+
+    //     if (confirmPwd) {
+    //         return user;
+    //     }
+
+    //     throw new BadRequestException({
+    //         result_code: ErrorStatus.LOGIN_FAILED,
+    //         error: ResponseMessages.LoginFailed,
+    //     });
+    // }
     async validateUser(email: string, app_id: number, password: string) {
         const user = await this.checkConsultant(Number(app_id), email);
-
-        const confirmPwd = await this.verifyPassword(password, user?.password_digest ?? null, 'en');
-
-        if (confirmPwd) {
-            return user;
+    
+        // 🔓 비밀번호가 존재할 경우만 검증 (SAML 로그인은 password: '')
+        if (password && password.trim() !== '') {
+            const confirmPwd = await this.verifyPassword(password, user?.password_digest ?? null, 'en');
+    
+            if (!confirmPwd) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.LOGIN_FAILED,
+                    error: ResponseMessages.LoginFailed,
+                });
+            }
         }
-
-        throw new BadRequestException({
-            result_code: ErrorStatus.LOGIN_FAILED,
-            error: ResponseMessages.LoginFailed,
-        });
+    
+        return user;
     }
+    
 
     async validateUserSocial(email: string, app_id: number, social_id: string) {
         const user = await this.checkConsultant(Number(app_id), email);
@@ -2668,75 +2687,133 @@ export class ConsultantsService {
         }
     }
 
+    // public async refreshToken(data: TokenRefreshDto, locale: string = 'en') {
+    //     const { refresh_token, token } = data;
+    //     if (!token) {
+    //         throw new UnauthorizedException({
+    //             result_code: ErrorStatus.NOT_FOUND,
+    //             error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+    //         });
+    //     }
+    //     const { secret: tokenAccess, time: accessTime } = this.jwtConfig.access;
+    //     const decoded = jwt.verify(token, tokenAccess);
+
+    //     const { id } = decoded as any;
+
+    //     const consultant = await this.consultantsRepository.findOneBy({ id });
+
+    //     if (!consultant) {
+    //         throw new UnauthorizedException({
+    //             result_code: ErrorStatus.NOT_FOUND,
+    //             error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
+    //         });
+    //     }
+
+    //     const hashedRefreshToken = await bcrypt.hash(refresh_token, 12);
+    //     const foundRefreshToken = await this.refreshTokenRepository.findOne({
+    //         where: {
+    //             accessToken: token,
+    //             refreshToken: refresh_token,
+    //         },
+    //     });
+
+    //     if (!foundRefreshToken) {
+    //         return {
+    //             access_token: null as string,
+    //             refresh_token: null as string,
+    //             message: 'Refresh token does not exist in the system. Please check with admin',
+    //         };
+    //     }
+
+    //     if (Date.now() > Number(foundRefreshToken.refreshTokenExpiredAt)) {
+    //         return {
+    //             access_token: null as string,
+    //             refresh_token: null as string,
+    //             message: 'Refresh token already expired',
+    //         };
+    //     }
+
+    //     const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
+    //         { id: consultant.id, email: consultant.email, role: Role.Consultant },
+    //         '',
+    //     );
+
+    //     consultant.token = accessToken;
+    //     await this.refreshTokenRepository.remove(foundRefreshToken);
+    //     await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
+
+    //     return {
+    //         access_token: accessToken,
+    //         refresh_token: refreshToken,
+    //     };
+    // }
+
     public async refreshToken(data: TokenRefreshDto, locale: string = 'en') {
-        const { refresh_token, token } = data;
-        if (!token) {
+        const { refresh_token } = data;
+    
+        const { secret: tokenAccess } = this.jwtConfig.refresh;
+    
+        let decoded;
+        try {
+            decoded = jwt.verify(refresh_token, tokenAccess);
+        } catch (err: any) {
+            if (err.name === 'TokenExpiredError') {
+                throw new ForbiddenException({
+                    result_code: 10000,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'token_expired'),
+                });
+            } else if (err.name === 'JsonWebTokenError') {
+                throw new ForbiddenException({
+                    result_code: 10001,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'invalid_token'),
+                });
+            } else if (err.name === 'NotBeforeError') {
+                throw new ForbiddenException({
+                    result_code: 10003,
+                    error: err.message,
+                });
+            }
+    
             throw new UnauthorizedException({
-                result_code: ErrorStatus.NOT_FOUND,
+                result_code: ErrorStatus.UNAUTHORIZED,
                 error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
             });
         }
-        const { secret: tokenAccess, time: accessTime } = this.jwtConfig.access;
-        const decoded = jwt.verify(token, tokenAccess);
-
+    
         const { id } = decoded as any;
-
+    
         const consultant = await this.consultantsRepository.findOneBy({ id });
-
+    
         if (!consultant) {
             throw new UnauthorizedException({
                 result_code: ErrorStatus.NOT_FOUND,
                 error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
             });
         }
-
-        const hashedRefreshToken = await bcrypt.hash(refresh_token, 12);
-        const foundRefreshToken = await this.refreshTokenRepository.findOne({
-            where: {
-                accessToken: token,
-                refreshToken: refresh_token,
-            },
-        });
-
-        if (!foundRefreshToken) {
-            return {
-                access_token: null as string,
-                refresh_token: null as string,
-                message: 'Refresh token does not exist in the system. Please check with admin',
-            };
-        }
-
-        if (Date.now() > Number(foundRefreshToken.refreshTokenExpiredAt)) {
-            return {
-                access_token: null as string,
-                refresh_token: null as string,
-                message: 'Refresh token already expired',
-            };
-        }
-
-        const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
+    
+        const [accessToken, new_refresh_token] = await this.authService.generateAuthTokens(
             { id: consultant.id, email: consultant.email, role: Role.Consultant },
             '',
         );
-
-        consultant.token = accessToken;
-        await this.refreshTokenRepository.remove(foundRefreshToken);
-        await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
-
+    
+        consultant.token = new_refresh_token;
+        await this.consultantsRepository.save(consultant);
+    
         return {
-            access_token: accessToken,
-            refresh_token: refreshToken,
+            token: accessToken,
+            refresh_token: new_refresh_token,
         };
     }
+    
 
     private errorTranslation(locale: string) {
         const device_not_exist: any = {
             'en': 'Device does not exist',
             'ko': '존재하지 않는 정보',
             'ar': 'الجهاز غير موجود',
-            'zh-hans': '设备不存在', // simplified
+            'zh-hans': '设备不存在',
             'zh-hant': '設備不存在',
-            'zh-tw': '設備不存在', // tw
+            'zh-tw': '設備不存在',
             'id': 'Perangkat tidak ada',
             'fr': "L'appareil n'existe pas",
             'ru': 'Устройство не существует',
