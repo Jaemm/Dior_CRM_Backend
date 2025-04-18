@@ -5,7 +5,7 @@ import { AuthService } from './auth.service';
 
 import { PassportModule } from '@nestjs/passport';
 import { JwtService } from 'src/jwt/jwt.service';
-import { SsoSamlStrategy } from './sso-saml.strategy';
+// import { SsoSamlStrategy } from './sso-saml.strategy';
 
 @Module({
     imports: [
@@ -13,7 +13,9 @@ import { SsoSamlStrategy } from './sso-saml.strategy';
         // JwtModule.register({ secret: process.env.JWT_REFRESH_TOKEN_SECRET, signOptions: { expiresIn: '1d' } }),
         // TypeOrmModule.forFeature([AdminUsers, AdminUserToken]),
     ],
-    providers: [AuthService, JwtService, SsoSamlStrategy],
+    // providers: [AuthService, JwtService, SsoSamlStrategy],
+    providers: [AuthService, JwtService],
+
     exports: [AuthService],
 })
 export class AuthModule {}

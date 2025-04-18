@@ -212,7 +212,7 @@ export class AuthService {
             assert_endpoint: process.env.OKTA_CALLBACK_URL,
             private_key: '',
             certificate: process.env.OKTA_SINGING_CERTIFICATE,
-            allow_unencrypted_assertion: true,
+            allow_unencrypted_assertion: true, 
         });
     }
 
@@ -296,9 +296,9 @@ export class AuthService {
 isTokenExpired(token: string): boolean {
     try {
         Jwt.verify(token, process.env.CRM_ACCESS_TOKEN_SECRET);
-        return false; // 유효한 경우
+        return false;
     } catch (err) {
-        return true; // 만료 또는 오류인 경우
+        return true;
     }
 }
 }
