@@ -26,7 +26,6 @@ export class AnalysisDataReplicationService {
             start: '2020-01-01 00:00:00',
             end: '2024-09-26 23:59:59',
         };
-        const diorDateStart = '2024-09-27 00:00:00';
 
         // Count analyses where status is true
         let _countQuery = this.diorCndpSkinRepository
@@ -42,6 +41,7 @@ export class AnalysisDataReplicationService {
                 status: '%true%',
             })
             .andWhere('analysis.created_time BETWEEN :start AND :end', globalDateRange);
+
         // Apply date range filter if start_date and end_date are provided
         if (start_date && end_date) {
             _countQuery = _countQuery.andWhere('created_time BETWEEN :start AND :end', {
@@ -242,60 +242,109 @@ export class AnalysisDataReplicationService {
     //     }
     // }
 
+    // async getConsultantIds(startDate?: string, endDate?: string): Promise<any> {
+    //     try {
+    //         // Define COALESCE condition
+    //         const coalesceCondition = `
+    //         COALESCE(
+    //             NULLIF(analysis.args->>'consultant_id', '')::NUMERIC,
+    //             NULLIF(analysis.args->>'id', '')::NUMERIC
+    //         ) AS "consultantId"
+    //     `;
+
+    //         // Define the CASE condition
+    //         const condition = `analysis.args->>'status' LIKE :status`;
+
+    //         // Define date ranges
+    //         const globalDateRange = {
+    //             start: '2020-01-01 00:00:00',
+    //             end: '2024-09-26 23:59:59',
+    //         };
+    //         const diorDateStart = '2024-09-27 00:00:00';
+
+    //         // Global Consultant Query
+    //         const globalQueryBuilder = this.globalcndpSkinRepository
+    //             .createQueryBuilder('analysis')
+    //             .select(coalesceCondition)
+    //             .where(condition, { status: '%true%' })
+    //             .andWhere('analysis.created_time BETWEEN :start AND :end', globalDateRange);
+
+    //         // Dior Consultant Query
+    //         const diorQueryBuilder = this.diorCndpSkinRepository
+    //             .createQueryBuilder('analysis')
+    //             .select(coalesceCondition)
+    //             .where(condition, { status: '%true%' })
+    //             .andWhere('analysis.created_time > :start', { start: diorDateStart });
+
+    //         // Execute queries in parallel
+    //         const [globalResult, diorResult] = await Promise.all([
+    //             globalQueryBuilder.getRawMany(),
+    //             diorQueryBuilder.getRawMany(),
+    //         ]);
+
+    //         // globalResult.push(...diorResult);
+    //         const cosnsultant = globalResult.map((item) => ({
+    //             consultantId: Number(item.consultantId),
+    //         }));
+
+    //         // console.log(cosnsultant);
+    //         // Combine results
+    //         return cosnsultant;
+    //     } catch (e) {
+    //         throw e;
+    //     }
+    // }
     async getConsultantIds(startDate?: string, endDate?: string): Promise<any> {
         try {
-            // Define COALESCE condition
-            const coalesceCondition = `
-            COALESCE(
-                NULLIF(analysis.args->>'consultant_id', '')::NUMERIC,
-                NULLIF(analysis.args->>'id', '')::NUMERIC
-            ) AS "consultantId"
-        `;
+            // COALESCE 제거 후 JSON 인덱스를 활용
+            const coalesceCondition = `(
+                CASE 
+                    WHEN analysis.args->>'consultant_id' IS NOT NULL AND analysis.args->>'consultant_id' != '' 
+                    THEN (analysis.args->>'consultant_id')::NUMERIC
+                    ELSE (analysis.args->>'id')::NUMERIC
+                END
+            ) AS "consultantId"`;
 
-            // Define the CASE condition
-            const condition = `analysis.args->>'status' LIKE :status`;
+            // 정확한 비교로 LIKE 제거
+            const condition = `analysis.args->>'status' = 'true'`;
 
-            // Define date ranges
+            // 날짜 범위 설정
             const globalDateRange = {
                 start: '2020-01-01 00:00:00',
                 end: '2024-09-26 23:59:59',
             };
             const diorDateStart = '2024-09-27 00:00:00';
 
-            // Global Consultant Query
+            // 글로벌 컨설턴트 조회 쿼리
             const globalQueryBuilder = this.globalcndpSkinRepository
                 .createQueryBuilder('analysis')
                 .select(coalesceCondition)
-                .where(condition, { status: '%true%' })
+                .where(condition)
                 .andWhere('analysis.created_time BETWEEN :start AND :end', globalDateRange);
 
-            // Dior Consultant Query
+            // Dior 컨설턴트 조회 쿼리
             const diorQueryBuilder = this.diorCndpSkinRepository
                 .createQueryBuilder('analysis')
                 .select(coalesceCondition)
-                .where(condition, { status: '%true%' })
-                .andWhere('analysis.created_time > :start', { start: diorDateStart });
+                .where(condition);
+            //.andWhere('analysis.created_time > :start', { start: diorDateStart });
 
-            // Execute queries in parallel
+            // Promise.all() 최적화
             const [globalResult, diorResult] = await Promise.all([
                 globalQueryBuilder.getRawMany(),
                 diorQueryBuilder.getRawMany(),
             ]);
 
-            // globalResult.push(...diorResult);
-            const cosnsultant = globalResult.map((item) => ({
+            // 결과 매핑
+            const consultantIds = globalResult.concat(diorResult).map((item) => ({
                 consultantId: Number(item.consultantId),
             }));
 
-            // console.log(cosnsultant);
-            // Combine results
-            return cosnsultant;
+            return consultantIds;
         } catch (e) {
             throw e;
         }
     }
-
-    ///////
 
     async getConsultantCountsForStatDetails(consultantIds?: string[], startDate?: string, endDate?: string) {
         try {

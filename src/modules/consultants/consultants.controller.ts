@@ -249,6 +249,17 @@ export class ConsultantsController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
+    // @Post('products/enter')
+    // @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    // async enterProducts(
+    //     @Req() req: Request,
+    //     @Res() res: Response,
+    //     @Body() body: EnterProductDto,
+    //     @Headers('X-CHOWIS-LOCALE') locale: string,
+    // ) {
+    //     const result = await this.consultants.enterProducts(req, body, locale);
+    //     return res.status(200).send(result);
+    // }
     @Post('products/enter')
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async enterProducts(
@@ -257,10 +268,20 @@ export class ConsultantsController {
         @Body() body: EnterProductDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
-        const result = await this.consultants.enterProducts(req, body, locale);
-        return res.status(200).send(result);
+        console.log('[Controller] enterProducts 실행됨');
+        console.log('[Controller] 요청 데이터:', body);
+        console.log('[Controller] 헤더 locale:', locale);
+    
+        try {
+            const result = await this.consultants.enterProducts(req, body, locale);
+            console.log('[Controller] 서비스 응답:', result);
+            return res.status(200).send(result);
+        } catch (error) {
+            console.error('[Controller] 에러 발생:', error);
+            return res.status(500).send({ error: 'Internal Server Error' });
+        }
     }
-
+    
     @Post('password')
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async password(

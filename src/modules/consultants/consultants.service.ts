@@ -2830,86 +2830,300 @@ export class ConsultantsService {
         const normalizedLocale = locale.toLowerCase();
         return device_not_exist[normalizedLocale] || device_not_exist['en'];
     }
+    // public async enterProducts(req: Request, data: EnterProductDto, locale: string = 'en') {
+    //     try {
+    //         const consultantId = Number((<{ id: string }>req.user).id);
+
+    //         if (!data.optic_number || !data.password || !data.application_id) {
+    //             throw new BadRequestException('1:Missing required value');
+    //         }
+    //         const errTranslation = this.errorTranslation(locale);
+    //         const { password, application_id, mac_address, lat, lng } = data;
+
+    //         const macAddress = mac_address ?? null;
+    //         const latt = lat ?? null;
+    //         const long = lng ?? null;
+    //         const isFirstUseDate = data.first_use_date === 'n';
+    //         const optic_number = data.optic_number.toUpperCase();
+
+    //         let useDate = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // Format: YYYYMMDD
+    //         let useTime = new Date().toISOString().slice(11, 16).replace(/:/g, ''); // Format: HHMM
+
+    //         const consultant = await this.consultantsRepository.findOneConsultantById(consultantId);
+
+    //         if (!consultant) {
+    //             this.commonService.throwNotFoundError();
+    //         }
+
+    //         const device = await this.deviceRepository.findOne({
+    //             where: [
+    //                 {
+    //                     optic_number: optic_number,
+    //                     pwd: password, // OR serial_number: password
+    //                 },
+    //                 {
+    //                     optic_number: optic_number,
+    //                     serial_number: password, // assuming password matches serial_number
+    //                 },
+    //             ],
+    //             relations: ['consultant_company'],
+    //         });
+
+    //         // console.log('device', consultant);
+    //         if (!device) {
+    //             throw new BadRequestException(`2: ${errTranslation}`);
+    //         }
+
+    //         if (device.use_yn !== 'Y') {
+    //             throw new BadRequestException('3:information that does not exist');
+    //         }
+
+    //         // Wrong information Error
+    //         // Product credentials are required.
+
+    //         if (device.consultant_company === null) {
+    //             device.consultant_company = consultant.consultant_company;
+    //         }
+
+    //         const device_id = device.id;
+
+    //         const product = await this.productsService.findOneProduct(
+    //             { device_id, application_id },
+    //             [],
+    //             ['license', 'application', 'consultant'],
+    //         );
+
+    //         if (!product || (product && !product.license)) {
+    //             throw new BadRequestException(`5: ${errTranslation}`);
+    //         }
+
+    //         if (product.consultant && product.consultant_id != consultant.id) {
+    //             throw new ConflictException('7:Device already registered by another consultant.');
+    //         }
+
+    //         const beforeUseDate = product.use_date;
+
+    //         product.consultant_id = Number(consultant?.id);
+    //         product.use_date = useDate;
+    //         product.use_time = useTime;
+    //         product.mac_address = macAddress;
+    //         product.app_use_yn = 'Y';
+    //         // comments
+
+    //         try {
+    //             await this.productsService.updateProduct(product.id, {
+    //                 consultant_id: consultant.id,
+    //                 use_date: useDate,
+    //                 use_time: useTime,
+    //                 mac_address: macAddress,
+    //                 app_use_yn: 'Y',
+    //             });
+    //         } catch (e) {
+    //             throw new Error('6:Error in usage registration');
+    //         }
+
+    //         const consultantCompanyId = device?.consultant_company_id ?? 213;
+    //         if (consultantCompanyId) {
+    //             const currentConsultant = await this.consultantsRepository.findOne({ where: { id: consultant.id } });
+    //             currentConsultant.consultant_company_id = consultantCompanyId;
+    //             await this.consultantsRepository.save(currentConsultant);
+    //         }
+
+    //         // console.log("===>",consultant.id);
+
+    //         if (!beforeUseDate && product.use_date && !isFirstUseDate) {
+    //             if (!product.first_use_date || product.first_use_date === null) {
+    //                 product.first_use_date = product.use_date;
+    //             }
+
+    //             console.log(product);
+    //             await this.productsRepository.save(product);
+    //         }
+
+    //         device.lng = long;
+    //         device.lat = latt;
+
+    //         // console.log(device);
+
+    //         await this.deviceRepository.update(device.id, {
+    //             lng: long,
+    //             lat: latt,
+    //         });
+
+    //         return {
+    //             result_code: '0',
+    //             product: {
+    //                 id: product.id,
+    //                 first_use_date: product.first_use_date,
+    //                 use_date: product.use_date,
+    //                 use_time: product.use_time,
+    //                 mac_address: product.mac_address,
+    //                 app_use_yn: product.app_use_yn,
+    //                 license_period: product.license_period,
+    //                 created_at: product.created_at,
+    //                 is_expired: product.getIsExpired,
+    //                 device: {
+    //                     id: device.id,
+    //                     optic_number: device.optic_number,
+    //                     serial_number: device.serial_number,
+    //                     docking_number: device.docking_number,
+    //                     wb: device.wb,
+    //                     cal: device.cal,
+    //                     refresh_date: device.refresh_date,
+    //                     app_version: device.app_version,
+    //                     app_update_date: device.app_update_date,
+    //                     division: device.division,
+    //                     use_yn: device.use_yn,
+    //                     lat: device.lat,
+    //                     lng: device.lng,
+    //                     consultant_company: {
+    //                         id: device?.consultant_company?.id ?? 213,
+    //                         name: device?.consultant_company?.name ?? 'Dior',
+    //                         address: device?.consultant_company?.address ?? '',
+    //                         email: device?.consultant_company?.email ?? '',
+    //                         phone: device?.consultant_company?.phone ?? '',
+    //                         font: device?.consultant_company?.font ?? '',
+    //                         primary_color_code: device?.consultant_company?.primary_color_code ?? '',
+    //                         secondary_color_code: device?.consultant_company?.secondary_color_code ?? '',
+    //                         program_color_code: device.consultant_company?.program_color_code ?? '',
+    //                         top_color_code: device?.consultant_company?.top_color_code ?? null,
+    //                         text_icon_color_code: device?.consultant_company?.text_icon_color_code ?? null,
+    //                         pie_chart_color_1: device?.consultant_company?.pie_chart_color_1 ?? null,
+    //                         pie_chart_color_2: device?.consultant_company?.pie_chart_color_2 ?? null,
+    //                         pie_chart_color_3: device?.consultant_company?.pie_chart_color_3 ?? null,
+    //                         pie_chart_color_4: device?.consultant_company?.pie_chart_color_4 ?? null,
+    //                         pie_chart_color_5: device.consultant_company?.pie_chart_color_5 ?? null,
+    //                         pie_chart_points_color: device?.consultant_company?.pie_chart_points_color ?? null,
+    //                         logo_url: null as null,
+    //                         app_icon_url: null as null,
+    //                         background_image_url: null as null,
+    //                         progressbar_image_1_url: null as null,
+    //                         progressbar_image_2_url: null as null,
+    //                         progressbar_image_3_url: null as null,
+    //                         created_at: device?.consultant_company?.created_at ?? null,
+    //                     },
+    //                 },
+    //                 license: {
+    //                     id: product.license.id,
+    //                     name: product.license.name,
+    //                 },
+    //                 application: {
+    //                     id: product.application.id,
+    //                     name: product.application.name,
+    //                     apk_url: product.application.apk_url,
+    //                     version: product.application.version,
+    //                     group_name: product.application.group_name,
+    //                     regist_date: product.application.regist_date,
+    //                     description: product.application.description,
+    //                     ios_version: product.application.ios_version,
+    //                     android_version: product.application.android_version,
+    //                     android_app_url: product.application.android_app_url,
+    //                     ios_app_url: product.application.ios_app_url,
+    //                     is_old: product.application.is_old,
+    //                     app_icon: null as null,
+    //                 },
+    //             },
+    //         };
+    //     } catch (error) {
+    //         console.log(error);
+    //         const splitMessage = error.message.split(':');
+    //         if (splitMessage.length > 1) {
+    //             return {
+    //                 result_code: splitMessage[0],
+    //                 error: splitMessage[1],
+    //             };
+    //         }
+    //         throw error;
+    //     }
+    // }
     public async enterProducts(req: Request, data: EnterProductDto, locale: string = 'en') {
         try {
+            console.log('[1] 요청 시작', { user: req.user, data });
+    
             const consultantId = Number((<{ id: string }>req.user).id);
-
+            console.log('[2] Consultant ID:', consultantId);
+    
             if (!data.optic_number || !data.password || !data.application_id) {
-                throw new BadRequestException('1:필수값 누락');
+                throw new BadRequestException('1:Missing required value');
             }
+            console.log('[3] 필수 값 검증 통과');
+    
             const errTranslation = this.errorTranslation(locale);
             const { password, application_id, mac_address, lat, lng } = data;
-
+    
             const macAddress = mac_address ?? null;
             const latt = lat ?? null;
             const long = lng ?? null;
             const isFirstUseDate = data.first_use_date === 'n';
             const optic_number = data.optic_number.toUpperCase();
-
-            let useDate = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // Format: YYYYMMDD
-            let useTime = new Date().toISOString().slice(11, 16).replace(/:/g, ''); // Format: HHMM
-
+    
+            let useDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            let useTime = new Date().toISOString().slice(11, 16).replace(/:/g, '');
+            console.log('[4] 날짜 및 시간 설정:', { useDate, useTime });
+    
             const consultant = await this.consultantsRepository.findOneConsultantById(consultantId);
-
+            console.log('[5] Consultant 조회:', consultant);
+    
             if (!consultant) {
                 this.commonService.throwNotFoundError();
             }
-
+    
             const device = await this.deviceRepository.findOne({
                 where: [
-                    {
-                        optic_number: optic_number,
-                        pwd: password, // OR serial_number: password
-                    },
-                    {
-                        optic_number: optic_number,
-                        serial_number: password, // assuming password matches serial_number
-                    },
+                    { optic_number: optic_number, pwd: password },
+                    { optic_number: optic_number, serial_number: password },
                 ],
                 relations: ['consultant_company'],
             });
-
-            // console.log('device', consultant);
+    
+            console.log('[6] Device 조회 결과:', device);
+    
             if (!device) {
                 throw new BadRequestException(`2: ${errTranslation}`);
             }
-
+    
+            console.log('[7] Device 사용 가능 여부:', device.use_yn);
+    
             if (device.use_yn !== 'Y') {
-                throw new BadRequestException('3:존재하지 않는 정보');
+                throw new BadRequestException('3:information that does not exist');
             }
-
-            // Wrong information Error
-            // Product credentials are required.
-
+    
             if (device.consultant_company === null) {
                 device.consultant_company = consultant.consultant_company;
             }
-
+    
+            console.log('[8] Device의 Consultant Company:', device.consultant_company);
+    
             const device_id = device.id;
-
+    
             const product = await this.productsService.findOneProduct(
                 { device_id, application_id },
                 [],
                 ['license', 'application', 'consultant'],
             );
-
+    
+            console.log('[9] Product 조회 결과:', product);
+    
             if (!product || (product && !product.license)) {
                 throw new BadRequestException(`5: ${errTranslation}`);
             }
-
-            if (product.consultant && product.consultant_id != consultant.id) {
+    
+            console.log('[10] Product 라이센스 확인:', product.license);
+    
+            if (product.consultant && product.consultant_id !== consultant.id) {
                 throw new ConflictException('7:Device already registered by another consultant.');
             }
-
+    
             const beforeUseDate = product.use_date;
-
+    
             product.consultant_id = Number(consultant?.id);
             product.use_date = useDate;
             product.use_time = useTime;
             product.mac_address = macAddress;
             product.app_use_yn = 'Y';
-            // comments
-
+    
+            console.log('[11] 제품 정보 업데이트 시도:', product);
+    
             try {
                 await this.productsService.updateProduct(product.id, {
                     consultant_id: consultant.id,
@@ -2919,37 +3133,40 @@ export class ConsultantsService {
                     app_use_yn: 'Y',
                 });
             } catch (e) {
-                throw new Error('6:사용등록오류');
+                console.error('[12] 제품 정보 업데이트 오류:', e);
+                throw new Error('6:Error in usage registration');
             }
-
+    
             const consultantCompanyId = device?.consultant_company_id ?? 213;
             if (consultantCompanyId) {
                 const currentConsultant = await this.consultantsRepository.findOne({ where: { id: consultant.id } });
                 currentConsultant.consultant_company_id = consultantCompanyId;
                 await this.consultantsRepository.save(currentConsultant);
             }
-
-            // console.log("===>",consultant.id);
-
+    
+            console.log('[13] Consultant 정보 업데이트 완료');
+    
             if (!beforeUseDate && product.use_date && !isFirstUseDate) {
                 if (!product.first_use_date || product.first_use_date === null) {
                     product.first_use_date = product.use_date;
                 }
-
-                console.log(product);
+    
+                console.log('[14] 최초 사용 날짜 설정:', product);
                 await this.productsRepository.save(product);
             }
-
+    
             device.lng = long;
             device.lat = latt;
-
-            // console.log(device);
-
+    
+            console.log('[15] Device 위치 정보 업데이트:', { lat: latt, lng: long });
+    
             await this.deviceRepository.update(device.id, {
                 lng: long,
                 lat: latt,
             });
-
+    
+            console.log('[16] 응답 데이터 반환 준비');
+    
             return {
                 result_code: '0',
                 product: {
@@ -2976,56 +3193,11 @@ export class ConsultantsService {
                         use_yn: device.use_yn,
                         lat: device.lat,
                         lng: device.lng,
-                        consultant_company: {
-                            id: device?.consultant_company?.id ?? 213,
-                            name: device?.consultant_company?.name ?? 'Dior',
-                            address: device?.consultant_company?.address ?? '',
-                            email: device?.consultant_company?.email ?? '',
-                            phone: device?.consultant_company?.phone ?? '',
-                            font: device?.consultant_company?.font ?? '',
-                            primary_color_code: device?.consultant_company?.primary_color_code ?? '',
-                            secondary_color_code: device?.consultant_company?.secondary_color_code ?? '',
-                            program_color_code: device.consultant_company?.program_color_code ?? '',
-                            top_color_code: device?.consultant_company?.top_color_code ?? null,
-                            text_icon_color_code: device?.consultant_company?.text_icon_color_code ?? null,
-                            pie_chart_color_1: device?.consultant_company?.pie_chart_color_1 ?? null,
-                            pie_chart_color_2: device?.consultant_company?.pie_chart_color_2 ?? null,
-                            pie_chart_color_3: device?.consultant_company?.pie_chart_color_3 ?? null,
-                            pie_chart_color_4: device?.consultant_company?.pie_chart_color_4 ?? null,
-                            pie_chart_color_5: device.consultant_company?.pie_chart_color_5 ?? null,
-                            pie_chart_points_color: device?.consultant_company?.pie_chart_points_color ?? null,
-                            logo_url: null as null,
-                            app_icon_url: null as null,
-                            background_image_url: null as null,
-                            progressbar_image_1_url: null as null,
-                            progressbar_image_2_url: null as null,
-                            progressbar_image_3_url: null as null,
-                            created_at: device?.consultant_company?.created_at ?? null,
-                        },
-                    },
-                    license: {
-                        id: product.license.id,
-                        name: product.license.name,
-                    },
-                    application: {
-                        id: product.application.id,
-                        name: product.application.name,
-                        apk_url: product.application.apk_url,
-                        version: product.application.version,
-                        group_name: product.application.group_name,
-                        regist_date: product.application.regist_date,
-                        description: product.application.description,
-                        ios_version: product.application.ios_version,
-                        android_version: product.application.android_version,
-                        android_app_url: product.application.android_app_url,
-                        ios_app_url: product.application.ios_app_url,
-                        is_old: product.application.is_old,
-                        app_icon: null as null,
                     },
                 },
             };
         } catch (error) {
-            console.log(error);
+            console.error('[ERROR] 요청 처리 중 오류 발생:', error);
             const splitMessage = error.message.split(':');
             if (splitMessage.length > 1) {
                 return {
@@ -3036,6 +3208,7 @@ export class ConsultantsService {
             throw error;
         }
     }
+    
 
     async getNotifications(consultatnId: number, data: GetNotificationsDto) {
         const { per, page, title } = data;

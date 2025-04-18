@@ -54,7 +54,8 @@ export class SendWebResultDto {
 
 export class CreateCustomerDto {
     @ApiProperty()
-    @IsNotEmpty()
+    // @IsNotEmpty()
+    @IsOptional()
     @IsString()
     email: string;
 

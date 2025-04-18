@@ -153,21 +153,36 @@ export class AutomaticProductDiorGenerator {
         const recommanded = foundMarket?.defaultRecommendation ?? '';
 
         let product: ProductRecommendationSelecteds[];
-        if (market.toLocaleLowerCase() === 'japan') {
-            product = await this.getProductsFromMarketJapan(result);
-        } else if (recommanded.includes('western') || recommanded.includes('europe')) {
-            product = await this.getProductsFromMarketWestern(result);
-        }
-
-        // else if (this.routineRecommendation === '3') {
-        //     product = await this.getProductsFromMarketWestern(result);
-        // } else if (this.routineRecommendation === '5') {
-        //     product = await this.getProductsFromMarketAsia(result);
-        // }
-        else {
-            // Default from asia
+       
+        if (recommanded.toLowerCase().includes('japan')) {
+            // product = await this.getProductsFromMarketJapan(result);
             product = await this.getProductsFromMarketAsia(result);
+            console.log('market japan');
+        } 
+        else if (recommanded.toLowerCase().includes('western') || recommanded.toLowerCase().includes('europe')) {
+            product = await this.getProductsFromMarketWestern(result);
+            console.log('market western');
+        } 
+        else if (recommanded.toLowerCase().includes('asia')) {
+            product = await this.getProductsFromMarketAsia(result);
+            console.log('market asia');
+        } 
+        else {
+            if (this.routineRecommendation === '3') {
+                product = await this.getProductsFromMarketWestern(result);
+                console.log('routineRecommendation 3');
+            } 
+            else if (this.routineRecommendation === '5') {
+                product = await this.getProductsFromMarketAsia(result);
+                console.log('routineRecommendation 5');
+            } 
+            else {
+                product = await this.getProductsFromMarketAsia(result);
+                console.log('else asia');
+            }
         }
+        console.log('market===',market)
+        console.log('recommanded===',recommanded)
 
         return product;
     }
@@ -304,8 +319,8 @@ export class AutomaticProductDiorGenerator {
     }
 
     async getProductsFromMarketWestern(result: ResultJson[]) {
-        const products = [];
-
+        const products: ProductRecommendationSelecteds[][] = [];
+        
         const premium = ['Yes, I use premium skincare.', "I'd like to try Dior premium skincare."];
         const nonPremium = ["No, I'm not interested."];
 
@@ -317,18 +332,18 @@ export class AutomaticProductDiorGenerator {
         const isNonPremium =
             result[2]['answers'].filter((x) => nonPremium.includes(x)).length === result[2]['answers'].length;
 
-        let skincareProducts: ProductRecommendationSelecteds[];
+        let skincareProducts;
         const addSkincareRoutine = async (routine: number) => {
             skincareProducts = await this.getSkinCareRoutine(routine, 'western skincare');
         };
 
-        if (noDryness && isPremium) addSkincareRoutine(2);
+        if (noDryness && isPremium) await addSkincareRoutine(2);
 
-        if (!noDryness && isPremium) addSkincareRoutine(1);
+        if (!noDryness && isPremium) await addSkincareRoutine(1);
 
-        if (noDryness && isNonPremium) addSkincareRoutine(3);
+        if (noDryness && isNonPremium) await addSkincareRoutine(3);
 
-        if (!noDryness && isNonPremium) addSkincareRoutine(4);
+        if (!noDryness && isNonPremium) await addSkincareRoutine(4);
 
         products.push(skincareProducts);
 

@@ -177,7 +177,9 @@ export class ProductsRepository extends Repository<Products> {
         product.use_date = null;
         product.use_time = null;
         product.mac_address = null;
-        product.app_use_yn = null;
+        // product.app_use_yn = null;
+        product.app_use_yn = 'N';
+
 
         console.log('product --------> ', product);
 
@@ -190,7 +192,8 @@ export class ProductsRepository extends Repository<Products> {
                     use_date: null,
                     use_time: null,
                     mac_address: null,
-                    app_use_yn: null,
+                    // app_use_yn: null,
+                    app_use_yn: 'N',
                 }, // Only update the fields you want
             );
 
