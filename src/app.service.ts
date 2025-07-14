@@ -32,21 +32,18 @@ export class AppService {
     handleApp(app: INestApplication) {
         const httpAdapter = app.getHttpAdapter();
 
-        // Check if the app is using Express
         if (httpAdapter instanceof ExpressAdapter) {
-            const expressApp = httpAdapter.getInstance(); // Get the Express instance
-            const router = expressApp._router; // Access the internal router
+            const expressApp = httpAdapter.getInstance();
+            const router = expressApp._router;
 
-            // Ensure the router is available
             if (router) {
                 const availableRoutes = router.stack
-                    .filter((layer: any) => layer.route) // Filters out middleware
+                    .filter((layer: any) => layer.route)
                     .map((layer: any) => ({
                         path: layer.route.path,
                         method: layer.route.stack[0].method,
                     }));
 
-                // Create an Excel file with route information
                 const worksheet = XLSX.utils.json_to_sheet(availableRoutes);
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, 'APIRoutes');
@@ -66,8 +63,6 @@ export class AppService {
         private readonly customersService: CustomersService,
         private readonly commonService: CommonService,
         private readonly productsService: ProductsService,
-
-        //repos
         private readonly ethnicitiesRepository: EthnicitiesRepository,
         private readonly deviceRepository: DevicesRepository,
         private readonly gendersRepository: GendersRepository,
@@ -216,43 +211,21 @@ export class AppService {
     async validateSocialLogin(authProvider: string, socialData: SocialInterface): Promise<any> {
         let user: any = null;
         const socialEmail = socialData.email?.toLowerCase();
-        let userByEmail: any = null;
+        const userByEmail: any = null;
 
         if (socialEmail) {
-            // userByEmail = await this.usersService.findByEmail(socialEmail);
         }
 
         if (socialData.id) {
-            // user = await this.usersService.findBySocialIdAndProvider({
-            //     socialId: socialData.id,
-            //     social: authProvider,
-            // });
         }
 
         if (user) {
             if (socialEmail && !userByEmail) {
                 user.email = socialEmail;
             }
-            // await this.usersService.update(user.id, user);
         } else if (userByEmail) {
             user = userByEmail;
         } else if (socialData.id) {
-            // const role = {
-            //     id: RoleEnum.user,
-            // };
-            // const status = {
-            //     id: StatusEnum.active,
-            // };
-            // user = await this.usersService.create({
-            //     email: socialEmail ?? null,
-            //     firstName: socialData.firstName ?? null,
-            //     lastName: socialData.lastName ?? null,
-            //     socialId: socialData.id,
-            //     provider: authProvider,
-            //     role,
-            //     status,
-            // });
-            // user = await this.usersService.findById(user.id);
         }
 
         if (!user) {
@@ -263,30 +236,7 @@ export class AppService {
                 },
             });
         }
-
-        // const hash = crypto.createHash('sha256').update(randomStringGenerator()).digest('hex');
-
-        // const session = await this.sessionService.create({
-        //     user,
-        //     hash,
-        // });
-
-        // const {
-        //     token: jwtToken,
-        //     refreshToken,
-        //     tokenExpires,
-        // } = await this.getTokensData({
-        //     id: user.id,
-        //     role: user.role,
-        //     sessionId: session.id,
-        //     hash,
-        // });
-
         return {
-            // refreshToken,
-            // token: jwtToken,
-            // tokenExpires,
-            // user,
         };
     }
 }

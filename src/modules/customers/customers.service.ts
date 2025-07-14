@@ -356,7 +356,7 @@ export class CustomersService {
             'products.application',
         ];
 
-        let customer: any = await this.getCustomer({ email, app_id }, selections, includes);
+        const customer: any = await this.getCustomer({ email, app_id }, selections, includes);
 
         if (customer?.products && customer?.products.length === 0) {
             const product = await this.productService.getProducts(customer?.id);
@@ -406,7 +406,7 @@ export class CustomersService {
         }
     }
 
-    async resendConfirmation(body: ResendConfirmationDto, locale: string = 'en') {
+    async resendConfirmation(body: ResendConfirmationDto, locale = 'en') {
         const { email, app_id } = body;
 
         const customer = await this.getCustomer({ email, app_id }, ['id', 'email', 'confirm_token', 'email_confirmed']);
@@ -488,7 +488,7 @@ export class CustomersService {
         return htmlFile;
     }
 
-    async customreSignUp(newCustomer: any, locale: string = 'en') {
+    async customreSignUp(newCustomer: any, locale = 'en') {
         let user = await this.getCustomer({ app_id: newCustomer.app_id });
         if (newCustomer.email) {
             if (newCustomer.phone) {
@@ -583,7 +583,7 @@ export class CustomersService {
         return customerData;
     }
 
-    async signUp(newCustomer: any, locale: string = 'en') {
+    async signUp(newCustomer: any, locale = 'en') {
         const user = await this.getCustomer({ email: newCustomer.email, app_id: newCustomer.app_id });
 
         if (user) {
@@ -655,7 +655,7 @@ export class CustomersService {
         return customerData;
     }
 
-    async login(email: string, password: string, app_id: number, locale: string = 'en') {
+    async login(email: string, password: string, app_id: number, locale = 'en') {
         const getCustomer = await this.validateCustomer(email, app_id, password);
 
         const checkToken = this.authService.isTokenExpired(getCustomer.token);
@@ -883,7 +883,7 @@ export class CustomersService {
             'gender',
         ];
 
-        let customer: any = await this.getCustomer({ id }, selections, includes);
+        const customer: any = await this.getCustomer({ id }, selections, includes);
 
         console.log(customer.products);
 
@@ -983,7 +983,7 @@ export class CustomersService {
         return { token };
     }
 
-    async passwordChange(id: string, customer: ChangePasswordCustomerDto, locale: string = 'en') {
+    async passwordChange(id: string, customer: ChangePasswordCustomerDto, locale = 'en') {
         const { password, new_password } = customer;
 
         const customerData = await this.getCustomer({ id }, ['email', 'password_digest']);
@@ -1023,7 +1023,7 @@ export class CustomersService {
         // TODO
     }
 
-    async password(data: PasswordDto, locale: string = 'en') {
+    async password(data: PasswordDto, locale = 'en') {
         const selections = [
             'id',
             'email',
@@ -1053,7 +1053,7 @@ export class CustomersService {
             'products',
         ];
 
-        let customer = await this.getCustomer({ email: data.email, app_id: data.app_id }, selections);
+        const customer = await this.getCustomer({ email: data.email, app_id: data.app_id }, selections);
 
         if (!customer) {
             // customer = await this.getCustomer({ email: data.email }, selections);

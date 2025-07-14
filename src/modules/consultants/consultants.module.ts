@@ -1,6 +1,5 @@
 import { MiddlewareConsumer, Module, RequestMethod, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
 import {
     AdminUsers,
     Applications,
@@ -25,32 +24,23 @@ import {
     ConsultantCountries,
     RefreshTokens,
 } from '@/src/common/entities/crmEntities';
-
 import { ConsultantsController } from './consultants.controller';
 import { ConsultantsService } from './consultants.service';
 import { AuthModule } from '../auth/auth.module';
 import { AuthService } from '../auth/auth.service';
 import { JwtService } from 'src/jwt/jwt.service';
-
 import { ConsultantCountrys } from '@/src/common/entities/crmEntities/ConsultantCountrys.entity';
-
 import { CustomerApplications } from '@/src/common/entities/crmEntities/CustomerApplications.entity';
-
 import { ConsultantApplications } from '@/src/common/entities/crmEntities/ConsultantApplications.entity';
-
 import { Licenses } from '@/src/common/entities/crmEntities/Licenses.entity';
 import { LicenseHistories } from '@/src/common/entities/crmEntities/LicenseHistories.entity';
-
 import { ConsultantLicenses } from '@/src/common/entities/crmEntities/ConsultantLicenses.entity';
 import { CustomerLicenses } from '@/src/common/entities/crmEntities/CustomerLicenses.entity';
 import { Ethnicities } from '@/src/common/entities/crmEntities/Ethnicities.entity';
 import { SkinColorGroups } from '@/src/common/entities/crmEntities/SkinColorGroups.entity';
-
 import { AdminGroups } from '@/src/common/entities/crmEntities/AdminGroups.entity';
-
 import { ActiveStorageAttachments } from '@/src/common/entities/crmEntities/ActiveStorageAttachments.entity';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
-
 import { ProductsModule } from '../products/products.module';
 import { CustomersModule } from '../customers/customers.module';
 import { Versions } from '@/src/common/entities/crmEntities/Versions.entity';
@@ -82,6 +72,7 @@ import { AnalysisDataReplicationModule } from '../dataReplication/analysisDataRe
 import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
 import { LicenseHistoriesRepository } from '@/src/common/repositories/crm/licenseHistories.repository';
 import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repository';
+import { SamlService } from './saml.service';
 
 @Module({
     imports: [
@@ -152,8 +143,6 @@ import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repos
         ConsultantsService,
         AuthService,
         JwtService,
-
-        // Repos
         ApplicationsRepository,
         ActiveStorageAttachmentsRepository,
         ConsultantsRepository,
@@ -178,6 +167,7 @@ import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repos
         LicensesRepository,
         LicenseHistoriesRepository,
         PasswordEmailDetailsRepository,
+        SamlService,
     ],
     exports: [ConsultantsService],
 })

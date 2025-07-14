@@ -37,7 +37,7 @@ export class DiorCompanyConsultantsService {
         private readonly consultantRepository: ConsultantsRepository,
     ) {}
 
-    async createDiorCompanyConsultants(body: CreateDiorCompanyConsultantsDto, locale: string = 'en') {
+    async createDiorCompanyConsultants(body: CreateDiorCompanyConsultantsDto, locale = 'en') {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
@@ -81,7 +81,7 @@ export class DiorCompanyConsultantsService {
         }
     }
 
-    async getDiorCompanyConsultants(req: Request, query: GetDiorCompanyConsultantsDto, locale: string = 'en') {
+    async getDiorCompanyConsultants(req: Request, query: GetDiorCompanyConsultantsDto, locale = 'en') {
         try {
             console.log(query);
             const { search, country, filter_by, filter_by_2, page, per } = query;
@@ -201,24 +201,24 @@ export class DiorCompanyConsultantsService {
             throw e;
         }
     }
-    
+
     // async getDiorCompanyConsultants(req: Request, query: GetDiorCompanyConsultantsDto, locale: string = 'en') {
     //     try {
     //         console.log(query);
     //         const { search, country, filter_by, filter_by_2, page, per } = query;
-    
+
     //         const userId = (<{ id: string }>req.user).id;
     //         const currentConsultant = await this.consultantRepository.getConsultantById(Number(userId), ['consultant_branch']);
-    
+
     //         const diorCompanyId = 213;
-    
+
     //         if (!currentConsultant) {
     //             throw new UnauthorizedException({
     //                 result_code: ErrorStatus.UNAUTHORIZED,
     //                 error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
     //             });
     //         }
-    
+
     //         const consultantsQuery = this.consultantRepository
     //             .createQueryBuilder('consultants')
     //             .where('consultants.consultant_company_id = :companyId', { companyId: diorCompanyId })
@@ -226,7 +226,7 @@ export class DiorCompanyConsultantsService {
     //             .andWhere('LOWER(consultants.email) NOT IN (:...excludedEmails)', {
     //                 excludedEmails: ['ann.chowis613@gmail.com', 'ann@chowis.com'],
     //             });
-    
+
     //         if (Number(currentConsultant.consultant_position_id) === PositionsIds.SUPER_ADMIN) {
     //             consultantsQuery.andWhere('consultants.id != :diorConsultantId', { diorConsultantId: 8131 });
     //         } else if (Number(currentConsultant.consultant_position_id) === PositionsIds.ADMIN) {
@@ -238,37 +238,37 @@ export class DiorCompanyConsultantsService {
     //                 country: currentConsultant.consultant_branch.country.toLocaleLowerCase(),
     //             }).andWhere('consultants.id != :diorConsultantId', { diorConsultantId: 8131 });
     //         }
-    
+
     //         if (filter_by) {
     //             consultantsQuery.andWhere('LOWER (consultants.country) = :filterBy', { filterBy: filter_by.toLocaleLowerCase() });
     //         }
-    
+
     //         if (filter_by_2) {
     //             consultantsQuery.andWhere('consultants.consultant_branch_id = :filter_by_2', { filter_by_2 });
     //         }
-    
+
     //         if (country) {
     //             consultantsQuery.andWhere('LOWER (consultants.country) = :country', { country: country.toLocaleLowerCase() });
     //         }
-    
+
     //         if (search) {
     //             consultantsQuery.andWhere(
     //                 '(consultants.country ILIKE :search OR consultants.code ILIKE :search OR consultant_branch.email ILIKE :search)',
     //                 { search: `%${search}%` }
     //             );
     //         }
-    
+
     //         // 🚀 개수 먼저 가져오기
     //         const totalCount = await consultantsQuery.getCount();
-    
+
     //         const searchPage = Number(page || 1);
     //         const searchPer = Number(per || 25);
-    
+
     //         consultantsQuery.skip((searchPage - 1) * searchPer).take(searchPer);
-    
+
     //         // 🚀 데이터 조회 (JOIN 최소화)
     //         const consultants = await consultantsQuery.getMany();
-    
+
     //         const reformatConsultantList: ConsultantForDiorT[] = consultants.map((consultant) => {
     //             return {
     //                 id: consultant.id,
@@ -282,7 +282,7 @@ export class DiorCompanyConsultantsService {
     //                 pos_email: consultant.consultant_branch?.email || null,
     //             };
     //         });
-    
+
     //         return {
     //             data: reformatConsultantList,
     //             total_size: totalCount,
@@ -294,7 +294,7 @@ export class DiorCompanyConsultantsService {
     //         throw e;
     //     }
     // }
-    
+
     async getConsultantByBranchesConsultant(req: Request, locale = 'en') {
         const currentConsultantId = (<{ id: string }>req.user).id;
         const currentConsultant = await this.consultantRepository.findOne({
@@ -473,7 +473,7 @@ export class DiorCompanyConsultantsService {
         }
     }
 
-    async exportDiorCompanyConsultant(req: Request, query: ExportDiorCompanyConsultantsDto, locale: string = 'en') {
+    async exportDiorCompanyConsultant(req: Request, query: ExportDiorCompanyConsultantsDto, locale = 'en') {
         try {
             const { search, filter_by, filter_by2, ids } = query;
 
@@ -544,7 +544,7 @@ export class DiorCompanyConsultantsService {
         }
     }
 
-    async importDiorCompanyConsultants(req: Request, body: ImportDiorCompanyConsultantsDto, locale: string = 'en') {
+    async importDiorCompanyConsultants(req: Request, body: ImportDiorCompanyConsultantsDto, locale = 'en') {
         try {
             const splitToken = req.headers.authorization.split(' ');
 

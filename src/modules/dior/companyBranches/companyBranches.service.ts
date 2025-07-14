@@ -410,7 +410,7 @@ export class DiorCompanyBranchesService {
         }
     }
 
-    async exportBranches(req: Request, query: ExportBranchesDto, locale: string = 'en') {
+    async exportBranches(req: Request, query: ExportBranchesDto, locale = 'en') {
         try {
             const { filter_by, search } = query;
             const userId = (<{ id: string }>req.user).id;

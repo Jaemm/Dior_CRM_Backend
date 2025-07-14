@@ -63,4 +63,3 @@ export class DiorAdminsController {
         return res.send(resultFile);
     }
 }
-
