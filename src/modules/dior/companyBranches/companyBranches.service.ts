@@ -317,7 +317,6 @@ export class DiorCompanyBranchesService {
                 });
             }
 
-            // 업데이트할 값 설정 (새 값이 없으면 기존 값 유지)
             branch.email = email || branch.email;
             branch.name = name || branch.name;
             branch.code = code || branch.code;
@@ -325,12 +324,10 @@ export class DiorCompanyBranchesService {
             branch.password = password || branch.password;
             branch.updatedAt = new Date();
 
-            // 브랜치 저장 (컨설턴트 여부와 상관없이 실행)
             const savedBranch = await this.consultantBranchesRepository.save(branch);
             console.log(`Branch ${savedBranch.id} updated successfully.`);
 
-            // 컨설턴트 정보 확인 (있으면 업데이트, 없으면 건너뜀)
-            const existingConsultant = await this.consultantRepository.findByEmail(savedBranch.email.toLowerCase());
+            const existingConsultant = await this.consultantRepository.findByEmail(savedBranch.email);
 
             if (existingConsultant) {
                 console.log(`Consultant ${existingConsultant.id} found. Updating consultant data...`);
@@ -339,7 +336,6 @@ export class DiorCompanyBranchesService {
                 console.warn(`Consultant with email ${savedBranch.email} not found. Skipping POS update.`);
             }
 
-            // 응답 데이터 재구성 (컨설턴트 없이도 브랜치 정보 반환)
             const reformatBranch: ConsultantBranchesForDiorT = {
                 id: Number(savedBranch.id),
                 name: savedBranch.name,

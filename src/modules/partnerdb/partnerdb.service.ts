@@ -679,16 +679,16 @@ export class PartnerDbService {
                 });
             }
 
-            const MAXIMUM_REQUEST_PASSWORD_RESET = 5;
+            const MAXIMUM_REQUEST_PASSWORD_RESET = 50;
 
             const oneHourCount = await this.passwordEmailDetailsRepository.countingPassingOneHourTry(email);
 
-            if (oneHourCount >= MAXIMUM_REQUEST_PASSWORD_RESET) {
-                throw new BadRequestException({
-                    result_code: ErrorStatus.CUSTOM_ERROR,
-                    error: 'You have reached maximum limit of reset password request!',
-                });
-            }
+            // if (oneHourCount >= MAXIMUM_REQUEST_PASSWORD_RESET) {
+            //     throw new BadRequestException({
+            //         result_code: ErrorStatus.CUSTOM_ERROR,
+            //         error: 'You have reached maximum limit of reset password request!',
+            //     });
+            // }
 
             await this.passwordEmailDetailsRepository.save({
                 email: email,
@@ -697,6 +697,7 @@ export class PartnerDbService {
             });
 
             const password = this.commonService.generateRandomPassword(12);
+            console.log('새로 생성된 비밀번호:', password);
             const hashedPassword = await argon2.hash(password);
 
             await this.consultantRepository.updateConsultant(consultant.id, { password_digest: hashedPassword });

@@ -195,7 +195,7 @@ export class ConsultantsController {
         @Body() body: LoginConsultantDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
-        body.email = body.email.toLowerCase();
+        // body.email = body.email.toLowerCase();
         const loginResult = await this.consultants.loginRuby(body, locale);
 
         return res.status(200).send({ ...loginResult });

@@ -13,7 +13,7 @@ import {
     ResetPasswordDto,
 } from './partnerdb.dto';
 
-@ApiTags('PartnerDB')
+@ApiTags('PartnerDB') 
 @Controller('partnerdb')
 export class PartnerDbController {
     constructor(private partnerdbService: PartnerDbService) {}
