@@ -1,22 +1,21 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AppModule } from './app.module';
 import { AppService } from './app.service';
 
 async function bootstrap() {
     const SSL = process.env.SSL;
     const HOSTNAME = process.env.HOSTNAME;
 
-    let httpsOptions = null;
-    //
+    const httpsOptions: null = null;
     const app = await NestFactory.create(AppModule, {
         httpsOptions,
         rawBody: true,
         logger: ['log', 'error', 'warn', 'debug', 'verbose'],
     });
-    const appService = app.get(AppService); // Get AppService
+    const appService = app.get(AppService);
     appService.handleApp(app);
 
     const port = Number(process.env.PORT) || 8081;

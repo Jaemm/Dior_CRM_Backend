@@ -143,4 +143,3 @@ export class DiorCompanyBranchesController {
         return res.status(200).send(result);
     }
 }
-

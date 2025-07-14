@@ -1,7 +1,6 @@
 import { IsNumberOrString } from '@/src/common/validators/number-or-string.validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
-import { IS_NOT_EMPTY, IsArray, IsNotEmpty, IsOptional, IsString, Matches, Validate } from 'class-validator';
+import { IsArray, IsEmail, IsNotEmpty, IsOptional, IsString, Validate } from 'class-validator';
 
 export class ConsultantDto {
     @ApiProperty()
@@ -14,13 +13,7 @@ export class ConsultantDto {
 
     @ApiProperty()
     @IsString()
-    // @Matches(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{7,20}$/, {
-    //     message: 'Password must contain at least 7 characters, including Upper/lowercase and numbers',
-    // })
     password: string;
-
-    // @ApiProperty()
-    // @IsString()
     confirmPassword: string;
 }
 
@@ -37,16 +30,18 @@ export class LoginConsultantDto {
     @IsString()
     password: string;
 }
+
+export class LoginSamlDto {
+    @ApiProperty()
+    @IsEmail()
+    email: string;
+}
+
 export class UpdateConsultantRubyDto {
     @ApiPropertyOptional()
     @IsString()
     @IsOptional()
     email: string;
-
-    // @ApiPropertyOptional()
-    // @IsString()
-    // @IsOptional()
-    // password: string;
 
     @ApiPropertyOptional()
     @IsString()
@@ -186,12 +181,10 @@ export class UpdateConsultantDto {
 
     @ApiProperty()
     @IsOptional()
-    // @IsString()
     phone_country_code: string;
 
     @ApiProperty()
     @IsOptional()
-    // @IsString()
     country_code: string;
 
     @ApiProperty()
@@ -201,149 +194,7 @@ export class UpdateConsultantDto {
 
     @ApiProperty()
     @IsOptional()
-    // @Validate(IsNumberOrString)
     consultant_shop_id: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // @IsString()
-    // password: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // confirm_password: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // consultant_company_id: number;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // consultant_branch_id: number;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // consultant_position_id: number;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // token: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // password_digest: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // recovery_password_digest: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // social: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // social_id: number;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // note: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // push_token: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // approved: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // country_name: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // country_id: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // consultant_store_id: number;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // email_confirmed: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // confirm_token: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // memo: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // company_name: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // company_address: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // position: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // branch: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // status: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // callback_url: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // is_active: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // code: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // otp_token: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // otp_valid_til: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // countries: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // confirmation_sent_at: Date;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // confirmed_at: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // unconfirmed_email: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // register_for_crm: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // email_subscription: string;
 }
 
 export function singleStringToArray(value: string | string[]): string[] {

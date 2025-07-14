@@ -110,13 +110,13 @@ export class ProductsService {
         // return updatedProduct;
     }
 
-    async enterProduct(customerId: string, query: ProductsEnterDto, locale: string = 'en') {
+    async enterProduct(customerId: string, query: ProductsEnterDto, locale = 'en') {
         const { password, application_id, mac_address, lat, lng } = query;
         const isFirstUseDate = query.first_use_date === 'n';
         const optic_number = query.optic_number.toUpperCase();
 
-        let useDate = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // Format: YYYYMMDD
-        let useTime = new Date().toISOString().slice(11, 16).replace(/:/g, ''); // Format: HHMM
+        const useDate = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // Format: YYYYMMDD
+        const useTime = new Date().toISOString().slice(11, 16).replace(/:/g, ''); // Format: HHMM
 
         const customer = await this.customersService.getCustomerById(customerId);
 
@@ -178,7 +178,7 @@ export class ProductsService {
             });
         }
 
-        let updatedProduct: any = await this.findOneProduct(
+        const updatedProduct: any = await this.findOneProduct(
             { id: product.id },
             [],
             ['device', 'license', 'application'],
@@ -331,7 +331,7 @@ export class ProductsService {
     }
 
     async getProducts(customer_id: any) {
-        let productIds: any = await this.getCustomerMultiProduct(Number(customer_id));
+        const productIds: any = await this.getCustomerMultiProduct(Number(customer_id));
 
         const numericProductIds = productIds.map((product_id: any) => product_id['product_id']);
 

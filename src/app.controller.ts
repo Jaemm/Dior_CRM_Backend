@@ -1,15 +1,12 @@
-import { Body, Controller, Get, Headers, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
-import { Response, Request } from 'express';
-
+import { Body, Controller, Get, Headers, Post, Query, Req, Res } from '@nestjs/common';
 import { ApiBearerAuth, ApiExcludeController, ApiTags } from '@nestjs/swagger';
+import { Request, Response } from 'express';
+import { FetchFwVersionDto, LoginSocialDto, ShopListDto, UpdateFwVersionDto } from './app.dto';
 import { AppService } from './app.service';
-import { FetchFwVersionDto, LoginDto, LoginSocialDto, ShopListDto, UpdateFwVersionDto } from './app.dto';
-import { AuthMiddleware } from './common/middleWare/authMiddlware/auth.middleware';
-import { CountriesListDto, CustomersDto } from './modules/customers/customers.dto';
-import { CustomersService } from './modules/customers/customers.service';
 import { Roles } from './common/decorators/roles.decorator';
 import { Role } from './common/enums/role.enum';
-import { GoogleOauthGuard } from './common/guards/google.guard';
+import { CountriesListDto, CustomersDto } from './modules/customers/customers.dto';
+import { CustomersService } from './modules/customers/customers.service';
 
 @ApiExcludeController()
 @ApiTags('App')
@@ -17,7 +14,6 @@ import { GoogleOauthGuard } from './common/guards/google.guard';
 export class AppController {
     constructor(private readonly appService: AppService, private readonly customers: CustomersService) {}
 
-    // For customers
     @ApiTags('Customers')
     @Roles(Role.Customer)
     @ApiBearerAuth()
@@ -27,7 +23,6 @@ export class AppController {
         return res.status(200).send({ shops });
     }
 
-    // For consultant
     @ApiTags('Additional')
     @ApiBearerAuth()
     @Roles(Role.Consultant, Role.Customer)
@@ -106,10 +101,7 @@ export class AppController {
         return res.status(200).send(logoutResult);
     }
 
-    // @Get
-
     @Get('/callback')
-    // @UseGuards(GoogleOauthGuard)
     async handleRedirect(@Req() req: any) {
         return req?.user;
     }

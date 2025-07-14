@@ -56,7 +56,7 @@ export class StatisticsService {
         private readonly prSelectedsRepository: ProductRecommendationSelectedRepository,
     ) {}
 
-    async getOverAll(req: Request, query: GetOverAllDto, locale: string = 'en') {
+    async getOverAll(req: Request, query: GetOverAllDto, locale = 'en') {
         try {
             const { start_date, end_date } = query;
 
@@ -265,7 +265,7 @@ export class StatisticsService {
                 });
 
                 let perCountry = 0;
-                let customerPerBranch = 0;
+                const customerPerBranch = 0;
                 const branchesInfo = [];
 
                 for (let j = 0; j < countryBranches.length; j++) {
@@ -653,7 +653,7 @@ export class StatisticsService {
                     delete countryBranchCounts['null'];
                 }
 
-                let transformedData: any = {};
+                const transformedData: any = {};
                 for (const country in countryBranchCounts) {
                     if (countryBranchCounts.hasOwnProperty(country)) {
                         transformedData[country] = Number(countryBranchCounts[country].count_all);
@@ -929,7 +929,7 @@ export class StatisticsService {
 
     async getInfographStatDetails(req: Request, query: GetInfographStatDetails, locale = 'en') {
         try {
-            let type = 'day';
+            const type = 'day';
 
             const { start_date, end_date, stat_type } = query;
 
@@ -1045,7 +1045,7 @@ export class StatisticsService {
                     .filter((v: any, i: any, a: any) => a.indexOf(v) === i);
                 const days = result.map((val: any) => val.day);
 
-                let finalQuery = `SELECT consultant_ids.id AS consultant_id, c.country, COUNT(*) AS id_count, consultant_ids.days 
+                const finalQuery = `SELECT consultant_ids.id AS consultant_id, c.country, COUNT(*) AS id_count, consultant_ids.days 
                         FROM (SELECT UNNEST($1::int[]) AS id, UNNEST($2::text[]) AS days) AS consultant_ids 
                         INNER JOIN consultants c ON c.id = consultant_ids.id 
                         GROUP BY consultant_ids.id, c.country, consultant_ids.days 
@@ -1157,7 +1157,7 @@ export class StatisticsService {
             } else if (stat_type === 'devices') {
                 data = [];
             } else if (stat_type === 'consultations') {
-                let consultationsQuery = this.consultantRepository
+                const consultationsQuery = this.consultantRepository
                     .createQueryBuilder('consultant')
                     .select('DISTINCT(consultant.id)', 'id')
                     .where('LOWER(consultant.country) = LOWER(:country_name)', { country_name });

@@ -180,7 +180,6 @@ export class ProductsRepository extends Repository<Products> {
         // product.app_use_yn = null;
         product.app_use_yn = 'N';
 
-
         console.log('product --------> ', product);
 
         try {

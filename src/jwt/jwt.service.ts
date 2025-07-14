@@ -84,7 +84,7 @@ export class JwtService {
             algorithm: 'HS256',
         };
         // try {
-        let payload: any = { id: user.id }; // Default payload for all token types
+        const payload: any = { id: user.id }; // Default payload for all token types
 
         switch (tokenType) {
             case TokenTypeEnum.ACCESS:

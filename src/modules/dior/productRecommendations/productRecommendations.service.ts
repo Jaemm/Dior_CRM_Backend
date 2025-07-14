@@ -56,7 +56,7 @@ export class ProductRecommendationService {
         private readonly presignRepository: PresignRepository,
         private readonly consultantRepository: ConsultantsRepository,
     ) {}
-    async getProductRecommendation(req: Request, query: SearchProductRecommendationDto, locale: string = 'en') {
+    async getProductRecommendation(req: Request, query: SearchProductRecommendationDto, locale = 'en') {
         try {
             const {
                 request_origin,
@@ -195,7 +195,7 @@ export class ProductRecommendationService {
 
             const [data, totalCount] = await prQuery.getManyAndCount();
 
-            console.log("totalCount",totalCount)
+            console.log('totalCount', totalCount);
 
             const result = data.map(async (d) => {
                 const returnFormat = {
@@ -264,7 +264,7 @@ export class ProductRecommendationService {
                 recommendationForShade
                     .filter((forShade) => forShade.shades)
                     .forEach((forShade) => returnFormat.collection_shades.push(forShade.shades));
-                
+
                 // category_translations
                 returnFormat.category_translations = await this.productAttributesRepository.getTranslationsByType(
                     'Category',
@@ -1746,4 +1746,3 @@ export class ProductRecommendationService {
         return await this.productRecommendationRepository.findOne({ where: { code: codes } });
     }
 }
-

@@ -36,4 +36,3 @@ import { HttpModule } from '@nestjs/axios';
     ],
 })
 export class ProductRecommendationModule {}
-

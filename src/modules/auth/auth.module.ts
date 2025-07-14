@@ -1,10 +1,6 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt/dist';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthService } from './auth.service';
-
-import { PassportModule } from '@nestjs/passport';
 import { JwtService } from 'src/jwt/jwt.service';
+import { AuthService } from './auth.service';
 // import { SsoSamlStrategy } from './sso-saml.strategy';
 
 @Module({
