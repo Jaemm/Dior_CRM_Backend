@@ -38,7 +38,7 @@ export class DiorDevicesService {
             const positionId = currentConsultant.consultant_position_id;
 
             // Step 2: Build consultants query based on positionId
-            let consultantsQuery = this.consultantsRespository.createQueryBuilder('consultants');
+            const consultantsQuery = this.consultantsRespository.createQueryBuilder('consultants');
 
             if ([5, 6].includes(Number(positionId))) {
                 consultantsQuery.where('consultants.consultant_company_id = :diorCompany', {
@@ -115,7 +115,7 @@ export class DiorDevicesService {
                 });
                 searchQuery = searchQuery.andWhere('device.optic_number LIKE :search', { search: `%${query.search}%` });
 
-                let [devices_, count] = await searchQuery
+                const [devices_, count] = await searchQuery
                     .skip((searchPage - 1) * searchPer)
                     .take(searchPer)
                     .getManyAndCount();
@@ -176,7 +176,7 @@ export class DiorDevicesService {
     }
 
     // 1971
-    async resetConnect(req: Request, body: ResetConnectDto, locale: string = 'en') {
+    async resetConnect(req: Request, body: ResetConnectDto, locale = 'en') {
         try {
             const userId = (<{ id: string }>req.user).id;
             const { device_id } = body;

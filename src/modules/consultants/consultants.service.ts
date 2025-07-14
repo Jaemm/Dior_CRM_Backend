@@ -1,30 +1,31 @@
-import * as path from 'path';
-import { createWriteStream, existsSync, fsync } from 'fs';
 import * as csv from 'csv';
+import { createWriteStream, existsSync } from 'fs';
 import * as moment from 'moment';
+import * as path from 'path';
 
 import {
     BadRequestException,
     ConflictException,
-    HttpStatus,
+    ForbiddenException,
     Injectable,
     InternalServerErrorException,
     NotFoundException,
     UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Repository } from 'typeorm';
 import { TokenTypeEnum } from 'src/jwt/enums/auth-token.enum';
+import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Repository } from 'typeorm';
 
-import { AuthService } from '../auth/auth.service';
-import { JwtService } from 'src/jwt/jwt.service';
-import * as bcrypt from 'bcrypt';
-import * as argon2 from 'argon2';
-import * as jwt from 'jsonwebtoken';
-import axios from 'axios';
-import { Request } from 'express';
 import {
-    ResendConfirmationDto,
+    Consultants,
+    Customers,
+    Devices,
+    HealthTips,
+    Identities,
+    Notifications,
+    ProductRecommendations,
+} from '@/src/common/entities/crmEntities';
+import {
     AllLicenseDto,
     CalculatePriceDto,
     ChangeEmailDto,
@@ -32,53 +33,52 @@ import {
     ConfirmHtmlDto,
     ConsultantCompanyDetailsDto,
     ConsultantDto,
+    CreateSalesConnectionDto,
+    EnterProductDto,
+    FetchSalesConnectionDto,
     GetConsultantDto,
+    GetNotificationsDto,
+    HealthTipsByCompanyDto,
+    HealthTipsDto,
+    LoginConsultantDto,
+    LoginPhoneDto,
     LoginSocialDto,
     NotifySalesChangeLicenseDto,
     PasswordDto,
+    PasswrodChangeDto,
+    ProductRecommendationsDto,
     RenewDevicesDto,
     RequestCallBackUrlDto,
-    UpdateConsultantDto,
-    UpdateLicenseDto,
-    LoginPhoneDto,
-    ProductRecommendationsDto,
+    ResendConfirmationDto,
     TokenRefreshDto,
-    PasswrodChangeDto,
-    EnterProductDto,
-    GetNotificationsDto,
-    UpdatePasswordDto,
+    UpdateConsultantDto,
     UpdateConsultantRubyDto,
-    HealthTipsDto,
-    HealthTipsByCompanyDto,
-    CreateSalesConnectionDto,
-    FetchSalesConnectionDto,
-    LoginConsultantDto,
+    UpdateLicenseDto,
+    UpdatePasswordDto,
 } from '@/src/modules/consultants/consultants.dto';
-let Client = require('ssh2-sftp-client');
-import {
-    Consultants,
-    Notifications,
-    Devices,
-    ProductRecommendations,
-    Identities,
-    HealthTips,
-    Customers,
-} from '@/src/common/entities/crmEntities';
+import * as argon2 from 'argon2';
+import axios from 'axios';
+import * as bcrypt from 'bcrypt';
+import { Request } from 'express';
+import * as jwt from 'jsonwebtoken';
 import { CommonService } from 'src/common/common.service';
+import { JwtService } from 'src/jwt/jwt.service';
+import { AuthService } from '../auth/auth.service';
+const Client = require('ssh2-sftp-client');
 
 import * as fs from 'fs/promises';
 import * as handlebars from 'handlebars';
 
-import { IJwt } from 'src/config/interfaces/jwt.interfaces';
 import { ConfigService } from '@nestjs/config';
+import { IJwt } from 'src/config/interfaces/jwt.interfaces';
 import { ProductsService } from '../products/products.service';
 
 import { LicenseType } from '@/src/common/enums/license-type.enum';
 
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 
-import { Role } from '@/src/common/enums/role.enum';
 import { ErrorStatus } from '@/src/common/constants/error-status';
+import { Role } from '@/src/common/enums/role.enum';
 import {
     ActiveStorageAttachmentsRepository,
     ApplicationsRepository,
@@ -102,7 +102,9 @@ import {
     SalesConnectionRepository,
     SkinColorGroupsRepository,
 } from '@/src/common/repositories/crm';
-import { AnalysisDataReplicationService } from '../dataReplication/analysisDataReplication/analysisDataReplication.service';
+import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
+import { LicenseHistoriesRepository } from '@/src/common/repositories/crm/licenseHistories.repository';
+import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repository';
 import {
     ConsultantBranchesT,
     ConsultantCompaniesT,
@@ -114,12 +116,9 @@ import {
     NotificationsT,
     SalesConnectionT,
 } from '@/src/common/types/entities';
-import { CountriesRepository } from '@/src/common/repositories/crm/countries.repository';
-import { LicenseHistoriesRepository } from '@/src/common/repositories/crm/licenseHistories.repository';
-import { LicensesRepository } from '@/src/common/repositories/crm/licenses.repository';
 import { Cron } from '@nestjs/schedule';
 import { promisify } from 'util';
-import { lowerCase, toLower } from 'lodash';
+import { AnalysisDataReplicationService } from '../dataReplication/analysisDataReplication/analysisDataReplication.service';
 @Injectable()
 export class ConsultantsService {
     private readonly readFile = promisify(fs.readFile);
@@ -127,7 +126,6 @@ export class ConsultantsService {
     private readonly saltRounds = 10;
     client = new Client();
 
-    // Disconnecting
     async disconnect() {
         await this.client.end();
     }
@@ -135,10 +133,6 @@ export class ConsultantsService {
     constructor(
         @InjectRepository(ProductRecommendations)
         private readonly productRecommendationsRepository: Repository<ProductRecommendations>,
-
-        // @InjectRepository(ProductRecommendationSelectedRepository)
-        // private readonly ProductRecommendationSelectedRepository: Repository<ProductRecommendationSelectedRepository>,
-
         @InjectRepository(HealthTips)
         private readonly healthTipsRespository: Repository<HealthTips>,
         @InjectRepository(Identities)
@@ -155,7 +149,6 @@ export class ConsultantsService {
 
         private readonly analysisReplService: AnalysisDataReplicationService,
 
-        // Repos
         private readonly skinColorGorupsRepository: SkinColorGroupsRepository,
         private readonly countriesRepository: CountriesRepository,
         private readonly consultantCompaniesRepository: ConsultantCompaniesRepository,
@@ -184,7 +177,6 @@ export class ConsultantsService {
         this.jwtConfig = this.configService.get<IJwt>('jwt');
     }
 
-    // Account
     async bcryptHashPassword(password: string): Promise<string> {
         return bcrypt.hash(password, this.saltRounds);
     }
@@ -216,7 +208,6 @@ export class ConsultantsService {
         }
     }
 
-    // Sample method to verify passwords using argon2
     async verifyPasswordArgon2(enteredPassword: string, argon2Hash: string): Promise<boolean> {
         try {
             return await argon2.verify(argon2Hash, enteredPassword);
@@ -228,12 +219,10 @@ export class ConsultantsService {
         }
     }
 
-    // Method to determine which hashing algorithm was used for a stored password
     determineHashAlgorithm(storedHash: string): 'bcrypt' | 'argon2' {
         return storedHash.startsWith('$2') ? 'bcrypt' : 'argon2';
     }
 
-    // Method to verify password based on the hashing algorithm used
     async verifyPassword(enteredPassword: string, storedHash: string, locale: string): Promise<boolean> {
         const hashAlgorithm = this.determineHashAlgorithm(storedHash);
 
@@ -250,7 +239,7 @@ export class ConsultantsService {
         }
     }
 
-    public async signUp(newUser: any, locale: string = 'en') {
+    public async signUp(newUser: any, locale = 'en') {
         const errors: string[] = [];
 
         if (newUser.password.length < 6) {
@@ -326,7 +315,6 @@ export class ConsultantsService {
             this.consultantsRepository.updateConsultant(consultantData.id, {
                 confirm_token: confirmationToken,
                 token: refreshToken,
-                // confirmation_sent_at: new Date(),
             }),
         ]);
 
@@ -342,7 +330,7 @@ export class ConsultantsService {
         return consultantData;
     }
 
-    public async signUpRuby(newUser: ConsultantDto, locale: string = 'en') {
+    public async signUpRuby(newUser: ConsultantDto, locale = 'en') {
         const existUser = await this.consultantsRepository.findConsultant(Number(newUser.app_id), newUser.email);
 
         if (existUser !== null) {
@@ -427,7 +415,7 @@ export class ConsultantsService {
         };
     }
 
-    public async updateConsultantRuby(req: Request, body: UpdateConsultantRubyDto, locale: string = 'en') {
+    public async updateConsultantRuby(req: Request, body: UpdateConsultantRubyDto, locale = 'en') {
         try {
             const {
                 email,
@@ -498,7 +486,7 @@ export class ConsultantsService {
         }
     }
 
-    async getHelthTips(req: Request, query: HealthTipsDto, locale: string = 'en') {
+    async getHelthTips(req: Request, query: HealthTipsDto, locale = 'en') {
         try {
             const userId = (<{ id: string }>req.user).id;
             const appId = query.app_id ? parseInt(query.app_id as string) : undefined;
@@ -689,7 +677,6 @@ export class ConsultantsService {
         const optic_number: string[] = [];
 
         products.map(async (p: any) => {
-            // Calculaet expired date
             const companyDetails = result.find((r) => r.id === p.device.consultant_company_id);
             p.device.consultant_company = companyDetails;
             const expiredDate = this.expiredDate(p.first_use_date, p.license_period);
@@ -735,31 +722,22 @@ export class ConsultantsService {
     async validateUser(email: string, app_id: number, password: string) {
         const user = await this.checkConsultant(Number(app_id), email);
 
-        const confirmPwd = await this.verifyPassword(password, user?.password_digest ?? null, 'en');
+        if (password && password.trim() !== '') {
+            const confirmPwd = await this.verifyPassword(password, user?.password_digest ?? null, 'en');
 
-        if (confirmPwd) {
-            return user;
+            if (!confirmPwd) {
+                throw new BadRequestException({
+                    result_code: ErrorStatus.LOGIN_FAILED,
+                    error: ResponseMessages.LoginFailed,
+                });
+            }
         }
 
-        throw new BadRequestException({
-            result_code: ErrorStatus.LOGIN_FAILED,
-            error: ResponseMessages.LoginFailed,
-        });
+        return user;
     }
 
     async validateUserSocial(email: string, app_id: number, social_id: string) {
         const user = await this.checkConsultant(Number(app_id), email);
-
-        // const user: any = {
-        //     password_digest: (await argon2.hash(newUser.password)) ?? null,
-        //     email: newUser.email,
-        //     unconfirmed_email: newUser.email,
-        //     app_id: newUser.app_id,
-        //     email_confirmed: newUser.email_confirmed ? newUser.email_confirmed : false,
-        //     rememberCreatedAt: new Date(),
-        //     updated_at: new Date(),
-        //     created_at: new Date(),
-        // };
 
         const confirmUser = await this.consultantsRepository.findOne({
             where: {
@@ -777,7 +755,7 @@ export class ConsultantsService {
         });
     }
 
-    async login(data: ConsultantDto, locale: string = 'en') {
+    async login(data: ConsultantDto, locale = 'en') {
         const { app_id, password, email } = data;
         const consultant = await this.validateUser(email, Number(app_id), password);
         const checkToken = this.authService.isTokenExpired(consultant.token);
@@ -872,13 +850,11 @@ export class ConsultantsService {
         };
     }
 
-    async loginRuby(data: LoginConsultantDto, locale: string = 'en') {
-        let { app_id, password, email } = data;
+    async loginRuby(data: LoginConsultantDto, locale = 'en') {
+        const { app_id, password, email } = data;
 
         const consultant: Consultants = await this.validateUser(email, Number(app_id), password);
 
-        // console.log(consultant);
-        // ONLY APP_ID IS NULL
         if (consultant.app_id === null) {
             consultant.app_id = Number(data.app_id);
 
@@ -909,6 +885,41 @@ export class ConsultantsService {
         };
     }
 
+    async loginWithEmailOnly(email: string, locale = 'en') {
+        const consultant = await this.consultantsRepository.findOne({
+            where: { email },
+        });
+
+        if (!consultant) {
+            throw new BadRequestException({
+                result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
+                error: 'No user found with this email',
+            });
+        }
+
+        if (!consultant.email_confirmed) {
+            throw new BadRequestException({
+                result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
+                error: ResponseMessages.EmailNotConfirmed,
+            });
+        }
+
+        const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
+            { id: consultant.id, email: consultant.email, role: Role.Consultant },
+            '',
+        );
+
+        consultant.token = accessToken;
+        await this.consultantsRepository.save(consultant);
+        await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
+
+        return {
+            token: accessToken,
+            refresh_token: refreshToken,
+            ...consultant.getConsultantsInfo,
+        };
+    }
+
     async logout(id: number) {
         try {
             const currentConsultant = await this.consultantsRepository.findOneBy({ id });
@@ -928,8 +939,6 @@ export class ConsultantsService {
                 });
 
                 let chowisTestResetList: object[];
-
-                // ruby code says FULL - RESET
                 if (currentConsultant.email.includes('chowistest')) {
                     chowisTestResetList = product.map((p) => {
                         const prod = p;
@@ -947,7 +956,6 @@ export class ConsultantsService {
                     });
                 }
 
-                // ruby code says RESET
                 if (currentConsultant.email.includes('@chowisas.com')) {
                     chowisTestResetList = product.map((p) => {
                         const prod = p;
@@ -996,22 +1004,14 @@ export class ConsultantsService {
                 token: logoutConsultant.token,
                 refresh_token: null as null,
                 social: logoutConsultant.social,
-                // country_code: logoutConsultant.country_code,
-                // store: logoutConsultant.store,
-                // optic_number: [],
                 password_update_needed: logoutConsultant.password_update_needed,
-                // products: [],
-                // consultant_position: {
-                //     id: 4,
-                //     name: 'Brand Manager',
-                // },
             };
         } catch (e) {
             throw e;
         }
     }
 
-    async getConsultantAboutMe(req: Request, locale: string = 'en') {
+    async getConsultantAboutMe(req: Request, locale = 'en') {
         try {
             const { user } = req;
 
@@ -1230,9 +1230,7 @@ export class ConsultantsService {
         };
     }
 
-    public async modifyConsultant(userId: number, data: UpdateConsultantDto, locale: string = 'en') {
-        // Commented code in this function can be use in future
-
+    public async modifyConsultant(userId: number, data: UpdateConsultantDto, locale = 'en') {
         const consultant = await this.consultantsRepository.findOne({
             where: { id: userId },
             relations: [
@@ -1284,7 +1282,7 @@ export class ConsultantsService {
                 });
             }
 
-            consultant.password_digest = await this.bcryptHashPassword(data.new_password); //await argon2.hash(data.new_password);
+            consultant.password_digest = await this.bcryptHashPassword(data.new_password);
 
             const subject = await this.commonService.translate('password_reset_subject', locale);
 
@@ -1328,10 +1326,6 @@ export class ConsultantsService {
             if (!country) {
                 this.commonService.throwNotFoundError();
             }
-
-            // consultant.country_id = country?.id ? Number(country.id) : null;
-            // consultant.country_code = country.country_code;
-            // consultant.country_name = country.name;
         }
 
         const results = await Promise.all(promises);
@@ -1372,7 +1366,6 @@ export class ConsultantsService {
             '',
         );
 
-        // Prepare the response object
         const response = {
             id: updatedConsultant.id,
             email: updatedConsultant.email,
@@ -1414,7 +1407,6 @@ export class ConsultantsService {
             consultant_position: updatedConsultant.consultant_position,
         };
 
-        // Call updateConsultant in the background
         this.consultantsRepository.updateConsultant(consultant.id, { token: refreshToken }).catch((error) => {
             console.error('Error updating consultant:', error);
         });
@@ -1442,7 +1434,7 @@ export class ConsultantsService {
         return this.commonService.generateMessage('Email confirmed successfully');
     }
 
-    public async resendConfirmation(data: ResendConfirmationDto, locale: string = 'en') {
+    public async resendConfirmation(data: ResendConfirmationDto, locale = 'en') {
         const { email, app_id } = data;
 
         const customer = await this.getConsultant({ email, app_id }, [
@@ -1476,7 +1468,7 @@ export class ConsultantsService {
         return this.commonService.generateMessage('Success!');
     }
 
-    public async changeEmail(consultantId: number, data: ChangeEmailDto, locale: string = 'en') {
+    public async changeEmail(consultantId: number, data: ChangeEmailDto, locale = 'en') {
         const consultant = await this.getConsultant({ id: consultantId });
 
         if (!consultant) {
@@ -1632,9 +1624,6 @@ export class ConsultantsService {
 
             let companyDetailsPromises;
             if (consultant.consultant_company) {
-                // consultant.consultant_company = await this.getCompanyDetails({
-                //     consultant_company_id: consultant.consultant_company['id'],
-                // });
                 companyDetailsPromises = consultant.products.map((p: any) => {
                     return this.getCompanyDetails({
                         consultant_company_id: String(consultant.consultant_company['id']),
@@ -1648,7 +1637,6 @@ export class ConsultantsService {
                 const companyDetails = companyDetailsResults[index];
                 p.device.consultant_company = companyDetails;
 
-                // Calculate expired date
                 const expiredDate = this.expiredDate(p.first_use_date, p.license_period);
                 if (expiredDate) {
                     const month = (expiredDate.getMonth() + 1).toString().padStart(2, '0');
@@ -1703,7 +1691,7 @@ export class ConsultantsService {
         };
     }
 
-    public async password(data: PasswordDto, locale: string = 'en') {
+    public async password(data: PasswordDto, locale = 'en') {
         try {
             const { email, app_id } = data;
 
@@ -1736,7 +1724,7 @@ export class ConsultantsService {
             await this.passwordDetailRepository.save({ email: email, createdAt: new Date(), updatedAt: new Date() });
 
             const password = this.commonService.generateRandomPassword(12);
-            const hashedPassword = await this.bcryptHashPassword(password); //await argon2.hash(password);
+            const hashedPassword = await this.bcryptHashPassword(password);
 
             await this.consultantsRepository.updateConsultant(consultant.id, { password_digest: hashedPassword });
 
@@ -1790,7 +1778,7 @@ export class ConsultantsService {
             });
         }
 
-        const password_digest = await this.bcryptHashPassword(new_password); //await argon2.hash(new_password);
+        const password_digest = await this.bcryptHashPassword(new_password);
 
         const updatedConsultant = await this.consultantsRepository.updateConsultant(consultantId, {
             password_digest,
@@ -1802,17 +1790,6 @@ export class ConsultantsService {
                 error: ResponseMessages.PasswordChangeFailed,
             });
         }
-        // const subject = await this.commonService.translate('password_reset_subject', locale);
-
-        // if (consultant.email) {
-        //     this.commonService.sendEmail({
-        //         to: consultant.email,
-        //         subject: subject,
-        //         templateName: 'password-reset-success',
-        //         templateContext: {},
-        //     });
-        // }
-
         return this.commonService.generateMessage('Success!');
     }
 
@@ -1876,7 +1853,7 @@ export class ConsultantsService {
             });
         }
 
-        const hashedPassword = await this.bcryptHashPassword(password); //await argon2.hash(password);
+        const hashedPassword = await this.bcryptHashPassword(password);
 
         await this.consultantsRepository.updateConsultant(consultant.id, {
             password_digest: hashedPassword,
@@ -1894,7 +1871,6 @@ export class ConsultantsService {
             const token = this.jwtService.getTokenFromRequest(req);
 
             if (!token) {
-                // Token not provided, handle accordingly (e.g., return unauthorized response)
                 throw new UnauthorizedException({
                     result_code: ErrorStatus.UNAUTHORIZED,
                     error: ResponseMessages.Unauthorized,
@@ -1904,8 +1880,8 @@ export class ConsultantsService {
             const analysisTypes = batchIds.map((b) => b.analysis_type);
             const results: any = [];
 
-            for (let analysisType of analysisTypes || []) {
-                let batchId = this.findBatchIdByAnalysis(batchIds, analysisType);
+            for (const analysisType of analysisTypes || []) {
+                const batchId = this.findBatchIdByAnalysis(batchIds, analysisType);
 
                 if (batchId) {
                     const result: any[] = await new Promise(async (resolve) => {
@@ -2169,14 +2145,6 @@ export class ConsultantsService {
         }
         if (!country_name) {
             country_name = '';
-            // throw new BadRequestException({
-            //     result_code: ErrorStatus.CUSTOM_ERROR,
-            //     error: this.commonService.createLocaleErrorMessage(
-            //         locale,
-            //         'custom_error',
-            //         'Country name missing! country_name param needed',
-            //     ),
-            // });
         }
 
         const newSaleConnection = this.salesConnectionRepository.create({
@@ -2273,7 +2241,7 @@ export class ConsultantsService {
         return company;
     }
 
-    public async deleteAccount(userId: number, reason: string = '', locale = 'en') {
+    public async deleteAccount(userId: number, reason = '', locale = 'en') {
         const consultant = await this.consultantsRepository.findOne({
             where: { id: userId },
         });
@@ -2318,7 +2286,6 @@ export class ConsultantsService {
     }
 
     public async changeLicense(consultantID: number, data: ChangeLicenseDto) {
-        // TODO: Send Email
         const { optic_number, license_id } = data;
 
         const [license, devices] = await Promise.all([
@@ -2336,113 +2303,15 @@ export class ConsultantsService {
             consultant_id: consultantID,
         });
 
-        // add entries in license change history table
-        // old_license_id, new_license_id, updater_type, updater_id
-        // price = new_change_license_cost(license_id)
-
-        // update new license id in products table
-
-        // const updatedProduct = await this.productsService.updateProduct(product.id, { license_id });
-
-        // if (updatedProduct.affected < 1) {
         this.commonService.throwNotFoundError();
-        // }
-
         return this.commonService.generateMessage('License changed successfully');
     }
 
     public async notifySalesChangeLicense(data: NotifySalesChangeLicenseDto) {}
 
-    public async calculatePrice(consultantId: number, data: CalculatePriceDto) {
-        // const { duration, license_id, optic_number, selection_type, time_type } = data;
-        // let cost = 0;
-        // let deviceIds = await this.devices.findDevices({ optic_number: In(optic_number.split(',')) }, ['id']);
-        // deviceIds = deviceIds.map((d: { id: string }) => Number(d.id));
-        // const products = await this.productsService.findProduct({
-        //     device_id: In(deviceIds),
-        //     consultant_id: consultantId,
-        // });
-        // if (!products.length) {
-        //     throw new BadRequestException({
-        //         result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //         error: ResponseMessages.DeviceNotBelong,
-        //     });
-        // }
-        // switch (selection_type) {
-        //     case 'change':
-        //         for (const product of products) {
-        //             // Check if already expired
-        //             const remaining = this.daysLeftFromExpired(Number(product.license_period), product.first_use_date);
-        //             if (remaining < 1) {
-        //                 throw new BadRequestException({
-        //                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //                     error: `Sorry! Product #${product.id} is already expired!`,
-        //                 });
-        //             }
-        //             // Calculate cost
-        //             cost += await new Promise<number>(async (resolve, reject) => {
-        //                 await this.newChangeLicenseCost(
-        //                     license_id,
-        //                     product.license_id,
-        //                     Number(product.application_id),
-        //                     product.first_use_date,
-        //                     Number(product.id),
-        //                     product.license_period,
-        //                     product.license_remaining_days,
-        //                 )
-        //                     .then((newCost) => resolve(newCost))
-        //                     .catch((error) => {
-        //                         reject(
-        //                             new BadRequestException({
-        //                                 result_code:
-        //                                     error?.response?.result_code || ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //                                 error: error?.response?.error || ResponseMessages.InternalServerError,
-        //                             }),
-        //                         );
-        //                     });
-        //             });
-        //         }
-        //         break;
-        //     case 'extend':
-        //         if (!duration || !time_type) {
-        //             throw new BadRequestException({
-        //                 result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //                 error: ResponseMessages.DurationAndTimeTypeRequired,
-        //             });
-        //         }
-        //         for (const product of products) {
-        //             const licenseId = product.license_id;
-        //             cost += await new Promise<number>(async (resolve, reject) => {
-        //                 await this.extendLicenseCost(
-        //                     Number(licenseId),
-        //                     Number(duration),
-        //                     time_type,
-        //                     Number(product.application_id),
-        //                 )
-        //                     .then((newCost) => resolve(newCost))
-        //                     .catch((error) => {
-        //                         reject(
-        //                             new BadRequestException({
-        //                                 result_code:
-        //                                     error?.response?.result_code || ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //                                 error: error?.response?.error || ResponseMessages.InternalServerError,
-        //                             }),
-        //                         );
-        //                     });
-        //             });
-        //         }
-        //         break;
-        //     default:
-        //         throw new BadRequestException({
-        //             result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
-        //             error: ResponseMessages.InvalidSelectionTyoe,
-        //         });
-        // }
-        // return { message: 'Success', total_cost: cost.toFixed(2) };
-    }
+    public async calculatePrice(consultantId: number, data: CalculatePriceDto) {}
 
     public async updateLicense(data: UpdateLicenseDto) {
-        // TODO: Send Email
         const { optic_number, duration, time_type } = data;
 
         const device = await this.deviceRepository.findOneDevices({ optic_number });
@@ -2603,7 +2472,7 @@ export class ConsultantsService {
         }
     }
 
-    public async loginPhone(data: LoginPhoneDto, consultantId: number, locale: string = 'en') {
+    public async loginPhone(data: LoginPhoneDto, consultantId: number, locale = 'en') {
         const { phone } = data;
 
         const consultant: Consultants = await this.getConsultant(
@@ -2668,16 +2537,37 @@ export class ConsultantsService {
         }
     }
 
-    public async refreshToken(data: TokenRefreshDto, locale: string = 'en') {
-        const { refresh_token, token } = data;
-        if (!token) {
+    public async refreshToken(data: TokenRefreshDto, locale = 'en') {
+        const { refresh_token } = data;
+
+        const { secret: tokenAccess } = this.jwtConfig.refresh;
+
+        let decoded;
+        try {
+            decoded = jwt.verify(refresh_token, tokenAccess);
+        } catch (err: any) {
+            if (err.name === 'TokenExpiredError') {
+                throw new ForbiddenException({
+                    result_code: 10000,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'token_expired'),
+                });
+            } else if (err.name === 'JsonWebTokenError') {
+                throw new ForbiddenException({
+                    result_code: 10001,
+                    error: this.commonService.createLocaleErrorMessage(locale, 'invalid_token'),
+                });
+            } else if (err.name === 'NotBeforeError') {
+                throw new ForbiddenException({
+                    result_code: 10003,
+                    error: err.message,
+                });
+            }
+
             throw new UnauthorizedException({
-                result_code: ErrorStatus.NOT_FOUND,
+                result_code: ErrorStatus.UNAUTHORIZED,
                 error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
             });
         }
-        const { secret: tokenAccess, time: accessTime } = this.jwtConfig.access;
-        const decoded = jwt.verify(token, tokenAccess);
 
         const { id } = decoded as any;
 
@@ -2690,42 +2580,17 @@ export class ConsultantsService {
             });
         }
 
-        const hashedRefreshToken = await bcrypt.hash(refresh_token, 12);
-        const foundRefreshToken = await this.refreshTokenRepository.findOne({
-            where: {
-                accessToken: token,
-                refreshToken: refresh_token,
-            },
-        });
-
-        if (!foundRefreshToken) {
-            return {
-                access_token: null as string,
-                refresh_token: null as string,
-                message: 'Refresh token does not exist in the system. Please check with admin',
-            };
-        }
-
-        if (Date.now() > Number(foundRefreshToken.refreshTokenExpiredAt)) {
-            return {
-                access_token: null as string,
-                refresh_token: null as string,
-                message: 'Refresh token already expired',
-            };
-        }
-
-        const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
+        const [accessToken, new_refresh_token] = await this.authService.generateAuthTokens(
             { id: consultant.id, email: consultant.email, role: Role.Consultant },
             '',
         );
 
-        consultant.token = accessToken;
-        await this.refreshTokenRepository.remove(foundRefreshToken);
-        await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
+        consultant.token = new_refresh_token;
+        await this.consultantsRepository.save(consultant);
 
         return {
-            access_token: accessToken,
-            refresh_token: refreshToken,
+            token: accessToken,
+            refresh_token: new_refresh_token,
         };
     }
 
@@ -2734,9 +2599,9 @@ export class ConsultantsService {
             'en': 'Device does not exist',
             'ko': '존재하지 않는 정보',
             'ar': 'الجهاز غير موجود',
-            'zh-hans': '设备不存在', // simplified
+            'zh-hans': '设备不存在',
             'zh-hant': '設備不存在',
-            'zh-tw': '設備不存在', // tw
+            'zh-tw': '設備不存在',
             'id': 'Perangkat tidak ada',
             'fr': "L'appareil n'existe pas",
             'ru': 'Устройство не существует',
@@ -2753,244 +2618,33 @@ export class ConsultantsService {
         const normalizedLocale = locale.toLowerCase();
         return device_not_exist[normalizedLocale] || device_not_exist['en'];
     }
-    // public async enterProducts(req: Request, data: EnterProductDto, locale: string = 'en') {
-    //     try {
-    //         const consultantId = Number((<{ id: string }>req.user).id);
 
-    //         if (!data.optic_number || !data.password || !data.application_id) {
-    //             throw new BadRequestException('1:Missing required value');
-    //         }
-    //         const errTranslation = this.errorTranslation(locale);
-    //         const { password, application_id, mac_address, lat, lng } = data;
-
-    //         const macAddress = mac_address ?? null;
-    //         const latt = lat ?? null;
-    //         const long = lng ?? null;
-    //         const isFirstUseDate = data.first_use_date === 'n';
-    //         const optic_number = data.optic_number.toUpperCase();
-
-    //         let useDate = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // Format: YYYYMMDD
-    //         let useTime = new Date().toISOString().slice(11, 16).replace(/:/g, ''); // Format: HHMM
-
-    //         const consultant = await this.consultantsRepository.findOneConsultantById(consultantId);
-
-    //         if (!consultant) {
-    //             this.commonService.throwNotFoundError();
-    //         }
-
-    //         const device = await this.deviceRepository.findOne({
-    //             where: [
-    //                 {
-    //                     optic_number: optic_number,
-    //                     pwd: password, // OR serial_number: password
-    //                 },
-    //                 {
-    //                     optic_number: optic_number,
-    //                     serial_number: password, // assuming password matches serial_number
-    //                 },
-    //             ],
-    //             relations: ['consultant_company'],
-    //         });
-
-    //         // console.log('device', consultant);
-    //         if (!device) {
-    //             throw new BadRequestException(`2: ${errTranslation}`);
-    //         }
-
-    //         if (device.use_yn !== 'Y') {
-    //             throw new BadRequestException('3:information that does not exist');
-    //         }
-
-    //         // Wrong information Error
-    //         // Product credentials are required.
-
-    //         if (device.consultant_company === null) {
-    //             device.consultant_company = consultant.consultant_company;
-    //         }
-
-    //         const device_id = device.id;
-
-    //         const product = await this.productsService.findOneProduct(
-    //             { device_id, application_id },
-    //             [],
-    //             ['license', 'application', 'consultant'],
-    //         );
-
-    //         if (!product || (product && !product.license)) {
-    //             throw new BadRequestException(`5: ${errTranslation}`);
-    //         }
-
-    //         if (product.consultant && product.consultant_id != consultant.id) {
-    //             throw new ConflictException('7:Device already registered by another consultant.');
-    //         }
-
-    //         const beforeUseDate = product.use_date;
-
-    //         product.consultant_id = Number(consultant?.id);
-    //         product.use_date = useDate;
-    //         product.use_time = useTime;
-    //         product.mac_address = macAddress;
-    //         product.app_use_yn = 'Y';
-    //         // comments
-
-    //         try {
-    //             await this.productsService.updateProduct(product.id, {
-    //                 consultant_id: consultant.id,
-    //                 use_date: useDate,
-    //                 use_time: useTime,
-    //                 mac_address: macAddress,
-    //                 app_use_yn: 'Y',
-    //             });
-    //         } catch (e) {
-    //             throw new Error('6:Error in usage registration');
-    //         }
-
-    //         const consultantCompanyId = device?.consultant_company_id ?? 213;
-    //         if (consultantCompanyId) {
-    //             const currentConsultant = await this.consultantsRepository.findOne({ where: { id: consultant.id } });
-    //             currentConsultant.consultant_company_id = consultantCompanyId;
-    //             await this.consultantsRepository.save(currentConsultant);
-    //         }
-
-    //         // console.log("===>",consultant.id);
-
-    //         if (!beforeUseDate && product.use_date && !isFirstUseDate) {
-    //             if (!product.first_use_date || product.first_use_date === null) {
-    //                 product.first_use_date = product.use_date;
-    //             }
-
-    //             console.log(product);
-    //             await this.productsRepository.save(product);
-    //         }
-
-    //         device.lng = long;
-    //         device.lat = latt;
-
-    //         // console.log(device);
-
-    //         await this.deviceRepository.update(device.id, {
-    //             lng: long,
-    //             lat: latt,
-    //         });
-
-    //         return {
-    //             result_code: '0',
-    //             product: {
-    //                 id: product.id,
-    //                 first_use_date: product.first_use_date,
-    //                 use_date: product.use_date,
-    //                 use_time: product.use_time,
-    //                 mac_address: product.mac_address,
-    //                 app_use_yn: product.app_use_yn,
-    //                 license_period: product.license_period,
-    //                 created_at: product.created_at,
-    //                 is_expired: product.getIsExpired,
-    //                 device: {
-    //                     id: device.id,
-    //                     optic_number: device.optic_number,
-    //                     serial_number: device.serial_number,
-    //                     docking_number: device.docking_number,
-    //                     wb: device.wb,
-    //                     cal: device.cal,
-    //                     refresh_date: device.refresh_date,
-    //                     app_version: device.app_version,
-    //                     app_update_date: device.app_update_date,
-    //                     division: device.division,
-    //                     use_yn: device.use_yn,
-    //                     lat: device.lat,
-    //                     lng: device.lng,
-    //                     consultant_company: {
-    //                         id: device?.consultant_company?.id ?? 213,
-    //                         name: device?.consultant_company?.name ?? 'Dior',
-    //                         address: device?.consultant_company?.address ?? '',
-    //                         email: device?.consultant_company?.email ?? '',
-    //                         phone: device?.consultant_company?.phone ?? '',
-    //                         font: device?.consultant_company?.font ?? '',
-    //                         primary_color_code: device?.consultant_company?.primary_color_code ?? '',
-    //                         secondary_color_code: device?.consultant_company?.secondary_color_code ?? '',
-    //                         program_color_code: device.consultant_company?.program_color_code ?? '',
-    //                         top_color_code: device?.consultant_company?.top_color_code ?? null,
-    //                         text_icon_color_code: device?.consultant_company?.text_icon_color_code ?? null,
-    //                         pie_chart_color_1: device?.consultant_company?.pie_chart_color_1 ?? null,
-    //                         pie_chart_color_2: device?.consultant_company?.pie_chart_color_2 ?? null,
-    //                         pie_chart_color_3: device?.consultant_company?.pie_chart_color_3 ?? null,
-    //                         pie_chart_color_4: device?.consultant_company?.pie_chart_color_4 ?? null,
-    //                         pie_chart_color_5: device.consultant_company?.pie_chart_color_5 ?? null,
-    //                         pie_chart_points_color: device?.consultant_company?.pie_chart_points_color ?? null,
-    //                         logo_url: null as null,
-    //                         app_icon_url: null as null,
-    //                         background_image_url: null as null,
-    //                         progressbar_image_1_url: null as null,
-    //                         progressbar_image_2_url: null as null,
-    //                         progressbar_image_3_url: null as null,
-    //                         created_at: device?.consultant_company?.created_at ?? null,
-    //                     },
-    //                 },
-    //                 license: {
-    //                     id: product.license.id,
-    //                     name: product.license.name,
-    //                 },
-    //                 application: {
-    //                     id: product.application.id,
-    //                     name: product.application.name,
-    //                     apk_url: product.application.apk_url,
-    //                     version: product.application.version,
-    //                     group_name: product.application.group_name,
-    //                     regist_date: product.application.regist_date,
-    //                     description: product.application.description,
-    //                     ios_version: product.application.ios_version,
-    //                     android_version: product.application.android_version,
-    //                     android_app_url: product.application.android_app_url,
-    //                     ios_app_url: product.application.ios_app_url,
-    //                     is_old: product.application.is_old,
-    //                     app_icon: null as null,
-    //                 },
-    //             },
-    //         };
-    //     } catch (error) {
-    //         console.log(error);
-    //         const splitMessage = error.message.split(':');
-    //         if (splitMessage.length > 1) {
-    //             return {
-    //                 result_code: splitMessage[0],
-    //                 error: splitMessage[1],
-    //             };
-    //         }
-    //         throw error;
-    //     }
-    // }
-    public async enterProducts(req: Request, data: EnterProductDto, locale: string = 'en') {
+    public async enterProducts(req: Request, data: EnterProductDto, locale = 'en') {
         try {
-            console.log('[1] 요청 시작', { user: req.user, data });
-    
             const consultantId = Number((<{ id: string }>req.user).id);
-            console.log('[2] Consultant ID:', consultantId);
-    
+
             if (!data.optic_number || !data.password || !data.application_id) {
                 throw new BadRequestException('1:Missing required value');
             }
-            console.log('[3] 필수 값 검증 통과');
-    
+
             const errTranslation = this.errorTranslation(locale);
             const { password, application_id, mac_address, lat, lng } = data;
-    
+
             const macAddress = mac_address ?? null;
             const latt = lat ?? null;
             const long = lng ?? null;
             const isFirstUseDate = data.first_use_date === 'n';
             const optic_number = data.optic_number.toUpperCase();
-    
-            let useDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-            let useTime = new Date().toISOString().slice(11, 16).replace(/:/g, '');
-            console.log('[4] 날짜 및 시간 설정:', { useDate, useTime });
-    
+
+            const useDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            const useTime = new Date().toISOString().slice(11, 16).replace(/:/g, '');
+
             const consultant = await this.consultantsRepository.findOneConsultantById(consultantId);
-            console.log('[5] Consultant 조회:', consultant);
-    
+
             if (!consultant) {
                 this.commonService.throwNotFoundError();
             }
-    
+
             const device = await this.deviceRepository.findOne({
                 where: [
                     { optic_number: optic_number, pwd: password },
@@ -2998,55 +2652,43 @@ export class ConsultantsService {
                 ],
                 relations: ['consultant_company'],
             });
-    
-            console.log('[6] Device 조회 결과:', device);
-    
+
             if (!device) {
                 throw new BadRequestException(`2: ${errTranslation}`);
             }
-    
-            console.log('[7] Device 사용 가능 여부:', device.use_yn);
-    
+
             if (device.use_yn !== 'Y') {
                 throw new BadRequestException('3:information that does not exist');
             }
-    
+
             if (device.consultant_company === null) {
                 device.consultant_company = consultant.consultant_company;
             }
-    
-            console.log('[8] Device의 Consultant Company:', device.consultant_company);
-    
+
             const device_id = device.id;
-    
+
             const product = await this.productsService.findOneProduct(
                 { device_id, application_id },
                 [],
                 ['license', 'application', 'consultant'],
             );
-    
-            console.log('[9] Product 조회 결과:', product);
-    
+
             if (!product || (product && !product.license)) {
                 throw new BadRequestException(`5: ${errTranslation}`);
             }
-    
-            console.log('[10] Product 라이센스 확인:', product.license);
-    
+
             if (product.consultant && product.consultant_id !== consultant.id) {
                 throw new ConflictException('7:Device already registered by another consultant.');
             }
-    
+
             const beforeUseDate = product.use_date;
-    
+
             product.consultant_id = Number(consultant?.id);
             product.use_date = useDate;
             product.use_time = useTime;
             product.mac_address = macAddress;
             product.app_use_yn = 'Y';
-    
-            console.log('[11] 제품 정보 업데이트 시도:', product);
-    
+
             try {
                 await this.productsService.updateProduct(product.id, {
                     consultant_id: consultant.id,
@@ -3059,37 +2701,30 @@ export class ConsultantsService {
                 console.error('[12] 제품 정보 업데이트 오류:', e);
                 throw new Error('6:Error in usage registration');
             }
-    
+
             const consultantCompanyId = device?.consultant_company_id ?? 213;
             if (consultantCompanyId) {
                 const currentConsultant = await this.consultantsRepository.findOne({ where: { id: consultant.id } });
                 currentConsultant.consultant_company_id = consultantCompanyId;
                 await this.consultantsRepository.save(currentConsultant);
             }
-    
-            console.log('[13] Consultant 정보 업데이트 완료');
-    
+
             if (!beforeUseDate && product.use_date && !isFirstUseDate) {
                 if (!product.first_use_date || product.first_use_date === null) {
                     product.first_use_date = product.use_date;
                 }
-    
-                console.log('[14] 최초 사용 날짜 설정:', product);
+
                 await this.productsRepository.save(product);
             }
-    
+
             device.lng = long;
             device.lat = latt;
-    
-            console.log('[15] Device 위치 정보 업데이트:', { lat: latt, lng: long });
-    
+
             await this.deviceRepository.update(device.id, {
                 lng: long,
                 lat: latt,
             });
-    
-            console.log('[16] 응답 데이터 반환 준비');
-    
+
             return {
                 result_code: '0',
                 product: {
@@ -3131,7 +2766,6 @@ export class ConsultantsService {
             throw error;
         }
     }
-    
 
     async getNotifications(consultatnId: number, data: GetNotificationsDto) {
         const { per, page, title } = data;
@@ -3222,7 +2856,7 @@ export class ConsultantsService {
         }
 
         const record = [
-            new Date().toISOString().replace('T', ' ').substring(0, 16), // 'YYYY-MM-DD HH:mm'
+            new Date().toISOString().replace('T', ' ').substring(0, 16),
             entity.id,
             entity.email,
             entity.app_id,
@@ -3251,7 +2885,7 @@ export class ConsultantsService {
 
     async checkFileExistence(outputPath: string) {
         try {
-            await fs.access(outputPath); // This is the asynchronous equivalent of checking file existence
+            await fs.access(outputPath);
             console.log('File exists');
         } catch (error) {
             console.log('File does not exist');
@@ -3268,40 +2902,26 @@ export class ConsultantsService {
         console.log(`${fileName}\n, "tempFilePath: ====>",${tempFilePath}\n`);
 
         try {
-            // Connect to the SFTP server
-            // await sftp.connect(sftpConfig);
-
-            // Define the remote directory path
             const remoteDirectoryPath = './analysis_data/PROD/bak';
 
-            // Check if the remote directory exists; if not, create it
             try {
-                await this.client.mkdir(remoteDirectoryPath, true); // 'true' makes the directory recursively
+                await this.client.mkdir(remoteDirectoryPath, true);
             } catch (err) {
                 console.log('Directory may already exist', err.message);
             }
 
-            const remoteFilePath = `${remoteDirectoryPath}/${fileName}`; //path.join(remoteDirectoryPath, fileName);
+            const remoteFilePath = `${remoteDirectoryPath}/${fileName}`;
 
-            console.log('remoteFilePath ------------>', remoteFilePath);
-            // await fs.access(remoteFilePath).then(() => console.log('checking'));
-            // Upload the file to the SFTP server
             const fileTransfered = tempFilePath;
             await this.uploadFile(tempFilePath, remoteFilePath);
-            // console.log(`${fileName} uploaded successfully to SFTP server`);
-
-            // Clean up the temporary local file
-            // await fs.unlink(tempFilePath);
         } catch (error) {
             console.error('Error during SFTP upload:', error);
-            // throw new Error(error);
         } finally {
             await this.disconnect();
         }
     }
 
     @Cron('0 0 0 * * *')
-    // @Cron('* * * * * *')
     async generateFlatFileDior(date: string) {
         const excelData = [];
         const credentials = {
@@ -3311,32 +2931,23 @@ export class ConsultantsService {
             confirmPassword: process.env.LOGIN_PASSWORD,
         };
 
-        // Fetch authentication token
         const { token } = await this.login(credentials, 'en');
         const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
-
-        // Define date ranges
-        // const startDate = date + ' 00:00:00'; //`${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
-        // const endDate = date + ' 23:59:59'; //`${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
 
         const startDate = date ? date + ' 00:00:00' : `${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
         const endDate = date ? date + ' 23:59:59' : `${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
 
         console.log(startDate, endDate);
-        // Fetch required data
         const analyses = await this.analysisReplService.getStatisticsConsultantions(startDate, endDate);
         const customerIds = analyses.map((analysis) => Number(analysis.customerId));
         const batchIds = analyses.map((analysis) => analysis.batchId);
 
-        // Fetch customers and map by ID for quick access
         const customers = await this.customersRepository.getTodayCreatedCustomers(customerIds);
         const customerMap = new Map(customers.map((customer) => [customer.id, customer]));
 
-        // Fetch consents and map by customerId + batchId for quick access
         const consents = await this.diorConsentRepository.find({ where: { batchId: In(batchIds) } });
         const consentMap = new Map(consents.map((consent) => [`${consent.batchId}`, consent]));
 
-        // Fetch product recommendations and group by batchId
         const productRecommendations = await this.ProductRecommendationSelectedRepository.find({
             where: { batchId: In(batchIds) },
             relations: ['productRecommendation'],
@@ -3348,7 +2959,6 @@ export class ConsultantsService {
             productMap.set(recommendation.batchId, batchProducts);
         });
 
-        // Fetch analysis results in parallel
         const analysisResults = await Promise.all(
             analyses.map((analysis) =>
                 axios.get(`${CNDP_SKIN_ANALYSIS_URL}/web-result/cndpskin/${analysis.batchId}`, {
@@ -3357,7 +2967,6 @@ export class ConsultantsService {
             ),
         );
 
-        // Process data
         for (const [index, analysis] of analyses.entries()) {
             const customer = customerMap.get(Number(analysis.customerId));
             if (!customer) continue;
@@ -3375,7 +2984,6 @@ export class ConsultantsService {
             }));
 
             const consent = consentMap.get(`${analysis.batchId}`);
-            // console.log(`${customer.id}_${analysis.batchId}`, '========>', consent);
             const consentAnswers = consent?.consentFormAnswers;
 
             const newJson = {
@@ -3390,7 +2998,6 @@ export class ConsultantsService {
                 recommended_product: products,
             };
 
-            // Apply consent logic
             if (consent) {
                 if (consent.consentType === 'without_ipos_consent' && consentAnswers?.[2] === 'No') {
                     newJson.client_iw_id = null;
@@ -3406,7 +3013,6 @@ export class ConsultantsService {
                 }
             }
 
-            // Filter data based on consent answers
             if ((consentAnswers || []).length === 2 && !consentAnswers.includes('No')) {
                 excelData.push(newJson);
             } else if ((consentAnswers || []).length === 4) {
@@ -3442,32 +3048,23 @@ export class ConsultantsService {
         const fileName = `${dateString}.json`;
         const filePath = path.join(flatFilesDirectoryPath, fileName);
 
-        const jsonData = excelData; //JSON.stringify(excelData);
+        const jsonData = excelData;
 
-        let file = JSON.stringify(jsonData, null, 2);
+        const file = JSON.stringify(jsonData, null, 2);
 
         try {
-            // Write file to the specified path
             await fs.writeFile(filePath, file);
             console.log(`${fileName} writing success`);
 
-            // Only proceed with upload if writing succeeds
             await this.uploadToSFTPServer(fileName, filePath);
-            // console.log(`${fileName} upload success`);
         } catch (error) {
-            // Catch any error during the process
             console.error(`${fileName} writing or upload failed`, error);
         } finally {
-            // Log completion message regardless of success or failure
             console.log('process done');
         }
 
         return true;
     }
-
-    // UPLOAD FILES
-
-    // SENDING JSON
 
     daysLeftFromExpired(licensePeriod: number, firstUseDate: string) {
         let periodLeft = 0;
@@ -3475,7 +3072,7 @@ export class ConsultantsService {
             const today = new Date();
             const daysSinceFirstUse = Math.floor(
                 (today.getTime() - new Date(firstUseDate).getTime()) / (1000 * 60 * 60 * 24),
-            ); // Convert milliseconds to days
+            );
             periodLeft = licensePeriod - daysSinceFirstUse;
         } else {
             periodLeft = licensePeriod;
@@ -3485,12 +3082,12 @@ export class ConsultantsService {
 
     expiredDate(firstUseDate: string, licensePeriod: number) {
         if (firstUseDate && licensePeriod) {
-            return new Date(new Date(firstUseDate).getTime() + licensePeriod * 24 * 60 * 60 * 1000); // Convert days to milliseconds
+            return new Date(new Date(firstUseDate).getTime() + licensePeriod * 24 * 60 * 60 * 1000);
         }
     }
 
-    expectedDaysIncrease(days: number, type: string = 'days', firstUseDate: string, licensePeriod: number) {
-        let currentDate = new Date();
+    expectedDaysIncrease(days: number, type = 'days', firstUseDate: string, licensePeriod: number) {
+        const currentDate = new Date();
         let expireDate;
         if (firstUseDate && licensePeriod) {
             let expirationDate = this.expiredDate(firstUseDate, licensePeriod);
@@ -3503,19 +3100,18 @@ export class ConsultantsService {
         }
         const calculatedDays = Math.round(
             (new Date(expireDate).getTime() - new Date(currentDate).getTime()) / (1000 * 60 * 60 * 24),
-        ); // milliseconds to days
+        );
         return calculatedDays;
     }
 
     timeTypeToMilliseconds(type: string) {
         switch (type) {
             case 'days':
-                return 24 * 60 * 60 * 1000; // 1 day in milliseconds
+                return 24 * 60 * 60 * 1000;
             case 'months':
-                return 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
+                return 30 * 24 * 60 * 60 * 1000;
             case 'years':
-                return 365 * 24 * 60 * 60 * 1000; // 365 days in milliseconds
-            default:
+                return 365 * 24 * 60 * 60 * 1000;
                 throw new BadRequestException({
                     result_code: ErrorStatus.CUSTOM_ERROR_CONSULTANT,
                     error: ResponseMessages.InvalidTimeType,
@@ -3571,13 +3167,12 @@ export class ConsultantsService {
             );
             let endDate = new Date(
                 new Date(licenseHistory.expectedExpiryDate).getTime() -
-                    new Date(expectedDays * 24 * 60 * 60 * 1000).getTime(), // Convert days to milliseconds
+                    new Date(expectedDays * 24 * 60 * 60 * 1000).getTime(),
             );
             totalUpgradeCost = this.checkCost(startDate, endDate, upgradeCosts);
             totalPaid = initialCost;
             if (firstUseDate) {
                 if (licenseHistory) {
-                    // #TODO : expected_days_increase function implementation
                 }
                 const licenseHistories = await this.licenseHistoriesRepository.findLicenceHistories({
                     licensable_id: productId,
@@ -3613,12 +3208,12 @@ export class ConsultantsService {
 
     checkCost(startDate: Date, endDate: Date, upgradeCosts: any) {
         let totalUpgradeCost = 0;
-        let currentDate = new Date();
+        const currentDate = new Date();
 
         if (currentDate <= endDate) {
             new Date(endDate).getTime();
             Math.max(new Date(currentDate).getTime(), new Date(startDate).getTime());
-            let remainingDays = Math.floor(
+            const remainingDays = Math.floor(
                 Math.max(
                     (new Date(endDate).getTime() - Math.max(currentDate.getTime(), new Date(startDate).getTime())) /
                         (1000 * 60 * 60 * 24),
@@ -3626,14 +3221,14 @@ export class ConsultantsService {
                 ),
             );
 
-            let closestDays = Object.keys(upgradeCosts)
+            const closestDays = Object.keys(upgradeCosts)
                 .map((c) => parseInt(c, 10))
                 .reduce((prev, curr) =>
                     Math.abs(curr - remainingDays) < Math.abs(prev - remainingDays) ? curr : prev,
                 );
 
-            let upgradeCostForPeriod = upgradeCosts[closestDays.toString()];
-            let dailyUpgradeCost = parseFloat(upgradeCostForPeriod) / closestDays;
+            const upgradeCostForPeriod = upgradeCosts[closestDays.toString()];
+            const dailyUpgradeCost = parseFloat(upgradeCostForPeriod) / closestDays;
             totalUpgradeCost = dailyUpgradeCost * remainingDays;
         }
         return totalUpgradeCost;
@@ -3690,8 +3285,6 @@ export class ConsultantsService {
         }
     }
 
-    // FTP TRANSFERT
-
     async listFiles(remoteDir: any, fileGlob: any) {
         console.log(`Listing ${remoteDir} ...`);
         let fileObjects;
@@ -3715,7 +3308,6 @@ export class ConsultantsService {
         return fileNames;
     }
 
-    // Transfering file
     async uploadFile(localFile: any, remoteFile: any) {
         console.log(`Uploading ${localFile} to ${remoteFile} ...`);
         try {
@@ -3730,10 +3322,10 @@ export class ConsultantsService {
         try {
             const response = await this.client.connect(options);
             console.log('Connected successfully');
-            return response; // Return the response if needed
+            return response;
         } catch (err) {
             console.error('Failed to connect:', err);
-            throw err; // Propagate the error
+            throw err;
         }
     }
 
@@ -3752,18 +3344,10 @@ export class ConsultantsService {
 
     async fileExists(filePath: string): Promise<boolean> {
         try {
-            // Check if the file exists using fs.access()
             await fs.access(filePath);
-            return true; // File exists
+            return true;
         } catch (error) {
-            return false; // File does not exist
+            return false;
         }
     }
-    // @Cron('* * * * *')
-    // @Cron(CronExpression.EVERY_DAY_AT_1AM)
 }
-
-// "total_size": 5,
-// "current_page_size": 5,
-// "current_page": 1,
-// "total_pages": 1

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, MinLength, Validate } from 'class-validator';
+import { IsString, Validate } from 'class-validator';
 import { IsNumberOrString } from './common/validators/number-or-string.validator';
 
 export class LoginSocialDto {

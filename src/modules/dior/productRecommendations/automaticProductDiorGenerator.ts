@@ -153,36 +153,31 @@ export class AutomaticProductDiorGenerator {
         const recommanded = foundMarket?.defaultRecommendation ?? '';
 
         let product: ProductRecommendationSelecteds[];
-       
+
         if (recommanded.toLowerCase().includes('japan')) {
             // product = await this.getProductsFromMarketJapan(result);
             product = await this.getProductsFromMarketAsia(result);
             console.log('market japan');
-        } 
-        else if (recommanded.toLowerCase().includes('western') || recommanded.toLowerCase().includes('europe')) {
+        } else if (recommanded.toLowerCase().includes('western') || recommanded.toLowerCase().includes('europe')) {
             product = await this.getProductsFromMarketWestern(result);
             console.log('market western');
-        } 
-        else if (recommanded.toLowerCase().includes('asia')) {
+        } else if (recommanded.toLowerCase().includes('asia')) {
             product = await this.getProductsFromMarketAsia(result);
             console.log('market asia');
-        } 
-        else {
+        } else {
             if (this.routineRecommendation === '3') {
                 product = await this.getProductsFromMarketWestern(result);
                 console.log('routineRecommendation 3');
-            } 
-            else if (this.routineRecommendation === '5') {
+            } else if (this.routineRecommendation === '5') {
                 product = await this.getProductsFromMarketAsia(result);
                 console.log('routineRecommendation 5');
-            } 
-            else {
+            } else {
                 product = await this.getProductsFromMarketAsia(result);
                 console.log('else asia');
             }
         }
-        console.log('market===',market)
-        console.log('recommanded===',recommanded)
+        console.log('market===', market);
+        console.log('recommanded===', recommanded);
 
         return product;
     }
@@ -320,7 +315,7 @@ export class AutomaticProductDiorGenerator {
 
     async getProductsFromMarketWestern(result: ResultJson[]) {
         const products: ProductRecommendationSelecteds[][] = [];
-        
+
         const premium = ['Yes, I use premium skincare.', "I'd like to try Dior premium skincare."];
         const nonPremium = ["No, I'm not interested."];
 
@@ -687,4 +682,3 @@ export class AutomaticProductDiorGenerator {
         return makeupProducts;
     }
 }
-

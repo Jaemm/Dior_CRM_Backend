@@ -1,33 +1,8 @@
+import { Public } from '@/src/common/decorators/public-route.decorator';
+import { Roles } from '@/src/common/decorators/roles.decorator';
+import { Role } from '@/src/common/enums/role.enum';
+import { JwtService } from '@/src/jwt/jwt.service';
 import {
-    BadRequestException,
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Headers,
-    Param,
-    Post,
-    Put,
-    Query,
-    Req,
-    Res,
-    UnauthorizedException,
-} from '@nestjs/common';
-import { Response, Request, query } from 'express';
-import { ConsultantsService } from './consultants.service';
-import {
-    ApiBearerAuth,
-    ApiBody,
-    ApiExcludeEndpoint,
-    ApiHeader,
-    ApiHeaders,
-    ApiOperation,
-    ApiQuery,
-    ApiTags,
-} from '@nestjs/swagger';
-import {
-    LoginSocialDto,
-    ResendConfirmationDto,
     AllLicenseDto,
     CalculatePriceDto,
     ChangeEmailDto,
@@ -35,45 +10,47 @@ import {
     ConfirmHtmlDto,
     ConsultantCompanyDetailsDto,
     ConsultantDto,
+    CreateSalesConnectionDto,
+    EnterProductDto,
+    FetchSalesConnectionDto,
     GetConsultantDto,
+    GetNotificationsDto,
+    HealthTipsByCompanyDto,
+    HealthTipsDto,
+    LoginConsultantDto,
+    LoginPhoneDto,
+    LoginSamlDto,
+    LoginSocialDto,
     NotifySalesChangeLicenseDto,
     PasswordDto,
+    PasswrodChangeDto,
+    ProductRecommendationsDto,
     RenewDevicesDto,
     RequestCallBackUrlDto,
-    UpdateConsultantDto,
-    UpdateLicenseDto,
-    LoginPhoneDto,
-    ProductRecommendationsDto,
+    ResendConfirmationDto,
     TokenRefreshDto,
-    PasswrodChangeDto,
-    EnterProductDto,
-    GetNotificationsDto,
-    UpdatePasswordDto,
     UpdateConsultantRubyDto,
-    HealthTipsDto,
-    HealthTipsByCompanyDto,
-    NotificationTestDto,
-    CreateSalesConnectionDto,
-    FetchSalesConnectionDto,
-    LoginConsultantDto,
+    UpdateLicenseDto,
+    UpdatePasswordDto,
 } from '@/src/modules/consultants/consultants.dto';
-import { JwtService } from '@/src/jwt/jwt.service';
-import { Roles } from '@/src/common/decorators/roles.decorator';
-import { Role } from '@/src/common/enums/role.enum';
-import { Public } from '@/src/common/decorators/public-route.decorator';
+import { Body, Controller, Delete, Get, Headers, Param, Post, Put, Query, Redirect, Req, Res } from '@nestjs/common';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiHeader, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Request, Response } from 'express';
+import { AuthService } from '../auth/auth.service';
 import { CRMService } from '../crm/crm.service';
+import { ConsultantsService } from './consultants.service';
+import { SamlService } from './saml.service';
 
 @ApiTags('Consultants')
 @Controller('consultants')
-// @ApiHeader({
-//     name: 'X-CHOWIS-LOCALE',
-//     required: false,
-// })
 export class ConsultantsController {
+    [x: string]: any;
     constructor(
         private readonly consultants: ConsultantsService,
+        private readonly samlService: SamlService,
         private jwtService: JwtService,
         private readonly crmService: CRMService,
+        private readonly authService: AuthService,
     ) {}
 
     @ApiBearerAuth()
@@ -197,8 +174,48 @@ export class ConsultantsController {
     ): Promise<any> {
         // body.email = body.email.toLowerCase();
         const loginResult = await this.consultants.loginRuby(body, locale);
-
         return res.status(200).send({ ...loginResult });
+    }
+
+    @Post('login/saml')
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    async loginWithSaml(
+        @Res() res: Response,
+        @Body() body: { samlResponse: string },
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ): Promise<any> {
+        try {
+            const email = await this.samlService.extractEmailFromSaml(body.samlResponse);
+
+            const samlDto: LoginSamlDto = { email };
+
+            const loginResult = await this.consultants.loginRuby(samlDto as any, locale); // 타입 강제 or 로그인 서비스 확장
+
+            return res.status(200).send({ ...loginResult });
+        } catch (error) {
+            return res.status(401).send({ message: 'SAML authentication failed', detail: error.message });
+        }
+    }
+
+    @Get('login/saml')
+    async redirectToOkta(@Res() res: Response) {
+        const loginUrl = this.samlService.getSsoLoginUrl();
+        return res.redirect(loginUrl);
+    }
+
+    @Post('login/saml')
+    async handleSamlResponse(
+        @Body() body: { SAMLResponse: string },
+        @Headers('X-CHOWIS-LOCALE') locale: string = 'en',
+        @Res() res: Response,
+    ) {
+        try {
+            const email = await this.samlService.extractEmailFromSaml(body.SAMLResponse);
+            const loginResult = await this.consultants.loginWithEmailOnly(email, locale);
+            return res.status(200).send(loginResult);
+        } catch (err) {
+            return res.status(401).send({ message: 'SAML login failed', error: err.message });
+        }
     }
 
     @Put('/update')
@@ -217,17 +234,6 @@ export class ConsultantsController {
 
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    // @Post('products/enter')
-    // @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
-    // async enterProducts(
-    //     @Req() req: Request,
-    //     @Res() res: Response,
-    //     @Body() body: EnterProductDto,
-    //     @Headers('X-CHOWIS-LOCALE') locale: string,
-    // ) {
-    //     const result = await this.consultants.enterProducts(req, body, locale);
-    //     return res.status(200).send(result);
-    // }
     @Post('products/enter')
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async enterProducts(
@@ -236,10 +242,6 @@ export class ConsultantsController {
         @Body() body: EnterProductDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
-        console.log('[Controller] enterProducts 실행됨');
-        console.log('[Controller] 요청 데이터:', body);
-        console.log('[Controller] 헤더 locale:', locale);
-    
         try {
             const result = await this.consultants.enterProducts(req, body, locale);
             console.log('[Controller] 서비스 응답:', result);
@@ -249,7 +251,7 @@ export class ConsultantsController {
             return res.status(500).send({ error: 'Internal Server Error' });
         }
     }
-    
+
     @Post('password')
     @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async password(
@@ -388,9 +390,6 @@ export class ConsultantsController {
         return res.status(200).send(token);
     }
 
-    // @ApiBearerAuth()
-    // @Roles(Role.Consultant)
-
     @Post('generate_flat_file_dior')
     async generateFlatFileDior(@Body() body: { startDate: string; endDate: string }, @Res() res: Response) {
         const startDate = new Date(body.startDate);
@@ -409,12 +408,6 @@ export class ConsultantsController {
         const template = await this.consultants.confirmEmailById(id);
         return res.status(200).send(template);
     }
-
-    /**
-     *
-     * Existing codes
-     *
-     * */
 
     @ApiExcludeEndpoint()
     @Post('register')

@@ -95,7 +95,7 @@ export class AwsS3Service {
     }
 
     pngFileFilter(fileName: string) {
-        let ext = path.extname(fileName);
+        const ext = path.extname(fileName);
         if (ext !== '.png') {
             throw new Error('Invalid file type');
         }

@@ -298,7 +298,7 @@ export class CommonService {
         }
     }
 
-    createLocaleErrorMessage(locale: string, messageKey: string, message: string = '') {
+    createLocaleErrorMessage(locale: string, messageKey: string, message = '') {
         const lowerLocale = locale.toLocaleLowerCase();
 
         const errorLocale = `errors.${lowerLocale}`;

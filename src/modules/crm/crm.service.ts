@@ -105,7 +105,7 @@ export class CRMService {
         }
     }
 
-    async getCustomerById(consultantId: number, customerId: number, locale: string = 'en') {
+    async getCustomerById(consultantId: number, customerId: number, locale = 'en') {
         const selection = {
             customers: {
                 id: true,
@@ -154,7 +154,7 @@ export class CRMService {
         return customer.getBasicInfo;
     }
 
-    async deleteCustomer(consultantId: number, customerId: number, locale: string = 'en') {
+    async deleteCustomer(consultantId: number, customerId: number, locale = 'en') {
         const consultant = await this.consultantRepository.findOne({
             where: {
                 id: consultantId,
@@ -442,7 +442,7 @@ export class CRMService {
         }
     }
 
-    async getByEmail(consultantId: number, data: GetByEmailDto, locale: string = 'en') {
+    async getByEmail(consultantId: number, data: GetByEmailDto, locale = 'en') {
         const selection = {
             customers: {
                 id: true,
@@ -604,7 +604,7 @@ export class CRMService {
         }
     }
 
-    async presignedUpload(req: Request, data: PresignedUploadDto, file: Express.Multer.File, locale: string = 'en') {
+    async presignedUpload(req: Request, data: PresignedUploadDto, file: Express.Multer.File, locale = 'en') {
         try {
             const consultantId = (<{ id: string }>req.user).id;
             const { consent_type } = data;
@@ -664,7 +664,7 @@ export class CRMService {
         }
     }
 
-    async updateConsentForm(data: UpdateConsentForm, locale: string = 'en') {
+    async updateConsentForm(data: UpdateConsentForm, locale = 'en') {
         // TODO: Use locale from headers for translation
 
         const { customer_id, consent_type, consent_form_answers, batch_id, url } = data;

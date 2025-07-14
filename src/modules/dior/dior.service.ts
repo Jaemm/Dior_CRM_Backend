@@ -158,7 +158,7 @@ export class DiorService {
     // }
     async createCustomers(body: CreateCustomerDto): Promise<CustomersT> {
         const { email, consultant_id, name, external_id, surname } = body;
-    
+
         // 중복 고객 확인
         const existCustomer = await this.customersRepository.findOne({
             where: {
@@ -167,12 +167,12 @@ export class DiorService {
                 external_id: external_id,
             },
         });
-    
+
         if (existCustomer) {
             // 중복 고객이 있는 경우 해당 고객 반환
             return this.reformatCustomer(existCustomer);
         }
-    
+
         // 새 고객 생성 및 저장
         const currentDate = new Date();
         const newCustomer = this.customersRepository.create({
@@ -184,13 +184,13 @@ export class DiorService {
             created_at: currentDate,
             updated_at: currentDate,
         });
-    
+
         const savedCustomer = await this.customersRepository.save(newCustomer);
-    
+
         // 저장된 고객 데이터 반환
         return this.reformatCustomer(savedCustomer);
     }
-    
+
     private reformatCustomer(customer: CustomersT): CustomersT {
         return {
             id: customer.id,
@@ -219,9 +219,8 @@ export class DiorService {
             external_id: customer.external_id,
         };
     }
-    
 
-    async sendWebResult(body: SendWebResultDto, locale: string = 'en') {
+    async sendWebResult(body: SendWebResultDto, locale = 'en') {
         try {
             const { email, batch_id } = body;
 

@@ -242,4 +242,3 @@ export class ProductRecommendationController {
         return res.status(200).send(result);
     }
 }
-

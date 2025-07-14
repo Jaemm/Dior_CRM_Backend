@@ -35,7 +35,7 @@ export class DiorCompanyConsultantsService {
         private readonly consultantRepository: ConsultantsRepository,
     ) {}
 
-    async createDiorCompanyConsultants(body: CreateDiorCompanyConsultantsDto, locale: string = 'en') {
+    async createDiorCompanyConsultants(body: CreateDiorCompanyConsultantsDto, locale = 'en') {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
@@ -77,7 +77,7 @@ export class DiorCompanyConsultantsService {
         }
     }
 
-    async getDiorCompanyConsultants(req: Request, query: GetDiorCompanyConsultantsDto, locale: string = 'en') {
+    async getDiorCompanyConsultants(req: Request, query: GetDiorCompanyConsultantsDto, locale = 'en') {
         try {
             console.log(query);
             const { search, country, filter_by, filter_by_2, page, per } = query;
@@ -307,7 +307,7 @@ export class DiorCompanyConsultantsService {
         }
     }
 
-    async exportDiorCompanyConsultant(req: Request, query: ExportDiorCompanyConsultantsDto, locale: string = 'en') {
+    async exportDiorCompanyConsultant(req: Request, query: ExportDiorCompanyConsultantsDto, locale = 'en') {
         try {
             const { search, filter_by, filter_by2, ids } = query;
 
@@ -378,7 +378,7 @@ export class DiorCompanyConsultantsService {
         }
     }
 
-    async importDiorCompanyConsultants(req: Request, body: ImportDiorCompanyConsultantsDto, locale: string = 'en') {
+    async importDiorCompanyConsultants(req: Request, body: ImportDiorCompanyConsultantsDto, locale = 'en') {
         try {
             const splitToken = req.headers.authorization.split(' ');
 

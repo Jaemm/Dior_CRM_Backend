@@ -277,8 +277,8 @@ export class PartnerDbService {
         }
     }
 
-    async loginDiorConsultant(body: LoginDiorConsultantDto, locale: string = 'en') {
-        let { email, password } = body;
+    async loginDiorConsultant(body: LoginDiorConsultantDto, locale = 'en') {
+        const { email, password } = body;
 
         let consultant;
 
@@ -647,7 +647,7 @@ export class PartnerDbService {
         return response.data || [];
     }
 
-    async resetPassword(body: ResetPasswordDto, locale: string = 'en') {
+    async resetPassword(body: ResetPasswordDto, locale = 'en') {
         try {
             const { app_id, email } = body;
 
@@ -719,7 +719,7 @@ export class PartnerDbService {
         }
     }
 
-    async getCustomerById(customerId: string, locale: string = 'en') {
+    async getCustomerById(customerId: string, locale = 'en') {
         try {
             const customer = await this.customerRepository.findOne({
                 where: {
