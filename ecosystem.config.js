@@ -1,4 +1,3 @@
-// https://pm2.keymetrics.io/docs/usage/application-declaration/
 
 module.exports = {
     apps: [
@@ -13,7 +12,6 @@ module.exports = {
             wait_ready: true,
             autorestart: true,
             watch: false,
-            // max_memory_restart: "1G",
             log_date_format: 'YYYY-MM-DD HH:mm Z',
             env: {
                 NODE_ENV: 'production',
