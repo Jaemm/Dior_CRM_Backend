@@ -115,4 +115,3 @@ export class DiorCompanyConsultantsController {
         return res.status(200).send(result);
     }
 }
-

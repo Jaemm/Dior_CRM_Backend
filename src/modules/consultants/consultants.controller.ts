@@ -177,26 +177,6 @@ export class ConsultantsController {
         return res.status(200).send({ ...loginResult });
     }
 
-    @Post('login/saml')
-    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
-    async loginWithSaml(
-        @Res() res: Response,
-        @Body() body: { samlResponse: string },
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ): Promise<any> {
-        try {
-            const email = await this.samlService.extractEmailFromSaml(body.samlResponse);
-
-            const samlDto: LoginSamlDto = { email };
-
-            const loginResult = await this.consultants.loginRuby(samlDto as any, locale); // 타입 강제 or 로그인 서비스 확장
-
-            return res.status(200).send({ ...loginResult });
-        } catch (error) {
-            return res.status(401).send({ message: 'SAML authentication failed', detail: error.message });
-        }
-    }
-
     @Get('login/saml')
     async redirectToOkta(@Res() res: Response) {
         const loginUrl = this.samlService.getSsoLoginUrl();
@@ -206,15 +186,30 @@ export class ConsultantsController {
     @Post('login/saml')
     async handleSamlResponse(
         @Body() body: { SAMLResponse: string },
-        @Headers('X-CHOWIS-LOCALE') locale: string = 'en',
+        @Query('redirect') redirect = 'https://dior-backoffice-git-dev-chowis1.vercel.app/login',
+        @Headers('X-CHOWIS-LOCALE') locale = 'en',
         @Res() res: Response,
     ) {
         try {
             const email = await this.samlService.extractEmailFromSaml(body.SAMLResponse);
             const loginResult = await this.consultants.loginWithEmailOnly(email, locale);
-            return res.status(200).send(loginResult);
+
+            console.log('[SAML 로그인 성공] email:', email);
+            console.log('[LoginResult]', loginResult);
+
+            const query = new URLSearchParams({
+                samlLogin: 'true',
+                token: loginResult.token,
+                name: loginResult.name,
+                id: loginResult.id.toString(),
+            }).toString();
+
+            console.log('[리다이렉트 URL]', `${redirect}?${query}`);
+
+            return res.redirect(`${redirect}?${query}`);
         } catch (err) {
-            return res.status(401).send({ message: 'SAML login failed', error: err.message });
+            console.error('[SAML 로그인 실패]', err);
+            return res.redirect(`${redirect}?error=saml_failed`);
         }
     }
 

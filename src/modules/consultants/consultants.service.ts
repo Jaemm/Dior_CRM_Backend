@@ -1,21 +1,3 @@
-import * as csv from 'csv';
-import { createWriteStream, existsSync } from 'fs';
-import * as moment from 'moment';
-import * as path from 'path';
-
-import {
-    BadRequestException,
-    ConflictException,
-    ForbiddenException,
-    Injectable,
-    InternalServerErrorException,
-    NotFoundException,
-    UnauthorizedException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { TokenTypeEnum } from 'src/jwt/enums/auth-token.enum';
-import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Repository } from 'typeorm';
-
 import {
     Consultants,
     Customers,
@@ -56,13 +38,29 @@ import {
     UpdateLicenseDto,
     UpdatePasswordDto,
 } from '@/src/modules/consultants/consultants.dto';
+import {
+    BadRequestException,
+    ConflictException,
+    ForbiddenException,
+    Injectable,
+    InternalServerErrorException,
+    NotFoundException,
+    UnauthorizedException,
+} from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import * as argon2 from 'argon2';
 import axios from 'axios';
 import * as bcrypt from 'bcrypt';
+import * as csv from 'csv';
 import { Request } from 'express';
+import { createWriteStream, existsSync } from 'fs';
 import * as jwt from 'jsonwebtoken';
+import * as moment from 'moment';
+import * as path from 'path';
 import { CommonService } from 'src/common/common.service';
+import { TokenTypeEnum } from 'src/jwt/enums/auth-token.enum';
 import { JwtService } from 'src/jwt/jwt.service';
+import { FindOptionsSelect, FindOptionsSelectByString, ILike, In, Not, Repository } from 'typeorm';
 import { AuthService } from '../auth/auth.service';
 const Client = require('ssh2-sftp-client');
 
@@ -886,22 +884,27 @@ export class ConsultantsService {
     }
 
     async loginWithEmailOnly(email: string, locale = 'en') {
-        const consultant = await this.consultantsRepository.findOne({
+        console.log('[SAML] 입력된 이메일:', email);
+
+        let consultant = await this.consultantsRepository.findOne({
             where: { email },
         });
 
         if (!consultant) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
-                error: 'No user found with this email',
-            });
-        }
+            console.warn('[SAML] 해당 이메일의 사용자가 없어 임시 계정을 생성합니다.');
 
-        if (!consultant.email_confirmed) {
-            throw new BadRequestException({
-                result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
-                error: ResponseMessages.EmailNotConfirmed,
+            consultant = this.consultantsRepository.create({
+                email,
+                name: 'SAML 임시 사용자',
+                consultant_company_id: 213,
+                app_id: 88,
+                country: 'France',
+                created_at: new Date(),
+                updated_at: new Date(),
+                email_confirmed: true,
             });
+
+            await this.consultantsRepository.save(consultant);
         }
 
         const [accessToken, refreshToken] = await this.authService.generateAuthTokens(

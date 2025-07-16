@@ -1,28 +1,34 @@
-import * as Joi from '@hapi/joi';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { AwsS3Module } from './common/awsS3/awsS3.module';
-import { CommonModule } from './common/common.module';
-import config from './config/config.schema';
-import { cndpSkinDB, diorCndpSkinDB, globalDB } from './config/typeOrm.config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import * as Joi from '@hapi/joi';
+import { globalDB, cndpSkinDB, diorCndpSkinDB } from './config/typeOrm.config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './modules/auth/auth.module';
+import { CommonModule } from './common/common.module';
 import { ConsultantsModule } from './modules/consultants/consultants.module';
-import { CustomersModule } from './modules/customers/customers.module';
-import { DataReplicationModule } from './modules/dataReplication/dataReplication.module';
 import { DiorModule } from './modules/dior/dior.module';
+import { AwsS3Module } from './common/awsS3/awsS3.module';
 import { ImageModule } from './modules/image/image.module';
+import config from './config/config.schema';
+import { DataReplicationModule } from './modules/dataReplication/dataReplication.module';
+import { CustomersModule } from './modules/customers/customers.module';
+
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthMiddleware } from './common/middleWare/authMiddlware/auth.middleware';
-import { APP_FILTER, APP_GUARD } from '@nestjs/core';
-import { RolesGuard } from './common/guards/roles.guard';
-import { AllExceptionsFilter } from './common/middleWare/exceptions/exceptionHandling/allException.filter';
-import { LoggingMiddleware } from './common/middleWare/logMiddleWare/logging.middleware';
+
+import { ProductsModule } from './modules/products/products.module';
 import { HealthModule } from './modules/apiHealthCheck/apiHealth.module';
 import { CRMModule } from './modules/crm/crm.module';
-import { ProductsModule } from './modules/products/products.module';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './common/guards/roles.guard';
+// import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { AllExceptionsFilter } from './common/middleWare/exceptions/exceptionHandling/allException.filter';
+import { LoggingMiddleware } from './common/middleWare/logMiddleWare/logging.middleware';
+
 import { DevtoolsModule } from '@nestjs/devtools-integration';
-import { ScheduleModule } from '@nestjs/schedule';
+import { DatabaseModule } from './modules/database/database.module';
 import {
     ConsultantShopsRepository,
     DevicesRepository,
@@ -31,9 +37,9 @@ import {
     SkinColorGroupsRepository,
 } from './common/repositories/crm';
 import { CountriesRepository } from './common/repositories/crm/countries.repository';
-import { DatabaseModule } from './modules/database/database.module';
-import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
 import { UtilsModule } from './modules/utils/utils.module';
+import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -72,6 +78,7 @@ import { UtilsModule } from './modules/utils/utils.module';
 
         DevtoolsModule.register({
             http: process.env.NODE_ENV !== 'production',
+            port: Number(process.env.NEST_DEVTOOLS_PORT) || 8010,
         }),
 
         ScheduleModule.forRoot(),

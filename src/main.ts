@@ -9,7 +9,7 @@ async function bootstrap() {
     const SSL = process.env.SSL;
     const HOSTNAME = process.env.HOSTNAME;
 
-    const httpsOptions: null = null;
+    const httpsOptions = null;
     const app = await NestFactory.create(AppModule, {
         httpsOptions,
         rawBody: true,
