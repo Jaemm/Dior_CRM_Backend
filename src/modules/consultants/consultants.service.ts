@@ -884,10 +884,19 @@ export class ConsultantsService {
     }
 
     async loginWithEmailOnly(email: string, locale = 'en') {
-        console.log('[SAML] 입력된 이메일:', email);
 
         let consultant = await this.consultantsRepository.findOne({
             where: { email },
+                relations: [
+                    'products',
+                    'products.device',
+                    'products.license',
+                    'products.application',
+                    'country_details',
+                    'consultant_position',
+                    'consultant_company',
+                    'consultant_branch',
+                ],
         });
 
         if (!consultant) {
@@ -895,7 +904,7 @@ export class ConsultantsService {
 
             consultant = this.consultantsRepository.create({
                 email,
-                name: 'SAML 임시 사용자',
+                name: 'SAML User',
                 consultant_company_id: 213,
                 app_id: 88,
                 country: 'France',
@@ -919,6 +928,7 @@ export class ConsultantsService {
         return {
             token: accessToken,
             refresh_token: refreshToken,
+            role: consultant.consultant_position?.name ,
             ...consultant.getConsultantsInfo,
         };
     }

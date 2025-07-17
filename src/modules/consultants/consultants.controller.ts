@@ -193,18 +193,15 @@ export class ConsultantsController {
         try {
             const email = await this.samlService.extractEmailFromSaml(body.SAMLResponse);
             const loginResult = await this.consultants.loginWithEmailOnly(email, locale);
-
-            console.log('[SAML 로그인 성공] email:', email);
-            console.log('[LoginResult]', loginResult);
-
+            
             const query = new URLSearchParams({
                 samlLogin: 'true',
                 token: loginResult.token,
+                refresh_token: loginResult.refresh_token,
                 name: loginResult.name,
                 id: loginResult.id.toString(),
+                role: loginResult.role || 'Consultant',
             }).toString();
-
-            console.log('[리다이렉트 URL]', `${redirect}?${query}`);
 
             return res.redirect(`${redirect}?${query}`);
         } catch (err) {
