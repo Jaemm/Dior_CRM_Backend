@@ -68,10 +68,11 @@ export class DiorDevicesService {
 
             let devicesQuery = this.devicesRepository
                 .createQueryBuilder('device')
-                .leftJoinAndSelect('device.products', 'products')
-                .leftJoinAndSelect('products.consultant', 'consultant')
-                .leftJoinAndSelect('consultant.consultant_branch', 'consultant_branch')
-                .where('device.id IN (:...productDeviceIds)', { productDeviceIds });
+                // .leftJoinAndSelect('device.products', 'products')
+                // .leftJoinAndSelect('products.consultant', 'consultant')
+                // .leftJoinAndSelect('consultant.consultant_branch', 'consultant_branch')
+                // .where('device.id IN (:...productDeviceIds)', { productDeviceIds });
+                .where('device.consultant_company_id = :diorCompanyId', { diorCompanyId: 213 });
 
             devicesQuery = devicesQuery.orWhere('device.consultant_company_id = :diorCompanyId', {
                 diorCompanyId: 213,
@@ -179,8 +180,6 @@ export class DiorDevicesService {
                     device_id: String(device_id),
                 },
             });
-
-            console.log('===>', productCount);
 
             let product;
             if (productCount > 1) {
