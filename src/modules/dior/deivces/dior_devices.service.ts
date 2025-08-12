@@ -31,13 +31,11 @@ export class DiorDevicesService {
         try {
             const userId = (<{ id: string }>req.user).id;
 
-            // Step 1: Get the current consultant
             const currentConsultant = await this.consultantsRespository.getConsultantById(userId, [
                 'consultant_branch',
             ]);
             const positionId = currentConsultant.consultant_position_id;
 
-            // Step 2: Build consultants query based on positionId
             const consultantsQuery = this.consultantsRespository.createQueryBuilder('consultants');
 
             if ([5, 6].includes(Number(positionId))) {
@@ -54,25 +52,20 @@ export class DiorDevicesService {
                 });
             }
 
-            // Step 3: Exclude specific consultant IDs
             consultantsQuery.andWhere('consultants.id NOT IN (:...consultantIds)', {
                 consultantIds: [11156, 9304],
             });
 
             const consultants = await consultantsQuery.getMany();
 
-            // Step 4: Fetch products associated with consultants
             const products = await this.productsRepository.find({
                 where: {
                     consultant_id: In(consultants.map((row) => row.id)),
                 },
             });
 
-            // Step 5: Fetch devices based on product IDs
             const productDeviceIds = products.map((product) => product.device_id);
 
-            // getConsultant
-            // consultant_branch
             let devicesQuery = this.devicesRepository
                 .createQueryBuilder('device')
                 .leftJoinAndSelect('device.products', 'products')
@@ -84,22 +77,16 @@ export class DiorDevicesService {
                 diorCompanyId: 213,
             });
 
-            // Step 6: Exclude specific optic numbers
             devicesQuery = devicesQuery.andWhere('device.optic_number NOT IN (:...excludedOptics)', {
                 excludedOptics: ['FAB02135', 'FAB02363', 'FAB02709', 'DVAA4496'],
             });
 
-            // Step 7: Apply exact search filter if present
-
-            // Step 8: Pagination
             const searchPage = Number(query?.page || 1);
             const searchPer = Number(query?.limit || 25);
 
-            // Fetch devices and count
-            let [devices, totalCount] = await devicesQuery
-                .skip((searchPage - 1) * searchPer)
-                .take(searchPer)
-                .getManyAndCount();
+            let allDevices = await devicesQuery.getMany();
+            let totalCount = allDevices.length;
+            let devices = allDevices.slice((searchPage - 1) * searchPer, searchPage * searchPer);
 
             if (query.search) {
                 let searchQuery = this.devicesRepository
@@ -123,7 +110,6 @@ export class DiorDevicesService {
                 totalCount = count;
             }
 
-            // Step 9: Reformat devices for output
             const reformatDevices: DeviceForDiorT[] = devices.map((device) => {
                 const consultant = device.getConsultant();
                 const pos = device.getConsultantShop();
@@ -161,7 +147,6 @@ export class DiorDevicesService {
                 };
             });
 
-            // Return the result with pagination info
             return {
                 data: reformatDevices,
                 total_size: totalCount,
@@ -175,7 +160,6 @@ export class DiorDevicesService {
         }
     }
 
-    // 1971
     async resetConnect(req: Request, body: ResetConnectDto, locale = 'en') {
         try {
             const userId = (<{ id: string }>req.user).id;

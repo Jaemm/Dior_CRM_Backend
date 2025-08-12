@@ -203,18 +203,5 @@ export class Devices {
             return this.products[0]?.consultant?.consultant_branch ?? null;
         }
         return null;
-        // getConsultantShop
     }
 }
-
-// for get consultant it get the value for the productsEntity as foolow
-// consultant is a
-
-// getConsultant() {
-//     console.log('==========> DEVICES', this.products ?? null);
-//     if (this.products && this.products.length > 0) {
-//         return this.products[0].consultant;
-//     }
-
-//     return null;
-// }
