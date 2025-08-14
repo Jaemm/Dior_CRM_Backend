@@ -198,7 +198,6 @@ export class StatisticsService {
                     .where('devices.id IN (:...productDeviceIds)', { productDeviceIds })
                     .orWhere('devices.id IN (:...diorDeviceIds)', { diorDeviceIds })
                     .getMany();
-
             }
 
             const deviceArray: any = devices;
@@ -557,8 +556,7 @@ export class StatisticsService {
             }
 
             const currentConsultant = await this.consultantRepository.getConsultantById(userId, ['consultant_branch']);
-
-            const diorCompanyId = 213; //await this.consultantRepository.getDiorConsultantCompanyId();
+            const diorCompanyId = 213;
 
             let consultants;
             if (currentConsultant.consultant_position_id === PositionsIds.ADMIN) {
@@ -584,7 +582,6 @@ export class StatisticsService {
             }
 
             let data: any = {};
-
             if (stat_type === 'stores') {
                 const branchQuery = await this.consultantBranchesRepository.createQueryBuilder('branch');
                 if (
@@ -609,30 +606,27 @@ export class StatisticsService {
                 }
 
                 const branches = await branchQuery.getMany();
-
                 const countries = (
                     await this.consultantCountriesRepository.find({
                         select: ['name'],
-                        where: {
-                            consultantCompanyId: diorCompanyId,
-                        },
+                        where: { consultantCompanyId: diorCompanyId },
                     })
                 ).map((c) => c.name);
 
                 const countryBranchCounts: { [country: string]: any } = {};
                 for (const country of countries) {
-                    const branchQuery = this.consultantBranchesRepository
+                    const branchCountQuery = this.consultantBranchesRepository
                         .createQueryBuilder('branch')
                         .select('COUNT(*) AS count_all')
                         .where('branch.country = :country', { country });
 
                     if (start_date && end_date) {
-                        branchQuery.andWhere(
+                        branchCountQuery.andWhere(
                             `branch.createdAt BETWEEN ${start_date} 00:00:00 AND ${end_date} 23:59:59`,
                         );
                     }
 
-                    const count = await branchQuery.getRawOne();
+                    const count = await branchCountQuery.getRawOne();
                     countryBranchCounts[country] = count;
                 }
 
@@ -649,18 +643,14 @@ export class StatisticsService {
 
                 const transformedData: any = {};
                 for (const country in countryBranchCounts) {
-                    if (countryBranchCounts.hasOwnProperty(country)) {
-                        transformedData[country] = Number(countryBranchCounts[country].count_all);
-                    }
+                    transformedData[country] = Number(countryBranchCounts[country].count_all);
                 }
-                data = {
-                    total_count: branches.length,
-                    data: transformedData,
-                };
+
+                data = { total_count: branches.length, data: transformedData };
             } else if (stat_type === 'devices') {
                 let devices: Devices[] = [];
-
                 const deviceQuery = await this.devicesRepository.createQueryBuilder('devices');
+
                 if (currentConsultant.consultant_position_id === PositionsIds.BRAND_MANAGER) {
                     const consultants = await this.consultantRepository.find({
                         where: { id: Not(In([11156, 9304])) },
@@ -668,25 +658,17 @@ export class StatisticsService {
 
                     if (consultants.length > 0) {
                         const productDevices = await this.productRepository.find({
-                            where: {
-                                consultant_id: In(consultants.map((c) => c.id)),
-                            },
+                            where: { consultant_id: In(consultants.map((c) => c.id)) },
                         });
 
                         deviceQuery
-                            .andWhere('devices.consultant_company_id = :companyId', {
-                                companyId: diorCompanyId,
-                            })
-                            .andWhere('devices.id IN (:...ids)', {
-                                ids: productDevices.map((p) => p.id),
-                            });
+                            .andWhere('devices.consultant_company_id = :companyId', { companyId: diorCompanyId })
+                            .andWhere('devices.id IN (:...ids)', { ids: productDevices.map((p) => p.id) });
                     }
                 } else if (
                     [PositionsIds.SUPER_ADMIN, PositionsIds.ADMIN].includes(currentConsultant.consultant_position_id)
                 ) {
-                    deviceQuery.andWhere('devices.consultant_company_id = :companyId', {
-                        companyId: diorCompanyId,
-                    });
+                    deviceQuery.andWhere('devices.consultant_company_id = :companyId', { companyId: diorCompanyId });
                 }
 
                 deviceQuery.andWhere('devices.optic_number NOT IN (:...excludeList)', {
@@ -700,111 +682,96 @@ export class StatisticsService {
                 }
 
                 devices = await deviceQuery.getMany();
-
                 const countryList = (
-                    await this.consultantCountriesRepository.find({
-                        where: {
-                            consultantCompanyId: diorCompanyId,
-                        },
-                    })
+                    await this.consultantCountriesRepository.find({ where: { consultantCompanyId: diorCompanyId } })
                 ).map((c) => c.code);
 
                 const jsonData: { [country: string]: number } = {};
                 for (const country of countryList) {
                     const countQuery = this.devicesRepository
                         .createQueryBuilder('devices')
-                        .where('devices.consultant_company_id = :companyId', {
-                            companyId: diorCompanyId,
-                        });
+                        .where('devices.consultant_company_id = :companyId', { companyId: diorCompanyId });
+
                     if (!country || country === '') {
                         countQuery.andWhere("(devices.country_code IS NULL OR devices.country_code = '' )");
                     } else {
                         countQuery.andWhere('LOWER(devices.country_code) = :country', {
-                            country: country.toLocaleLowerCase(),
+                            country: country.toLowerCase(),
                         });
                     }
 
                     const count = await countQuery.getCount();
-
                     jsonData[country] = count;
                 }
-                const unknownQuery = this.devicesRepository.createQueryBuilder('device');
 
+                const unknownQuery = this.devicesRepository.createQueryBuilder('device');
                 if (start_date && end_date) {
                     unknownQuery.andWhere(
                         `device.refresh_date BETWEEN ${start_date} 00:00:00 AND ${end_date} 23:59:59`,
                     );
                 }
-                //
+
                 jsonData['unknown_country'] = await unknownQuery
                     .where("device.country_code IS NULL OR device.country_code = ''")
                     .getCount();
 
-                data = {
-                    total_count: devices.length,
-                    data: jsonData,
-                };
+                data = { total_count: devices.length, data: jsonData };
             } else if (stat_type === 'consultations') {
-                // Get countries name
+
                 const countries = await this.consultantCountriesRepository.find({
                     where: { consultantCompanyId: diorCompanyId },
                 });
-
-                // Extract country names and convert to lowercase
                 const countryNames = countries.map((c) => c.name.toLowerCase());
 
-                // Get consultant IDs from the analysis API argument
                 const consultantIdArray = await this.analysisDataReplicationService.getConsultantIds(
                     start_date,
                     end_date,
                 );
                 const consultantIds = [...new Set(consultantIdArray.map((c: any) => c.consultantId))];
+                console.log(`[DEBUG] consultantIds length: ${consultantIds.length}`);
 
-                const jsonData: { [country: string]: number } = {};
+                const jsonData: Record<string, number> = {};
+                countryNames.forEach((country) => (jsonData[country] = 0));
 
-                // Initialize jsonData with zero counts for all countries
-                for (const country of countryNames) {
-                    jsonData[country] = 0; // Start with zero count for each country
-                }
-
-                // Find all consultants matching the provided country names and IDs in a single query
-                const consultants = await this.consultantRepository
+                console.time('[consultantByCountry]');
+                const consultantsRaw = await this.consultantRepository
                     .createQueryBuilder('consultants')
-                    .select('consultants.id, lower(consultants.country) as country')
+                    .select('consultants.id', 'id')
+                    .addSelect('LOWER(consultants.country)', 'country')
                     .where('consultants.id IN (:...ids)', { ids: consultantIds })
                     .andWhere(
                         new Brackets((qb) => {
-                            qb.where('lower(consultants.country) IN (:...countries)', {
+                            qb.where('LOWER(consultants.country) IN (:...countries)', {
                                 countries: countryNames,
                             }).orWhere('consultants.country IS NULL');
                         }),
                     )
                     .getRawMany();
+                console.timeEnd('[consultantByCountry]');
 
-                // Prepare a map to hold the counts per country
-                const countryConsultantMap: { [key: string]: number[] } = {};
-
-                // Organize consultant IDs by country
-                for (const consultant of consultants) {
-                    const country = consultant.country;
-                    if (!countryConsultantMap[country]) {
-                        countryConsultantMap[country] = [];
+                const countryConsultantMap = new Map<string, number[]>();
+                for (const { id, country } of consultantsRaw) {
+                    const key = country || 'null';
+                    if (!countryConsultantMap.has(key)) {
+                        countryConsultantMap.set(key, []);
                     }
-                    countryConsultantMap[country].push(consultant.id);
+                    countryConsultantMap.get(key)!.push(id);
                 }
-                const countPromises = Object.keys(countryConsultantMap).map(async (country) => {
-                    const _ids = countryConsultantMap[country];
-                    if (_ids.length > 0) {
-                        const count = await this.analysisDataReplicationService.statististic(
-                            _ids,
-                            start_date,
-                            end_date,
-                        );
-                        jsonData[country] = count;
-                    }
-                });
 
-                await Promise.all(countPromises);
+                console.time('[statististic_counts]');
+                await Promise.all(
+                    Array.from(countryConsultantMap.entries()).map(async ([country, ids]) => {
+                        if (ids.length > 0) {
+                            const count = await this.analysisDataReplicationService.statististic(
+                                ids,
+                                start_date,
+                                end_date,
+                            );
+                            jsonData[country] = count;
+                        }
+                    }),
+                );
+                console.timeEnd('[statististic_counts]');
 
                 const totalConsultation = await this.analysisDataReplicationService.getConsultantCountsForStatDetails(
                     null,
@@ -817,23 +784,16 @@ export class StatisticsService {
 
                 jsonData['null'] = totalConsultation - totalWithCountry;
 
-                function logMappedCountryCount(countryData: { [country: string]: number }) {
-                    const countryCount = Object.keys(countryData).length;
-               }
+                console.log(`[DEBUG] totalConsultation: ${totalConsultation}`);
+                console.log(`[DEBUG] totalWithCountry: ${totalWithCountry}`);
+                console.log(`[DEBUG] jsonData:`, jsonData);
 
-                const nullCountries = await this.consultantRepository
-                    .createQueryBuilder('consultants')
-                    .select('consultants.id, consultants.country')
-                    .where('consultants.id IN (:...ids)', { ids: consultantIds })
-                    .andWhere("consultants.country IS NULL OR consultants.country = ''")
-                    .getRawMany();
-
-                data = {
-                    total_count: totalConsultation,
-                    data: jsonData,
-                };
-                logMappedCountryCount(jsonData);
+                data = { total_count: totalConsultation, data: jsonData };
+                console.timeEnd('[getStatDetails][consultations] 전체 수행 시간');
             } else if (stat_type === 'clients') {
+                /** ------------------------------------------------
+                 *  clients
+                 * ------------------------------------------------ */
                 const dateRangeCondition =
                     start_date && end_date
                         ? `customers.created_at BETWEEN '${start_date} 00:00:00' AND '${end_date} 23:59:59'`
@@ -852,17 +812,11 @@ export class StatisticsService {
                     .getRawMany();
 
                 const countries = (
-                    await this.consultantCountriesRepository.find({
-                        where: {
-                            consultantCompanyId: diorCompanyId,
-                        },
-                    })
+                    await this.consultantCountriesRepository.find({ where: { consultantCompanyId: diorCompanyId } })
                 ).map((c) => c.name.toLowerCase());
 
                 const jsonData: { [country: string]: number } = {};
-                countries.forEach((country) => {
-                    jsonData[country] = 0;
-                });
+                countries.forEach((country) => (jsonData[country] = 0));
 
                 consultantCountryCounts.forEach(({ country, count }) => {
                     jsonData[country || 'unknown_country'] = parseInt(count, 10);
@@ -873,7 +827,6 @@ export class StatisticsService {
                     [PositionsIds.ADMIN, PositionsIds.BRAND_MANAGER].includes(currentConsultant.consultant_position_id)
                 ) {
                     const consultantIds = consultants.map((c) => c.id);
-
                     if (consultantIds.length > 0) {
                         totalClients = await this.customerRepository
                             .createQueryBuilder('customers')
@@ -906,15 +859,12 @@ export class StatisticsService {
 
                 delete jsonData['0'];
 
-                data = {
-                    total_count: totalClients,
-
-                    data: jsonData,
-                };
+                data = { total_count: totalClients, data: jsonData };
             }
 
             return data;
         } catch (e) {
+            console.error('[getStatDetails] Error:', e);
             throw e;
         }
     }
