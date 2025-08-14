@@ -143,18 +143,12 @@ export class AnalysisDataReplicationService {
                 .createQueryBuilder('analysis')
                 .where("analysis.args->>'status' LIKE '%true'");
 
-            if (startDate && endDate) {
-                globalQueryPromise.andWhere(
-                    `analysis.created_time BETWEEN ${startDate} 00:00:00 AND ${endDate} 23:59:59`,
-                );
-            }
-
-            const [diorConsultations, globalConsultations] = await Promise.all([
+            const [diorConsultations] = await Promise.all([
                 diorQueryPromise.getMany(),
                 globalQueryPromise.getMany(),
             ]);
 
-            const combinedConsultations = [...diorConsultations, ...globalConsultations];
+            const combinedConsultations = [...diorConsultations];
 
             return combinedConsultations;
         } catch (e) {

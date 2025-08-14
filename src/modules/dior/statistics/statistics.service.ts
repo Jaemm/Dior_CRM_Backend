@@ -420,7 +420,6 @@ export class StatisticsService {
                     });
                 }
 
-                // collection shades
                 const recommShadeList = await this.productRecommendationRepository
                     .createQueryBuilder('recommendtaions')
                     .where('recommendtaions.collection = :collection', {
@@ -432,7 +431,6 @@ export class StatisticsService {
                 const collectionShades = recommShadeList.map((recomm) => recomm.shades);
 
                 let productTranslations: any = [];
-                // product translations
                 if (refRecommendation || recommendation) {
                     const oneOfRecomm = refRecommendation || recommendation;
 
@@ -485,13 +483,11 @@ export class StatisticsService {
                     productTranslations = await Promise.all(promiseTranslations);
                 }
 
-                // category
                 const categoryTranslations = await this.productAttributesRepository.getTranslationsByType(
                     'Category',
                     recommendation.category,
                 );
 
-                // collection
                 const collectionTranslations = await this.productAttributesRepository.getTranslationsByType(
                     'Collection',
                     recommendation.collection,
@@ -728,12 +724,10 @@ export class StatisticsService {
                     end_date,
                 );
                 const consultantIds = [...new Set(consultantIdArray.map((c: any) => c.consultantId))];
-                console.log(`[DEBUG] consultantIds length: ${consultantIds.length}`);
 
                 const jsonData: Record<string, number> = {};
                 countryNames.forEach((country) => (jsonData[country] = 0));
 
-                console.time('[consultantByCountry]');
                 const consultantsRaw = await this.consultantRepository
                     .createQueryBuilder('consultants')
                     .select('consultants.id', 'id')
@@ -771,8 +765,6 @@ export class StatisticsService {
                         }
                     }),
                 );
-                console.timeEnd('[statististic_counts]');
-
                 const totalConsultation = await this.analysisDataReplicationService.getConsultantCountsForStatDetails(
                     null,
                     start_date,
@@ -783,17 +775,8 @@ export class StatisticsService {
                     .reduce((sum, [, value]) => sum + value, 0);
 
                 jsonData['null'] = totalConsultation - totalWithCountry;
-
-                console.log(`[DEBUG] totalConsultation: ${totalConsultation}`);
-                console.log(`[DEBUG] totalWithCountry: ${totalWithCountry}`);
-                console.log(`[DEBUG] jsonData:`, jsonData);
-
                 data = { total_count: totalConsultation, data: jsonData };
-                console.timeEnd('[getStatDetails][consultations] 전체 수행 시간');
             } else if (stat_type === 'clients') {
-                /** ------------------------------------------------
-                 *  clients
-                 * ------------------------------------------------ */
                 const dateRangeCondition =
                     start_date && end_date
                         ? `customers.created_at BETWEEN '${start_date} 00:00:00' AND '${end_date} 23:59:59'`
@@ -864,7 +847,7 @@ export class StatisticsService {
 
             return data;
         } catch (e) {
-            console.error('[getStatDetails] Error:', e);
+            console.error(e);
             throw e;
         }
     }
