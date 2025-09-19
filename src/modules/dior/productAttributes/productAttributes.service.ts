@@ -27,8 +27,6 @@ import { ProductAttributes } from '@/src/common/entities/crmEntities';
 export class DiorProductAttributesService {
     constructor(
         private readonly commonService: CommonService,
-
-        // Repos
         private readonly consultantsRepository: ConsultantsRepository,
         private readonly productAttributesRepository: ProductAttributesRepository,
         private readonly productAttributeTranslationsRepository: ProductAttributeTranslationsRepository,

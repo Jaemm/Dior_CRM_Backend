@@ -36,7 +36,6 @@ export class DiorDeivcesConroller {
         @Body() body: ResetConnectDto,
         @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
-        console.log('=======>', body);
         const result = await this.diorDevicesService.resetConnect(req, body, locale);
         return res.status(200).send(result);
     }

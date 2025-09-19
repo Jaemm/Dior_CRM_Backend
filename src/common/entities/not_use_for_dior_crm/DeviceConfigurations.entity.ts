@@ -1,5 +1,4 @@
 import { Column, Entity, Index, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
-// import { Devices } from './Devices.entity';
 
 @Index('device_configurations_pkey', ['id'], { unique: true })
 @Index('optic_number_unique', ['optic_number'], { unique: true })
@@ -36,10 +35,4 @@ export class DeviceConfigurations {
     })
     updatedTime: Date;
 
-    // @OneToOne(() => Devices, (devices) => devices.deviceConfigurations, {
-    //   onDelete: "CASCADE",
-    //   onUpdate: "CASCADE",
-    // })
-    // @JoinColumn([{ name: "optic_number", referencedColumnName: "optic_number" }])
-    // opticNumber2: Devices;
 }

@@ -14,8 +14,6 @@ import { CommonService } from '@/src/common/common.service';
     providers: [
         CommonService,
         ProductRecommendationGroupsService,
-
-        // Repos
         ProductRecommendationRepository,
         ProductRecommendationSelectedRepository,
         ProductRecommendationGroupsRepository,

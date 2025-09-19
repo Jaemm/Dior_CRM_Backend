@@ -15,7 +15,6 @@ import { ApiTags } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { AwsS3Service } from 'src/common/awsS3/awsS3.service';
 
-// @UseGuards(JwtAuthGuard)
 @ApiTags('Image')
 @Controller('image')
 export class ImageController {

@@ -3,18 +3,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import {
     Applications,
-    //
     Consultants,
     ConsultantShops,
     ConsultantBranches,
     ConsultantCompanies,
-    //
     Customers,
     Countries,
-    //
     Devices,
     DiorCustomerConsents,
-    //
     Products,
 } from '@/src/common/entities/crmEntities';
 
@@ -113,12 +109,9 @@ import { CountriesRepository } from '@/src/common/repositories/crm/countries.rep
     ],
     controllers: [CRMController],
     providers: [
-        // Services
         CRMService,
         JwtService,
         AwsS3Service,
-
-        // Repos
         CustomersRepository,
         ConsultantsRepository,
         CountriesRepository,

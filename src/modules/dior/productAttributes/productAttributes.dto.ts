@@ -89,7 +89,6 @@ export class ImportProductAttributeTranslationsDataDto {
     country: string;
 }
 
-// protected
 class productTranslationsDto {
     @IsOptional()
     @IsString()

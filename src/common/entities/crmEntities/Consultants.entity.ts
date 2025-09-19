@@ -227,7 +227,7 @@ export class Consultants {
     })
     @JoinColumn([{ name: 'consultant_shop_id', referencedColumnName: 'id' }])
     'consultant_shop': ConsultantShops;
-    //
+
     @ManyToOne(() => ConsultantBranches, (branches: ConsultantBranches) => branches.consultants, {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
@@ -302,7 +302,6 @@ export class Consultants {
         };
     }
 
-    // Deprecated
     get 'getProducts'(): object {
         if (this.products) {
             return this.products;
@@ -312,7 +311,6 @@ export class Consultants {
 
     get 'getOpticNumbers'(): string[] | null {
         if (this.products && this.products.length > 0) {
-            // Map each product's optic_number to an array
             return this.products.map((product) => {
                 if (product.device) {
                     return product.device.optic_number;
@@ -338,7 +336,6 @@ export class Consultants {
 
     get 'getSerialNumbers'(): string[] | null {
         if (this.products && this.products.length > 0) {
-            // Map each product's serial_number to an array
             return this.products.map((product) => product.device?.serial_number);
         }
         return [];

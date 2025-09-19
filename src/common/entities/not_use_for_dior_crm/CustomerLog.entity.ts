@@ -1,6 +1,4 @@
 import { Column, Entity, Index, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
-// import { Customers } from './Customers.entity';
-// import { Consultants } from './Consultants.entity';
 
 @Index('customer_log_pkey', ['id'], { unique: true })
 @Index('index_customer_log_on_consultant_id', ['consultant_id'], {})

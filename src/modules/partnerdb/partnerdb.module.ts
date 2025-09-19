@@ -25,8 +25,6 @@ import { ConsultantsModule } from '../consultants/consultants.module';
         PartnerDbService,
         AuthService,
         JwtService,
-
-        // Repos
         ApplicationsRepository,
         CustomersRepository,
         ConsultantsRepository,
@@ -57,4 +55,3 @@ export class PartnerDbModule {
             });
     }
 }
-//

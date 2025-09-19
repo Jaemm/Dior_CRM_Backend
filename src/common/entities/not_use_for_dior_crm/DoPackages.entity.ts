@@ -2,8 +2,6 @@ import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGenerat
 import { DoPackingSpec } from './DoPackingSpec.entity';
 import { DoProductPortfolio } from './DoProductPortfolio.entity';
 import { DoProductSort } from './DoProductSort.entity';
-// import { PackageRelation } from './PackageRelation.entity';
-
 @Index('do_packages_pkey', ['id'], { unique: true })
 @Entity('do_packages', { schema: 'public' })
 export class DoPackages {
@@ -42,9 +40,4 @@ export class DoPackages {
     @JoinColumn([{ name: 'product_sort', referencedColumnName: 'id' }])
     productSort: DoProductSort;
 
-    // @OneToMany(
-    //   () => PackageRelation,
-    // (packageRelation) => packageRelation.package
-    // )
-    // packageRelations: PackageRelation[];
 }

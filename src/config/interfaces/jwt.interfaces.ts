@@ -5,8 +5,6 @@ export interface ISingleJwt {
 
 export interface IAccessJwt {
     secret: string;
-    // publicKey: string;
-    // privateKey: string;
     time: number;
 }
 

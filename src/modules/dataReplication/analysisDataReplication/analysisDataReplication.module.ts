@@ -9,9 +9,6 @@ import { TypeMeasurements } from '@/src/common/entities/analysisEntities/TypeMea
 
 @Module({
     imports: [
-        // PassportModule.register({ defaultStrategy: 'jwt' }),
-        // JwtModule.register({ secret: process.env.JWT_REFRESH_TOKEN_SECRET, signOptions: { expiresIn: '1d' } }),
-
         TypeOrmModule.forFeature([Analysis, Measurements, TypeImages, TypeMeasurements], 'cndpSkinDB'),
 
         TypeOrmModule.forFeature([Analysis, Measurements, TypeImages, TypeMeasurements], 'diorCndpSkinDB'),

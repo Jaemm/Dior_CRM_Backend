@@ -1,18 +1,12 @@
-/*
-  Chowis 2023
-  Paul Kapuku
-*/
-
 import { ApiProperty } from '@nestjs/swagger';
 import { Allow, IsNotEmpty } from 'class-validator';
 
-// All tokens will contain these value
 export interface ITokenBase {
-    iat: number; // issued at
-    exp: number; // expiration
-    iss: string; // issuer
-    aud: string; //audience
-    sub: string; // subject
+    iat: number;
+    exp: number;
+    iss: string;
+    aud: string;
+    sub: string;
 }
 
 export class Tokens {
@@ -30,7 +24,4 @@ export interface SocialInterface {
     firstName?: string;
     lastName?: string;
     email?: string;
-    // app_id?: number;
-    // social?: string;
-    // appType: string; // b2b or b2c
 }

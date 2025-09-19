@@ -30,13 +30,6 @@ export class ProductRecommendationSelectedsService {
         try {
             const { customer_id, batch_id } = query;
 
-            // const prsQuery = this.prSelectedRepository
-            //     .createQueryBuilder('prSelected')
-            //     .where('prSelected.customer_id = :customerId', { customerId: Number(customer_id) })
-            //     .orderBy('order_number')
-            //     .leftJoinAndSelect('prSelected.productRecommendation', 'productRecommendation');
-
-            console.log(customer_id, customer_id !== null);
             const prsQuery = this.prSelectedRepository
                 .createQueryBuilder('prSelected')
                 .where('prSelected.batch_id = :batchId', { batchId: batch_id })
@@ -52,12 +45,6 @@ export class ProductRecommendationSelectedsService {
                 .orderBy('order_number')
                 .leftJoinAndSelect('prSelected.productRecommendation', 'productRecommendation');
 
-            // if (customer_id || customer_id !== null || customer_id !== 'null') {
-            //     prsQuery.andWhere('prSelected.customer_id = :customerId', { customerId: Number(customer_id) });
-            // }
-            // if (batch_id) {
-            //     prsQuery.andWhere('prSelected.batch_id = :batchId', { batchId: batch_id });
-            // } else
             if (customer_id && !batch_id) {
                 prsQuery.andWhere('prSelected.batch_id IS NULL');
             }
@@ -79,7 +66,6 @@ export class ProductRecommendationSelectedsService {
 
                 const originOrClone = cloneRecommendation || product;
 
-                // translations
                 const translations = await this.productTranslationsRepository.find({
                     where: {
                         productRecommendationId: originOrClone.id,
@@ -264,7 +250,6 @@ export class ProductRecommendationSelectedsService {
                         shades = recommendation.shades;
                     }
 
-                    // collection shades
                     const recommShadeList = await this.productRecommendationRepository
                         .createQueryBuilder('recommendtaions')
                         .where('recommendtaions.collection = :collection', {
@@ -274,9 +259,6 @@ export class ProductRecommendationSelectedsService {
                         .getMany();
 
                     collectionShades = recommShadeList.map((recomm) => recomm.shades);
-                    // collection_shades END
-
-                    // product translations START
                     if (refRecommendation || recommendation) {
                         const oneOfRecomm = refRecommendation || recommendation;
 
@@ -328,7 +310,6 @@ export class ProductRecommendationSelectedsService {
 
                         productTranslations = await Promise.all(promiseTranslations);
                     }
-                    // product translations END
 
                     categoryTranslations = await this.productAttributesRepository.getTranslationsByType(
                         'Category',

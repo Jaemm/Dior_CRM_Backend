@@ -40,7 +40,6 @@ export class DiorCompanyBranchesService {
         private configService: ConfigService,
         private awsS3Service: AwsS3Service,
         private analysis: AnalysisDataReplicationService,
-        //repos
         private readonly consultantRepository: ConsultantsRepository,
         private readonly consultantBranchesRepository: ConsultantBranchesRepository,
         private readonly productsRepository: ProductsRepository,
@@ -75,7 +74,6 @@ export class DiorCompanyBranchesService {
             await this.updateCondultantForPos(newUser);
         }
 
-        console.log('newUser ====>', newUser);
         const consultant = await this.consultantRepository.createConsultantForPOS({
             name: newUser.name,
             consultant_company_id: 213,
@@ -104,17 +102,13 @@ export class DiorCompanyBranchesService {
     }
 
     public async updateCondultantForPos(newUser: any) {
-        console.log(`Searching for consultant with email: ${newUser.email}`);
         const bm = await this.consultantRepository.findByEmail(newUser.email);
-        console.log('Query result:', bm);
 
         delete newUser.consultantCompanyId;
         delete newUser.createdAt;
         delete newUser.updatedAt;
 
         delete newUser.countryId;
-
-        console.log('newUser ====>', newUser);
 
         newUser.email = newUser?.email ? newUser.email : bm.email;
         newUser.name = newUser?.name ? newUser.name : bm.name;
@@ -166,7 +160,6 @@ export class DiorCompanyBranchesService {
                 last_consultation_date: null,
             };
 
-            // cons
             body.consultant_branch_id = reformatBranch.id;
             if (reformatBranch) {
                 this.createCondultantForPos(body);
@@ -208,7 +201,6 @@ export class DiorCompanyBranchesService {
             const { filter_by: filterBy, search, country, page, per, is_bc } = query;
 
             const userId = (<{ id: string }>req.user).id;
-            // const userId = 8131;
             const currentConsultant = await this.consultantRepository.findOneBy({ id: Number(userId) });
 
             if (!currentConsultant) {
@@ -268,12 +260,6 @@ export class DiorCompanyBranchesService {
             const searchPage = Number(page || 1);
             const searchPer = Number(per || 25);
 
-            // const [branches, total] = await branchQuery
-            //     .skip((searchPage - 1) * searchPer)
-            //     .take(searchPer)
-            //     .getManyAndCount();
-
-            //     console.log(branches)
             const total = await branchQuery.getCount();
             const branches = await branchQuery
                 .skip((searchPage - 1) * searchPer)
@@ -317,7 +303,6 @@ export class DiorCompanyBranchesService {
                 });
             }
 
-            // 업데이트할 값 설정 (새 값이 없으면 기존 값 유지)
             branch.email = email || branch.email;
             branch.name = name || branch.name;
             branch.code = code || branch.code;
@@ -325,21 +310,16 @@ export class DiorCompanyBranchesService {
             branch.password = password || branch.password;
             branch.updatedAt = new Date();
 
-            // 브랜치 저장 (컨설턴트 여부와 상관없이 실행)
             const savedBranch = await this.consultantBranchesRepository.save(branch);
-            console.log(`Branch ${savedBranch.id} updated successfully.`);
 
-            // 컨설턴트 정보 확인 (있으면 업데이트, 없으면 건너뜀)
             const existingConsultant = await this.consultantRepository.findByEmail(savedBranch.email.toLowerCase());
 
             if (existingConsultant) {
-                console.log(`Consultant ${existingConsultant.id} found. Updating consultant data...`);
                 await this.updateCondultantForPos(savedBranch);
             } else {
                 console.warn(`Consultant with email ${savedBranch.email} not found. Skipping POS update.`);
             }
 
-            // 응답 데이터 재구성 (컨설턴트 없이도 브랜치 정보 반환)
             const reformatBranch: ConsultantBranchesForDiorT = {
                 id: Number(savedBranch.id),
                 name: savedBranch.name,
@@ -528,7 +508,6 @@ export class DiorCompanyBranchesService {
 
             const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
 
-            console.log('baseUrl', baseUrl);
             const downloadUrl = `${baseUrl}/api/dior/company_branches/files/${hash}`;
 
             await this.presignRepository.saveNewPresignEntity({

@@ -215,7 +215,6 @@ export class PartnerDbService {
                     }),
                 );
             }
-            //
             if (filter_by) {
                 let filterByOrder = 'ASC';
                 let filterByField = filter_by.toString();
@@ -283,10 +282,7 @@ export class PartnerDbService {
         let consultant;
 
         const app_id = body?.app_id ?? '88';
-        // if (app_id) {
         consultant = await this.consultantRepository.getConsultantEmailAndAppId(email, app_id);
-
-        // if (!consultant) {
         consultant = await this.consultantRepository.getConsultantEmailAndAppId(email);
 
         if (!consultant) {
@@ -314,39 +310,6 @@ export class PartnerDbService {
                 error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
             });
         }
-        // }
-        // }
-
-        // else {
-        //     const consultants = await this.consultantRepository.find({
-        //         where: {
-        //             email: email,
-        //         },
-        //     });
-
-        //     if (!consultants && consultants.length < 1) {
-        //         throw new UnauthorizedException({
-        //             result_code: ErrorStatus.LOGIN_FAILED,
-        //             error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
-        //         });
-        //         if (passWordCheck === true) {
-        //             throw new UnauthorizedException({
-        //                 result_code: ErrorStatus.LOGIN_FAILED,
-        //                 error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
-        //             });
-        //         }
-        //     }
-
-        //     for (let i = 0; i < consultants.length; i++) {
-        //         const c = consultants[i];
-
-        //         if (c.password_digest) {
-        //             this.consultantService.verifyPassword(password, c.password_digest, locale);
-        //             consultant = c;
-        //             break;
-        //         }
-        //     }
-        // }
 
         if (!consultant) {
             throw new UnauthorizedException({
@@ -455,8 +418,6 @@ export class PartnerDbService {
                 device = await this.productsRepository.findProductsDeviceByEntityAndAppId(consultant);
             }
 
-            // const data = [];
-
             const analysisTypeList = application?.analysis_type || [];
 
             const analysisHistoryRequestPromise = analysisTypeList.map(async (analysisType) => {
@@ -518,9 +479,7 @@ export class PartnerDbService {
         try {
             const { analysis_type: analysisType } = query;
 
-            // const requestHeaders = req.headers;
-
-            const authorization: any = req.headers['x-chowis-consultant-token']; //requestHeaders?.authorization;
+            const authorization: any = req.headers['x-chowis-consultant-token'];
 
             let bearerToken = authorization ? 'Bearer ' + authorization : null;
             if (!bearerToken) {
@@ -528,14 +487,10 @@ export class PartnerDbService {
             }
 
             let result: any;
-
-            // if (['cndpskin'].includes(analysisType)) {
             const type = 'cndpskin';
             result = await this.analysisHistoryRequestByBatchId(type, customerId, batchId, bearerToken);
-            // }
 
             if (result.data && result.data.length > 0) {
-                // Remove duplicates by 'hash' key
                 const uniqueData = Array.from(new Map(result.data.map((item: any) => [item['hash'], item])).values());
 
                 result.data = uniqueData;
@@ -608,7 +563,6 @@ export class PartnerDbService {
         if (!baseUrl) {
             return null;
         }
-        //
 
         const requestUrlObj = `${baseUrl}/cndpskin/${customerId}/analysis-history/analysis-infor?batch_id=${batchId}`;
 
@@ -619,8 +573,6 @@ export class PartnerDbService {
                 Authorization: bearerToken,
             },
         });
-
-        // Return the result as JSON
 
         return response.data || [];
     }

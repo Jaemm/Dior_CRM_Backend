@@ -23,7 +23,6 @@ export class ProductsEnterDto {
 
     @ApiProperty()
     @Validate(IsNumberOrString)
-    // @IsOptional()
     application_id: string;
 
     @ApiProperty()

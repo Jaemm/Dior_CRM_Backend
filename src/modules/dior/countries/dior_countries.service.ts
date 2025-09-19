@@ -15,7 +15,6 @@ export class DiorCountriesService {
     constructor(
         private commonSerivce: CommonService,
 
-        // Repos
         private readonly consultantRepository: ConsultantsRepository,
         private readonly consultantCountriesRepository: ConsultantCountriesRepository,
     ) {}

@@ -15,7 +15,6 @@ import { CommonService } from '@/src/common/common.service';
     providers: [
         CommonService,
 
-        // Repos
         DiorDevicesService,
         ConsultantsRepository,
         ProductsRepository,

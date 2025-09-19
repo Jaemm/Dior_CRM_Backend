@@ -52,8 +52,7 @@ export class AuthService {
             sso_login_url: metadata.ssoLoginUrl,
             sso_logout_url: process.env.OKTA_SIGNOUT_URL || '',
             certificates: metadata.certificates,
-            // @ts-ignore
-            want_assertions_encrypted: false,
+            // want_assertions_encrypted: false,
         });
 
         return new Promise((resolve, reject) => {

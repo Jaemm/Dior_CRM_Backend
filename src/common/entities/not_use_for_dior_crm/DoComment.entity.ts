@@ -1,6 +1,4 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-// import { DoRemark } from './DoRemark.entity';
-// import { AdminUsers } from './AdminUsers.entity';
 
 @Index('do_comment_pkey', ['id'], { unique: true })
 @Entity('do_comment', { schema: 'public' })
@@ -51,11 +49,4 @@ export class DoComment {
     })
     fileExtension: string | null;
 
-    // @ManyToOne(() => DoRemark, (doRemark) => doRemark.doComments)
-    // @JoinColumn([{ name: "remark_id", referencedColumnName: "id" }])
-    // remark: DoRemark;
-
-    // @ManyToOne(() => AdminUsers, (adminUsers) => adminUsers.doComments)
-    // @JoinColumn([{ name: "writer_id", referencedColumnName: "id" }])
-    // writer: AdminUsers;
 }

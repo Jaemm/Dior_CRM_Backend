@@ -70,11 +70,6 @@ export class PresignedUploadDto {
     @ApiProperty()
     @IsNotEmpty()
     consent_type: string;
-
-    // @ApiProperty()
-    // @Validate(IsNumberOrString)
-    // @IsNotEmpty()
-    // customer_id: string;
 }
 
 export class GetByEmailDto {
@@ -116,11 +111,6 @@ export class GetCustomerDto {
 }
 
 export class CreateCrmCustomerDto {
-    // @ApiProperty()
-    // @IsNotEmpty()
-    // @Validate(IsNumberOrString)
-    // consultant_id: number;
-
     @ApiProperty()
     @IsOptional()
     @IsString()

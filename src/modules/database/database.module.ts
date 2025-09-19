@@ -4,8 +4,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
     imports: [
-        /* GLOBAL DB */
-        // CRM
         TypeOrmModule.forRootAsync({
             imports: [ConfigModule],
             inject: [ConfigService],
@@ -15,7 +13,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
             }),
         }),
 
-        // cndp SKIN
         TypeOrmModule.forRootAsync({
             imports: [ConfigModule],
             inject: [ConfigService],

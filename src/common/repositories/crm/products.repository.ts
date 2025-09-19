@@ -108,7 +108,6 @@ export class ProductsRepository extends Repository<Products> {
                     id: true,
                     name: true,
                     apk_url: true,
-                    // old_apk_url: true,
                     version: true,
                     group_name: true,
                     regist_date: true,
@@ -131,8 +130,6 @@ export class ProductsRepository extends Repository<Products> {
                 license_period: true,
                 created_at: true,
                 license_remaining_days: true,
-                // expired_date: true,
-                // is_expired: true,
             },
             relations: ['application', 'device', 'device.consultant_company', 'license'],
         });
@@ -161,8 +158,6 @@ export class ProductsRepository extends Repository<Products> {
                 license_remaining_days: true,
                 days_remaining_updated_at: true,
                 is_paid_for_license: true,
-                // expired_date: true,
-                // is_expired: true,
             },
             relations: ['application', 'device', 'license'],
         });
@@ -171,38 +166,32 @@ export class ProductsRepository extends Repository<Products> {
     }
 
     async connectReset(product: Products): Promise<boolean> {
-        // Reset product fields
         product.consultant_id = null;
         product.customer_id = null;
         product.use_date = null;
         product.use_time = null;
         product.mac_address = null;
-        // product.app_use_yn = null;
         product.app_use_yn = 'N';
 
-        console.log('product --------> ', product);
 
         try {
             const result = await this.update(
-                { id: product.id }, // Specify the product by ID
+                { id: product.id },
                 {
                     consultant_id: null,
                     customer_id: null,
                     use_date: null,
                     use_time: null,
                     mac_address: null,
-                    // app_use_yn: null,
                     app_use_yn: 'N',
-                }, // Only update the fields you want
+                },
             );
 
-            console.log('Product updated: ', result); //
         } catch (e) {
-            // Log the error for debugging purposes
             console.error('Error saving product:', e);
-            return false; // Return false to indicate failure
+            return false;
         }
 
-        return true; // Return true if save is successful
+        return true;
     }
 }

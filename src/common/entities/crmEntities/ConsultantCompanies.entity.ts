@@ -1,8 +1,6 @@
 import { AfterLoad, Column, Entity, Index, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { ConsultantBranches } from './ConsultantBranches.entity';
 import { ConsultantShops } from './ConsultantShops.entity';
-// import { DoWrite } from './DoWrite.entity';
-// import { UserInformation } from './UserInformation.entity';
 import { Devices } from './Devices.entity';
 import { Applications } from './Applications.entity';
 import { Consultants } from './Consultants.entity';
@@ -88,12 +86,6 @@ export class ConsultantCompanies {
 
     @OneToMany(() => ConsultantBranches, (consultantBranches) => consultantBranches.consultantCompany)
     consultantBranches: ConsultantBranches[];
-
-    // @OneToMany(() => DoWrite, (doWrite) => doWrite.customer)
-    // doWrites: DoWrite[];
-
-    // @OneToMany(() => UserInformation, (userInformation) => userInformation.company)
-    // userInformations: UserInformation[];
 
     @OneToMany(() => Devices, (devices) => devices.consultant_company)
     devices: Devices[];

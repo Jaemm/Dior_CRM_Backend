@@ -9,7 +9,6 @@ import { ConsultantCountriesRepository, ConsultantsRepository } from '@/src/comm
     providers: [
         DiorCountriesService,
 
-        // Repos
         ConsultantsRepository,
         ConsultantCountriesRepository,
     ],

@@ -3,7 +3,6 @@ import { DiorController } from './dior.controller';
 import { DiorService } from './dior.service';
 import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middleware';
 
-// DataBase
 import {
     ConsultantBranches,
     ConsultantCountries,
@@ -58,7 +57,6 @@ import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
         ProductRecommendationGroups,
         ProductLogs,
 
-        // Modules
         DiorAdminsModule,
         DiorCountriesModule,
         DiorCompanyBranchesModule,
@@ -77,7 +75,6 @@ import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
         CommonService,
         AwsS3Service,
 
-        // Repositories
         ProductsRepository,
         ConsultantsRepository,
         ConsultantCountriesRepository,
@@ -115,9 +112,5 @@ export class DiorModule {
                 path: 'dior/*',
                 method: RequestMethod.ALL,
             });
-        // consumer.apply(AuthMiddleware).forRoutes({
-        //     path: 'dior/company_consultants/by_consultant',
-        //     method: RequestMethod.GET,
-        // });
     }
 }

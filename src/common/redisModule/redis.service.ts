@@ -1,21 +1,14 @@
-// redis.service.ts
 import { Injectable } from '@nestjs/common';
-import Redis from 'ioredis'; // Use default import
+import Redis from 'ioredis';
 
 @Injectable()
 export class RedisService {
     private readonly redisClient: Redis;
 
     constructor() {
-        // this.redisClient = new Redis({
-        //   host: '127.0.0.1',
-        //   port: 6379,
-        //   // Add more options as needed, such as password, TLS, etc.
-        // });
     }
 
     subscribe(message: string) {
-        // Subscribe to the specified channel
         this.redisClient.subscribe(message);
     }
 

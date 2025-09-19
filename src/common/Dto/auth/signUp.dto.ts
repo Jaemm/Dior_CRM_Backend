@@ -1,6 +1,5 @@
 import { IsEmail, IsNotEmpty, IsNumber, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 
-// import { IsNotEmpty, IsString, MinLength } from "class-validator/types/decorator/decorators";
 export enum Role {
     Admin = 'Admin',
     Manager = 'Manager',
@@ -21,7 +20,6 @@ export class SignUpDto {
     @IsString()
     @IsNotEmpty()
     @MinLength(7)
-    //   @MaxLength(65)
     @Matches(/^(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).*$/, { message: 'Password must contain a special character' })
     password: string;
 

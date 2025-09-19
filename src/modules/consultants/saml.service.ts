@@ -3,6 +3,8 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { resolve } from 'path';
 import * as saml from 'samlify';
+import { parseStringPromise } from 'xml2js';
+
 dotenv.config();
 
 saml.setSchemaValidator({
@@ -62,11 +64,38 @@ export class SamlService {
     }
 
     async extractEmailFromSaml(samlResponse: string): Promise<string> {
-        const parsed = await this.sp.parseLoginResponse(this.idp, 'post', {
-            body: { SAMLResponse: samlResponse },
-        });
-        const email = parsed.extract.attributes?.email;
-        if (!email) throw new Error('No email in SAML response');
-        return email.toLowerCase();
+        const decoded = Buffer.from(samlResponse, 'base64').toString('utf-8');
+        const parsed = await parseStringPromise(decoded, { explicitArray: false });
+
+        const assertion = parsed?.['saml2p:Response']?.['saml2:Assertion'];
+        const attributes = assertion?.['saml2:AttributeStatement']?.['saml2:Attribute'];
+        const subject = assertion?.['saml2:Subject'];
+        const rawNameID = subject?.['saml2:NameID'];
+        const nameID = typeof rawNameID === 'string' ? rawNameID : rawNameID?._;
+
+        const attributeMap: Record<string, string> = {};
+        if (Array.isArray(attributes)) {
+            for (const attr of attributes) {
+            attributeMap[attr.$.Name] = attr['saml2:AttributeValue'];
+            }
+        } else if (attributes) {
+            attributeMap[attributes.$.Name] = attributes['saml2:AttributeValue'];
+        }
+
+        const email =
+            attributeMap['email'] ||
+            attributeMap['mail'] ||
+            nameID;
+
+        if (!email) {
+            console.log('decoded XML:', decoded);
+            console.log('nameID:', nameID);
+            console.log('attributeMap:', attributeMap);
+            throw new Error('No email in SAML response');
+        }
+
+        console.log('[SAML] 입력된 이메일:', email);
+        return email;
     }
+
 }

@@ -25,8 +25,6 @@ import { ProductRecommendationGroups, ProductRecommendationSelecteds } from '@/s
 export class ProductRecommendationGroupsService {
     constructor(
         private commonService: CommonService,
-
-        // Repos
         private readonly consultantRepository: ConsultantsRepository,
         private readonly productRecommendationsRepository: ProductRecommendationRepository,
         private readonly prSelectedRepository: ProductRecommendationSelectedRepository,

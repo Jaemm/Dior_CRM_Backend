@@ -172,7 +172,6 @@ export class ConsultantsController {
         @Body() body: LoginConsultantDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
-        // body.email = body.email.toLowerCase();
         const loginResult = await this.consultants.loginRuby(body, locale);
         return res.status(200).send({ ...loginResult });
     }
@@ -185,33 +184,42 @@ export class ConsultantsController {
 
     @Post('login/saml')
     async handleSamlResponse(
-        @Body() body: { SAMLResponse: string },
-        @Query('redirect') redirect = 'https://dior-backoffice-git-dev-chowis1.vercel.app/login',
-        @Headers('X-CHOWIS-LOCALE') locale = 'en',
-        @Res() res: Response,
+    @Body() body: { SAMLResponse: string },
+    @Query('redirect') redirect = 'https://dior-backoffice-git-dev-choicetech.vercel.app/login',
+    @Headers('X-CHOWIS-LOCALE') locale = 'en',
+    @Res() res: Response,
     ) {
-        try {
-            const email = await this.samlService.extractEmailFromSaml(body.SAMLResponse);
-            const loginResult = await this.consultants.loginWithEmailOnly(email, locale);
+    try {
+        const email = await this.samlService.extractEmailFromSaml(body.SAMLResponse);
+        const loginResult = await this.consultants.loginWithEmailOnly(email, locale);
 
-            console.log('[SAML 로그인 성공] email:', email);
-            console.log('[LoginResult]', loginResult);
+        console.log('[SAML 로그인 성공] email:', email);
+        console.log('[LoginResult]', loginResult);
 
-            const query = new URLSearchParams({
-                samlLogin: 'true',
-                token: loginResult.token,
-                name: loginResult.name,
-                id: loginResult.id.toString(),
-            }).toString();
+        const role =
+        (loginResult.consultant_position as { id: number; name: string })?.name ||
+        loginResult.position ||
+        'Brand Manager';
+        console.log('=================',role)
 
-            console.log('[리다이렉트 URL]', `${redirect}?${query}`);
+        const query = new URLSearchParams({
+        samlLogin: 'true',
+        token: loginResult.token,
+        name: loginResult.name,
+        id: loginResult.id.toString(),
+        role,
+        }).toString();
 
-            return res.redirect(`${redirect}?${query}`);
-        } catch (err) {
-            console.error('[SAML 로그인 실패]', err);
-            return res.redirect(`${redirect}?error=saml_failed`);
-        }
+        console.log('[리다이렉트 URL]', `${redirect}?${query}`);
+
+        return res.redirect(`${redirect}?${query}`);
+    } catch (err) {
+        console.error('[SAML 로그인 실패]', err);
+        console.log('[Raw SAMLResponse]', body.SAMLResponse);
+        return res.redirect(`${redirect}?error=saml_failed`);
     }
+    }
+
 
     @Put('/update')
     @ApiBearerAuth()

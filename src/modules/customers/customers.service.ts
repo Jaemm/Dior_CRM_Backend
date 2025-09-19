@@ -58,7 +58,7 @@ export class CustomersService {
 
         private readonly commonService: CommonService,
 
-        @Inject(forwardRef(() => ProductsService)) private readonly productService: ProductsService, // TODO: Resolve dependency issue // private readonly customerConsentsService: CustomerConsentsService,
+        @Inject(forwardRef(() => ProductsService)) private readonly productService: ProductsService,
 
         private readonly skinColorGorupsRepository: SkinColorGroupsRepository,
         private readonly applicationsRepository: ApplicationsRepository,
@@ -77,7 +77,6 @@ export class CustomersService {
         }
     }
 
-    // Sample method to verify passwords using argon2
     async verifyPasswordArgon2(enteredPassword: string, argon2Hash: string): Promise<boolean> {
         try {
             return await argon2.verify(argon2Hash, enteredPassword);
@@ -89,12 +88,10 @@ export class CustomersService {
         }
     }
 
-    // Method to determine which hashing algorithm was used for a stored password
     determineHashAlgorithm(storedHash: string): 'bcrypt' | 'argon2' {
         return storedHash.startsWith('$2a$') ? 'bcrypt' : 'argon2';
     }
 
-    // Method to verify password based on the hashing algorithm used
     async verifyPassword(enteredPassword: string, storedHash: string): Promise<boolean> {
         const hashAlgorithm = this.determineHashAlgorithm(storedHash);
 
@@ -165,36 +162,6 @@ export class CustomersService {
 
         return customers;
     }
-    //
-    // async function getPaginatedUsers(page: number, perPage: number): Promise<PaginationResult<User>> {
-    //     const userRepository = getRepository(User);
-
-    //     // Get total number of users
-    //     const total_size = await userRepository.count();
-
-    //     // Get the users for the current page
-    //     const [data, current_page_size] = await userRepository.findAndCount({
-    //         skip: (page - 1) * perPage,
-    //         take: perPage
-    //     });
-
-    //     // Convert gender to number
-    //     data.forEach(user => {
-    //         user.gender = Number(user.gender);
-    //     });
-
-    //     // Calculate total pages
-    //     const total_pages = Math.ceil(total_size / perPage);
-
-    //     return {
-    //         data,
-    //         total_size,
-    //         current_page_size,
-    //         current_page: page,
-    //         total_pages,
-    //         perPage
-    //     };
-    // }
 
     async getCustomersByConsultant(
         conditions: any,
@@ -371,7 +338,6 @@ export class CustomersService {
         if (customer?.optic_number) customer.optic_number = customer?.getOpticNumbers;
         if (customer?.consultant_name) customer.consultant_name = customer?.getConsultantName;
 
-        // customer.gender = customer.gender !== null ? Number(customer.gender.id) : customer.gender;
         customer.consultant_name = customer?.getConsultantName;
         customer.optic_number = customer?.getOpticNumbers;
         customer.gender = customer.gender_id;
@@ -402,7 +368,6 @@ export class CustomersService {
             });
             return result;
         } catch (error) {
-            console.log('Erorrrrrrr :', error);
         }
     }
 
@@ -454,7 +419,6 @@ export class CustomersService {
         });
 
         return 'Successfully confirmed';
-        // return this.commonService.generateMessage('Confirmation successful');
     }
 
     public async confirmEmail(data: ConfirmHtmlDto) {
@@ -661,7 +625,6 @@ export class CustomersService {
         const checkToken = this.authService.isTokenExpired(getCustomer.token);
 
         if (!getCustomer.email_confirmed) {
-            //Check if Token is not yet expired
             if (!checkToken) {
                 const confirmationToken = await this.jwtService.generateToken(
                     { id: getCustomer.id, email: getCustomer.email, role: Role.Customer },
@@ -725,11 +688,6 @@ export class CustomersService {
     }
 
     async update(userId: number, customer: UpdateCustomersDto | UpdateCrmCustomersDto) {
-        // Commented code in this function can be use in future
-
-        // if (String(customer?.consultant_shop_id)?.length === 0) {
-        //     customer.consultant_shop_id = null;
-        // }
         const customerData = await this.CustomersRepository.findOne({
             where: { id: userId },
         });
@@ -742,27 +700,6 @@ export class CustomersService {
         }
 
         const promises: Promise<any>[] = [];
-
-        // if (customer.social_id) {
-        // }
-        // if (customer.external_id) {
-        // }
-
-        // if (customer.company_id) {
-        //     promises.push(this.companies.getOneCompany(String(customer?.company_id)));
-        // }
-
-        // if (customer.consultant_id) {
-        //     promises.push(this.consultant.findOneConsultant(customer.consultant_id));
-        // }
-
-        // if (customer.consultant_shop_id) {
-        //     promises.push(this.consultantShops.findOneConsultantShops(Number(customer.consultant_shop_id)));
-        // }
-
-        // if (customer.gender_id) {
-        //     promises.push(this.genders.findOneGender(String(customer.gender_id)));
-        // }
 
         if (customer.app_id) {
             promises.push(this.applicationsRepository.findOneApplication(customer.app_id));
@@ -782,11 +719,6 @@ export class CustomersService {
                     error: ResponseMessages.InvalidCountryCode,
                 });
             }
-
-            // customer.country_id = country?.id ? Number(country.id) : null;
-            // customer.country_code = country.code;
-            // customer.country_name = country.name;
-            // customer.phone_country_code = country.phone_country_code;
         }
 
         if (customer.skin_color_group_id) {
@@ -815,10 +747,6 @@ export class CustomersService {
             ? Number(customer.skin_color_group_id)
             : customerData.skin_color_group_id;
 
-        // customerData.consultant_shop_id = customer?.consultant_shop_id
-        //     ? Number(customer.consultant_shop_id)
-        //     : customerData.consultant_shop_id;
-
         customerData.age = customer?.age ? Number(customer.age) : customerData.age;
 
         customerData.phone_country_code = customer?.phone_country_code
@@ -826,8 +754,6 @@ export class CustomersService {
             : customerData.phone_country_code;
 
         customerData.app_id = customer?.app_id ? Number(customerData.app_id) : customerData.app_id;
-
-        // customerData.consultant_shop_id = customer?.consultant_shop_id ? Number(customerData.consultant_shop_id) : null;
 
         const updatedCustomer: any = await this.CustomersRepository.save(customerData);
 
@@ -885,7 +811,6 @@ export class CustomersService {
 
         const customer: any = await this.getCustomer({ id }, selections, includes);
 
-        console.log(customer.products);
 
         if (customer.products.length === 0) {
             const product = await this.productService.getProducts(customer?.id);
@@ -1020,7 +945,6 @@ export class CustomersService {
     }
 
     async presignUpload(file: PresignedUploadDto) {
-        // TODO
     }
 
     async password(data: PasswordDto, locale = 'en') {
@@ -1056,8 +980,6 @@ export class CustomersService {
         const customer = await this.getCustomer({ email: data.email, app_id: data.app_id }, selections);
 
         if (!customer) {
-            // customer = await this.getCustomer({ email: data.email }, selections);
-
             throw new NotFoundException({
                 result_code: ErrorStatus.CUSTOMER_NOT_FOUND,
                 error: ResponseMessages.CustomerNotFound,
@@ -1086,8 +1008,6 @@ export class CustomersService {
     }
 
     async deleteAccount(id: string, data: DeleteCustomerDto) {
-        // TODO: Add translation
-
         if (!id) {
             return this.commonService.generateMessage('Customer id is required');
         }
@@ -1105,21 +1025,6 @@ export class CustomersService {
         if (productIds && productIds.length) {
             await this.productService.updateProducts({ id: In(productIds) }, { customer_id: null });
         }
-
-        // const consentIds = customer.chowisCustomerConsents.map((c: any) => c.id);
-
-        // if (consentIds && consentIds.length) {
-        //     await this.chowisCustomerConsentRepository.update({ id: In(consentIds) }, { customer_id: null });
-        // }
-
-        // await this.customerLogRepository.save({
-        //     customer_id: customer.id,
-        //     app_id: customer.app_id,
-        //     email: customer.email,
-        //     reason: data.reason,
-        //     created_at: new Date(),
-        //     updated_at: new Date(),
-        // });
 
         const deletedCustomer = await this.deleteCustomer(id);
 

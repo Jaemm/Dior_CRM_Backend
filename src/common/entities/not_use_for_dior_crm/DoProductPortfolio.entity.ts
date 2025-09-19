@@ -1,6 +1,5 @@
 import { Column, Entity, Index, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { DoPackages } from './DoPackages.entity';
-// import { PackageRelation } from './PackageRelation.entity';
 
 @Index('product_code_pkey', ['id'], { unique: true })
 @Entity('do_product_portfolio', { schema: 'public' })
@@ -87,9 +86,4 @@ export class DoProductPortfolio {
     @OneToMany(() => DoPackages, (doPackages) => doPackages.product)
     doPackages: DoPackages[];
 
-    // @OneToMany(
-    //   () => PackageRelation,
-    //   (packageRelation) => packageRelation.product
-    // )
-    // packageRelations: PackageRelation[];
 }

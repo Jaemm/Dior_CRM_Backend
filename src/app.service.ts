@@ -51,7 +51,6 @@ export class AppService {
                 const filePath = './api_routes.xlsx';
                 XLSX.writeFile(workbook, filePath);
 
-                console.log(`API routes have been written to ${filePath}`);
             } else {
                 console.error('Router is undefined');
             }
@@ -156,7 +155,6 @@ export class AppService {
     }
 
     async loginSocial(loginDetails: LoginSocialDto) {
-        // TODO
     }
 
     async logout(id: string) {

@@ -1,5 +1,4 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-// import { Applications } from './Applications.entity';
 
 @Index('index_app_version_checks_on_app_id', ['appId'], {})
 @Index('app_version_checks_pkey', ['id'], { unique: true })
@@ -23,10 +22,4 @@ export class AppVersionChecks {
     @Column('timestamp without time zone', { name: 'updated_at' })
     updatedAt: Date;
 
-    // @ManyToOne(
-    //   () => Applications,
-    //   (applications) => applications.appVersionChecks
-    // )
-    // @JoinColumn([{ name: "app_id", referencedColumnName: "id" }])
-    // app: Applications;
 }

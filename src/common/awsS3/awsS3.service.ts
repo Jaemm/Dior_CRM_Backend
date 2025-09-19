@@ -7,7 +7,6 @@ import * as path from 'path';
 import fs from 'fs';
 import { NotFoundException } from '@nestjs/common/exceptions';
 
-// let COS = require('cos-nodejs-sdk-v5');
 
 @Injectable()
 export class AwsS3Service {
@@ -15,7 +14,6 @@ export class AwsS3Service {
 
     async uploadFileToS3(fileContent: Buffer, hash: string, prefix: string) {
         if (this.configService.get('REGION') === 'CHINA') {
-            // return await this.uploadImageTencent(fileContent, fileName);
         }
 
         const key = `${prefix}/${hash}`;
@@ -25,7 +23,6 @@ export class AwsS3Service {
             Bucket: this.configService.get('AWS_BUCKET_NAME'),
             Key: key,
             Body: fileContent,
-            // ACL: 'public-read',
         };
 
         return new Promise((resolve, reject) => {
@@ -40,7 +37,6 @@ export class AwsS3Service {
 
     async uploadFile(fileContent: Buffer, fileName: string) {
         if (this.configService.get('REGION') === 'CHINA') {
-            // return await this.uploadImageTencent(fileContent, fileName);
         }
         const s3 = new S3();
         const params = {
@@ -62,7 +58,6 @@ export class AwsS3Service {
     async getImageCloudS3(key: string): Promise<GetObjectOutput> {
         try {
             if (this.configService.get('REGION') === 'CHINA') {
-                // return await this.getImageTencent(key);
             }
             const params = { Bucket: this.configService.get('AWS_BUCKET_NAME'), Key: key };
             const s3 = new S3();
@@ -75,7 +70,6 @@ export class AwsS3Service {
                 });
             });
         } catch (e) {
-            console.log(e);
         }
     }
 
@@ -103,13 +97,10 @@ export class AwsS3Service {
     }
 
     async getImagesFromCloud(sysUrl: string) {
-        // const sysUrl = await this.getImage(hash);
         if (!sysUrl) throw new NotFoundException('product image was not found');
         const image = await this.getImageCloudS3(`${sysUrl}`);
         return image;
     }
-
-    // brochure
 
     async uploadBrochure(fileContent: Buffer, fileName: string) {
         const s3 = new S3();
@@ -144,7 +135,6 @@ export class AwsS3Service {
     }
 
     async getFileFromS3(sysUrl: string) {
-        // const sysUrl = await this.getImage(hash);
         if (!sysUrl) throw new NotFoundException('product brochure was not found');
 
         const image = await this.getImageCloudS3(`${sysUrl}.pdf`);
@@ -191,51 +181,4 @@ export class AwsS3Service {
         const file = await this.getImageCloudS3(`${sysUrl}${ext}`);
         return file;
     }
-
-    // TENCENT
-    // async uploadImageTencent(fileContent: Buffer, filename: string) {
-    //     const cos = new COS({
-    //         SecretId: this.configService.get('TENCENT_SECRET_ID'),
-    //         SecretKey: this.configService.get('TENCENT_SECRET_KEY'),
-    //     });
-    //     return new Promise((resolve, reject) => {
-    //         cos.putObject(
-    //             {
-    //                 Bucket: this.configService.get('TENCENT_CFA_BUCKET_NAME'),
-    //                 Region: this.configService.get('TENCENT_REGION'),
-    //                 Key: filename + '.jpg',
-    //                 StorageClass: 'STANDARD',
-    //                 Body: fileContent,
-    //             },
-    //             function (err: any, data: any) {
-    //                 if (err) {
-    //                     return reject(err);
-    //                 }
-    //                 return resolve(data);
-    //             },
-    //         );
-    //     });
-    // }
-
-    // async getImageTencent(key: string): Promise<any> {
-    //     const cos = new COS({
-    //         SecretId: this.configService.get('TENCENT_SECRET_ID'),
-    //         SecretKey: this.configService.get('TENCENT_SECRET_KEY'),
-    //     });
-    //     return new Promise((resolve, reject) => {
-    //         cos.getObject(
-    //             {
-    //                 Bucket: this.configService.get('TENCENT_CFA_BUCKET_NAME'),
-    //                 Region: this.configService.get('TENCENT_REGION'),
-    //                 Key: key,
-    //             },
-    //             (err: any, data: any) => {
-    //                 if (err) {
-    //                     return reject(err);
-    //                 }
-    //                 return resolve(data);
-    //             },
-    //         );
-    //     });
-    // }
 }

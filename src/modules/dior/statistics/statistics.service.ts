@@ -37,8 +37,6 @@ export class StatisticsService {
     constructor(
         private commonService: CommonService,
         private analysisDataReplicationService: AnalysisDataReplicationService,
-
-        // Repos
         private readonly consultantCountriesRepository: ConsultantCountriesRepository,
         private readonly consultantRepository: ConsultantsRepository,
         private readonly consultantBranchesRepository: ConsultantBranchesRepository,
@@ -286,7 +284,6 @@ export class StatisticsService {
                         perCountry = perCountry + consultationCount;
                     }
                 }
-                //
                 data.push({
                     name: country.name,
                     total: perCountry,

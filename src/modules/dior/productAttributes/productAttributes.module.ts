@@ -12,7 +12,6 @@ import {
     providers: [
         DiorProductAttributesService,
 
-        // Repos
         ConsultantsRepository,
         ProductAttributesRepository,
         ProductAttributeTranslationsRepository,

@@ -6,10 +6,8 @@ config();
 
 const configService = new ConfigService();
 
-/* ------------ GLOBAL DB SETTINGS START -------------------*/
 
 const globalConfig = {
-    // name: 'globalDB',
     type: 'postgres',
     host: configService.get('POSTGRES_HOST'),
     port: configService.get('POSTGRES_PORT'),
@@ -20,15 +18,8 @@ const globalConfig = {
     migrations: ['dist/migrations/*{.ts,.js}'],
     autoLoadEntities: true,
     synchronize: false,
-    // logging: true,
-    // cli: {
-    //   migrationsDir: 'src/common/entities',
-    // },
 };
 
-// ANALYSIS DB SETTINGS
-
-// CNDP SKIN
 const cndpSkinDBConfig = {
     type: 'postgres',
     host: configService.get('POSTGRES_HOST'),
@@ -41,11 +32,8 @@ const cndpSkinDBConfig = {
     autoLoadEntities: true,
     synchronize: false,
     logging: true,
-    // cli: {
-    //   migrationsDir: 'src/common/entities',
-    // },
 };
-//
+
 const diorCndpSkinDBConfig = {
     type: 'postgres',
     host: configService.get('POSTGRES_HOST'),
@@ -58,9 +46,6 @@ const diorCndpSkinDBConfig = {
     autoLoadEntities: true,
     synchronize: false,
     logging: true,
-    // cli: {
-    //   migrationsDir: 'src/common/entities',
-    // },
 };
 
 export const globalDB = registerAs('globalDB', () => globalConfig);

@@ -131,7 +131,6 @@ export class CustomersController {
     @ApiQuery({ name: 'token' })
     @Get('confirmation')
     async confirmation(@Res() res: Response, @Query() token: ConfirmHtmlDto): Promise<any> {
-        // confirmEmail
         const confirmationResult = await this.customers.confirmEmail(token);
         return res.status(200).send(confirmationResult);
     }
@@ -168,9 +167,6 @@ export class CustomersController {
     @Roles(Role.Customer)
     @Get('all-licenses')
     async allLicenses(@Req() req: Request, @Res() res: Response, @Body() body: AllLicenseDto): Promise<any> {
-        // const id = (<{ id: string }>req['user']).id;
-        // const licenses = await this.customers.allLicenses(body);
-        // return res.status(200).send(licenses);
     }
 
     @ApiBearerAuth()
@@ -181,9 +177,6 @@ export class CustomersController {
         @Res() res: Response,
         @Body() body: CustomerChangeLicenseDto,
     ): Promise<any> {
-        // const id = (<{ id: string }>req['user']).id;
-        // const licenses = await this.customers.changeLicense(body);
-        // return res.status(200).send(licenses);
     }
 
     @ApiBearerAuth()
@@ -194,35 +187,23 @@ export class CustomersController {
         @Res() res: Response,
         @Body() body: NotifySalesChangeLicenseDto,
     ): Promise<any> {
-        // const id = (<{ id: string }>req['user']).id;
-        // const licenses = await this.customers.notifySalesChangeLicense();
-        // return res.status(200).send(licenses);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Customer)
     @Get('calculate-price')
     async calculatePrice(@Req() req: Request, @Res() res: Response, @Body() body: CalculatePriceDto): Promise<any> {
-        // const id = (<{ id: string }>req['user']).id;
-        // const price = await this.customers.calculatePrice();
-        // return res.status(200).send(price);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Customer)
     @Put('update-license')
     async updateLicense(@Req() req: Request, @Res() res: Response, @Body() body: UpdateLicenseDto): Promise<any> {
-        // const id = (<{ id: string }>req['user']).id;
-        // const licenses = await this.customers.updateLicense();
-        // return res.status(200).send(licenses);
     }
 
     @ApiBearerAuth()
     @Roles(Role.Customer)
     @Post('renew-devices')
     async renewLicense(@Req() req: Request, @Res() res: Response, @Body() body: RenewDevicesDto): Promise<any> {
-        // const id = (<{ id: string }>req['user']).id;
-        // const licenses = await this.customers.renewLicense();
-        // return res.status(200).send(licenses);
     }
 }

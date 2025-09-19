@@ -1,6 +1,5 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { DoComment } from './DoComment.entity';
-// import { AdminUsers } from './AdminUsers.entity';
 
 @Index('do_remark_pkey', ['id'], { unique: true })
 @Entity('do_remark', { schema: 'public' })
@@ -60,11 +59,4 @@ export class DoRemark {
         default: () => 'false',
     })
     isFinance: boolean | null;
-
-    // @OneToMany(() => DoComment, (doComment) => doComment.remark)
-    // doComments: DoComment[];
-
-    // @ManyToOne(() => AdminUsers, (adminUsers) => adminUsers.doRemarks)
-    // @JoinColumn([{ name: "writer_id", referencedColumnName: "id" }])
-    // writer: AdminUsers;
 }

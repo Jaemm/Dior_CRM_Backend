@@ -35,8 +35,6 @@ export class ProductsService {
         private readonly commonService: CommonService,
         private readonly customersService: CustomersService,
         @Inject(forwardRef(() => ConsultantsService)) private readonly consultantsService: ConsultantsService,
-
-        // repos
         private readonly activeStorageAttachRepository: ActiveStorageAttachmentsRepository,
         private readonly productsRepository: ProductsRepository,
         private readonly devicesRepository: DevicesRepository,
@@ -81,33 +79,6 @@ export class ProductsService {
     }
 
     async proctConnectMulti(product: Products, customer: any) {
-        // const countProduct = await this.productsMultiConnectRepository.count({ where: { product_id: product.id } });
-        // if (countProduct > 5) {
-        //     throw new ConflictException({
-        //         result_code: ErrorStatus.DEVICE_ALREADY_REGISTERED,
-        //         error: ResponseMessages.DeviceReachedMaximumRegistration,
-        //     });
-        // }
-        // try {
-        //     const insertProduct = this.productsMultiConnectRepository.create({
-        //         consultant_id: null,
-        //         customer_id: customer.id,
-        //         product_id: product.id,
-        //         created_at: new Date(),
-        //         updated_at: new Date(),
-        //     });
-        //     await this.productsMultiConnectRepository.save(insertProduct).catch((e) => {});
-        // } catch (error) {
-        //     if (error.code === '23505' && error.detail.includes('Key (customer_id, product_id)')) {
-        //     } else {
-        //         throw new Error();
-        //     }
-        // }
-        // const updatedProduct = await this.updateProduct(product.id, {
-        //     app_use_yn: 'Y',
-        //     products_multi_connect: true,
-        // });
-        // return updatedProduct;
     }
 
     async enterProduct(customerId: string, query: ProductsEnterDto, locale = 'en') {
@@ -115,8 +86,8 @@ export class ProductsService {
         const isFirstUseDate = query.first_use_date === 'n';
         const optic_number = query.optic_number.toUpperCase();
 
-        const useDate = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // Format: YYYYMMDD
-        const useTime = new Date().toISOString().slice(11, 16).replace(/:/g, ''); // Format: HHMM
+        const useDate = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const useTime = new Date().toISOString().slice(11, 16).replace(/:/g, '');
 
         const customer = await this.customersService.getCustomerById(customerId);
 
@@ -319,15 +290,6 @@ export class ProductsService {
     }
 
     async getCustomerMultiProduct(customer_id: number) {
-        // const productsList = await this.productsMultiConnectRepository.find({
-        //     where: {
-        //         customer_id,
-        //     },
-        //     select: {
-        //         product_id: true,
-        //     },
-        // });
-        // return productsList;
     }
 
     async getProducts(customer_id: any) {

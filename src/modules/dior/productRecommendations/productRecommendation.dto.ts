@@ -175,7 +175,6 @@ export class UpdateProductRecommendationDto {
     @ApiPropertyOptional({
         default: [
             {
-                // id: 0,
                 field_name: '',
                 language: '',
                 value: '',
@@ -184,7 +183,6 @@ export class UpdateProductRecommendationDto {
     })
     @IsOptional()
     product_translations: {
-        // id: number;
         field_name: string;
         language: string;
         value: string;

@@ -19,7 +19,6 @@ async function bootstrap() {
     appService.handleApp(app);
 
     const port = Number(process.env.PORT) || 8081;
-    console.log(`Configured Port: ${port}`);
 
     app.setGlobalPrefix('/v1/api');
     const enableSwagger = process.env.OPEN_SWAGGER;
@@ -71,7 +70,5 @@ async function bootstrap() {
         Logger.log('Listening at ' + address);
     });
 
-    console.log(`Application is running on: ${await app.getUrl()}`);
 }
-//
 bootstrap();

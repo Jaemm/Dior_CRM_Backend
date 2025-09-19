@@ -9,12 +9,10 @@ export class UtilsService {
                 type: 'png',
                 width: 480,
                 color: {
-                    dark: '#000000', // Black QR code
-                    light: '#FFFFFF', // White background
+                    dark: '#000000',
+                    light: '#FFFFFF',
                 },
             });
-            // const qrCodeUrl = await QRCode.toDataURL(url);
-
             return qrCodeUrl;
         } catch (error) {
             throw new error();

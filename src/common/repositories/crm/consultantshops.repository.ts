@@ -17,7 +17,6 @@ export class ConsultantShopsRepository extends Repository<ConsultantShops> {
         return consultantshops;
     }
 
-    //
     async findConsultantShops(conditions?: any, selections?: string[], includes?: string[]) {
         const shops = await this.find({
             where: conditions,

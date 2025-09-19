@@ -30,12 +30,11 @@ export class DiorController {
     @Post('customers')
     async createCustomers(
         @Res() res: Response,
-        @Body(new ValidationPipe({ transform: true })) body: CreateCustomerDto, // ✅ transform 활성화
+        @Body(new ValidationPipe({ transform: true })) body: CreateCustomerDto,
     ) {
         const result = await this.diorService.createCustomers(body);
         return res.status(200).send(result);
     }
-    //
 
     @Post('send-web-result')
     @ApiBearerAuth()

@@ -17,7 +17,6 @@ export class CustomersRepository extends Repository<Customers> {
 
         const customers = await this.find({
             where: {
-                // created_at: Between(startOfToday, endOfToday),
                 id: In(ids),
             },
             relations: [

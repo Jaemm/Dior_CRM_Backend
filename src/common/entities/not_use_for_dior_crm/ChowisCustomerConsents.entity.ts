@@ -52,7 +52,4 @@ export class ChowisCustomerConsents {
     @Column('text', { name: 'additional_information', nullable: true })
     additionalInformation: string | null;
 
-    // @ManyToOne(() => Customers, (customers) => customers.chowisCustomerConsents)
-    // @JoinColumn([{ name: "customer_id", referencedColumnName: "id" }])
-    // customer: Customers;
 }

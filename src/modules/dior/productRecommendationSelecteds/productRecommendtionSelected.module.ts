@@ -14,8 +14,6 @@ import { StaticTokenMiddleware } from '@/src/common/middleWare/authMiddlware/sta
     controllers: [ProductRecommendationSelectedsController],
     providers: [
         ProductRecommendationSelectedsService,
-
-        // Repos
         ProductAttributesRepository,
         ProductAttributeTranslationsRepository,
         ProductRecommendationRepository,
@@ -24,8 +22,6 @@ import { StaticTokenMiddleware } from '@/src/common/middleWare/authMiddlware/sta
     ],
 })
 export class ProductRecommendationSelectedsModule {
-    // StaticTokenMiddleware
-
     configure(consumer: MiddlewareConsumer) {
         consumer
             .apply(StaticTokenMiddleware)
@@ -34,9 +30,5 @@ export class ProductRecommendationSelectedsModule {
                 path: 'dior/product_recommendation_selecteds',
                 method: RequestMethod.GET,
             });
-        // consumer.apply(AuthMiddleware).forRoutes({
-        //     path: 'dior/company_consultants/by_consultant',
-        //     method: RequestMethod.GET,
-        // });
     }
 }

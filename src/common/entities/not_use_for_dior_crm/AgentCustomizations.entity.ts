@@ -1,5 +1,4 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-// import { AdminUsers } from './AdminUsers.entity';
 
 @Index('index_agent_customizations_on_agent_id', ['agentId'], {})
 @Index('agent_customizations_pkey', ['id'], { unique: true })
@@ -23,8 +22,4 @@ export class AgentCustomizations {
 
     @Column('timestamp without time zone', { name: 'updated_at' })
     updatedAt: Date;
-
-    // @ManyToOne(() => AdminUsers, (adminUsers) => adminUsers.agentCustomizations)
-    // @JoinColumn([{ name: "agent_id", referencedColumnName: "id" }])
-    // agent: AdminUsers;
 }

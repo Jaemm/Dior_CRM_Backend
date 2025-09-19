@@ -66,12 +66,6 @@ export class CommonService {
         }
     }
 
-    /**
-     * Throw Duplicate Error
-     *
-     * Checks is an error is of the code 23505, PostgreSQL's duplicate value error,
-     * and throws a conflict exception
-     */
     public async throwDuplicateError<T>(promise: Promise<T>, message?: string) {
         try {
             return await promise;
@@ -89,11 +83,6 @@ export class CommonService {
         }
     }
 
-    /**
-     * Throw Internal Error
-     *
-     * Function to abstract throwing internal server exception
-     */
     public async throwInternalError<T>(promise: Promise<T>): Promise<T> {
         try {
             return await promise;
@@ -103,11 +92,6 @@ export class CommonService {
         }
     }
 
-    /**
-     * Format Name
-     *
-     * Takes a string trims it and capitalizes every word
-     */
     public formatName(title: string): string {
         return title
             .trim()
@@ -115,12 +99,6 @@ export class CommonService {
             .replace(/\s\s+/g, ' ')
             .replace(/\w\S*/g, (w) => w.replace(/^\w/, (l) => l.toUpperCase()));
     }
-
-    /**
-     * Generate Point Slug
-     *
-     * Takes a string and generates a slug with dtos as word separators
-     */
     public generatePointSlug(str: string): string {
         return slugify(str, { lower: true, replacement: '.', remove: /['_\.\-]/g });
     }
@@ -163,7 +141,6 @@ export class CommonService {
 
             await this.mailTransporter.sendMail(mailOptions);
         } catch (error) {
-            console.log('Error sending email', error);
         }
     }
 
@@ -177,18 +154,14 @@ export class CommonService {
             return chars[Math.floor(Math.random() * chars.length)];
         }
 
-        // Ensure the password contains at least one lowercase, one uppercase, and one number
         let password = [getRandomChar(lowercaseChars), getRandomChar(uppercaseChars), getRandomChar(numberChars)];
 
-        // Fill the rest of the password length with random characters from all characters
         for (let i = 3; i < length; i++) {
             password.push(getRandomChar(allChars));
         }
 
-        // Shuffle the password array to mix the guaranteed characters with the random ones
         password = password.sort(() => Math.random() - 0.5);
 
-        // Join the array to form the final password string
         return password.join('');
     }
 
@@ -202,81 +175,12 @@ export class CommonService {
     private loadTranslations() {
         const koPath = join('src', 'common', 'translation', 'ko.json');
         const enPath = join('src', 'common', 'translation', 'en.json');
-        // const elPath = join('src', 'common', 'translation', 'el.json');
-        // const activeAdminEnPath = join('src', 'common', 'translation', 'activeadmin.en.json');
-        // const chowisEnPath = join('src', 'common', 'translation', 'chowis.en.json');
-        // const deviseEnPath = join('src', 'common', 'translation', 'devise.en.json');
         const errorsEnPath = join('src', 'common', 'translation', 'errors.en.json');
         const errorsKoPath = join('src', 'common', 'translation', 'errors.ko.json');
-        // const errorsDePath = join('src', 'common', 'translation', 'errors.de.json');
-        // const errorsEsPath = join('src', 'common', 'translation', 'errors.es.json');
-        // const errorsFrPath = join('src', 'common', 'translation', 'errors.fr.json');
-        // const errorsHePath = join('src', 'common', 'translation', 'errors.he.json');
-        // const errorsItPath = join('src', 'common', 'translation', 'errors.it.json');
-        // const errorsJaPath = join('src', 'common', 'translation', 'errors.ja.json');
-        // const errorsNlPath = join('src', 'common', 'translation', 'errors.nl.json');
-        // const errorsRuPath = join('src', 'common', 'translation', 'errors.ru.json');
-        // const errorsViPath = join('src', 'common', 'translation', 'errors.vi.json');
-        // const errorsZhHansPath = join('src', 'common', 'translation', 'errors.zh_hans.json');
-        // const errorsZhHantPath = join('src', 'common', 'translation', 'errors.zh_hant.json');
-        // const esPath = join('src', 'common', 'translation', 'es.json');
-        // const frPath = join('src', 'common', 'translation', 'fr.json');
-        // const huPath = join('src', 'common', 'translation', 'hu.json');
-        // const itPath = join('src', 'common', 'translation', 'it.json');
-        // const jaPath = join('src', 'common', 'translation', 'ja.json');
-        // const messagesPath = join('src', 'common', 'translation', 'messages.json');
-        // const nbPath = join('src', 'common', 'translation', 'nb.json');
-        // const nlPath = join('src', 'common', 'translation', 'nl.json');
-        // const plPath = join('src', 'common', 'translation', 'pl.json');
-        // const ruPath = join('src', 'common', 'translation', 'ru.json');
-        // const simpleFormEnPath = join('src', 'common', 'translation', 'simple_form.en.json');
-        // const thPath = join('src', 'common', 'translation', 'th.json');
-        // const validateEnPath = join('src', 'common', 'translation', 'validate.en.json');
-        // const validateKoPath = join('src', 'common', 'translation', 'validate.ko.json');
-        // const viPath = join('src', 'common', 'translation', 'vi.json');
-        // const zhCnPath = join('src', 'common', 'translation', 'zh-CN.json');
-        // const zhHansPath = join('src', 'common', 'translation', 'zh-Hans.json');
-        // const zhHantPath = join('src', 'common', 'translation', 'zh-Hant.json');
-        // const zhTwPath = join('src', 'common', 'translation', 'zh-TW.json');
-
         this.translations['en'] = JSON.parse(readFileSync(enPath, { encoding: 'utf-8' }));
         this.translations['ko'] = JSON.parse(readFileSync(koPath, { encoding: 'utf-8' }));
-        // this.translations['el'] = JSON.parse(fs.readFileSync(elPath, { encoding: 'utf-8' }));
-        // this.translations['activeadmin.en'] = JSON.parse(fs.readFileSync(activeAdminEnPath, { encoding: 'utf-8' }));
-        // this.translations['chowis.en'] = JSON.parse(fs.readFileSync(chowisEnPath, { encoding: 'utf-8' }));
-        // this.translations['devise.en'] = JSON.parse(fs.readFileSync(deviseEnPath, { encoding: 'utf-8' }));
         this.translations['errors.en'] = JSON.parse(readFileSync(errorsEnPath, { encoding: 'utf-8' }));
         this.translations['errors.ko'] = JSON.parse(readFileSync(errorsKoPath, { encoding: 'utf-8' }));
-        // this.translations['errors.de'] = JSON.parse(fs.readFileSync(errorsDePath, { encoding: 'utf-8' }));
-        // this.translations['errors.es'] = JSON.parse(fs.readFileSync(errorsEsPath, { encoding: 'utf-8' }));
-        // this.translations['errors.fr'] = JSON.parse(fs.readFileSync(errorsFrPath, { encoding: 'utf-8' }));
-        // this.translations['errors.he'] = JSON.parse(fs.readFileSync(errorsHePath, { encoding: 'utf-8' }));
-        // this.translations['errors.it'] = JSON.parse(fs.readFileSync(errorsItPath, { encoding: 'utf-8' }));
-        // this.translations['errors.ja'] = JSON.parse(fs.readFileSync(errorsJaPath, { encoding: 'utf-8' }));
-        // this.translations['errors.nl'] = JSON.parse(fs.readFileSync(errorsNlPath, { encoding: 'utf-8' }));
-        // this.translations['errors.ru'] = JSON.parse(fs.readFileSync(errorsRuPath, { encoding: 'utf-8' }));
-        // this.translations['errors.vi'] = JSON.parse(fs.readFileSync(errorsViPath, { encoding: 'utf-8' }));
-        // this.translations['errors.zh-hans'] = JSON.parse(fs.readFileSync(errorsZhHansPath, { encoding: 'utf-8' }));
-        // this.translations['errors.zh-hant'] = JSON.parse(fs.readFileSync(errorsZhHantPath, { encoding: 'utf-8' }));
-        // this.translations['es'] = JSON.parse(fs.readFileSync(esPath, { encoding: 'utf-8' }));
-        // this.translations['fr'] = JSON.parse(fs.readFileSync(frPath, { encoding: 'utf-8' }));
-        // this.translations['hu'] = JSON.parse(fs.readFileSync(huPath, { encoding: 'utf-8' }));
-        // this.translations['it'] = JSON.parse(fs.readFileSync(itPath, { encoding: 'utf-8' }));
-        // this.translations['ja'] = JSON.parse(fs.readFileSync(jaPath, { encoding: 'utf-8' }));
-        // this.translations['messages'] = JSON.parse(fs.readFileSync(messagesPath, { encoding: 'utf-8' }));
-        // this.translations['nb'] = JSON.parse(fs.readFileSync(nbPath, { encoding: 'utf-8' }));
-        // this.translations['nl'] = JSON.parse(fs.readFileSync(nlPath, { encoding: 'utf-8' }));
-        // this.translations['pl'] = JSON.parse(fs.readFileSync(plPath, { encoding: 'utf-8' }));
-        // this.translations['ru'] = JSON.parse(fs.readFileSync(ruPath, { encoding: 'utf-8' }));
-        // this.translations['simple_form.en'] = JSON.parse(fs.readFileSync(simpleFormEnPath, { encoding: 'utf-8' }));
-        // this.translations['th'] = JSON.parse(fs.readFileSync(thPath, { encoding: 'utf-8' }));
-        // this.translations['validate.en'] = JSON.parse(fs.readFileSync(validateEnPath, { encoding: 'utf-8' }));
-        // this.translations['validate.ko'] = JSON.parse(fs.readFileSync(validateKoPath, { encoding: 'utf-8' }));
-        // this.translations['vi'] = JSON.parse(fs.readFileSync(viPath, { encoding: 'utf-8' }));
-        // this.translations['zh-CN'] = JSON.parse(fs.readFileSync(zhCnPath, { encoding: 'utf-8' }));
-        // this.translations['zh-Hans'] = JSON.parse(fs.readFileSync(zhHansPath, { encoding: 'utf-8' }));
-        // this.translations['zh-Hant'] = JSON.parse(fs.readFileSync(zhHantPath, { encoding: 'utf-8' }));
-        // this.translations['zh-TW'] = JSON.parse(fs.readFileSync(zhTwPath, { encoding: 'utf-8' }));
     }
 
     getTranslation(locale: string) {
@@ -329,7 +233,6 @@ export class CommonService {
             const fileBinary = fileResponse.data;
 
             const buffer = Buffer.from(fileBinary, 'binary');
-            // await fs.writeFile('downloaded.xlsx', fileBinary);
 
             const workbook = new ExcelJS.Workbook();
             await workbook.xlsx.load(buffer);
@@ -338,7 +241,6 @@ export class CommonService {
 
             return worksheet;
         } catch (e) {
-            console.log(e);
             throw new BadRequestException({
                 result_code: ErrorStatus.INVALID_REQUEST,
                 error: this.createLocaleErrorMessage('en', 'invalid_request', `cannot detect ${fileUrl}`),

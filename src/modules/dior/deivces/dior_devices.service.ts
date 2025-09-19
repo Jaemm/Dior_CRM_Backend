@@ -71,8 +71,6 @@ export class DiorDevicesService {
                 .leftJoinAndSelect('device.products', 'products')
                 .leftJoinAndSelect('products.consultant', 'consultant')
                 .leftJoinAndSelect('consultant.consultant_branch', 'consultant_branch')
-                // .where('device.id IN (:...productDeviceIds)', { productDeviceIds });
-                // .where('device.consultant_company_id = :diorCompanyId', { diorCompanyId: 213 });
                 .where('device.id IN (:...productDeviceIds)', {
                     productDeviceIds: productDeviceIds.length ? productDeviceIds : [0],
                 });

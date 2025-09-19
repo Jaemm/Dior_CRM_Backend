@@ -35,23 +35,4 @@ describe('Dior - Product Recommendation Selecteds (e2e)', () => {
         const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
         expect(missingFields).toEqual([]);
     });
-
-    // test('dior/product_recommendation_selecteds/lists (GET)', async () => {
-    //     const localResponse = await request(localUrl)
-    //         .get('/dior/product_recommendation_selecteds/lists')
-    //         .auth(localToken, {
-    //             type: 'bearer',
-    //         })
-    //         .send()
-    //         .expect(200);
-
-    //     const rubyResponse = await request(rubyUrl)
-    //         .get('/dior/product_recommendation_selecteds/lists')
-    //         .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
-    //         .send()
-    //         .expect(200);
-
-    //     const missingFields = findMissingFields(rubyResponse.body, localResponse.body);
-    //     expect(missingFields).toEqual([]);
-    // });
 });

@@ -9,9 +9,7 @@ import { ResponseMessages } from '@/src/common/constants/response-messages';
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
     private readonly validLanguages = ['en', 'kr'];
-    //
     catch(exception: any, host: ArgumentsHost) {
-        console.log('exception: ', exception, exception.message);
 
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
@@ -50,7 +48,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
             return ErrorMessageTranslation[language]?.['Internal server error.'];
         }
 
-        // Get translated message based on language
         return translation;
     }
 

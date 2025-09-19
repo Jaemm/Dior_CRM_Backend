@@ -18,7 +18,6 @@ import { DiorCompanyBranchesService } from './companyBranches.service';
     providers: [
         DiorCompanyBranchesService,
         AwsS3Service,
-        // Repos
         ConsultantsRepository,
         ConsultantBranchesRepository,
         ProductsRepository,

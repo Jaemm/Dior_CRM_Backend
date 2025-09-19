@@ -11,14 +11,11 @@ export class ApiKeyMiddleware implements NestMiddleware {
         try {
             const token = req.headers.authorization?.split(' ')[1];
             if (this.secretKey !== token) {
-                // Token not provided, handle accordingly (e.g., return unauthorized response)
                 throw new UnauthorizedException({
                     result_code: ErrorStatus.UNAUTHORIZED,
                     error: ResponseMessages.Unauthorized,
                 });
             }
-            // return decoded;
-            // Do further verification or processing if needed
             next();
         } catch (err) {
             if (err.name === 'TokenExpiredError') {

@@ -12,9 +12,5 @@ import { AuthMiddleware } from '@/src/common/middleWare/authMiddlware/auth.middl
 })
 export class UtilsModule {
     configure(consumer: MiddlewareConsumer) {
-        // consumer.apply(AuthMiddleware).forRoutes({
-        //     path: 'utils/generate_qr_code',
-        //     method: RequestMethod.GET,
-        // });
     }
 }

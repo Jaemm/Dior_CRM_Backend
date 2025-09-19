@@ -1,16 +1,13 @@
 export const findMissingFields = (obj1: any, obj2: any, currentPath = ''): string[] => {
     const missingFields: string[] = [];
 
-    // Handle case where obj1 or obj2 is null or undefined
     if (obj1 === null || obj1 === undefined || obj2 === null || obj2 === undefined) {
         if (obj1 !== obj2) {
-            // Check strict inequality
             return [currentPath];
         }
         return [];
     }
 
-    // Check if obj1 and obj2 are not objects
     if (typeof obj1 !== 'object' || typeof obj2 !== 'object') {
         return [currentPath];
     }

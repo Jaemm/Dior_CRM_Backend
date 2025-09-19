@@ -94,8 +94,6 @@ export class Products {
     consultant: Consultants;
 
     @ManyToOne(() => Devices, (devices) => devices.products, {
-        // onDelete: 'SET NULL',
-        // onUpdate: 'CASCADE',
     })
     @JoinColumn([{ name: 'device_id', referencedColumnName: 'id' }])
     device: Devices;
@@ -106,7 +104,7 @@ export class Products {
 
     get getExpiredDate(): Date | null {
         if (this.first_use_date && this.license_period) {
-            return new Date(new Date(this.first_use_date).getTime() + this.license_period * 24 * 60 * 60 * 1000); // Convert days to milliseconds
+            return new Date(new Date(this.first_use_date).getTime() + this.license_period * 24 * 60 * 60 * 1000);
         }
         return null;
     }

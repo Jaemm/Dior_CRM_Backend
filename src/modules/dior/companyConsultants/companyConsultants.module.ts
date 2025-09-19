@@ -16,7 +16,6 @@ import { AnalysisDataReplicationModule } from '../../dataReplication/analysisDat
         DiorCompanyConsultantsService,
         CommonService,
 
-        // Repos
         ConsultantsRepository,
         CustomersRepository,
         ConsultantBranchesRepository,

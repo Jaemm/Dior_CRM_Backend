@@ -14,7 +14,7 @@ export class RefreshTokensRepository extends Repository<RefreshTokens> {
             tokenableId: String(consultant.id),
             tokenableType: 'Consultant',
             refreshToken: refreshToken,
-            refreshTokenExpiredAt: new Date(Date.now() + 7776000000), // 90 Days
+            refreshTokenExpiredAt: new Date(Date.now() + 7776000000),
             accessToken: accessToken,
             createdAt: new Date(),
             updatedAt: new Date(),

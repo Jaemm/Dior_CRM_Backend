@@ -12,7 +12,6 @@ export class AuthMiddleware implements NestMiddleware {
     constructor(private readonly commonService: CommonService) {}
 
     use(req: Request, res: Response, next: NextFunction) {
-        // const token = String(req.headers['authorization'])
         let token;
 
         let locale = 'en';
@@ -25,14 +24,12 @@ export class AuthMiddleware implements NestMiddleware {
         } else if (req.headers['x-chowis-token']) {
             token = String(req.headers['x-chowis-token']);
         } else {
-            // Extract the token from the Authorization header if present
             if (req.headers.authorization) {
                 token = req.headers.authorization.split(' ')[1];
             }
         }
 
         if (!token) {
-            // Token not provided, handle accordingly (e.g., return unauthorized response)
             throw new UnauthorizedException({
                 result_code: ErrorStatus.UNAUTHORIZED,
                 error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
@@ -41,18 +38,13 @@ export class AuthMiddleware implements NestMiddleware {
 
         try {
             const decoded = jwt.verify(token, this.secretKey);
-            // const decoded = jwt.verify(token, this.secretKey, {ignoreExpiration: true});
 
             req['user'] = decoded;
 
-            console.log(decoded);
 
             if (!(<{ id: string }>req.user).id) {
                 (<{ id: string }>req.user).id = (<{ consultant_id: string }>req.user).consultant_id;
             }
-
-            // return decoded;
-            // Do further verification or processing if needed
             next();
         } catch (err) {
             if (err.name === 'TokenExpiredError') {

@@ -113,17 +113,12 @@ import { CountriesRepository } from '@/src/common/repositories/crm/countries.rep
         AuthModule,
 
         forwardRef(() => ProductsModule),
-        // CustomerConsentsModule
     ],
     controllers: [CustomersController],
     providers: [
         CustomersService,
         AuthService,
         JwtService,
-
-        // CustomerDataReplicationService,
-
-        // Repos
         ApplicationsRepository,
         CountriesRepository,
         EthnicitiesRepository,

@@ -22,11 +22,8 @@ import { HttpModule } from '@nestjs/axios';
         ProductRecommendationService,
         AwsS3Service,
         CommonService,
-
-        // Repos
         ConsultantsRepository,
         ConsultantCountriesRepository,
-
         ProductAttributesRepository,
         ProductRecommendationRepository,
         ProductTranslationsRepository,

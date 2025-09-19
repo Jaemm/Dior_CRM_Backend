@@ -22,8 +22,6 @@ import { AnalysisDataReplicationModule } from '../../dataReplication/analysisDat
     controllers: [StatisticsController],
     providers: [
         StatisticsService,
-
-        // Repos
         ConsultantsRepository,
         ConsultantBranchesRepository,
         ConsultantCountriesRepository,

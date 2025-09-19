@@ -8,5 +8,4 @@ export interface GoogleUser {
     };
     _accessToken: string;
     _refreshToken: string;
-    // picture: string;
 }

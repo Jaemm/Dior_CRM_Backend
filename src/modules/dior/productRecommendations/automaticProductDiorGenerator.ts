@@ -155,37 +155,26 @@ export class AutomaticProductDiorGenerator {
         let product: ProductRecommendationSelecteds[];
 
         if (recommanded.toLowerCase().includes('japan')) {
-            // product = await this.getProductsFromMarketJapan(result);
             product = await this.getProductsFromMarketAsia(result);
-            console.log('market japan');
         } else if (recommanded.toLowerCase().includes('western') || recommanded.toLowerCase().includes('europe')) {
             product = await this.getProductsFromMarketWestern(result);
-            console.log('market western');
         } else if (recommanded.toLowerCase().includes('asia')) {
             product = await this.getProductsFromMarketAsia(result);
-            console.log('market asia');
         } else {
             if (this.routineRecommendation === '3') {
                 product = await this.getProductsFromMarketWestern(result);
-                console.log('routineRecommendation 3');
             } else if (this.routineRecommendation === '5') {
                 product = await this.getProductsFromMarketAsia(result);
-                console.log('routineRecommendation 5');
             } else {
                 product = await this.getProductsFromMarketAsia(result);
-                console.log('else asia');
             }
         }
-        console.log('market===', market);
-        console.log('recommanded===', recommanded);
-
         return product;
     }
 
     async getProductsFromMarketJapan(result: ResultJson[]) {
         const products = [];
 
-        //  skincare japan
         const premium = ['Yes, I use premium skincare.', "I'd like to try Dior premium skincare."];
         const drynessDarkSpot = ['dryness', 'dark spots'];
         const nonPremium = ["No, I'm not interested."];
@@ -209,8 +198,6 @@ export class AutomaticProductDiorGenerator {
 
         if (result[1].answers.includes('dark spots') && isPremium) await addSkinCareRoutineForJapan(3);
 
-        ///
-
         if (noDrynessDarkSpot && isNonPremium) await addSkinCareRoutineForJapan(5);
 
         if (result[1]['answers'].includes('dryness') && isNonPremium) await addSkinCareRoutineForJapan(4);
@@ -227,12 +214,11 @@ export class AutomaticProductDiorGenerator {
             products.push(await this.getMakeupRoutine(routineId, 'japan makeup'));
         };
 
-        /////
         if (isPremium) {
             if (finishType.includes('Matte Finish')) {
                 if (coverage.includes('Light')) {
                     if (form.includes('Fluid')) addMakeupRoutine(10);
-                    if (form.includes('Compact')) addMakeupRoutine(10); // it's routine 11. but ruby code 10
+                    if (form.includes('Compact')) addMakeupRoutine(10);
                     if (form.includes('Cushion')) addMakeupRoutine(3);
                 }
 
@@ -485,28 +471,20 @@ export class AutomaticProductDiorGenerator {
 
     async getProductsFromMarketAsia(result: ResultJson[]) {
         const products: ProductRecommendationSelecteds[][] = [];
-
-        //  skincare japan
         const premium = ['Yes, I use premium skincare.', "I'd like to try Dior premium skincare."];
         const drynessDarkSpot = ['dryness', 'dark spots'];
         const nonPremium = ["No, I'm not interested."];
-
         const darkSpotWrinkles = ['dark spots', 'wrinkles & fines lines'];
         const darkSpotFirmness = ['dark spots', 'lack of firmness'];
-
         const isAnswer1Count1 = result[1]['answers'].length === 1;
         const isDryness = result[1]['answers'].includes('dryness');
         const isDarkspots = result[1]['answers'].includes('dark spots');
-
         const isDarkSpotWrinkles = result[1]['answers'].every((x) => darkSpotWrinkles.includes(x));
         const isDarkSpotFirmness = result[1]['answers'].every((x) => darkSpotFirmness.includes(x));
-
         const isPremium =
             result[2]['answers'].filter((x) => premium.includes(x)).length === result[2]['answers'].length;
-
         const isNonPremium =
             result[2]['answers'].filter((x) => nonPremium.includes(x)).length === result[2]['answers'].length;
-
         let skincareProducts;
         const addSkincareRoutineForAsia = async (routine: number) => {
             skincareProducts = await this.getSkinCareRoutine(routine, 'asia skincare');

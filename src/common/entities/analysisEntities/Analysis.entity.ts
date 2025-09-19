@@ -9,7 +9,6 @@ import { Questionnaire } from './Questionnaire.entity';
 export class Analysis {
     @PrimaryGeneratedColumn({ type: 'integer', name: 'batch_id' })
     batchId: number;
-    //
     @Column('bigint', { name: 'customer_id', nullable: true })
     customerId: string | null;
 

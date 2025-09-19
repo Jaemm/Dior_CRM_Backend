@@ -13,9 +13,6 @@ export class CustomersDto {
 
     @ApiProperty()
     @IsString()
-    // @Matches(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{7,20}$/, {
-    //     message: 'Password must contain at least 7 characters, including Upper/lowercase and numbers',
-    // })
     password: string;
 }
 
@@ -142,14 +139,6 @@ export class UpdateCustomersDto {
     @IsOptional()
     consultant_shop_id: number;
 
-    // country_id: number;
-
-    // country_name: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // social_id: string;
-
     @ApiPropertyOptional()
     @IsOptional()
     social: string;
@@ -166,93 +155,9 @@ export class UpdateCustomersDto {
     @IsOptional()
     country_id: number;
 
-    // @ApiProperty()
-    // @IsOptional()
-    // company_id: number;
-
     @ApiPropertyOptional()
     @IsOptional()
     consultant_id: number;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // external_id: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // email_confirmed: boolean;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // confirm_token: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // memo: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // company_name: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // company_address: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // position: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // branch: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // status: number;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // callback_url: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // is_active: number;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // code: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // otp_token: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // otp_valid_til: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // countries: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // confirmation_sent_at: Date;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // confirmed_at: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // unconfirmed_email: string;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // register_for_crm: boolean;
-
-    // @ApiProperty()
-    // @IsOptional()
-    // email_subscription: boolean;
 }
 
 export class PasswordDto {

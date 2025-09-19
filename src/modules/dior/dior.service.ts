@@ -24,13 +24,11 @@ export class DiorService {
         private awsS3Service: AwsS3Service,
         private configService: ConfigService,
 
-        // Repos
         private consultantRepository: ConsultantsRepository,
         private customersRepository: CustomersRepository,
         private presignRepository: PresignRepository,
     ) {}
 
-    /** Customers */
     async getCustomers(query: CustomerByConsultantIdDto, locale = 'en') {
         try {
             const { consultant_id: consultantId, email } = query;
@@ -93,73 +91,9 @@ export class DiorService {
         }
     }
 
-    // async createCustomers(body: CreateCustomerDto) {
-    //     try {
-    //         const { email, consultant_id, name, external_id, surname } = body;
-
-    //         const existCustomer = await this.customersRepository.find({
-    //             where: {
-    //                 email: email,
-    //                 consultant_id: Number(consultant_id),
-    //                 external_id: external_id,
-    //             },
-    //         });
-
-    //         if (existCustomer.length > 0) {
-    //             throw new ConflictException({
-    //                 result_code: 409,
-    //                 error: `Data already Exists.`,
-    //             });
-    //         }
-
-    //         const newCustomer = this.customersRepository.create({
-    //             email: email,
-    //             consultant_id: Number(consultant_id),
-    //             name: name,
-    //             external_id: external_id,
-    //             surname: surname,
-    //             created_at: new Date(),
-    //             updated_at: new Date(),
-    //         });
-
-    //         const savedCustomer = await this.customersRepository.save(newCustomer);
-
-    //         const reformatCustomer: CustomersT = {
-    //             id: savedCustomer.id,
-    //             email: savedCustomer.email,
-    //             name: savedCustomer.name,
-    //             surname: savedCustomer.surname,
-    //             os: savedCustomer.os,
-    //             language: savedCustomer.language,
-    //             phone: savedCustomer.phone,
-    //             birth: savedCustomer.birth,
-    //             address: savedCustomer.address,
-    //             city: savedCustomer.city,
-    //             state: savedCustomer.state,
-    //             zip_code: savedCustomer.zip_code,
-    //             country: savedCustomer.country,
-    //             notes: savedCustomer.notes,
-    //             push_token: savedCustomer.push_token,
-    //             app_id: savedCustomer.app_id,
-    //             company_id: savedCustomer.company_id,
-    //             consultant_id: savedCustomer.consultant_id,
-    //             skin_color_group_id: savedCustomer.skin_color_group_id,
-    //             ethnicity_id: savedCustomer.ethnicity_id,
-    //             gender: savedCustomer.gender,
-    //             sign_in_count: savedCustomer.sign_in_count,
-    //             image_url: savedCustomer.image_url,
-    //             external_id: savedCustomer.external_id,
-    //         };
-
-    //         return reformatCustomer;
-    //     } catch (e) {
-    //         throw e;
-    //     }
-    // }
     async createCustomers(body: CreateCustomerDto): Promise<CustomersT> {
         const { email, consultant_id, name, external_id, surname } = body;
 
-        // 중복 고객 확인
         const existCustomer = await this.customersRepository.findOne({
             where: {
                 email: email,
@@ -169,11 +103,9 @@ export class DiorService {
         });
 
         if (existCustomer) {
-            // 중복 고객이 있는 경우 해당 고객 반환
             return this.reformatCustomer(existCustomer);
         }
 
-        // 새 고객 생성 및 저장
         const currentDate = new Date();
         const newCustomer = this.customersRepository.create({
             email,
@@ -187,7 +119,6 @@ export class DiorService {
 
         const savedCustomer = await this.customersRepository.save(newCustomer);
 
-        // 저장된 고객 데이터 반환
         return this.reformatCustomer(savedCustomer);
     }
 
@@ -266,8 +197,6 @@ export class DiorService {
 
             const uploadData: any = await this.awsS3Service.uploadFileToS3(buffer, keyForS3, prefix);
 
-            console.log(uploadData);
-
             const createFileUrl = (key: string) => {
                 const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
 
@@ -293,10 +222,6 @@ export class DiorService {
             return {
                 url: downloadUrl,
             };
-            // ('http://localhost:3100/image/277c7a2f-9236-4759-8d54-3aed0d402506');
-            // 1. param -> 277c7a2f-9236-4759-8d54-3aed0d402506
-            // 2. DB check -->  ext
-            // 3. s3 -> key + .ext
         } catch (e) {
             throw e;
         }

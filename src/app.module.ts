@@ -22,7 +22,6 @@ import { HealthModule } from './modules/apiHealthCheck/apiHealth.module';
 import { CRMModule } from './modules/crm/crm.module';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guards/roles.guard';
-// import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { AllExceptionsFilter } from './common/middleWare/exceptions/exceptionHandling/allException.filter';
 import { LoggingMiddleware } from './common/middleWare/logMiddleWare/logging.middleware';
@@ -60,7 +59,6 @@ import { ScheduleModule } from '@nestjs/schedule';
                 JWT_RESET_PASSWORD_TIME: Joi.string().required(),
                 DOMAIN: Joi.string().required(),
 
-                // Analyis Table
                 CNDP_SKIN: Joi.string().optional(),
                 CNDP_HAIR: Joi.string().optional(),
                 CMA_SKIN: Joi.string().optional(),

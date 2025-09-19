@@ -20,14 +20,6 @@ export const consultantLoginData = {
 };
 
 export const consultantUpdateData = {
-    // email: '',
-    // phone: '1234567890',
-    // new_password: 'string',
-    // name: 'Test',
-    // surname: 'testSurname',
-    // os: 'testOS',
-    // language: 'en',
-    // birthdate: '',
     address: 'test',
     app_id: 88,
     age: '23',

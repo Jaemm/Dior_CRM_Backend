@@ -65,10 +65,6 @@ export class DiorAdminsService {
 
             return {
                 data: reformatAdminList,
-                // total_size: totalCount,
-                // current_page_size: reformatAdminList.length,
-                // current_page: searchPage,
-                // total_pages: Math.ceil(totalCount / searchPer),
             };
         } catch (e) {
             throw e;

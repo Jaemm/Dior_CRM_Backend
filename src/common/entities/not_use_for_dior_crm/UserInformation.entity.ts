@@ -1,7 +1,4 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-// import { ConsultantCompanies } from './ConsultantCompanies.entity';
-// import { Countries } from './Countries.entity';
-// import { AdminUsers } from './AdminUsers.entity';
 
 @Index('user_information_pkey', ['id'], { unique: true })
 @Entity('user_information', { schema: 'public' })
@@ -57,14 +54,4 @@ export class UserInformation {
     @Column('character varying', { name: 'attn', nullable: true })
     attn: string | null;
 
-    // @ManyToOne(() => ConsultantCompanies, (consultantCompanies) => consultantCompanies.userInformations)
-    // @JoinColumn([{ name: 'company_id', referencedColumnName: 'id' }])
-    // company: ConsultantCompanies;
-
-    // @ManyToOne(() => AdminUsers, (adminUsers) => adminUsers.userInformations, {
-    //     onDelete: 'CASCADE',
-    //     onUpdate: 'CASCADE',
-    // })
-    // @JoinColumn([{ name: 'user_id', referencedColumnName: 'id' }])
-    // user: AdminUsers;
 }

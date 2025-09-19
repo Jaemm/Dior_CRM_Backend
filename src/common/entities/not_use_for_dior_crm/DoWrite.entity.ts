@@ -1,8 +1,5 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-// import { AdminUsers } from './AdminUsers.entity';
-// import { ConsultantCompanies } from './ConsultantCompanies.entity';
 import { DoCustomerType } from './DoCustomerType.entity';
-// import { Countries } from './Countries.entity';
 import { DoSaleChannel } from './DoSaleChannel.entity';
 import { DoShippingTerm } from './DoShippingTerm.entity';
 import { DoStatus } from './DoStatus.entity';
@@ -149,14 +146,6 @@ export class DoWrite {
         length: 100,
     })
     deliveryBrand: string | null;
-
-    // @ManyToOne(() => AdminUsers, (adminUsers) => adminUsers.doWrites)
-    // @JoinColumn([{ name: 'agent_id', referencedColumnName: 'id' }])
-    // agent: AdminUsers;
-
-    // @ManyToOne(() => ConsultantCompanies, (consultantCompanies) => consultantCompanies.doWrites)
-    // @JoinColumn([{ name: 'customer_id', referencedColumnName: 'id' }])
-    // customer: ConsultantCompanies;
 
     @ManyToOne(() => DoCustomerType, (doCustomerType) => doCustomerType.doWrites)
     @JoinColumn([{ name: 'customertypeid', referencedColumnName: 'id' }])

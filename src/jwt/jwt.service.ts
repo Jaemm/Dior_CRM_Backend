@@ -24,7 +24,6 @@ export class JwtService {
         this.domain = this.configService.get<string>('DOMAIN');
     }
 
-    // Decode RS256
     private async generateRS256Token(
         payload: any,
         privateKey: string,
@@ -40,7 +39,6 @@ export class JwtService {
         );
     }
 
-    // Decode simple token
     private static async generateTokenAsync(
         payload: IAccessPayload | IEmailPayload | IRefreshPayload,
         secret: string,
@@ -57,7 +55,6 @@ export class JwtService {
         });
     }
 
-    //
 
     private static async verifyTokenAsync<T>(token: string, secret: string, options: Jwt.VerifyOptions): Promise<T> {
         return new Promise((resolve, rejects) => {
@@ -83,19 +80,16 @@ export class JwtService {
             audience: domain ?? this.domain,
             algorithm: 'HS256',
         };
-        // try {
-        const payload: any = { id: user.id }; // Default payload for all token types
+        const payload: any = { id: user.id };
 
         switch (tokenType) {
             case TokenTypeEnum.ACCESS:
                 const { secret: tokenAccess, time: accessTime } = this.jwtConfig.access;
-                // return this.generateRS256Token(payload, privateKey, jwtOptions, accessTime);
 
                 const accessToken = await this.commonService.throwDuplicateError(
                     JwtService.generateTokenAsync({ id: user.id.toString(), role: user.role }, tokenAccess, {
                         ...jwtOptions,
                         expiresIn: accessTime,
-                        //algorithm: 'RS256', // to use public and private key
                     }),
                 );
                 return accessToken;
@@ -107,7 +101,6 @@ export class JwtService {
                         {
                             id: user.id.toString(),
                             role: user.role,
-                            // version: user.credentials.version,
                             tokenId: tokenId ?? uuidv4(),
                         },
                         refreshSecret,
@@ -129,14 +122,12 @@ export class JwtService {
         }
     }
 
-    //To verify and decode token
     private static async throwBadRequest<T extends IAccessToken | IRefreshToken | IEmailToken>(
         promise: Promise<T>,
     ): Promise<T> {
         try {
             return await promise;
         } catch (error) {
-            console.log('error', error);
             if (error instanceof Jwt.TokenExpiredError) {
                 throw new UnauthorizedException({
                     result_code: ErrorStatus.UNAUTHORIZED,
@@ -169,7 +160,6 @@ export class JwtService {
                     JwtService.verifyTokenAsync(token, secret_, {
                         ...jwtOptions,
                         maxAge: accessTime,
-                        // algorithms: ['RS256'],
                     }),
                 );
             case TokenTypeEnum.REFRESH:
@@ -180,7 +170,6 @@ export class JwtService {
                     JwtService.verifyTokenAsync(token, secret, {
                         ...jwtOptions,
                         maxAge: time,
-                        // algorithms: ['HS256'],
                     }),
                 );
         }
@@ -193,7 +182,6 @@ export class JwtService {
         } else if (req.headers['x-chowis-token']) {
             token = String(req.headers['x-chowis-token']);
         } else {
-            // Extract the token from the Authorization header if present
             if (req.headers.authorization) {
                 token = req.headers.authorization.split(' ')[1];
             }

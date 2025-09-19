@@ -48,11 +48,8 @@ export class CRMService {
         private configService: ConfigService,
         private readonly customerService: CustomersService,
         private consultantsService: ConsultantsService,
-
         private productService: ProductsService,
         private commonService: CommonService,
-
-        // Repos
         private readonly countriesRepository: CountriesRepository,
         private readonly customersRepository: CustomersRepository,
         private readonly consultantRepository: ConsultantsRepository,
@@ -195,8 +192,6 @@ export class CRMService {
 
     async register(id: number, data: UpdateCrmCustomersDto) {
         const { email, phone, app_id, country_code } = data;
-        // let country_id = data.country_id;
-
         if (!email && !phone) {
             throw new BadRequestException({
                 result_code: ErrorStatus.BAD_REQUEST,
@@ -240,14 +235,12 @@ export class CRMService {
         if (country_code) {
             const country = await this.countriesRepository.findOneCountry({ country_code: country_code }, ['id']);
             if (country) {
-                // country_id = Number(country.id);
             }
         }
 
         const customerData = {
             ...data,
             consultant_id: consultant.id,
-            // country_id: country_id,
             register_date: new Date(),
             register_for_crm: true,
             created_at: new Date(),
@@ -289,8 +282,6 @@ export class CRMService {
     }
 
     async updateCustomer(consultantId: number, customerId: number, data: UpdateCrmCustomersDto) {
-        // let country_id = data.country_id;
-
         const {
             email,
             social,
@@ -518,7 +509,6 @@ export class CRMService {
         const batches = [];
 
         for (const d of diagnosis_info) {
-            // Sync batch_id
             const batchIdUrl = `${process.env.CHOWIS_CLOUD_V2_URL}/analysis/requestBatchId?customer_id=${cloudCustomerId}`;
             const batchIdResponse = await axios
                 .get(batchIdUrl, {
@@ -537,8 +527,6 @@ export class CRMService {
             batches.push({ local_batch_id: localBatchId, cloud_batch_id: cloudBatchId });
 
             for (const m of d.measurements) {
-                // Sync analysis data
-                // TODO: send originalImage & analyzedImage as a file
                 const analysisUrl = `${process.env.CHOWIS_CLOUD_V2_URL}/analysis/offline`;
 
                 let file: any = this.convertToFileFromBase64(m.original_image, 'originalImage.png');
@@ -665,8 +653,6 @@ export class CRMService {
     }
 
     async updateConsentForm(data: UpdateConsentForm, locale = 'en') {
-        // TODO: Use locale from headers for translation
-
         const { customer_id, consent_type, consent_form_answers, batch_id, url } = data;
 
         if (!consent_type) {
