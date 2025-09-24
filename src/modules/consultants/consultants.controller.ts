@@ -186,14 +186,14 @@ export class ConsultantsController {
     @Post('login/saml')
     async handleSamlResponse(
         @Body() body: { SAMLResponse: string },
-        @Query('redirect') redirect = 'https://dior-backoffice-git-dev-chowis1.vercel.app/login',
+        @Query('redirect') redirect = 'https://dior-backoffice-git-dev-choicetech.vercel.app/login',
         @Headers('X-CHOWIS-LOCALE') locale = 'en',
         @Res() res: Response,
     ) {
         try {
             const email = await this.samlService.extractEmailFromSaml(body.SAMLResponse);
             const loginResult = await this.consultants.loginWithEmailOnly(email, locale);
-            
+
             const query = new URLSearchParams({
                 samlLogin: 'true',
                 token: loginResult.token,
