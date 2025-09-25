@@ -636,6 +636,7 @@ export class ConsultantsService {
                 consultant_company_id: consultant.consultant_company.id,
             });
         }
+        //
         if (consultant?.consultant_branch) {
             consultant.consultant_branch.id = Number(consultant?.consultant_branch.id);
             delete consultant.consultant_branch.consultantCompanyId;
@@ -883,39 +884,27 @@ export class ConsultantsService {
     }
 
     async loginWithEmailOnly(email: string, locale = 'en') {
-        console.log('[SAML] 입력된 이메일:', email);
-
-        let consultant = await this.consultantsRepository.findOne({ where: { email } });
+        let consultant = await this.consultantsRepository.findOne({
+            where: { email },
+            relations: [
+                'products',
+                'products.device',
+                'products.license',
+                'products.application',
+                'country_details',
+                'consultant_position',
+                'consultant_company',
+                'consultant_branch',
+            ],
+        });
 
         if (!consultant) {
             console.warn('[SAML] 해당 이메일의 사용자가 없어 임시 계정을 생성합니다.');
 
-            let branch = await this.consultantBranchesRepository.findOne({ where: { code: 'OKTA' } });
-
-            if (!branch) {
-            branch = this.consultantBranchesRepository.create({
-                consultantCompanyId: '213',
-                name: 'okta branch',
-                email,
-                password: 'okta1234',
-                country: 'France',
-                code: 'OKTA',
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            });
-            await this.consultantBranchesRepository.save(branch);
-            console.log('[SAML] OKTA branch 생성됨:', branch.id);
-            } else {
-            console.log('[SAML] 기존 OKTA branch 사용:', branch.id);
-            }
-
-            try {
             consultant = this.consultantsRepository.create({
-                consultant_company_id: 213,
-                consultant_branch_id: Number(branch.id),
-                name: 'okta user',
                 email,
-                password_digest: 'okta1234',
+                name: 'SAML User',
+                consultant_company_id: 213,
                 app_id: 88,
                 country: 'France',
                 created_at: new Date(),
@@ -924,10 +913,6 @@ export class ConsultantsService {
             });
 
             await this.consultantsRepository.save(consultant);
-            } catch (error) {
-            console.warn('[SAML] 다른 프로세스에서 이미 계정 생성됨, 기존 계정 로드');
-            consultant = await this.consultantsRepository.findOne({ where: { email } });
-            }
         }
 
         const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
@@ -1367,6 +1352,7 @@ export class ConsultantsService {
         if (consultant?.products.length > 0) {
             for (const productData of consultant.products) {
                 await this.productsRepository.save(productData).catch((error) => {
+                    console.log(error);
                 });
             }
         }
@@ -2353,10 +2339,10 @@ export class ConsultantsService {
                 additionalDays = Number(duration);
                 break;
             case 'months':
-                additionalDays = Number(duration) * 28;
+                additionalDays = Number(duration) * 28; // Assuming 30 days in a month
                 break;
             case 'years':
-                additionalDays = Number(duration) * 365;
+                additionalDays = Number(duration) * 365; // Assuming 365 days in a year
                 break;
             default:
                 throw new NotFoundException({
@@ -2902,6 +2888,7 @@ export class ConsultantsService {
                         reject(err);
                     } else {
                         resolve(true);
+                        console.log('Success delete consultant');
                     }
                 });
             });
@@ -2911,7 +2898,9 @@ export class ConsultantsService {
     async checkFileExistence(outputPath: string) {
         try {
             await fs.access(outputPath);
+            console.log('File exists');
         } catch (error) {
+            console.log('File does not exist');
         }
     }
     async uploadToSFTPServer(fileName: string, tempFilePath: string) {
@@ -2922,6 +2911,7 @@ export class ConsultantsService {
             password: process.env.SFTP_PASS || '',
         });
 
+        console.log(`${fileName}\n, "tempFilePath: ====>",${tempFilePath}\n`);
 
         try {
             const remoteDirectoryPath = './analysis_data/PROD/bak';
@@ -2929,6 +2919,7 @@ export class ConsultantsService {
             try {
                 await this.client.mkdir(remoteDirectoryPath, true);
             } catch (err) {
+                console.log('Directory may already exist', err.message);
             }
 
             const remoteFilePath = `${remoteDirectoryPath}/${fileName}`;
@@ -2962,9 +2953,13 @@ export class ConsultantsService {
             const startDate = date ? date + ' 00:00:00' : `${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
             const endDate = date ? date + ' 23:59:59' : `${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
 
-        const analyses = await this.analysisReplService.getStatisticsConsultantions(startDate, endDate);
-        const customerIds = analyses.map((analysis) => Number(analysis.customerId));
-        const batchIds = analyses.map((analysis) => analysis.batchId);
+            console.log(`[CRON] 조회 기간: ${startDate} ~ ${endDate}`);
+
+            const analyses = await this.analysisReplService.getStatisticsConsultantions(startDate, endDate);
+            console.log(`[CRON] 분석 데이터 수집 완료: ${analyses.length}건`);
+
+            const customerIds = analyses.map((analysis) => Number(analysis.customerId));
+            const batchIds = analyses.map((analysis) => analysis.batchId);
 
             const customers = await this.customersRepository.getTodayCreatedCustomers(customerIds);
             console.log(`[CRON] 고객 수집 완료: ${customers.length}명`);
@@ -3004,14 +2999,15 @@ export class ConsultantsService {
             const jsonData = excelData;
             const file = JSON.stringify(jsonData, null, 2);
 
-        try {
-            await fs.writeFile(filePath, file);
+            try {
+                await fs.writeFile(filePath, file);
+                console.log(`[CRON] 파일 생성 완료: ${filePath}`);
 
-            await this.uploadToSFTPServer(fileName, filePath);
-        } catch (error) {
-            console.error(`${fileName} writing or upload failed`, error);
-        } finally {
-        }
+                await this.uploadToSFTPServer(fileName, filePath);
+                console.log(`[CRON] SFTP 업로드 완료: ${fileName}`);
+            } catch (error) {
+                console.error(`[CRON] ${fileName} writing or upload failed`, error);
+            }
 
             console.log(`[CRON] === END generateFlatFileDior ===`);
             return true;
@@ -3241,17 +3237,21 @@ export class ConsultantsService {
     }
 
     async listFiles(remoteDir: any, fileGlob: any) {
+        console.log(`Listing ${remoteDir} ...`);
         let fileObjects;
         try {
             fileObjects = await this.client.list(remoteDir, fileGlob);
         } catch (err) {
+            console.log('Listing failed:', err);
         }
 
         const fileNames: any[] = [];
 
         for (const file of fileObjects) {
             if (file.type === 'd') {
+                console.log(`${new Date(file.modifyTime).toISOString()} PRE ${file.name}`);
             } else {
+                console.log(`${new Date(file.modifyTime).toISOString()} ${file.size} ${file.name}`);
             }
             fileNames.push(file.name);
         }
@@ -3260,6 +3260,7 @@ export class ConsultantsService {
     }
 
     async uploadFile(localFile: any, remoteFile: any) {
+        console.log(`Uploading ${localFile} to ${remoteFile} ...`);
         try {
             await this.client.put(localFile, remoteFile);
         } catch (err) {
@@ -3268,8 +3269,10 @@ export class ConsultantsService {
     }
 
     async ftpconnect(options: { host: string; port: number; username: string; password: string }) {
+        console.log(`Connecting to ${options.host}:${options.port}`);
         try {
             const response = await this.client.connect(options);
+            console.log('Connected successfully');
             return response;
         } catch (err) {
             console.error('Failed to connect:', err);

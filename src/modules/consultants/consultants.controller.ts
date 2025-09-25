@@ -172,6 +172,7 @@ export class ConsultantsController {
         @Body() body: LoginConsultantDto,
         @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
+        body.email = body.email.toLowerCase();
         const loginResult = await this.consultants.loginRuby(body, locale);
         return res.status(200).send({ ...loginResult });
     }
@@ -185,7 +186,7 @@ export class ConsultantsController {
     @Post('login/saml')
     async handleSamlResponse(
         @Body() body: { SAMLResponse: string },
-        @Query('redirect') redirect = 'https://dior-backoffice-git-dev-chowis1.vercel.app/login',
+        @Query('redirect') redirect = 'https://dior-backoffice-git-dev-choicetech.vercel.app/login',
         @Headers('X-CHOWIS-LOCALE') locale = 'en',
         @Res() res: Response,
     ) {
@@ -193,26 +194,21 @@ export class ConsultantsController {
             const email = await this.samlService.extractEmailFromSaml(body.SAMLResponse);
             const loginResult = await this.consultants.loginWithEmailOnly(email, locale);
 
-            console.log('[SAML 로그인 성공] email:', email);
-            console.log('[LoginResult]', loginResult);
-
             const query = new URLSearchParams({
                 samlLogin: 'true',
                 token: loginResult.token,
+                refresh_token: loginResult.refresh_token,
                 name: loginResult.name,
                 id: loginResult.id.toString(),
+                role: loginResult.role || 'Consultant',
             }).toString();
 
-            console.log('[리다이렉트 URL]', `${redirect}?${query}`);
-
-        return res.redirect(`${redirect}?${query}`);
-    } catch (err) {
-        console.error('[SAML 로그인 실패]', err);
-        console.log('[Raw SAMLResponse]', body.SAMLResponse);
-        return res.redirect(`${redirect}?error=saml_failed`);
+            return res.redirect(`${redirect}?${query}`);
+        } catch (err) {
+            console.error('[SAML 로그인 실패]', err);
+            return res.redirect(`${redirect}?error=saml_failed`);
+        }
     }
-    }
-
 
     @Put('/update')
     @ApiBearerAuth()
