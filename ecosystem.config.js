@@ -2,7 +2,7 @@
 module.exports = {
     apps: [
         {
-            name: 'dior-crm',
+            name: 'Dior-CRM',
             script: './dist/main.js',
             args: 'restart',
             exec_mode: 'cluster',

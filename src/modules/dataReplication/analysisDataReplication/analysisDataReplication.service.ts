@@ -327,7 +327,7 @@ export class AnalysisDataReplicationService {
             SELECT analysis.created_time
             FROM analysis
             WHERE ${condition}
-            AND analysis.created_time BETWEEN '2020-01-01' AND '2024-09-26'
+            AND analysis.created_time < '2024-09-26'
             ORDER BY analysis.created_time DESC
             LIMIT 1
         `;
