@@ -2933,7 +2933,7 @@ export class ConsultantsService {
         }
     }
 
-    @Cron('*/1 * * * *')
+    @Cron('0 0 * * *')
     async generateFlatFileDior(date?: string) {
         console.log(`[CRON] === START generateFlatFileDior ===`);
         console.log(`[CRON] 실행 날짜 파라미터: ${date || '오늘 날짜'}`);
