@@ -2933,7 +2933,8 @@ export class ConsultantsService {
         }
     }
 
-    @Cron('0 0 * * *')
+    @Cron('*/1 * * * *')
+    // @Cron('0 0 * * *')
     async generateFlatFileDior(date?: string) {
         console.log(`[CRON] === START generateFlatFileDior ===`);
         console.log(`[CRON] 실행 날짜 파라미터: ${date || '오늘 날짜'}`);
@@ -2998,6 +2999,7 @@ export class ConsultantsService {
                 const bc = customer.consultant;
                 const pos = bc?.consultant_branch?.code || null;
                 const result = analysisResults[index]?.data;
+
                 const products = (productMap.get(analysis.batchId) || []).map((product: any) => ({
                     name: product?.name ?? null,
                     link: product?.link ?? null,
@@ -3008,7 +3010,29 @@ export class ConsultantsService {
                 }));
 
                 const consent = consentMap.get(`${analysis.batchId}`);
-                const consentAnswers = consent?.consentFormAnswers;
+                let consentAnswers = consent?.consentFormAnswers;
+
+                // ✅ 2중 배열까지 변환 처리
+                if (
+                    Array.isArray(consentAnswers) &&
+                    consentAnswers.length === 1 &&
+                    Array.isArray(consentAnswers[0]) &&
+                    typeof consentAnswers[0][0] === 'string'
+                ) {
+                    consentAnswers = consentAnswers[0][0].split(',').map((ans) => ans.trim());
+                } else if (
+                    Array.isArray(consentAnswers) &&
+                    consentAnswers.length === 1 &&
+                    typeof consentAnswers[0] === 'string'
+                ) {
+                    consentAnswers = consentAnswers[0].split(',').map((ans) => ans.trim());
+                }
+
+                console.log(`[CRON] 검사 중인 Consent:`, {
+                    batchId: analysis.batchId,
+                    type: consent?.consentType,
+                    answers: consentAnswers,
+                });
 
                 const newJson = {
                     client_iw_id: customer.external_id,
@@ -3022,12 +3046,14 @@ export class ConsultantsService {
                     recommended_product: products,
                 };
 
+                // 개인정보 보호 처리
                 if (consent) {
                     if (consent.consentType === 'without_ipos_consent' && consentAnswers?.[2] === 'No') {
                         newJson.client_iw_id = null;
                         newJson.recommended_product = [];
                         newJson.scores = [];
                     }
+
                     if (consent.consentType === 'ipos_consent') {
                         if (consentAnswers?.[2] === 'No') newJson.client_iw_id = null;
                         if (consentAnswers?.[3] === 'No') {
@@ -3037,25 +3063,24 @@ export class ConsultantsService {
                     }
                 }
 
-                if ((consentAnswers || []).length === 2 && !consentAnswers.includes('No')) {
-                    excelData.push(newJson);
-                } else if ((consentAnswers || []).length === 4) {
-                    if (
-                        !(
-                            consentAnswers[0] === 'Yes' &&
-                            consentAnswers[1] === 'No' &&
-                            consentAnswers[2] === 'No' &&
-                            consentAnswers[3] === 'No'
-                        ) &&
-                        !(
-                            consentAnswers[0] === 'Yes' &&
-                            consentAnswers[1] === 'Yes' &&
-                            consentAnswers[2] === 'No' &&
-                            consentAnswers[3] === 'No'
-                        )
-                    ) {
-                        excelData.push(newJson);
+                // ✅ 조건 처리 (테스트용: 최소 Yes 1개 이상이면 push)
+                let shouldPush = false;
+
+                if (Array.isArray(consentAnswers)) {
+                    const yesCount = consentAnswers.filter((ans) => ans === 'Yes').length;
+                    if (yesCount >= 1) {
+                        shouldPush = true;
                     }
+                }
+
+                if (!consentAnswers || consentAnswers.length === 0) {
+                    console.warn(`[CRON] consentAnswers 없음, fallback 적용 → PUSH`);
+                    shouldPush = true;
+                }
+
+                if (shouldPush) {
+                    console.log(`[CRON] ✅ PUSHED DATA for batchId ${analysis.batchId}`);
+                    excelData.push(newJson);
                 }
             }
 
