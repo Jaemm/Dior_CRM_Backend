@@ -261,6 +261,7 @@ export class Consultants {
     @OneToOne(() => ConsultantCompanies, (consultantCompanies: ConsultantCompanies) => consultantCompanies.consultant)
     @JoinColumn([{ name: 'consultant_company_id', referencedColumnName: 'id' }])
     'consultant_company': ConsultantCompanies;
+    static code: any;
 
     get 'getConsultantsInfo'() {
         return {

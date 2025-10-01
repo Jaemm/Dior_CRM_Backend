@@ -16,24 +16,20 @@ export class SamlService {
     private readonly certPath = process.env.SAML_IDP_CERT_PATH;
 
     constructor() {
-        console.log('[SAML] SAML_IDP_CERT_PATH:', this.certPath);
 
         if (!this.certPath) {
             throw new Error('[SAML] SAML_IDP_CERT_PATH is undefined');
         }
 
         const resolvedPath = resolve(this.certPath);
-        console.log('[SAML] Resolved Path:', resolvedPath);
 
         const fileExists = fs.existsSync(resolvedPath);
-        console.log('[SAML] File exists:', fileExists);
 
         if (!fileExists) {
             throw new Error(`[SAML] Cert file not found at ${resolvedPath}`);
         }
 
         const certContent = fs.readFileSync(resolvedPath, 'utf-8');
-        console.log('[SAML] Cert content preview:', certContent.slice(0, 100));
 
         this.idp = saml.IdentityProvider({
             entityID: process.env.SAML_IDP_ENTITY_ID,
@@ -88,13 +84,9 @@ export class SamlService {
             nameID;
 
         if (!email) {
-            console.log('decoded XML:', decoded);
-            console.log('nameID:', nameID);
-            console.log('attributeMap:', attributeMap);
             throw new Error('No email in SAML response');
         }
 
-        console.log('[SAML] 입력된 이메일:', email);
         return email;
     }
 

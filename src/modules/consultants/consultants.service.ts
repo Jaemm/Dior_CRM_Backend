@@ -1351,9 +1351,7 @@ export class ConsultantsService {
         Object.assign(consultant, data);
         if (consultant?.products.length > 0) {
             for (const productData of consultant.products) {
-                await this.productsRepository.save(productData).catch((error) => {
-                    console.log(error);
-                });
+                await this.productsRepository.save(productData).catch((error) => {});
             }
         }
 
@@ -2888,7 +2886,6 @@ export class ConsultantsService {
                         reject(err);
                     } else {
                         resolve(true);
-                        console.log('Success delete consultant');
                     }
                 });
             });
@@ -2898,10 +2895,7 @@ export class ConsultantsService {
     async checkFileExistence(outputPath: string) {
         try {
             await fs.access(outputPath);
-            console.log('File exists');
-        } catch (error) {
-            console.log('File does not exist');
-        }
+        } catch (error) {}
     }
     async uploadToSFTPServer(fileName: string, tempFilePath: string) {
         await this.ftpconnect({
@@ -2911,16 +2905,12 @@ export class ConsultantsService {
             password: process.env.SFTP_PASS || '',
         });
 
-        console.log(`${fileName}\n, "tempFilePath: ====>",${tempFilePath}\n`);
-
         try {
             const remoteDirectoryPath = './analysis_data/PROD/bak';
 
             try {
                 await this.client.mkdir(remoteDirectoryPath, true);
-            } catch (err) {
-                console.log('Directory may already exist', err.message);
-            }
+            } catch (err) {}
 
             const remoteFilePath = `${remoteDirectoryPath}/${fileName}`;
 
@@ -2936,9 +2926,6 @@ export class ConsultantsService {
     // @Cron('*/1 * * * *')
     @Cron('0 0 * * *')
     async generateFlatFileDior(date?: string) {
-        console.log(`[CRON] === START generateFlatFileDior ===`);
-        console.log(`[CRON] 실행 날짜 파라미터: ${date || '오늘 날짜'}`);
-
         const excelData: any[] = [];
         const credentials = {
             app_id: '88',
@@ -2954,27 +2941,21 @@ export class ConsultantsService {
             const startDate = date ? date + ' 00:00:00' : `${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
             const endDate = date ? date + ' 23:59:59' : `${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
 
-            console.log(`[CRON] 조회 기간: ${startDate} ~ ${endDate}`);
-
             const analyses = await this.analysisReplService.getStatisticsConsultantions(startDate, endDate);
-            console.log(`[CRON] 분석 데이터 수집 완료: ${analyses.length}건`);
 
             const customerIds = analyses.map((analysis) => Number(analysis.customerId));
             const batchIds = analyses.map((analysis) => analysis.batchId);
 
             const customers = await this.customersRepository.getTodayCreatedCustomers(customerIds);
-            console.log(`[CRON] 고객 수집 완료: ${customers.length}명`);
             const customerMap = new Map(customers.map((customer) => [customer.id, customer]));
 
             const consents = await this.diorConsentRepository.find({ where: { batchId: In(batchIds) } });
-            console.log(`[CRON] Consent 수집 완료: ${consents.length}건`);
             const consentMap = new Map(consents.map((consent) => [`${consent.batchId}`, consent]));
 
             const productRecommendations = await this.ProductRecommendationSelectedRepository.find({
                 where: { batchId: In(batchIds) },
                 relations: ['productRecommendation'],
             });
-            console.log(`[CRON] 추천 제품 수집 완료: ${productRecommendations.length}건`);
 
             const productMap = new Map();
             productRecommendations.forEach((recommendation) => {
@@ -2990,7 +2971,6 @@ export class ConsultantsService {
                     }),
                 ),
             );
-            console.log(`[CRON] Web-result 수집 완료: ${analysisResults.length}건`);
 
             for (const [index, analysis] of analyses.entries()) {
                 const customer = customerMap.get(Number(analysis.customerId));
@@ -3012,41 +2992,34 @@ export class ConsultantsService {
                 const consent = consentMap.get(`${analysis.batchId}`);
                 let consentAnswers = consent?.consentFormAnswers;
 
-                // ✅ 2중 배열까지 변환 처리
-                if (
-                    Array.isArray(consentAnswers) &&
-                    consentAnswers.length === 1 &&
-                    Array.isArray(consentAnswers[0]) &&
-                    typeof consentAnswers[0][0] === 'string'
-                ) {
-                    consentAnswers = consentAnswers[0][0].split(',').map((ans) => ans.trim());
-                } else if (
-                    Array.isArray(consentAnswers) &&
-                    consentAnswers.length === 1 &&
-                    typeof consentAnswers[0] === 'string'
-                ) {
-                    consentAnswers = consentAnswers[0].split(',').map((ans) => ans.trim());
+                if (Array.isArray(consentAnswers)) {
+                    if (consentAnswers.length === 1 && typeof consentAnswers[0] === 'string') {
+                        consentAnswers = (consentAnswers[0] as string).split(',').map((ans: string) => ans.trim());
+                    } else if (
+                        Array.isArray(consentAnswers[0]) &&
+                        consentAnswers[0].length === 1 &&
+                        typeof consentAnswers[0][0] === 'string'
+                    ) {
+                        consentAnswers = (consentAnswers[0][0] as string).split(',').map((ans: string) => ans.trim());
+                    }
                 }
 
-                console.log(`[CRON] 검사 중인 Consent:`, {
-                    batchId: analysis.batchId,
-                    type: consent?.consentType,
-                    answers: consentAnswers,
-                });
-
                 const newJson = {
-                    client_iw_id: customer.external_id,
+                    client_iw_id: customer.id,
                     country: bc?.country,
                     consultation_id: customer?.consultant?.id,
                     pos,
-                    bc: customer?.consultant?.code,
+                    bc: customer?.consultant?.consultant_branch_id,
                     consultation_date: analysis?.createdTime,
-                    opt_in: consent?.fetchOptions,
-                    scores: result?.data,
+                    opt_in: consent?.consentFormAnswers || null,
+                    scores: Array.isArray(result?.body)
+                        ? result.body
+                        : Array.isArray(result?.data?.data)
+                        ? result.data.data
+                        : [],
                     recommended_product: products,
                 };
 
-                // 개인정보 보호 처리
                 if (consent) {
                     if (consent.consentType === 'without_ipos_consent' && consentAnswers?.[2] === 'No') {
                         newJson.client_iw_id = null;
@@ -3063,12 +3036,15 @@ export class ConsultantsService {
                     }
                 }
 
-                // ✅ 조건 처리 (테스트용: 최소 Yes 1개 이상이면 push)
                 let shouldPush = false;
 
-                if (Array.isArray(consentAnswers)) {
+                if ((consentAnswers || []).length === 2) {
+                    if (consentAnswers.every((ans) => ans === 'Yes')) {
+                        shouldPush = true;
+                    }
+                } else if ((consentAnswers || []).length === 4) {
                     const yesCount = consentAnswers.filter((ans) => ans === 'Yes').length;
-                    if (yesCount >= 1) {
+                    if (yesCount >= 2) {
                         shouldPush = true;
                     }
                 }
@@ -3079,7 +3055,6 @@ export class ConsultantsService {
                 }
 
                 if (shouldPush) {
-                    console.log(`[CRON] ✅ PUSHED DATA for batchId ${analysis.batchId}`);
                     excelData.push(newJson);
                 }
             }
@@ -3089,7 +3064,6 @@ export class ConsultantsService {
 
             if (!existsSync(flatFilesDirectoryPath)) {
                 await fs.mkdir(flatFilesDirectoryPath);
-                console.log(`[CRON] 폴더 생성: ${flatFilesDirectoryPath}`);
             }
 
             const dateString = moment(startDate).format('YYYY-MM-DD');
@@ -3101,15 +3075,12 @@ export class ConsultantsService {
 
             try {
                 await fs.writeFile(filePath, file);
-                console.log(`[CRON] 파일 생성 완료: ${filePath}`);
 
                 await this.uploadToSFTPServer(fileName, filePath);
-                console.log(`[CRON] SFTP 업로드 완료: ${fileName}`);
             } catch (error) {
                 console.error(`[CRON] ${fileName} writing or upload failed`, error);
             }
 
-            console.log(`[CRON] === END generateFlatFileDior ===`);
             return true;
         } catch (error) {
             console.error(`[CRON] 실행 중 에러 발생`, error);
@@ -3337,21 +3308,16 @@ export class ConsultantsService {
     }
 
     async listFiles(remoteDir: any, fileGlob: any) {
-        console.log(`Listing ${remoteDir} ...`);
         let fileObjects;
         try {
             fileObjects = await this.client.list(remoteDir, fileGlob);
-        } catch (err) {
-            console.log('Listing failed:', err);
-        }
+        } catch (err) {}
 
         const fileNames: any[] = [];
 
         for (const file of fileObjects) {
             if (file.type === 'd') {
-                console.log(`${new Date(file.modifyTime).toISOString()} PRE ${file.name}`);
             } else {
-                console.log(`${new Date(file.modifyTime).toISOString()} ${file.size} ${file.name}`);
             }
             fileNames.push(file.name);
         }
@@ -3360,7 +3326,6 @@ export class ConsultantsService {
     }
 
     async uploadFile(localFile: any, remoteFile: any) {
-        console.log(`Uploading ${localFile} to ${remoteFile} ...`);
         try {
             await this.client.put(localFile, remoteFile);
         } catch (err) {
@@ -3369,10 +3334,8 @@ export class ConsultantsService {
     }
 
     async ftpconnect(options: { host: string; port: number; username: string; password: string }) {
-        console.log(`Connecting to ${options.host}:${options.port}`);
         try {
             const response = await this.client.connect(options);
-            console.log('Connected successfully');
             return response;
         } catch (err) {
             console.error('Failed to connect:', err);

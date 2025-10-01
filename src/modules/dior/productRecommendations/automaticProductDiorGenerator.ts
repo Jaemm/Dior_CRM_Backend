@@ -56,124 +56,7 @@ export class AutomaticProductDiorGenerator {
         this.prGroupsRepository = repositories.prGroupsRepository;
     }
 
-    // async questionAnswers() {
-    //     const data = [
-    //         {
-    //             question: "Select client's age group",
-    //             answers: [
-    //                 { code: 'A', answer_text: 'under 20' },
-    //                 { code: 'B', answer_text: '20 to 30' },
-    //                 { code: 'C', answer_text: '30 to 40' },
-    //                 { code: 'D', answer_text: '40 to 50' },
-    //                 { code: 'E', answer_text: '50 to 60' },
-    //                 { code: 'F', answer_text: 'over 60' },
-    //             ],
-    //         },
-    //         {
-    //             question: 'What are your main skin concerns?',
-    //             answers: [
-    //                 { code: 'A', answer_text: 'wrinkles & fines lines' },
-    //                 { code: 'B', answer_text: 'lack of firmness' },
-    //                 { code: 'C', answer_text: 'dark spots' },
-    //                 { code: 'D', answer_text: 'lack of radiance' },
-    //                 { code: 'E', answer_text: 'open pores' },
-    //                 { code: 'F', answer_text: 'dryness' },
-    //             ],
-    //         },
-    //         {
-    //             question: 'Have you ever tried premium skincare?',
-    //             answers: [
-    //                 { code: 'A', answer_text: 'Yes, I use premium skincare.' },
-    //                 { code: 'B', answer_text: "I'd like to try Dior premium skincare." },
-    //                 { code: 'C', answer_text: "No, I'm not interested." },
-    //             ],
-    //         },
-    //         {
-    //             question: 'What foundation FINISH are you looking for?',
-    //             answers: [
-    //                 { code: 'A', answer_text: 'Matte Finish' },
-    //                 { code: 'B', answer_text: 'Glow Finish' },
-    //             ],
-    //         },
-    //         {
-    //             question: 'What foundation COVERAGE are you looking for?',
-    //             answers: [
-    //                 { code: 'A', answer_text: 'Light' },
-    //                 { code: 'B', answer_text: 'Medium' },
-    //                 { code: 'C', answer_text: 'Full' },
-    //             ],
-    //         },
-    //         {
-    //             question: 'What foundation TEXTURE are you looking for?',
-    //             answers: [
-    //                 { code: 'A', answer_text: 'Fluid' },
-    //                 { code: 'B', answer_text: 'Compact' },
-    //                 { code: 'C', answer_text: 'Cushion' },
-    //             ],
-    //         },
-    //     ];
-
-    //     const answerArray = this.answers.split(',');
-
-    //     const result = answerArray.map((answer, i) => {
-    //         const ans = answer.split('');
-    //         const json = {
-    //             id: i + 1,
-    //             question: data[i]['question'],
-    //             answers: [''],
-    //         };
-
-    //         if (ans.length === 1) {
-    //             const tempAnswer = data[i]['answers'].find((eachAnswer) => eachAnswer.code === answer);
-    //             const answerText = tempAnswer ? tempAnswer['answer_text'] : '';
-
-    //             json.answers = [answerText];
-    //         } else {
-    //             const arr: string[] = [];
-    //             ans.forEach((a) => {
-    //                 const tempAnswer = data[i]['answers'].find((eachAnswer) => eachAnswer.code === a);
-    //                 const answerText = tempAnswer ? tempAnswer['answer_text'] : '';
-    //                 arr.push(answerText);
-    //             });
-    //             json.answers = arr;
-    //         }
-
-    //         return json;
-    //     });
-
-    //     const foundMarket = await this.consultantCountriesRepository
-    //         .createQueryBuilder('country')
-    //         .where('LOWER(country.name) = :market', {
-    //             market: this.market.toLocaleLowerCase(),
-    //         })
-    //         .getOne();
-
-    //     const market = foundMarket?.name ?? '';
-
-    //     const recommanded = foundMarket?.defaultRecommendation ?? '';
-
-    //     let product: ProductRecommendationSelecteds[];
-
-    //     if (recommanded.toLowerCase().includes('japan')) {
-    //         product = await this.getProductsFromMarketAsia(result);
-    //     } else if (recommanded.toLowerCase().includes('western') || recommanded.toLowerCase().includes('europe')) {
-    //         product = await this.getProductsFromMarketWestern(result);
-    //     } else if (recommanded.toLowerCase().includes('asia')) {
-    //         product = await this.getProductsFromMarketAsia(result);
-    //     } else {
-    //         if (this.routineRecommendation === '3') {
-    //             product = await this.getProductsFromMarketWestern(result);
-    //         } else if (this.routineRecommendation === '5') {
-    //             product = await this.getProductsFromMarketAsia(result);
-    //         } else {
-    //             product = await this.getProductsFromMarketAsia(result);
-    //         }
-    //     }
-    //     return product;
-    // }
     async questionAnswers() {
-        console.log('[QA-1] questionAnswers 시작', { answers: this.answers, market: this.market });
-
         const data = [
             {
             question: "Select client's age group",
@@ -231,10 +114,8 @@ export class AutomaticProductDiorGenerator {
         ];
 
         const answerArray = this.answers.split(',');
-        console.log('[QA-2] answerArray 파싱 완료', { answerArray });
 
         const result = answerArray.map((answer, i) => {
-            console.log(`[QA-3-${i}] 개별 answer 처리 시작`, { i, answer });
 
             if (!data[i]) {
             console.warn(`[QA-WARN-${i}] data에 해당 index 없음`, { i, answer });
@@ -252,25 +133,20 @@ export class AutomaticProductDiorGenerator {
             const tempAnswer = data[i].answers.find((eachAnswer) => eachAnswer.code === answer);
             const answerText = tempAnswer ? tempAnswer.answer_text : '';
             json.answers = [answerText];
-            console.log(`[QA-4-${i}] 단일 답변 매핑`, { code: answer, answerText });
             } else {
             const arr: string[] = [];
             ans.forEach((a, idx) => {
                 const tempAnswer = data[i].answers.find((eachAnswer) => eachAnswer.code === a);
                 const answerText = tempAnswer ? tempAnswer.answer_text : '';
                 arr.push(answerText);
-                console.log(`[QA-4-${i}-${idx}] 다중 답변 매핑`, { code: a, answerText });
             });
             json.answers = arr;
             }
 
-            console.log(`[QA-5-${i}] 최종 json`, json);
             return json;
         });
 
-        console.log('[QA-6] result 생성 완료', { result });
 
-        // ✅ market 처리
         const marketValue = this.market ? this.market.toLocaleLowerCase() : '';
         if (!this.market) {
             console.warn('[QA-WARN] market 값이 undefined, 기본값 "" 사용');
@@ -280,28 +156,22 @@ export class AutomaticProductDiorGenerator {
             .createQueryBuilder('country')
             .where('LOWER(country.name) = :market', { market: marketValue })
             .getOne();
-        console.log('[QA-7] foundMarket 조회 완료', { foundMarket });
 
         const market = foundMarket?.name ?? '';
         const recommanded = foundMarket?.defaultRecommendation ?? '';
-        console.log('[QA-8] market/recommanded', { market, recommanded });
 
         let product: ProductRecommendationSelecteds[];
 
         if (recommanded?.toLowerCase().includes('japan')) {
-            console.log('[QA-9] 일본 분기 진입');
             product = await this.getProductsFromMarketAsia(result);
         } else if (
             recommanded?.toLowerCase().includes('western') ||
             recommanded?.toLowerCase().includes('europe')
         ) {
-            console.log('[QA-9] 서양 분기 진입');
             product = await this.getProductsFromMarketWestern(result);
         } else if (recommanded?.toLowerCase().includes('asia')) {
-            console.log('[QA-9] 아시아 분기 진입');
             product = await this.getProductsFromMarketAsia(result);
         } else {
-            console.log('[QA-9] 기본 분기', { routineRecommendation: this.routineRecommendation });
             if (this.routineRecommendation === '3') {
             product = await this.getProductsFromMarketWestern(result);
             } else if (this.routineRecommendation === '5') {
@@ -311,7 +181,6 @@ export class AutomaticProductDiorGenerator {
             }
         }
 
-        console.log('[QA-10] 최종 product 반환', { count: product?.length });
         return product;
     }
 

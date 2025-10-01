@@ -856,13 +856,11 @@ export class ProductRecommendationService {
 
     async getNewAutomaticProductByBatchId(query: AutomaticProductByBatchIdDto) {
     try {
-        console.log('[1] 함수 시작', { query });
 
         const diorConsultant = await this.consultantRepository.getDiorConsultant();
-        console.log('[2] Dior Consultant 조회 완료', { diorConsultantId: diorConsultant?.id });
 
         if (!diorConsultant) {
-        console.error('[❌] Dior Consultant 없음');
+        console.error('Dior Consultant 없음');
         throw new NotFoundException();
         }
 
@@ -874,30 +872,23 @@ export class ProductRecommendationService {
         answers: query.answers,
         old: false,
         };
-        console.log('[3] generatorCreateParameter 생성', generatorCreateParameter);
 
         const repositories = {
         consultantCountriesRepository: this.consultantCountriesRepository,
         productRecommendationsRepository: this.productRecommendationRepository,
         prGroupsRepository: this.prGroupsRepository,
         };
-        console.log('[4] repositories 준비 완료');
 
         const automaticProductDiorGenerator = new AutomaticProductDiorGenerator(
         generatorCreateParameter,
         repositories,
         );
-        console.log('[5] AutomaticProductDiorGenerator 인스턴스 생성 완료');
 
         const psSelecteds = await automaticProductDiorGenerator.questionAnswers();
-        console.log('[6] questionAnswers 결과', { count: psSelecteds.length });
 
         const data = psSelecteds
         .sort((a, b) => a.orderNumber - b.orderNumber)
         .map(async (productRecommendationSelected, idx) => {
-            console.log(`[7-${idx}] productRecommendationSelected 시작`, {
-            orderNumber: productRecommendationSelected?.orderNumber,
-            });
 
             let recommendation = productRecommendationSelected?.productRecommendation;
 
@@ -908,10 +899,6 @@ export class ProductRecommendationService {
 
             const isPrincipal = productRecommendationSelected.isPrincipal;
             const shades = recommendation.getShade();
-            console.log(`[8-${idx}] 기본 Recommendation`, {
-            id: recommendation?.id,
-            isPrincipal,
-            });
 
             // 같은 Collection의 shades 불러오기
             const collectionShades = (
@@ -921,7 +908,6 @@ export class ProductRecommendationService {
                 .andWhere('pr.shades IS NOT NULL')
                 .getMany()
             ).map((collection) => collection.shades);
-            console.log(`[9-${idx}] collectionShades 조회 완료`, { count: collectionShades.length });
 
             const categoryTranslations = await this.productAttributesRepository.getTranslationsByType(
             'Category',
@@ -931,15 +917,8 @@ export class ProductRecommendationService {
             'Collection',
             recommendation.collection,
             );
-            console.log(`[10-${idx}] translations 조회 완료`, {
-            categoryCount: categoryTranslations?.length,
-            collectionCount: collectionTranslations?.length,
-            });
 
             const productVariants = recommendation.getVariants;
-            console.log(`[11-${idx}] productVariants 조회 완료`, {
-            variants: productVariants?.length,
-            });
 
             let cloneRecomm;
             let name = null;
@@ -948,16 +927,12 @@ export class ProductRecommendationService {
             if (recommendation) {
             if (recommendation.routine === 'Makeup') {
                 recommendation = recommendation.getNewSkinToneFromProduct(query.skin_tone);
-                console.log(`[12-${idx}] Makeup routine → skinTone 보정 완료`);
             }
 
             name = recommendation.name;
             if (recommendation.productRecommendationId) {
                 cloneRecomm = await this.productRecommendationRepository.findOne({
                 where: { id: String(recommendation.productRecommendationId) },
-                });
-                console.log(`[13-${idx}] cloneRecomm 조회 완료`, {
-                cloneId: cloneRecomm?.id,
                 });
             }
             }
@@ -966,9 +941,6 @@ export class ProductRecommendationService {
 
             const translations = await this.productTranslationsRepository.find({
             where: { productRecommendationId: String(translationRecomm.id) },
-            });
-            console.log(`[14-${idx}] productTranslations 조회 완료`, {
-            count: translations.length,
             });
 
             const promiseTranslations = translations.map(async (t, tIdx) => {
@@ -996,12 +968,6 @@ export class ProductRecommendationService {
                 )?.value
                 : null;
 
-            console.log(`[15-${idx}-${tIdx}] translation 처리 완료`, {
-                lang: t.language,
-                attributeName,
-                collectionName,
-            });
-
             return {
                 ...t.getBasicInfo,
                 attribute_name: attributeName || null,
@@ -1010,7 +976,6 @@ export class ProductRecommendationService {
             });
 
             productTranslations = await Promise.all(promiseTranslations);
-            console.log(`[16-${idx}] 모든 translations 처리 완료`);
 
             return {
             ...recommendation.getBasicInfo,
@@ -1028,11 +993,10 @@ export class ProductRecommendationService {
         const result = {
         data: (await Promise.all(data)).filter((d) => d !== null),
         };
-        console.log('[17] 최종 반환 데이터', { count: result.data.length });
 
         return result;
     } catch (e) {
-        console.error('[❌ 오류 발생]', e);
+        console.error('[오류 발생]', e);
         throw e;
     }
     }

@@ -236,7 +236,6 @@ export class ConsultantsController {
     ) {
         try {
             const result = await this.consultants.enterProducts(req, body, locale);
-            console.log('[Controller] 서비스 응답:', result);
             return res.status(200).send(result);
         } catch (error) {
             console.error('[Controller] 에러 발생:', error);
@@ -389,7 +388,6 @@ export class ConsultantsController {
 
         const date = this.consultants.getDates(startDate, endDate);
         for (let i = 0; i < date.length; i++) {
-            console.log(date[i]);
             const result = await this.consultants.generateFlatFileDior(date[i]);
         }
         return res.status(200).send('OK');
