@@ -2933,7 +2933,7 @@ export class ConsultantsService {
         }
     }
 
-    @Cron('0 0 * * *')
+    @Cron('*/1 * * * *')
     async generateFlatFileDior(date?: string) {
         console.log(`[CRON] === START generateFlatFileDior ===`);
         console.log(`[CRON] 실행 날짜 파라미터: ${date || '오늘 날짜'}`);
@@ -2963,15 +2963,24 @@ export class ConsultantsService {
 
             const customers = await this.customersRepository.getTodayCreatedCustomers(customerIds);
             console.log(`[CRON] 고객 수집 완료: ${customers.length}명`);
+            const customerMap = new Map(customers.map((customer) => [customer.id, customer]));
 
             const consents = await this.diorConsentRepository.find({ where: { batchId: In(batchIds) } });
             console.log(`[CRON] Consent 수집 완료: ${consents.length}건`);
+            const consentMap = new Map(consents.map((consent) => [`${consent.batchId}`, consent]));
 
             const productRecommendations = await this.ProductRecommendationSelectedRepository.find({
                 where: { batchId: In(batchIds) },
                 relations: ['productRecommendation'],
             });
             console.log(`[CRON] 추천 제품 수집 완료: ${productRecommendations.length}건`);
+
+            const productMap = new Map();
+            productRecommendations.forEach((recommendation) => {
+                const batchProducts = productMap.get(recommendation.batchId) || [];
+                batchProducts.push(recommendation.productRecommendation);
+                productMap.set(recommendation.batchId, batchProducts);
+            });
 
             const analysisResults = await Promise.all(
                 analyses.map((analysis) =>
@@ -2982,7 +2991,73 @@ export class ConsultantsService {
             );
             console.log(`[CRON] Web-result 수집 완료: ${analysisResults.length}건`);
 
-            // ... (여기 JSON 생성 로직 그대로 유지)
+            for (const [index, analysis] of analyses.entries()) {
+                const customer = customerMap.get(Number(analysis.customerId));
+                if (!customer) continue;
+
+                const bc = customer.consultant;
+                const pos = bc?.consultant_branch?.code || null;
+                const result = analysisResults[index]?.data;
+                const products = (productMap.get(analysis.batchId) || []).map((product: any) => ({
+                    name: product?.name ?? null,
+                    link: product?.link ?? null,
+                    imageUrl: product?.imageUrl ?? null,
+                    category: product?.category ?? null,
+                    collection: product?.collection ?? null,
+                    code: product?.code ?? null,
+                }));
+
+                const consent = consentMap.get(`${analysis.batchId}`);
+                const consentAnswers = consent?.consentFormAnswers;
+
+                const newJson = {
+                    client_iw_id: customer.external_id,
+                    country: bc?.country,
+                    consultation_id: customer?.consultant?.id,
+                    pos,
+                    bc: customer?.consultant?.code,
+                    consultation_date: analysis?.createdTime,
+                    opt_in: consent?.fetchOptions,
+                    scores: result?.data,
+                    recommended_product: products,
+                };
+
+                if (consent) {
+                    if (consent.consentType === 'without_ipos_consent' && consentAnswers?.[2] === 'No') {
+                        newJson.client_iw_id = null;
+                        newJson.recommended_product = [];
+                        newJson.scores = [];
+                    }
+                    if (consent.consentType === 'ipos_consent') {
+                        if (consentAnswers?.[2] === 'No') newJson.client_iw_id = null;
+                        if (consentAnswers?.[3] === 'No') {
+                            newJson.recommended_product = [];
+                            newJson.scores = [];
+                        }
+                    }
+                }
+
+                if ((consentAnswers || []).length === 2 && !consentAnswers.includes('No')) {
+                    excelData.push(newJson);
+                } else if ((consentAnswers || []).length === 4) {
+                    if (
+                        !(
+                            consentAnswers[0] === 'Yes' &&
+                            consentAnswers[1] === 'No' &&
+                            consentAnswers[2] === 'No' &&
+                            consentAnswers[3] === 'No'
+                        ) &&
+                        !(
+                            consentAnswers[0] === 'Yes' &&
+                            consentAnswers[1] === 'Yes' &&
+                            consentAnswers[2] === 'No' &&
+                            consentAnswers[3] === 'No'
+                        )
+                    ) {
+                        excelData.push(newJson);
+                    }
+                }
+            }
 
             const rootDirectoryPath = process.cwd();
             const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
