@@ -101,29 +101,55 @@ export class DiorCompanyBranchesService {
         return;
     }
 
-    public async updateCondultantForPos(newUser: any) {
-        const bm = await this.consultantRepository.findByEmail(newUser.email);
+public async updateCondultantForPos(newUser: any) {
+    console.log('[updateCondultantForPos] 시작');
+    console.log('받은 newUser:', { ...newUser });
 
-        delete newUser.consultantCompanyId;
-        delete newUser.createdAt;
-        delete newUser.updatedAt;
-
-        delete newUser.countryId;
-
-        newUser.email = newUser?.email ? newUser.email : bm.email;
-        newUser.name = newUser?.name ? newUser.name : bm.name;
-        newUser.code = newUser?.code ? newUser.code : bm.code;
-        newUser.country = newUser?.country ? newUser.country : bm.country;
-        newUser.password_digest = await bcrypt.hash(newUser.password, 10);
-        newUser.updated_at = new Date();
-        newUser.consultant_branch_id = newUser.id;
-
-        delete newUser.password;
-        delete newUser.id;
-        const updatedBM = await this.consultantRepository.updateConsultant(bm.id, newUser);
-
-        return updatedBM;
+    const bm = await this.consultantRepository.findByEmail(newUser.email);
+    if (!bm) {
+        console.warn(`[updateCondultantForPos] 해당 이메일(${newUser.email})의 consultant를 찾을 수 없습니다.`);
+        return null;
     }
+
+    console.log('[updateCondultantForPos] 기존 consultant 정보:', { id: bm.id, email: bm.email });
+
+    // 불필요한 필드 제거
+    delete newUser.consultantCompanyId;
+    delete newUser.createdAt;
+    delete newUser.updatedAt;
+    delete newUser.countryId;
+
+    // 필드 보완
+    newUser.email = newUser.email || bm.email;
+    newUser.name = newUser.name || bm.name;
+    newUser.code = newUser.code || bm.code;
+    newUser.country = newUser.country || bm.country;
+
+    // 비밀번호 해싱
+    if (newUser.password) {
+        newUser.password_digest = await bcrypt.hash(newUser.password, 10);
+        console.log('[updateCondultantForPos] 비밀번호 해싱 완료');
+    } else {
+        console.warn('[updateCondultantForPos] password 값이 없어 password_digest를 생성하지 않습니다.');
+    }
+
+    // 추가 필드 설정
+    newUser.updated_at = new Date();
+    newUser.consultant_branch_id = newUser.id;
+
+    // 민감 정보 제거
+    delete newUser.password;
+    delete newUser.id;
+
+    console.log('[updateCondultantForPos] 최종 업데이트할 데이터:', newUser);
+
+    const updatedBM = await this.consultantRepository.updateConsultant(bm.id, newUser);
+
+    console.log('[updateCondultantForPos] 업데이트 완료:', updatedBM);
+
+    return updatedBM;
+}
+
 
     async createBranch(req: Request, body: CreateBranchesDto) {
         try {
@@ -312,7 +338,7 @@ export class DiorCompanyBranchesService {
 
             const savedBranch = await this.consultantBranchesRepository.save(branch);
 
-            const existingConsultant = await this.consultantRepository.findByEmail(savedBranch.email.toLowerCase());
+            const existingConsultant = await this.consultantRepository.findByEmail(savedBranch.email);
 
             if (existingConsultant) {
                 await this.updateCondultantForPos(savedBranch);
