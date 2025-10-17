@@ -612,16 +612,22 @@ export class ConsultantsService {
     }
 
     async checkConsultant(app_id: number, email: string) {
-        const consultant: any = await this.consultantsRepository.findConsultant(Number(app_id), email);
+        console.log(`[checkConsultant] 시작 - email: '${email}', app_id: ${app_id}`);
 
+        // 1. 컨설턴트 조회
+        const consultant: any = await this.consultantsRepository.findConsultant(Number(app_id), email);
         if (!consultant) {
+            console.warn(`[checkConsultant] 컨설턴트 없음 - email: '${email}'`);
             throw new BadRequestException({
                 result_code: ErrorStatus.LOGIN_FAILED,
                 error: ResponseMessages.LoginFailed,
             });
         }
+        console.log(`[checkConsultant] 컨설턴트 조회 완료 - consultant_id: ${consultant.id}`);
 
+        // 2. 회사 첨부 파일 조회
         const file = await this.activeStorageAttchRepository.getCompaniesFiles(consultant?.consultant_company_id ?? 1);
+        console.log(`[checkConsultant] 회사 첨부파일 개수: ${file.length}`);
 
         const attachmentObject: any = {};
         file.forEach((attachment) => {
@@ -631,12 +637,15 @@ export class ConsultantsService {
             attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
         });
 
+        // 3. 회사 상세정보 조회
         if (consultant?.consultant_company) {
             consultant.consultant_company = await this.getCompanyDetails({
                 consultant_company_id: consultant.consultant_company.id,
             });
+            console.log(`[checkConsultant] 회사 상세정보 로드 완료`);
         }
-        //
+
+        // 4. 지점 정제
         if (consultant?.consultant_branch) {
             consultant.consultant_branch.id = Number(consultant?.consultant_branch.id);
             delete consultant.consultant_branch.consultantCompanyId;
@@ -644,21 +653,28 @@ export class ConsultantsService {
             delete consultant.consultant_branch.updatedAt;
             delete consultant.consultant_branch.password;
             delete consultant.consultant_branch.countryId;
+            console.log(`[checkConsultant] 지점 정보 정제 완료`);
         }
 
+        // 5. 국가 정보 정제
         if (consultant?.country_details) {
             consultant.country_id = consultant.country_details?.id ?? '';
             consultant.country = consultant.country_details?.name ?? '';
             consultant.country_code = consultant.country_details?.countryCode ?? '';
+            console.log(`[checkConsultant] 국가 정보 설정 완료`);
         }
 
+        // 6. 포지션 정보 조회
         if (consultant?.consultant_position_id) {
             consultant.consultant_position = await this.consultantPositionRepository.checkConsultantPosition(
                 consultant?.consultant_position_id,
             );
+            console.log(`[checkConsultant] 포지션 정보 조회 완료`);
         }
 
+        // 7. 제품 정보 조회
         const products = await this.productsRepository.getCompaniesFiles(consultant?.id ?? null, Number(app_id));
+        console.log(`[checkConsultant] 제품 개수: ${products.length}`);
 
         const promises: Promise<any>[] = [];
         if (products.length > 0) {
@@ -674,9 +690,11 @@ export class ConsultantsService {
         const result = await Promise.all(promises);
         const optic_number: string[] = [];
 
-        products.map(async (p: any) => {
+        // 8. 제품마다 추가 정보 정제
+        await Promise.all(products.map(async (p: any) => {
             const companyDetails = result.find((r) => r.id === p.device.consultant_company_id);
             p.device.consultant_company = companyDetails;
+
             const expiredDate = this.expiredDate(p.first_use_date, p.license_period);
             let formattedDate;
 
@@ -686,8 +704,9 @@ export class ConsultantsService {
                 const year = expiredDate.getFullYear();
                 formattedDate = `${year}-${month}-${date}`;
             }
+
             p.expired_date = formattedDate ?? null;
-            p.is_expired = p.expired_date ? new Date() > p.expired_date : false;
+            p.is_expired = p.expired_date ? new Date() > new Date(p.expired_date) : false;
 
             const files = await this.activeStorageAttchRepository.getCompaniesFiles(String(p.application.id));
             const attachmentObject: any = {};
@@ -696,43 +715,61 @@ export class ConsultantsService {
                 const { key } = blob;
                 attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
             });
+
             p.application.apk_url = attachmentObject.apk;
             p.application.old_apk_url = attachmentObject.old_apk;
             p.application.app_icon = attachmentObject.icon;
-            p.device.offline_qo = p.device.offline_qo ? p.device.offline_qo : true;
+            p.device.offline_qo = p.device.offline_qo ?? true;
 
             if (p?.device?.optic_number) {
-                optic_number.push(p.device['optic_number']);
+                optic_number.push(p.device.optic_number);
             }
-        });
+        }));
 
+        // 9. 옵틱 번호 설정
         if (consultant?.optic_number) {
             consultant.optic_number = optic_number;
+            console.log(`[checkConsultant] 옵틱 번호 개수: ${optic_number.length}`);
         }
 
+        // 10. 제품 정보 설정
         if (consultant?.products) {
             consultant.products = products;
+            console.log(`[checkConsultant] 제품 정보 설정 완료`);
         }
 
+        console.log(`[checkConsultant] 완료 - consultant_id: ${consultant.id}`);
         return consultant;
     }
 
     async validateUser(email: string, app_id: number, password: string) {
+        console.log(`[validateUser] 시작 - email: '${email}', app_id: ${app_id}`);
+
         const user = await this.checkConsultant(Number(app_id), email);
+        console.log(`[validateUser] 컨설턴트 조회 결과 - id: ${user?.id}, email: ${user?.email}`);
 
         if (password && password.trim() !== '') {
+            console.log(`[validateUser] 입력된 비밀번호: '${password}'`);
+            console.log(`[validateUser] 저장된 해시: '${user?.password_digest}'`);
+
             const confirmPwd = await this.verifyPassword(password, user?.password_digest ?? null, 'en');
 
+            console.log(`[validateUser] 비밀번호 비교 결과: ${confirmPwd ? '일치 ✅' : '불일치 ❌'}`);
             if (!confirmPwd) {
+                console.warn(`[validateUser] 비밀번호 불일치`);
                 throw new BadRequestException({
                     result_code: ErrorStatus.LOGIN_FAILED,
                     error: ResponseMessages.LoginFailed,
                 });
             }
+        } else {
+            console.warn(`[validateUser] 비밀번호가 입력되지 않음`);
         }
 
+        console.log(`[validateUser] 사용자 인증 성공 - id: ${user?.id}`);
         return user;
     }
+
 
     async validateUserSocial(email: string, app_id: number, social_id: string) {
         const user = await this.checkConsultant(Number(app_id), email);
@@ -851,37 +888,53 @@ export class ConsultantsService {
     async loginRuby(data: LoginConsultantDto, locale = 'en') {
         const { app_id, password, email } = data;
 
-        const consultant: Consultants = await this.validateUser(email, Number(app_id), password);
+        console.log(`[loginRuby] 시작 - email: ${email}, app_id: ${app_id}`);
 
+        // 1단계: 유저 유효성 검사
+        const consultant: Consultants = await this.validateUser(email, Number(app_id), password);
+        console.log(`[loginRuby] validateUser 완료 - consultant_id: ${consultant?.id}`);
+
+        // 2단계: app_id가 비어있다면 할당
         if (consultant.app_id === null) {
             consultant.app_id = Number(data.app_id);
-
             await this.consultantsRepository.save(consultant);
+            console.log(`[loginRuby] app_id 저장 완료 - app_id: ${consultant.app_id}`);
         }
 
+        // 3단계: 이메일 인증 여부 확인
         if (!consultant.email_confirmed) {
+            console.warn(`[loginRuby] 이메일 인증되지 않음 - email: ${email}`);
             throw new BadRequestException({
                 result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
                 error: ResponseMessages.EmailNotConfirmed,
             });
         }
 
+        // 4단계: 액세스 토큰 및 리프레시 토큰 생성
         const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
             { id: consultant.id, email: consultant.email, role: Role.Consultant },
             '',
         );
+        console.log(`[loginRuby] 토큰 생성 완료 - accessToken: ${accessToken?.substring(0, 10)}...`);
 
+        // 5단계: 컨설턴트 객체에 토큰 저장
         consultant.token = accessToken;
         await this.consultantsRepository.save(consultant);
+        console.log(`[loginRuby] 컨설턴트 토큰 저장 완료 - consultant_id: ${consultant.id}`);
 
+        // 6단계: 리프레시 토큰 저장
         await this.refreshTokenRepository.saveNewRefreshToken(accessToken, refreshToken, consultant);
+        console.log(`[loginRuby] 리프레시 토큰 저장 완료 - consultant_id: ${consultant.id}`);
 
+        // 7단계: 최종 응답 반환
+        console.log(`[loginRuby] 로그인 완료 - consultant_id: ${consultant.id}`);
         return {
             token: accessToken,
             refresh_token: refreshToken,
             ...consultant.getConsultantsInfo,
         };
     }
+
 
     async loginWithEmailOnly(email: string, locale = 'en') {
         let consultant = await this.consultantsRepository.findOne({
