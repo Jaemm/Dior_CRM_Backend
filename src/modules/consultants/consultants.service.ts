@@ -2924,6 +2924,194 @@ export class ConsultantsService {
     }
 
     // @Cron('*/1 * * * *')
+    // @Cron('0 0 * * *')
+    // async generateFlatFileDior(date?: string) {
+    //     const excelData: any[] = [];
+    //     const credentials = {
+    //         app_id: '88',
+    //         email: 'krtest@diormail.com',
+    //         password: process.env.LOGIN_PASSWORD,
+    //         confirmPassword: process.env.LOGIN_PASSWORD,
+    //     };
+
+    //     try {
+    //         console.log('[1단계] 로그인 시작');
+    //         const { token } = await this.login(credentials, 'en');
+    //         console.log('[1단계 완료] 로그인 성공, 토큰 획득');
+
+    //         const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
+
+    //         const startDate = date ? date + ' 00:00:00' : `${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
+    //         const endDate = date ? date + ' 23:59:59' : `${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
+
+    //         console.log('[2단계] 분석 데이터 조회 시작:', { startDate, endDate });
+    //         const analyses = await this.analysisReplService.getStatisticsConsultantions(startDate, endDate);
+    //         console.log(`[2단계 완료] 분석 데이터 조회 성공, 총 ${analyses.length} 건`);
+
+    //         const customerIds = analyses.map((analysis) => Number(analysis.customerId));
+    //         const batchIds = analyses.map((analysis) => analysis.batchId);
+
+    //         console.log('[3단계] 고객 데이터 조회 시작');
+    //         const customers = await this.customersRepository.getTodayCreatedCustomers(customerIds);
+    //         const customerMap = new Map(customers.map((customer) => [customer.id, customer]));
+    //         console.log(`[3단계 완료] 고객 데이터 조회 성공, 총 ${customers.length} 명`);
+
+    //         console.log('[4단계] 동의(consent) 데이터 조회 시작');
+    //         const consents = await this.diorConsentRepository.find({ where: { batchId: In(batchIds) } });
+    //         const consentMap = new Map(consents.map((consent) => [`${consent.batchId}`, consent]));
+    //         console.log(`[4단계 완료] 동의 데이터 조회 성공, 총 ${consents.length} 건`);
+
+    //         console.log('[5단계] 추천 제품 데이터 조회 시작');
+    //         const productRecommendations = await this.ProductRecommendationSelectedRepository.find({
+    //             where: { batchId: In(batchIds) },
+    //             relations: ['productRecommendation'],
+    //         });
+    //         const productMap = new Map();
+    //         productRecommendations.forEach((recommendation) => {
+    //             const batchProducts = productMap.get(recommendation.batchId) || [];
+    //             batchProducts.push(recommendation.productRecommendation);
+    //             productMap.set(recommendation.batchId, batchProducts);
+    //         });
+    //         console.log(`[5단계 완료] 추천 제품 조회 성공, 총 ${productRecommendations.length} 건`);
+
+    //         console.log('[6단계] 분석 결과 API 호출 시작');
+    //         const analysisResults = await Promise.all(
+    //             analyses.map((analysis) =>
+    //                 axios.get(`${CNDP_SKIN_ANALYSIS_URL}/web-result/cndpskin/${analysis.batchId}`, {
+    //                     headers: { Authorization: `Bearer ${token}` },
+    //                 }),
+    //             ),
+    //         );
+    //         console.log('[6단계 완료] 분석 결과 API 호출 성공');
+
+    //         console.log('[7단계] 데이터 매핑 및 JSON 변환 시작');
+    //         for (const [index, analysis] of analyses.entries()) {
+    //             const customer = customerMap.get(Number(analysis.customerId));
+    //             if (!customer) {
+    //                 console.warn(`[7단계 경고] 고객 없음 - customerId: ${analysis.customerId}`);
+    //                 continue;
+    //             }
+
+    //             const bc = customer.consultant;
+    //             const pos = bc?.consultant_branch?.code || null;
+    //             const result = analysisResults[index]?.data;
+
+    //             const products = (productMap.get(analysis.batchId) || []).map((product: any) => ({
+    //                 name: product?.name ?? null,
+    //                 link: product?.link ?? null,
+    //                 imageUrl: product?.imageUrl ?? null,
+    //                 category: product?.category ?? null,
+    //                 collection: product?.collection ?? null,
+    //                 code: product?.code ?? null,
+    //             }));
+
+    //             const consent = consentMap.get(`${analysis.batchId}`);
+    //             let consentAnswers = consent?.consentFormAnswers;
+
+    //             if (Array.isArray(consentAnswers)) {
+    //                 if (consentAnswers.length === 1 && typeof consentAnswers[0] === 'string') {
+    //                     consentAnswers = (consentAnswers[0] as string).split(',').map((ans: string) => ans.trim());
+    //                 } else if (
+    //                     Array.isArray(consentAnswers[0]) &&
+    //                     consentAnswers[0].length === 1 &&
+    //                     typeof consentAnswers[0][0] === 'string'
+    //                 ) {
+    //                     consentAnswers = (consentAnswers[0][0] as string).split(',').map((ans: string) => ans.trim());
+    //                 }
+    //             }
+
+    //             const newJson = {
+    //                 client_iw_id: customer.id,
+    //                 country: bc?.country,
+    //                 consultation_id: customer?.consultant?.id,
+    //                 pos,
+    //                 bc: customer?.consultant?.consultant_branch_id,
+    //                 consultation_date: analysis?.createdTime,
+    //                 opt_in: consent?.consentFormAnswers || null,
+    //                 scores: Array.isArray(result?.body)
+    //                     ? result.body
+    //                     : Array.isArray(result?.data?.data)
+    //                     ? result.data.data
+    //                     : [],
+    //                 recommended_product: products,
+    //             };
+
+    //             // 동의 조건 처리
+    //             if (consent) {
+    //                 if (consent.consentType === 'without_ipos_consent' && consentAnswers?.[2] === 'No') {
+    //                     newJson.client_iw_id = null;
+    //                     newJson.recommended_product = [];
+    //                     newJson.scores = [];
+    //                 }
+
+    //                 if (consent.consentType === 'ipos_consent') {
+    //                     if (consentAnswers?.[2] === 'No') newJson.client_iw_id = null;
+    //                     if (consentAnswers?.[3] === 'No') {
+    //                         newJson.recommended_product = [];
+    //                         newJson.scores = [];
+    //                     }
+    //                 }
+    //             }
+
+    //             let shouldPush = false;
+
+    //             if ((consentAnswers || []).length === 2) {
+    //                 if (consentAnswers.every((ans) => ans === 'Yes')) {
+    //                     shouldPush = true;
+    //                 }
+    //             } else if ((consentAnswers || []).length === 4) {
+    //                 const yesCount = consentAnswers.filter((ans) => ans === 'Yes').length;
+    //                 if (yesCount >= 2) {
+    //                     shouldPush = true;
+    //                 }
+    //             }
+
+    //             if (!consentAnswers || consentAnswers.length === 0) {
+    //                 console.warn(`[7단계] consentAnswers 없음, fallback 적용 → PUSH`);
+    //                 shouldPush = true;
+    //             }
+
+    //             if (shouldPush) {
+    //                 excelData.push(newJson);
+    //             }
+    //         }
+    //         console.log(`[7단계 완료] 최종 데이터 변환 완료, 총 ${excelData.length} 건`);
+
+    //         console.log('[8단계] JSON 파일 저장 시작');
+    //         const rootDirectoryPath = process.cwd();
+    //         const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
+
+    //         if (!existsSync(flatFilesDirectoryPath)) {
+    //             await fs.mkdir(flatFilesDirectoryPath);
+    //             console.log(`[8단계] 디렉토리 생성 완료: ${flatFilesDirectoryPath}`);
+    //         }
+
+    //         const dateString = moment(startDate).format('YYYY-MM-DD');
+    //         const fileName = `${dateString}.json`;
+    //         const filePath = path.join(flatFilesDirectoryPath, fileName);
+
+    //         const jsonData = excelData;
+    //         const file = JSON.stringify(jsonData, null, 2);
+
+    //         try {
+    //             await fs.writeFile(filePath, file);
+    //             console.log(`[8단계 완료] JSON 파일 저장 완료: ${filePath}`);
+
+    //             console.log('[9단계] SFTP 업로드 시작');
+    //             await this.uploadToSFTPServer(fileName, filePath);
+    //             console.log('[9단계 완료] SFTP 업로드 성공');
+    //         } catch (error) {
+    //             console.error(`[오류] ${fileName} writing or upload failed`, error);
+    //         }
+
+    //         console.log('[10단계] generateFlatFileDior 완료');
+    //         return true;
+    //     } catch (error) {
+    //         console.error(`[CRON] 실행 중 에러 발생`, error);
+    //         return false;
+    //     }
+    // }
+    
     @Cron('0 0 * * *')
     async generateFlatFileDior(date?: string) {
         const excelData: any[] = [];
@@ -2935,35 +3123,59 @@ export class ConsultantsService {
         };
 
         try {
+            console.log('───────────────────────────────');
+            console.log('[1단계] 로그인 시작');
             const { token } = await this.login(credentials, 'en');
+            console.log('[1단계 완료] 로그인 성공, 토큰 획득');
+
             const CNDP_SKIN_ANALYSIS_URL = process.env.CNDP_SKIN_ANALYSIS_URL;
 
-            const startDate = date ? date + ' 00:00:00' : `${moment().startOf('day').format('YYYY-MM-DD')} 00:00:00`;
-            const endDate = date ? date + ' 23:59:59' : `${moment().endOf('day').format('YYYY-MM-DD')} 23:59:59`;
+            // 날짜 처리 부분 개선
+            let targetDate: string;
+            if (date) {
+                targetDate = moment(date, 'YYYY-MM-DD').isValid()
+                    ? moment(date, 'YYYY-MM-DD').format('YYYY-MM-DD')
+                    : moment().format('YYYY-MM-DD');
+                console.log(`[날짜 지정 모드] 지정된 날짜 사용 → ${targetDate}`);
+            } else {
+                targetDate = moment().format('YYYY-MM-DD');
+                console.log(`[기본 모드] 오늘 날짜 사용 → ${targetDate}`);
+            }
 
+            const startDate = `${targetDate} 00:00:00`;
+            const endDate = `${targetDate} 23:59:59`;
+
+            console.log('[2단계] 분석 데이터 조회 시작:', { startDate, endDate });
             const analyses = await this.analysisReplService.getStatisticsConsultantions(startDate, endDate);
+            console.log(`[2단계 완료] 분석 데이터 조회 성공, 총 ${analyses.length} 건`);
 
             const customerIds = analyses.map((analysis) => Number(analysis.customerId));
             const batchIds = analyses.map((analysis) => analysis.batchId);
 
+            console.log('[3단계] 고객 데이터 조회 시작');
             const customers = await this.customersRepository.getTodayCreatedCustomers(customerIds);
             const customerMap = new Map(customers.map((customer) => [customer.id, customer]));
+            console.log(`[3단계 완료] 고객 데이터 조회 성공, 총 ${customers.length} 명`);
 
+            console.log('[4단계] 동의(consent) 데이터 조회 시작');
             const consents = await this.diorConsentRepository.find({ where: { batchId: In(batchIds) } });
             const consentMap = new Map(consents.map((consent) => [`${consent.batchId}`, consent]));
+            console.log(`[4단계 완료] 동의 데이터 조회 성공, 총 ${consents.length} 건`);
 
+            console.log('[5단계] 추천 제품 데이터 조회 시작');
             const productRecommendations = await this.ProductRecommendationSelectedRepository.find({
                 where: { batchId: In(batchIds) },
                 relations: ['productRecommendation'],
             });
-
             const productMap = new Map();
             productRecommendations.forEach((recommendation) => {
                 const batchProducts = productMap.get(recommendation.batchId) || [];
                 batchProducts.push(recommendation.productRecommendation);
                 productMap.set(recommendation.batchId, batchProducts);
             });
+            console.log(`[5단계 완료] 추천 제품 조회 성공, 총 ${productRecommendations.length} 건`);
 
+            console.log('[6단계] 분석 결과 API 호출 시작');
             const analysisResults = await Promise.all(
                 analyses.map((analysis) =>
                     axios.get(`${CNDP_SKIN_ANALYSIS_URL}/web-result/cndpskin/${analysis.batchId}`, {
@@ -2971,10 +3183,15 @@ export class ConsultantsService {
                     }),
                 ),
             );
+            console.log('[6단계 완료] 분석 결과 API 호출 성공');
 
+            console.log('[7단계] 데이터 매핑 및 JSON 변환 시작');
             for (const [index, analysis] of analyses.entries()) {
                 const customer = customerMap.get(Number(analysis.customerId));
-                if (!customer) continue;
+                if (!customer) {
+                    console.warn(`[7단계 경고] 고객 없음 - customerId: ${analysis.customerId}`);
+                    continue;
+                }
 
                 const bc = customer.consultant;
                 const pos = bc?.consultant_branch?.code || null;
@@ -3020,6 +3237,7 @@ export class ConsultantsService {
                     recommended_product: products,
                 };
 
+                // 동의 조건 처리
                 if (consent) {
                     if (consent.consentType === 'without_ipos_consent' && consentAnswers?.[2] === 'No') {
                         newJson.client_iw_id = null;
@@ -3039,51 +3257,48 @@ export class ConsultantsService {
                 let shouldPush = false;
 
                 if ((consentAnswers || []).length === 2) {
-                    if (consentAnswers.every((ans) => ans === 'Yes')) {
-                        shouldPush = true;
-                    }
+                    if (consentAnswers.every((ans) => ans === 'Yes')) shouldPush = true;
                 } else if ((consentAnswers || []).length === 4) {
                     const yesCount = consentAnswers.filter((ans) => ans === 'Yes').length;
-                    if (yesCount >= 2) {
-                        shouldPush = true;
-                    }
+                    if (yesCount >= 2) shouldPush = true;
                 }
 
                 if (!consentAnswers || consentAnswers.length === 0) {
-                    console.warn(`[CRON] consentAnswers 없음, fallback 적용 → PUSH`);
+                    console.warn(`[7단계] consentAnswers 없음, fallback 적용 → PUSH`);
                     shouldPush = true;
                 }
 
-                if (shouldPush) {
-                    excelData.push(newJson);
-                }
+                if (shouldPush) excelData.push(newJson);
             }
+            console.log(`[7단계 완료] 최종 데이터 변환 완료, 총 ${excelData.length} 건`);
 
+            console.log('[8단계] JSON 파일 저장 시작');
             const rootDirectoryPath = process.cwd();
             const flatFilesDirectoryPath = path.join(rootDirectoryPath, 'public', 'dior-flat-files');
 
             if (!existsSync(flatFilesDirectoryPath)) {
                 await fs.mkdir(flatFilesDirectoryPath);
+                console.log(`[8단계] 디렉토리 생성 완료: ${flatFilesDirectoryPath}`);
             }
 
-            const dateString = moment(startDate).format('YYYY-MM-DD');
+            const dateString = targetDate;
             const fileName = `${dateString}.json`;
             const filePath = path.join(flatFilesDirectoryPath, fileName);
 
             const jsonData = excelData;
             const file = JSON.stringify(jsonData, null, 2);
 
-            try {
-                await fs.writeFile(filePath, file);
+            await fs.writeFile(filePath, file);
+            console.log(`[8단계 완료] JSON 파일 저장 완료: ${filePath}`);
 
-                await this.uploadToSFTPServer(fileName, filePath);
-            } catch (error) {
-                console.error(`[CRON] ${fileName} writing or upload failed`, error);
-            }
+            console.log('[9단계] SFTP 업로드 시작');
+            await this.uploadToSFTPServer(fileName, filePath);
+            console.log('[9단계 완료] SFTP 업로드 성공');
 
+            console.log('[10단계] generateFlatFileDior 완료');
             return true;
         } catch (error) {
-            console.error(`[CRON] 실행 중 에러 발생`, error);
+            console.error('[CRON] 실행 중 에러 발생', error);
             return false;
         }
     }
