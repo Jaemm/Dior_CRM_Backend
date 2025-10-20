@@ -691,40 +691,42 @@ export class ConsultantsService {
         const optic_number: string[] = [];
 
         // 8. 제품마다 추가 정보 정제
-        await Promise.all(products.map(async (p: any) => {
-            const companyDetails = result.find((r) => r.id === p.device.consultant_company_id);
-            p.device.consultant_company = companyDetails;
+        await Promise.all(
+            products.map(async (p: any) => {
+                const companyDetails = result.find((r) => r.id === p.device.consultant_company_id);
+                p.device.consultant_company = companyDetails;
 
-            const expiredDate = this.expiredDate(p.first_use_date, p.license_period);
-            let formattedDate;
+                const expiredDate = this.expiredDate(p.first_use_date, p.license_period);
+                let formattedDate;
 
-            if (expiredDate) {
-                const month = (expiredDate.getMonth() + 1).toString().padStart(2, '0');
-                const date = expiredDate.getDate().toString().padStart(2, '0');
-                const year = expiredDate.getFullYear();
-                formattedDate = `${year}-${month}-${date}`;
-            }
+                if (expiredDate) {
+                    const month = (expiredDate.getMonth() + 1).toString().padStart(2, '0');
+                    const date = expiredDate.getDate().toString().padStart(2, '0');
+                    const year = expiredDate.getFullYear();
+                    formattedDate = `${year}-${month}-${date}`;
+                }
 
-            p.expired_date = formattedDate ?? null;
-            p.is_expired = p.expired_date ? new Date() > new Date(p.expired_date) : false;
+                p.expired_date = formattedDate ?? null;
+                p.is_expired = p.expired_date ? new Date() > new Date(p.expired_date) : false;
 
-            const files = await this.activeStorageAttchRepository.getCompaniesFiles(String(p.application.id));
-            const attachmentObject: any = {};
-            files.forEach((attachment) => {
-                const { name, blob } = attachment;
-                const { key } = blob;
-                attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
-            });
+                const files = await this.activeStorageAttchRepository.getCompaniesFiles(String(p.application.id));
+                const attachmentObject: any = {};
+                files.forEach((attachment) => {
+                    const { name, blob } = attachment;
+                    const { key } = blob;
+                    attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
+                });
 
-            p.application.apk_url = attachmentObject.apk;
-            p.application.old_apk_url = attachmentObject.old_apk;
-            p.application.app_icon = attachmentObject.icon;
-            p.device.offline_qo = p.device.offline_qo ?? true;
+                p.application.apk_url = attachmentObject.apk;
+                p.application.old_apk_url = attachmentObject.old_apk;
+                p.application.app_icon = attachmentObject.icon;
+                p.device.offline_qo = p.device.offline_qo ?? true;
 
-            if (p?.device?.optic_number) {
-                optic_number.push(p.device.optic_number);
-            }
-        }));
+                if (p?.device?.optic_number) {
+                    optic_number.push(p.device.optic_number);
+                }
+            }),
+        );
 
         // 9. 옵틱 번호 설정
         if (consultant?.optic_number) {
@@ -769,7 +771,6 @@ export class ConsultantsService {
         console.log(`[validateUser] 사용자 인증 성공 - id: ${user?.id}`);
         return user;
     }
-
 
     async validateUserSocial(email: string, app_id: number, social_id: string) {
         const user = await this.checkConsultant(Number(app_id), email);
@@ -934,7 +935,6 @@ export class ConsultantsService {
             ...consultant.getConsultantsInfo,
         };
     }
-
 
     async loginWithEmailOnly(email: string, locale = 'en') {
         let consultant = await this.consultantsRepository.findOne({
@@ -2950,6 +2950,31 @@ export class ConsultantsService {
             await fs.access(outputPath);
         } catch (error) {}
     }
+    // async uploadToSFTPServer(fileName: string, tempFilePath: string) {
+    //     await this.ftpconnect({
+    //         host: process.env.SFTP_HOST || '',
+    //         port: Number(process.env.SFTP_PORT),
+    //         username: process.env.SFTP_USER || '',
+    //         password: process.env.SFTP_PASS || '',
+    //     });
+
+    //     try {
+    //         const remoteDirectoryPath = './analysis_data/PROD/bak';
+
+    //         try {
+    //             await this.client.mkdir(remoteDirectoryPath, true);
+    //         } catch (err) {}
+
+    //         const remoteFilePath = `${remoteDirectoryPath}/${fileName}`;
+
+    //         const fileTransfered = tempFilePath;
+    //         await this.uploadFile(tempFilePath, remoteFilePath);
+    //     } catch (error) {
+    //         console.error('Error during SFTP upload:', error);
+    //     } finally {
+    //         await this.disconnect();
+    //     }
+    // }
     async uploadToSFTPServer(fileName: string, tempFilePath: string) {
         await this.ftpconnect({
             host: process.env.SFTP_HOST || '',
@@ -2959,20 +2984,31 @@ export class ConsultantsService {
         });
 
         try {
-            const remoteDirectoryPath = './analysis_data/PROD/bak';
+            // 현재 연도
+            const currentYear = new Date().getFullYear();
 
+            // 연도별 폴더 구조 (analysis_data 바로 아래)
+            const remoteDirectoryPath = `/analysis_data/${currentYear}`;
+
+            // 연도별 폴더 생성 (없으면 자동 생성)
             try {
                 await this.client.mkdir(remoteDirectoryPath, true);
-            } catch (err) {}
+                console.log(`[SFTP] 연도별 폴더 생성 또는 확인 완료: ${remoteDirectoryPath}`);
+            } catch (err) {
+                console.warn(`[SFTP] 폴더 생성 중 오류 (무시 가능):`, err.message);
+            }
 
+            // 업로드 경로 (해당 연도 폴더 안)
             const remoteFilePath = `${remoteDirectoryPath}/${fileName}`;
+            console.log(`[SFTP] 업로드 시작 → ${remoteFilePath}`);
 
-            const fileTransfered = tempFilePath;
             await this.uploadFile(tempFilePath, remoteFilePath);
+            console.log(`[SFTP] 업로드 완료: ${remoteFilePath}`);
         } catch (error) {
             console.error('Error during SFTP upload:', error);
         } finally {
             await this.disconnect();
+            console.log('[SFTP] 연결 종료');
         }
     }
 
@@ -3164,7 +3200,7 @@ export class ConsultantsService {
     //         return false;
     //     }
     // }
-    
+
     @Cron('0 0 * * *')
     async generateFlatFileDior(date?: string) {
         const excelData: any[] = [];
