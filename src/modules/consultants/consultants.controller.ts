@@ -186,7 +186,7 @@ export class ConsultantsController {
     @Post('login/saml')
     async handleSamlResponse(
         @Body() body: { SAMLResponse: string },
-        @Query('redirect') redirect = 'https://dior-backoffice-git-dev-choicetech.vercel.app/login',
+        @Query('redirect') redirect = 'https://dior-backoffice.chowis.cloud/login',
         @Headers('X-CHOWIS-LOCALE') locale = 'en',
         @Res() res: Response,
     ) {

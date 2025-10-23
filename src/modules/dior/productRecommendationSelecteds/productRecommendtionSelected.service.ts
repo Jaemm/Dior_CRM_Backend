@@ -92,16 +92,20 @@ export class ProductRecommendationSelectedsService {
                                           },
                                       })
                                   )?.value || null;
+                            let collectionName = null;
 
-                              const collectionName =
-                                  (
-                                      await this.productAttributeTranslationsRepository.findOne({
-                                          where: {
-                                              productAttributeId: Number(collectionAttribute.id),
-                                              language: t.language,
-                                          },
-                                      })
-                                  )?.value || null;
+                            if (collectionAttribute?.id) {
+                                const translation = await this.productAttributeTranslationsRepository.findOne({
+                                    where: {
+                                        productAttributeId: Number(collectionAttribute.id),
+                                        language: t.language,
+                                    },
+                                });
+
+                                collectionName = translation?.value || null;
+                            } else {
+                                console.warn('[WARN] collectionAttribute가 null이거나 id가 없습니다.');
+                            }
 
                               return {
                                   ...t.getBasicInfo,
@@ -141,8 +145,58 @@ export class ProductRecommendationSelectedsService {
         }
     }
 
+    // async selectProducts(body: SelectProductsDto, userId: number) {
+    //     const { batch_id, customer_id, products_selected } = body;
+    //     try {
+    //         const whereCondition: any = { batchId: batch_id };
+
+    //         if (customer_id !== null && customer_id !== undefined) {
+    //             whereCondition.customerId = customer_id;
+    //         }
+
+    //         const prevProductSelected = await this.prSelectedRepository.find({
+    //             where: whereCondition,
+    //         });
+
+    //         const deleteList = prevProductSelected.map((prev) => this.prSelectedRepository.delete(prev));
+    //         await Promise.all(deleteList);
+
+    //         const newSelectedList = products_selected.map(async (pid, i) => {
+    //             const existingEntry = await this.prSelectedRepository.findOne({
+    //                 where: { batchId: batch_id, productRecommendationId: pid, consultantId: userId },
+    //             });
+
+    //             if (!existingEntry) {
+    //                 const newSelect = this.prSelectedRepository.create({
+    //                     batchId: batch_id,
+    //                     customerId: customer_id,
+    //                     productRecommendationId: pid,
+    //                     orderNumber: i + 1,
+    //                     createdAt: new Date(),
+    //                     updatedAt: new Date(),
+    //                     consultantId: userId,
+    //                 });
+
+    //                 await this.prSelectedRepository.save(newSelect);
+    //             }
+    //         });
+
+    //         await Promise.all(newSelectedList);
+
+    //         return {
+    //             message: 'Saved selected products',
+    //         };
+    //     } catch (e) {
+    //         throw e;
+    //     }
+    // }
     async selectProducts(body: SelectProductsDto, userId: number) {
         const { batch_id, customer_id, products_selected } = body;
+
+        console.log('[1] 시작: selectProducts 실행');
+        console.log('[2] 전달받은 body:', body);
+        console.log('[3] userId:', userId);
+
         try {
             const whereCondition: any = { batchId: batch_id };
 
@@ -150,19 +204,38 @@ export class ProductRecommendationSelectedsService {
                 whereCondition.customerId = customer_id;
             }
 
+            console.log('[4] whereCondition 생성:', whereCondition);
+
             const prevProductSelected = await this.prSelectedRepository.find({
                 where: whereCondition,
             });
 
-            const deleteList = prevProductSelected.map((prev) => this.prSelectedRepository.delete(prev));
-            await Promise.all(deleteList);
+            console.log('[5] 기존 선택된 제품 개수:', prevProductSelected.length);
 
-            const newSelectedList = products_selected.map(async (pid, i) => {
+            prevProductSelected.forEach((prev, idx) => {
+                console.log(`[6-${idx}] 삭제할 항목:`, prev);
+            });
+
+            // remove로 정확한 삭제 처리
+            await this.prSelectedRepository.remove(prevProductSelected);
+            console.log('[7] 기존 선택 항목 삭제 완료');
+
+            // 저장은 순차적으로 처리
+            for (let i = 0; i < products_selected.length; i++) {
+                const pid = products_selected[i];
+                console.log(`[8-${i}] 새로 선택된 제품 ID:`, pid);
+
                 const existingEntry = await this.prSelectedRepository.findOne({
-                    where: { batchId: batch_id, productRecommendationId: pid, consultantId: userId },
+                    where: {
+                        batchId: batch_id,
+                        productRecommendationId: pid,
+                        consultantId: userId,
+                    },
                 });
 
                 if (!existingEntry) {
+                    console.log(`[9-${i}] 기존 항목 없음 → 새로 생성`);
+
                     const newSelect = this.prSelectedRepository.create({
                         batchId: batch_id,
                         customerId: customer_id,
@@ -173,19 +246,28 @@ export class ProductRecommendationSelectedsService {
                         consultantId: userId,
                     });
 
-                    await this.prSelectedRepository.save(newSelect);
-                }
-            });
+                    console.log(`[10-${i}] 저장할 새 객체:`, newSelect);
 
-            await Promise.all(newSelectedList);
+                    await this.prSelectedRepository.save(newSelect);
+                    console.log(`[11-${i}] 저장 완료`);
+                } else {
+                    console.log(`[9-${i}] 이미 존재하는 항목 → 저장 생략`);
+                }
+            }
+
+            console.log('[12] 전체 선택 항목 저장 완료');
 
             return {
                 message: 'Saved selected products',
             };
         } catch (e) {
+            console.error('[ERROR] selectProducts 중 예외 발생:', e);
             throw e;
         }
     }
+
+
+
 
     async getListOfRecommendationSelected(query: GetListOfRecommendationListDto) {
         try {

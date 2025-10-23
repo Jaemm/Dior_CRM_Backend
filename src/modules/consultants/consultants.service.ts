@@ -678,10 +678,14 @@ export class ConsultantsService {
 
         const promises: Promise<any>[] = [];
         if (products.length > 0) {
-            products.map((p) => {
+            products.forEach((p) => {
                 if (p?.device?.consultant_company_id) {
                     promises.push(
-                        this.getCompanyDetails({ consultant_company_id: String(p.device.consultant_company_id) }),
+                        this.getCompanyDetails({ consultant_company_id: String(p.device.consultant_company_id) })
+                            .catch((err:any) => {
+                                console.error(`[checkConsultant] 회사 상세정보 조회 실패 - id: ${p.device.consultant_company_id}`, err);
+                                return null;
+                            })
                     );
                 }
             });
@@ -693,8 +697,8 @@ export class ConsultantsService {
         // 8. 제품마다 추가 정보 정제
         await Promise.all(
             products.map(async (p: any) => {
-                const companyDetails = result.find((r) => r.id === p.device.consultant_company_id);
-                p.device.consultant_company = companyDetails;
+                const companyDetails = result.find((r) => r && r.id === p.device.consultant_company_id);
+                p.device.consultant_company = companyDetails ?? null;
 
                 const expiredDate = this.expiredDate(p.first_use_date, p.license_period);
                 let formattedDate;
@@ -709,17 +713,25 @@ export class ConsultantsService {
                 p.expired_date = formattedDate ?? null;
                 p.is_expired = p.expired_date ? new Date() > new Date(p.expired_date) : false;
 
-                const files = await this.activeStorageAttchRepository.getCompaniesFiles(String(p.application.id));
-                const attachmentObject: any = {};
-                files.forEach((attachment) => {
-                    const { name, blob } = attachment;
-                    const { key } = blob;
-                    attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
-                });
+                // 제품 앱 첨부파일 조회 (null-safe)
+                if (p?.application?.id) {
+                    try {
+                        const files = await this.activeStorageAttchRepository.getCompaniesFiles(String(p.application.id));
+                        const attachmentObject: any = {};
+                        files.forEach((attachment) => {
+                            const { name, blob } = attachment;
+                            const { key } = blob;
+                            attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
+                        });
 
-                p.application.apk_url = attachmentObject.apk;
-                p.application.old_apk_url = attachmentObject.old_apk;
-                p.application.app_icon = attachmentObject.icon;
+                        p.application.apk_url = attachmentObject.apk;
+                        p.application.old_apk_url = attachmentObject.old_apk;
+                        p.application.app_icon = attachmentObject.icon;
+                    } catch (err) {
+                        console.error(`[checkConsultant] 제품 앱 첨부파일 조회 실패 - app_id: ${p.application.id}`, err);
+                    }
+                }
+
                 p.device.offline_qo = p.device.offline_qo ?? true;
 
                 if (p?.device?.optic_number) {
@@ -729,20 +741,17 @@ export class ConsultantsService {
         );
 
         // 9. 옵틱 번호 설정
-        if (consultant?.optic_number) {
-            consultant.optic_number = optic_number;
-            console.log(`[checkConsultant] 옵틱 번호 개수: ${optic_number.length}`);
-        }
+        consultant.optic_number = optic_number;
+        console.log(`[checkConsultant] 옵틱 번호 개수: ${optic_number.length}`);
 
         // 10. 제품 정보 설정
-        if (consultant?.products) {
-            consultant.products = products;
-            console.log(`[checkConsultant] 제품 정보 설정 완료`);
-        }
+        consultant.products = products;
+        console.log(`[checkConsultant] 제품 정보 설정 완료`);
 
         console.log(`[checkConsultant] 완료 - consultant_id: ${consultant.id}`);
         return consultant;
     }
+
 
     async validateUser(email: string, app_id: number, password: string) {
         console.log(`[validateUser] 시작 - email: '${email}', app_id: ${app_id}`);
