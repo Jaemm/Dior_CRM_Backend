@@ -66,9 +66,8 @@ async function bootstrap() {
 
     await app.listen(port, async () => {
         const protocol = SSL === 'true' ? 'https' : 'http';
-        const address = protocol + '://' + (SSL === 'true' ? HOSTNAME : '0.0.0.0') + ':' + port;
+        const address = protocol + '://' + HOSTNAME + ':' + port;
         Logger.log('Listening at ' + address);
     });
-
 }
 bootstrap();

@@ -6,7 +6,6 @@ import {
     ConsultantCompaniesRepository,
     ConsultantsRepository,
     DevicesRepository,
-    ProductLogsRepository,
     ProductsRepository,
 } from '@/src/common/repositories/crm';
 import { Consultants, Devices } from '@/src/common/entities/crmEntities';
@@ -15,16 +14,17 @@ import { In } from 'typeorm';
 import { DeviceForDiorT } from '@/src/common/types/entities';
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import { CommonService } from '@/src/common/common.service';
+import { ProductLogService } from '@/src/modules/productLog/service';
 
 @Injectable()
 export class DiorDevicesService {
     constructor(
         private commonService: CommonService,
+        private productLogService: ProductLogService,
 
         private readonly consultantsRespository: ConsultantsRepository,
         private readonly productsRepository: ProductsRepository,
         private readonly devicesRepository: DevicesRepository,
-        private readonly productLogsRepository: ProductLogsRepository,
     ) {}
 
     async getDevices(req: Request, query: GetDevicesDto, locale = 'en') {
@@ -207,11 +207,11 @@ export class DiorDevicesService {
 
             const result = await this.productsRepository.connectReset(product);
 
-            const logResult = await this.productLogsRepository.saveLogs(
-                product,
-                `done by ${currentConsultant.email}(BM) - connect reset`,
-                currentConsultant,
-            );
+            const logResult = await this.productLogService.createProductLog({
+                productId: String(product.id),
+                consultantId: String(currentConsultant.id),
+                message: `done by ${currentConsultant.email}(BM) - connect reset`,
+            });
 
             if (result && logResult) {
                 return {

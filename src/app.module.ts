@@ -39,6 +39,8 @@ import { CountriesRepository } from './common/repositories/crm/countries.reposit
 import { UtilsModule } from './modules/utils/utils.module';
 import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ProductLogModule } from './modules/productLog/module';
+
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -88,6 +90,7 @@ import { ScheduleModule } from '@nestjs/schedule';
         DiorModule,
 
         AuthModule,
+        ProductLogModule,
         CommonModule,
         HealthModule,
         AwsS3Module,

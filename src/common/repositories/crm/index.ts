@@ -38,6 +38,4 @@ export { ProductRecommendationGroupsRepository } from './productRecommendtaionGr
 
 export { ProductTranslationsRepository } from './productTranslations.repository';
 
-export { ProductLogsRepository } from './productLogs.repository';
-
 export { PresignRepository } from './presign.repository';

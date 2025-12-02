@@ -1,6 +1,7 @@
 export { AdminUsers } from './AdminUsers.entity';
 export { Applications } from './Applications.entity';
 export { ActiveStorageAttachments } from './ActiveStorageAttachments.entity';
+export { ProductLogEntity } from './ProductLog.entity';
 
 export { Brands } from './Brand.entity';
 
@@ -46,4 +47,3 @@ export { ProductRecommendations } from './ProductRecommendations.entity';
 export { ProductRecommendationSelecteds } from './ProductRecommendationSelecteds.entity';
 export { ProductRecommendationGroups } from './ProductRecommendationGroups.entity';
 export { ProductTranslations } from './ProductTranslations.entity';
-export { ProductLogs } from './productLogs.entity';

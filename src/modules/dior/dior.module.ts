@@ -14,7 +14,7 @@ import {
     ProductRecommendations,
     ProductRecommendationGroups,
     ProductRecommendationSelecteds,
-    ProductLogs,
+    ProductLogEntity,
 } from '@/src/common/entities/crmEntities';
 import {
     ConsultantsRepository,
@@ -55,7 +55,7 @@ import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
         ProductRecommendations,
         ProductRecommendationSelecteds,
         ProductRecommendationGroups,
-        ProductLogs,
+        ProductLogEntity,
 
         DiorAdminsModule,
         DiorCountriesModule,
