@@ -681,11 +681,15 @@ export class ConsultantsService {
             products.forEach((p) => {
                 if (p?.device?.consultant_company_id) {
                     promises.push(
-                        this.getCompanyDetails({ consultant_company_id: String(p.device.consultant_company_id) })
-                            .catch((err:any) => {
-                                console.error(`[checkConsultant] 회사 상세정보 조회 실패 - id: ${p.device.consultant_company_id}`, err);
+                        this.getCompanyDetails({ consultant_company_id: String(p.device.consultant_company_id) }).catch(
+                            (err: any): null => {
+                                console.error(
+                                    `[checkConsultant] 회사 상세정보 조회 실패 - id: ${p.device.consultant_company_id}`,
+                                    err,
+                                );
                                 return null;
-                            })
+                            },
+                        ),
                     );
                 }
             });
@@ -716,7 +720,9 @@ export class ConsultantsService {
                 // 제품 앱 첨부파일 조회 (null-safe)
                 if (p?.application?.id) {
                     try {
-                        const files = await this.activeStorageAttchRepository.getCompaniesFiles(String(p.application.id));
+                        const files = await this.activeStorageAttchRepository.getCompaniesFiles(
+                            String(p.application.id),
+                        );
                         const attachmentObject: any = {};
                         files.forEach((attachment) => {
                             const { name, blob } = attachment;
@@ -728,7 +734,10 @@ export class ConsultantsService {
                         p.application.old_apk_url = attachmentObject.old_apk;
                         p.application.app_icon = attachmentObject.icon;
                     } catch (err) {
-                        console.error(`[checkConsultant] 제품 앱 첨부파일 조회 실패 - app_id: ${p.application.id}`, err);
+                        console.error(
+                            `[checkConsultant] 제품 앱 첨부파일 조회 실패 - app_id: ${p.application.id}`,
+                            err,
+                        );
                     }
                 }
 
@@ -751,7 +760,6 @@ export class ConsultantsService {
         console.log(`[checkConsultant] 완료 - consultant_id: ${consultant.id}`);
         return consultant;
     }
-
 
     async validateUser(email: string, app_id: number, password: string) {
         console.log(`[validateUser] 시작 - email: '${email}', app_id: ${app_id}`);
@@ -907,7 +915,7 @@ export class ConsultantsService {
         // 2단계: app_id가 비어있다면 할당
         if (consultant.app_id === null) {
             consultant.app_id = Number(data.app_id);
-            await this.consultantsRepository.save(consultant);
+            await this.consultantsRepository.update(consultant.id, { app_id: consultant.app_id });
             console.log(`[loginRuby] app_id 저장 완료 - app_id: ${consultant.app_id}`);
         }
 
@@ -929,7 +937,7 @@ export class ConsultantsService {
 
         // 5단계: 컨설턴트 객체에 토큰 저장
         consultant.token = accessToken;
-        await this.consultantsRepository.save(consultant);
+        await this.consultantsRepository.update(consultant.id, { token: accessToken });
         console.log(`[loginRuby] 컨설턴트 토큰 저장 완료 - consultant_id: ${consultant.id}`);
 
         // 6단계: 리프레시 토큰 저장
@@ -2749,7 +2757,7 @@ export class ConsultantsService {
                 throw new BadRequestException(`5: ${errTranslation}`);
             }
 
-            if (product.consultant && product.consultant_id !== consultant.id) {
+            if (product.consultant && Number(product.consultant_id) !== Number(consultant.id)) {
                 throw new ConflictException('7:Device already registered by another consultant.');
             }
 
