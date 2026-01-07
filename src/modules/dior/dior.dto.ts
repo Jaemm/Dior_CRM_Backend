@@ -27,7 +27,7 @@ export class AutomaticProductByBatchIdDto {
     @ApiProperty()
     @IsOptional()
     @IsString()
-    answers: string;
+    answers: string | string[];
 }
 export class CustomerByConsultantIdDto {
     @ApiProperty()

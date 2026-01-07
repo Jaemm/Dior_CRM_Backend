@@ -712,13 +712,18 @@ export class ProductRecommendationService {
             if (!diorConsultant) {
                 throw new NotFoundException();
             }
+            const normalizeAnswersToString = (answers?: string | string[]) => {
+                if (!answers) return '';
+                if (Array.isArray(answers)) return answers.join(',');
+                return answers;
+            };
 
             const generatorCreateParameter = {
                 diorConsultant: diorConsultant,
                 skinTone: query.skin_tone,
                 routineRecommendation: query.routine_recommendation,
                 market: query?.market ?? '',
-                answers: query.answers,
+                answers: normalizeAnswersToString(query.answers),
                 old: true,
             };
 
@@ -855,152 +860,171 @@ export class ProductRecommendationService {
     }
 
     async getNewAutomaticProductByBatchId(query: AutomaticProductByBatchIdDto) {
-    try {
+        try {
+            const diorConsultant = await this.consultantRepository.getDiorConsultant();
 
-        const diorConsultant = await this.consultantRepository.getDiorConsultant();
-
-        if (!diorConsultant) {
-        console.error('Dior Consultant 없음');
-        throw new NotFoundException();
-        }
-
-        const generatorCreateParameter = {
-        diorConsultant: diorConsultant,
-        skinTone: query.skin_tone,
-        routineRecommendation: query.routine_recommendation,
-        market: query.market,
-        answers: query.answers,
-        old: false,
-        };
-
-        const repositories = {
-        consultantCountriesRepository: this.consultantCountriesRepository,
-        productRecommendationsRepository: this.productRecommendationRepository,
-        prGroupsRepository: this.prGroupsRepository,
-        };
-
-        const automaticProductDiorGenerator = new AutomaticProductDiorGenerator(
-        generatorCreateParameter,
-        repositories,
-        );
-
-        const psSelecteds = await automaticProductDiorGenerator.questionAnswers();
-
-        const data = psSelecteds
-        .sort((a, b) => a.orderNumber - b.orderNumber)
-        .map(async (productRecommendationSelected, idx) => {
-
-            let recommendation = productRecommendationSelected?.productRecommendation;
-
-            if (!recommendation) {
-            console.warn(`[WARN-${idx}] recommendation 없음 → 스킵`);
-            return null;
+            if (!diorConsultant) {
+                console.error('Dior Consultant 없음');
+                throw new NotFoundException();
             }
 
-            const isPrincipal = productRecommendationSelected.isPrincipal;
-            const shades = recommendation.getShade();
+            /**
+             * answers 정규화
+             * - "a"         → ["a"]
+             * - "a,b,c"     → ["a","b","c"]
+             * - undefined   → []
+             */
+            const normalizeAnswersToString = (answers?: string | string[]) => {
+                if (!answers) return '';
+                if (Array.isArray(answers)) return answers.join(',');
+                return answers;
+            };
 
-            // 같은 Collection의 shades 불러오기
-            const collectionShades = (
-            await this.productRecommendationRepository
-                .createQueryBuilder('pr')
-                .where('pr.collection = :collection', { collection: recommendation.collection })
-                .andWhere('pr.shades IS NOT NULL')
-                .getMany()
-            ).map((collection) => collection.shades);
+            const generatorCreateParameter = {
+                diorConsultant,
+                skinTone: query.skin_tone,
+                routineRecommendation: query.routine_recommendation,
+                market: query.market,
+                answers: normalizeAnswersToString(query.answers),
+                old: false,
+            };
 
-            const categoryTranslations = await this.productAttributesRepository.getTranslationsByType(
-            'Category',
-            recommendation.category,
+            const repositories = {
+                consultantCountriesRepository: this.consultantCountriesRepository,
+                productRecommendationsRepository: this.productRecommendationRepository,
+                prGroupsRepository: this.prGroupsRepository,
+            };
+
+            const automaticProductDiorGenerator = new AutomaticProductDiorGenerator(
+                generatorCreateParameter,
+                repositories,
             );
-            const collectionTranslations = await this.productAttributesRepository.getTranslationsByType(
-            'Collection',
-            recommendation.collection,
-            );
 
-            const productVariants = recommendation.getVariants;
+            const psSelecteds = await automaticProductDiorGenerator.questionAnswers();
 
-            let cloneRecomm;
-            let name = null;
-            let productTranslations = [];
+            const data = psSelecteds
+                .sort((a, b) => a.orderNumber - b.orderNumber)
+                .map(async (productRecommendationSelected, idx) => {
+                    let recommendation = productRecommendationSelected?.productRecommendation;
 
-            if (recommendation) {
-            if (recommendation.routine === 'Makeup') {
-                recommendation = recommendation.getNewSkinToneFromProduct(query.skin_tone);
-            }
+                    if (!recommendation) {
+                        console.warn(`[WARN-${idx}] recommendation 없음 → 스킵`);
+                        return null;
+                    }
 
-            name = recommendation.name;
-            if (recommendation.productRecommendationId) {
-                cloneRecomm = await this.productRecommendationRepository.findOne({
-                where: { id: String(recommendation.productRecommendationId) },
+                    const isPrincipal = productRecommendationSelected.isPrincipal;
+                    const shades = recommendation.getShade();
+
+                    // 같은 Collection의 shades 불러오기
+                    const collectionShades = (
+                        await this.productRecommendationRepository
+                            .createQueryBuilder('pr')
+                            .where('pr.collection = :collection', {
+                                collection: recommendation.collection,
+                            })
+                            .andWhere('pr.shades IS NOT NULL')
+                            .getMany()
+                    ).map((collection) => collection.shades);
+
+                    const categoryTranslations = await this.productAttributesRepository.getTranslationsByType(
+                        'Category',
+                        recommendation.category,
+                    );
+
+                    const collectionTranslations = await this.productAttributesRepository.getTranslationsByType(
+                        'Collection',
+                        recommendation.collection,
+                    );
+
+                    const productVariants = recommendation.getVariants;
+
+                    let cloneRecomm;
+                    let name = null;
+                    let productTranslations = [];
+
+                    if (recommendation.routine === 'Makeup') {
+                        recommendation = recommendation.getNewSkinToneFromProduct(query.skin_tone);
+                    }
+
+                    name = recommendation.name;
+
+                    if (recommendation.productRecommendationId) {
+                        cloneRecomm = await this.productRecommendationRepository.findOne({
+                            where: {
+                                id: String(recommendation.productRecommendationId),
+                            },
+                        });
+                    }
+
+                    const translationRecomm = cloneRecomm || recommendation;
+
+                    const translations = await this.productTranslationsRepository.find({
+                        where: {
+                            productRecommendationId: String(translationRecomm.id),
+                        },
+                    });
+
+                    const promiseTranslations = translations.map(async (t) => {
+                        const attribute = await this.productAttributesRepository.findOne({
+                            where: { value: translationRecomm.category },
+                        });
+
+                        const collection = await this.productAttributesRepository.findOne({
+                            where: { value: translationRecomm.collection },
+                        });
+
+                        const attributeName = attribute
+                            ? (
+                                  await this.paTranslationsRepository.findOne({
+                                      where: {
+                                          productAttributeId: Number(attribute.id),
+                                          language: t.language,
+                                      },
+                                  })
+                              )?.value
+                            : null;
+
+                        const collectionName = collection
+                            ? (
+                                  await this.paTranslationsRepository.findOne({
+                                      where: {
+                                          productAttributeId: Number(collection.id),
+                                          language: t.language,
+                                      },
+                                  })
+                              )?.value
+                            : null;
+
+                        return {
+                            ...t.getBasicInfo,
+                            attribute_name: attributeName,
+                            collection_name: collectionName,
+                        };
+                    });
+
+                    productTranslations = await Promise.all(promiseTranslations);
+
+                    return {
+                        ...recommendation.getBasicInfo,
+                        name,
+                        is_principal: isPrincipal,
+                        shades,
+                        collection_shades: collectionShades,
+                        product_translations: productTranslations,
+                        category_translations: categoryTranslations,
+                        collection_translations: collectionTranslations,
+                        product_variants: productVariants,
+                    };
                 });
-            }
-            }
-
-            const translationRecomm = cloneRecomm || recommendation;
-
-            const translations = await this.productTranslationsRepository.find({
-            where: { productRecommendationId: String(translationRecomm.id) },
-            });
-
-            const promiseTranslations = translations.map(async (t, tIdx) => {
-            const attribute = await this.productAttributesRepository.findOne({
-                where: { value: translationRecomm.category },
-            });
-
-            const collection = await this.productAttributesRepository.findOne({
-                where: { value: translationRecomm.collection },
-            });
-
-            const attributeName = attribute
-                ? (
-                    await this.paTranslationsRepository.findOne({
-                    where: { productAttributeId: Number(attribute.id), language: t.language },
-                    })
-                )?.value
-                : null;
-
-            const collectionName = collection
-                ? (
-                    await this.paTranslationsRepository.findOne({
-                    where: { productAttributeId: Number(collection.id), language: t.language },
-                    })
-                )?.value
-                : null;
 
             return {
-                ...t.getBasicInfo,
-                attribute_name: attributeName || null,
-                collection_name: collectionName || null,
+                data: (await Promise.all(data)).filter(Boolean),
             };
-            });
-
-            productTranslations = await Promise.all(promiseTranslations);
-
-            return {
-            ...recommendation.getBasicInfo,
-            name,
-            is_principal: isPrincipal,
-            shades,
-            collection_shades: collectionShades,
-            product_translations: productTranslations,
-            category_translations: categoryTranslations,
-            collection_translations: collectionTranslations,
-            product_variants: productVariants,
-            };
-        });
-
-        const result = {
-        data: (await Promise.all(data)).filter((d) => d !== null),
-        };
-
-        return result;
-    } catch (e) {
-        console.error('[오류 발생]', e);
-        throw e;
+        } catch (e) {
+            console.error('[오류 발생]', e);
+            throw e;
+        }
     }
-    }
-
 
     async getRecommendationsCategories(routine: AttributeRoutine) {
         try {
@@ -1032,7 +1056,6 @@ export class ProductRecommendationService {
         worksheet.eachRow((row, rowNumber) => {
             if (rowNumber > 1) rows.push(row.values);
         });
-
 
         const rowCount = worksheet.rowCount + 1;
         const newProducts: any[] = [];

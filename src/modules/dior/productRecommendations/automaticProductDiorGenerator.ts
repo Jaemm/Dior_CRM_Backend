@@ -57,95 +57,101 @@ export class AutomaticProductDiorGenerator {
     }
 
     async questionAnswers() {
+        if (!this.answers || !this.answers.trim()) {
+            console.warn('[QA-WARN] answers 비어 있음');
+            return [];
+        }
+
         const data = [
             {
-            question: "Select client's age group",
-            answers: [
-                { code: 'A', answer_text: 'under 20' },
-                { code: 'B', answer_text: '20 to 30' },
-                { code: 'C', answer_text: '30 to 40' },
-                { code: 'D', answer_text: '40 to 50' },
-                { code: 'E', answer_text: '50 to 60' },
-                { code: 'F', answer_text: 'over 60' },
-            ],
+                question: "Select client's age group",
+                answers: [
+                    { code: 'A', answer_text: 'under 20' },
+                    { code: 'B', answer_text: '20 to 30' },
+                    { code: 'C', answer_text: '30 to 40' },
+                    { code: 'D', answer_text: '40 to 50' },
+                    { code: 'E', answer_text: '50 to 60' },
+                    { code: 'F', answer_text: 'over 60' },
+                ],
             },
             {
-            question: 'What are your main skin concerns?',
-            answers: [
-                { code: 'A', answer_text: 'wrinkles & fines lines' },
-                { code: 'B', answer_text: 'lack of firmness' },
-                { code: 'C', answer_text: 'dark spots' },
-                { code: 'D', answer_text: 'lack of radiance' },
-                { code: 'E', answer_text: 'open pores' },
-                { code: 'F', answer_text: 'dryness' },
-            ],
+                question: 'What are your main skin concerns?',
+                answers: [
+                    { code: 'A', answer_text: 'wrinkles & fines lines' },
+                    { code: 'B', answer_text: 'lack of firmness' },
+                    { code: 'C', answer_text: 'dark spots' },
+                    { code: 'D', answer_text: 'lack of radiance' },
+                    { code: 'E', answer_text: 'open pores' },
+                    { code: 'F', answer_text: 'dryness' },
+                ],
             },
             {
-            question: 'Have you ever tried premium skincare?',
-            answers: [
-                { code: 'A', answer_text: 'Yes, I use premium skincare.' },
-                { code: 'B', answer_text: "I'd like to try Dior premium skincare." },
-                { code: 'C', answer_text: "No, I'm not interested." },
-            ],
+                question: 'Have you ever tried premium skincare?',
+                answers: [
+                    { code: 'A', answer_text: 'Yes, I use premium skincare.' },
+                    { code: 'B', answer_text: "I'd like to try Dior premium skincare." },
+                    { code: 'C', answer_text: "No, I'm not interested." },
+                ],
             },
             {
-            question: 'What foundation FINISH are you looking for?',
-            answers: [
-                { code: 'A', answer_text: 'Matte Finish' },
-                { code: 'B', answer_text: 'Glow Finish' },
-            ],
+                question: 'What foundation FINISH are you looking for?',
+                answers: [
+                    { code: 'A', answer_text: 'Matte Finish' },
+                    { code: 'B', answer_text: 'Glow Finish' },
+                ],
             },
             {
-            question: 'What foundation COVERAGE are you looking for?',
-            answers: [
-                { code: 'A', answer_text: 'Light' },
-                { code: 'B', answer_text: 'Medium' },
-                { code: 'C', answer_text: 'Full' },
-            ],
+                question: 'What foundation COVERAGE are you looking for?',
+                answers: [
+                    { code: 'A', answer_text: 'Light' },
+                    { code: 'B', answer_text: 'Medium' },
+                    { code: 'C', answer_text: 'Full' },
+                ],
             },
             {
-            question: 'What foundation TEXTURE are you looking for?',
-            answers: [
-                { code: 'A', answer_text: 'Fluid' },
-                { code: 'B', answer_text: 'Compact' },
-                { code: 'C', answer_text: 'Cushion' },
-            ],
+                question: 'What foundation TEXTURE are you looking for?',
+                answers: [
+                    { code: 'A', answer_text: 'Fluid' },
+                    { code: 'B', answer_text: 'Compact' },
+                    { code: 'C', answer_text: 'Cushion' },
+                ],
             },
         ];
 
-        const answerArray = this.answers.split(',');
+        const answerArray = this.answers
+            .split(',')
+            .map((a) => a.trim())
+            .filter(Boolean);
 
         const result = answerArray.map((answer, i) => {
-
             if (!data[i]) {
-            console.warn(`[QA-WARN-${i}] data에 해당 index 없음`, { i, answer });
-            return { id: i + 1, question: null, answers: [] };
+                console.warn(`[QA-WARN-${i}] data에 해당 index 없음`, { i, answer });
+                return { id: i + 1, question: null, answers: [] };
             }
 
             const ans = answer.split('');
             const json: any = {
-            id: i + 1,
-            question: data[i].question,
-            answers: [],
+                id: i + 1,
+                question: data[i].question,
+                answers: [],
             };
 
             if (ans.length === 1) {
-            const tempAnswer = data[i].answers.find((eachAnswer) => eachAnswer.code === answer);
-            const answerText = tempAnswer ? tempAnswer.answer_text : '';
-            json.answers = [answerText];
-            } else {
-            const arr: string[] = [];
-            ans.forEach((a, idx) => {
-                const tempAnswer = data[i].answers.find((eachAnswer) => eachAnswer.code === a);
+                const tempAnswer = data[i].answers.find((eachAnswer) => eachAnswer.code === answer);
                 const answerText = tempAnswer ? tempAnswer.answer_text : '';
-                arr.push(answerText);
-            });
-            json.answers = arr;
+                json.answers = [answerText];
+            } else {
+                const arr: string[] = [];
+                ans.forEach((a, idx) => {
+                    const tempAnswer = data[i].answers.find((eachAnswer) => eachAnswer.code === a);
+                    const answerText = tempAnswer ? tempAnswer.answer_text : '';
+                    arr.push(answerText);
+                });
+                json.answers = arr;
             }
 
             return json;
         });
-
 
         const marketValue = this.market ? this.market.toLocaleLowerCase() : '';
         if (!this.market) {
@@ -164,26 +170,22 @@ export class AutomaticProductDiorGenerator {
 
         if (recommanded?.toLowerCase().includes('japan')) {
             product = await this.getProductsFromMarketAsia(result);
-        } else if (
-            recommanded?.toLowerCase().includes('western') ||
-            recommanded?.toLowerCase().includes('europe')
-        ) {
+        } else if (recommanded?.toLowerCase().includes('western') || recommanded?.toLowerCase().includes('europe')) {
             product = await this.getProductsFromMarketWestern(result);
         } else if (recommanded?.toLowerCase().includes('asia')) {
             product = await this.getProductsFromMarketAsia(result);
         } else {
             if (this.routineRecommendation === '3') {
-            product = await this.getProductsFromMarketWestern(result);
+                product = await this.getProductsFromMarketWestern(result);
             } else if (this.routineRecommendation === '5') {
-            product = await this.getProductsFromMarketAsia(result);
+                product = await this.getProductsFromMarketAsia(result);
             } else {
-            product = await this.getProductsFromMarketAsia(result);
+                product = await this.getProductsFromMarketAsia(result);
             }
         }
 
         return product;
     }
-
 
     async getProductsFromMarketJapan(result: ResultJson[]) {
         const products = [];
@@ -484,41 +486,66 @@ export class AutomaticProductDiorGenerator {
 
     async getProductsFromMarketAsia(result: ResultJson[]) {
         const products: ProductRecommendationSelecteds[][] = [];
+
         const premium = ['Yes, I use premium skincare.', "I'd like to try Dior premium skincare."];
-        const drynessDarkSpot = ['dryness', 'dark spots'];
         const nonPremium = ["No, I'm not interested."];
+
         const darkSpotWrinkles = ['dark spots', 'wrinkles & fines lines'];
         const darkSpotFirmness = ['dark spots', 'lack of firmness'];
-        const isAnswer1Count1 = result[1]['answers'].length === 1;
-        const isDryness = result[1]['answers'].includes('dryness');
-        const isDarkspots = result[1]['answers'].includes('dark spots');
-        const isDarkSpotWrinkles = result[1]['answers'].every((x) => darkSpotWrinkles.includes(x));
-        const isDarkSpotFirmness = result[1]['answers'].every((x) => darkSpotFirmness.includes(x));
-        const isPremium =
-            result[2]['answers'].filter((x) => premium.includes(x)).length === result[2]['answers'].length;
-        const isNonPremium =
-            result[2]['answers'].filter((x) => nonPremium.includes(x)).length === result[2]['answers'].length;
-        let skincareProducts;
+
+        // ✅ 안전한 answers 추출 (절대 result[n] 직접 접근 금지)
+        const q1Answers = result[1]?.answers ?? [];
+        const q2Answers = result[2]?.answers ?? [];
+        const finishType = result[3]?.answers ?? [];
+        const coverage = result[4]?.answers ?? [];
+        const form = result[5]?.answers ?? [];
+
+        const isAnswer1Count1 = q1Answers.length === 1;
+        const isDryness = q1Answers.includes('dryness');
+        const isDarkspots = q1Answers.includes('dark spots');
+
+        const isDarkSpotWrinkles = q1Answers.length > 0 && q1Answers.every((x) => darkSpotWrinkles.includes(x));
+
+        const isDarkSpotFirmness = q1Answers.length > 0 && q1Answers.every((x) => darkSpotFirmness.includes(x));
+
+        const isPremium = q2Answers.length > 0 && q2Answers.every((x) => premium.includes(x));
+
+        const isNonPremium = q2Answers.length > 0 && q2Answers.every((x) => nonPremium.includes(x));
+
+        let skincareProducts: ProductRecommendationSelecteds[] | undefined;
+
         const addSkincareRoutineForAsia = async (routine: number) => {
             skincareProducts = await this.getSkinCareRoutine(routine, 'asia skincare');
         };
 
-        if (isAnswer1Count1 && isDryness && isPremium) await addSkincareRoutineForAsia(1);
-        else if (isAnswer1Count1 && isDarkspots && isPremium) await addSkincareRoutineForAsia(3);
-        else if (isPremium) await addSkincareRoutineForAsia(2);
+        // =========================
+        // Skincare
+        // =========================
+        if (isAnswer1Count1 && isDryness && isPremium) {
+            await addSkincareRoutineForAsia(1);
+        } else if (isAnswer1Count1 && isDarkspots && isPremium) {
+            await addSkincareRoutineForAsia(3);
+        } else if (isPremium) {
+            await addSkincareRoutineForAsia(2);
+        }
 
-        if (isAnswer1Count1 && isDarkspots && isNonPremium) await addSkincareRoutineForAsia(7);
-        else if ((isDarkSpotFirmness && isNonPremium) || (isDarkSpotWrinkles && isNonPremium))
+        if (isAnswer1Count1 && isDarkspots && isNonPremium) {
+            await addSkincareRoutineForAsia(7);
+        } else if ((isDarkSpotFirmness && isNonPremium) || (isDarkSpotWrinkles && isNonPremium)) {
             await addSkincareRoutineForAsia(6);
-        else if (isAnswer1Count1 && isDryness && isNonPremium) await addSkincareRoutineForAsia(4);
-        else if (isNonPremium) await addSkincareRoutineForAsia(5);
+        } else if (isAnswer1Count1 && isDryness && isNonPremium) {
+            await addSkincareRoutineForAsia(4);
+        } else if (isNonPremium) {
+            await addSkincareRoutineForAsia(5);
+        }
 
-        products.push(skincareProducts);
+        if (skincareProducts) {
+            products.push(skincareProducts);
+        }
 
-        const finishType = result[3]['answers'];
-        const coverage = result[4]['answers'];
-        const form = result[5]['answers'];
-
+        // =========================
+        // Makeup
+        // =========================
         const addMakeupRoutine = async (routine: number) => {
             products.push(await this.getMakeupRoutine(routine, 'asia makeup'));
         };
@@ -530,13 +557,11 @@ export class AutomaticProductDiorGenerator {
                     if (form.includes('Compact')) await addMakeupRoutine(11);
                     if (form.includes('Cushion')) await addMakeupRoutine(3);
                 }
-
                 if (coverage.includes('Medium')) {
                     if (form.includes('Fluid')) await addMakeupRoutine(1);
                     if (form.includes('Compact')) await addMakeupRoutine(5);
                     if (form.includes('Cushion')) await addMakeupRoutine(3);
                 }
-
                 if (coverage.includes('Full')) {
                     if (form.includes('Fluid')) await addMakeupRoutine(1);
                     if (form.includes('Compact')) await addMakeupRoutine(5);
@@ -547,20 +572,18 @@ export class AutomaticProductDiorGenerator {
             if (finishType.includes('Glow Finish')) {
                 if (coverage.includes('Light')) {
                     if (form.includes('Fluid')) await addMakeupRoutine(6);
-                    if (form.includes('Cushion')) await addMakeupRoutine(4);
                     if (form.includes('Compact')) await addMakeupRoutine(13);
+                    if (form.includes('Cushion')) await addMakeupRoutine(4);
                 }
-
                 if (coverage.includes('Medium')) {
                     if (form.includes('Fluid')) await addMakeupRoutine(2);
-                    if (form.includes('Cushion')) await addMakeupRoutine(9);
                     if (form.includes('Compact')) await addMakeupRoutine(7);
+                    if (form.includes('Cushion')) await addMakeupRoutine(9);
                 }
-
                 if (coverage.includes('Full')) {
                     if (form.includes('Fluid')) await addMakeupRoutine(8);
-                    if (form.includes('Cushion')) await addMakeupRoutine(9);
                     if (form.includes('Compact')) await addMakeupRoutine(7);
+                    if (form.includes('Cushion')) await addMakeupRoutine(9);
                 }
             }
         } else {
@@ -570,13 +593,11 @@ export class AutomaticProductDiorGenerator {
                     if (form.includes('Compact')) await addMakeupRoutine(11);
                     if (form.includes('Cushion')) await addMakeupRoutine(3);
                 }
-
                 if (coverage.includes('Medium')) {
                     if (form.includes('Fluid')) await addMakeupRoutine(1);
                     if (form.includes('Compact')) await addMakeupRoutine(5);
                     if (form.includes('Cushion')) await addMakeupRoutine(3);
                 }
-
                 if (coverage.includes('Full')) {
                     if (form.includes('Fluid')) await addMakeupRoutine(1);
                     if (form.includes('Compact')) await addMakeupRoutine(5);
@@ -590,13 +611,11 @@ export class AutomaticProductDiorGenerator {
                     if (form.includes('Compact')) await addMakeupRoutine(13);
                     if (form.includes('Cushion')) await addMakeupRoutine(4);
                 }
-
                 if (coverage.includes('Medium')) {
                     if (form.includes('Fluid')) await addMakeupRoutine(2);
                     if (form.includes('Compact')) await addMakeupRoutine(7);
                     if (form.includes('Cushion')) await addMakeupRoutine(4);
                 }
-
                 if (coverage.includes('Full')) {
                     if (form.includes('Fluid')) await addMakeupRoutine(2);
                     if (form.includes('Compact')) await addMakeupRoutine(7);
