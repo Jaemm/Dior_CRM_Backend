@@ -116,6 +116,8 @@ export class DiorDevicesService {
                 const consultant = device.getConsultant();
                 const pos = device.getConsultantShop();
 
+                const product = device.products[0];
+
                 return {
                     id: device.id,
                     optic_number: device.optic_number,
@@ -130,6 +132,7 @@ export class DiorDevicesService {
                     use_yn: device.use_yn,
                     lat: device.lat,
                     lng: device.lng,
+                    first_use_date: product.first_use_date,
                     created_at: new Date(device.enter_at),
                     license_period: String(device.getLicensePeriod()),
                     consultant: consultant
