@@ -28,7 +28,7 @@ describe('Dior - Countries Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/countries')
-            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 

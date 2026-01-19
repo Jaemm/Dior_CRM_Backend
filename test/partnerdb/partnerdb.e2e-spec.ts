@@ -28,7 +28,7 @@ describe('PartnerDB Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/partnerdb/consultants/19617')
-            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -47,7 +47,7 @@ describe('PartnerDB Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/partnerdb/consultants/19645/customers')
-            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -66,7 +66,7 @@ describe('PartnerDB Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/partnerdb/customers/109617/analysis_histories')
-            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -85,7 +85,7 @@ describe('PartnerDB Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/partnerdb/customers/115421')
-            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 

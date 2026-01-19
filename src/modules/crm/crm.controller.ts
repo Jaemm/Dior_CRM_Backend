@@ -55,13 +55,13 @@ export class CRMController {
 
     @Post('customers')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiHeader({ name: 'X-LOCALE', required: false })
     @Roles(Role.Consultant)
     async createCustomer(
         @Req() req: Request,
         @Res() res: Response,
         @Body() body: CreateCrmCustomerDto,
-        @Headers('X-CHOWIS-LOCALE') locale?: string,
+        @Headers('X-LOCALE') locale?: string,
     ) {
         const userId = Number((<{ id: string }>req['user']).id);
 
@@ -72,12 +72,12 @@ export class CRMController {
     @Get('customers/get_by_email')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiHeader({ name: 'X-LOCALE', required: false })
     async getCustomerByEmail(
         @Req() req: Request,
         @Res() res: Response,
         @Query() query: GetByEmailDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Headers('X-LOCALE') locale: string,
     ): Promise<any> {
         const userId = Number((<{ id: string }>req['user']).id);
 
@@ -101,7 +101,7 @@ export class CRMController {
 
     @Post('customers/presign_upload_consent_form')
     @Roles(Role.Consultant)
-    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiHeader({ name: 'X-LOCALE', required: false })
     @ApiConsumes('multipart/form-data')
     @ApiBody({
         schema: {
@@ -120,7 +120,7 @@ export class CRMController {
     @ApiConsumes('multipart/form-data')
     @UseInterceptors(FileInterceptor('file'))
     async presignUploadConsentForm(
-        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Headers('X-LOCALE') locale: string,
         @Req() req: Request,
         @Res() res: Response,
         @UploadedFile() file: Express.Multer.File,
@@ -159,12 +159,12 @@ export class CRMController {
     @Get('customers/:id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiHeader({ name: 'X-LOCALE', required: false })
     async getCustomerById(
         @Req() req: Request,
         @Res() res: Response,
         @Param('id') customerId: string,
-        @Headers('X-CHOWIS-LOCALE') locale?: string,
+        @Headers('X-LOCALE') locale?: string,
     ): Promise<any> {
         const consultantId = Number((<{ id: string }>req['user']).id);
 
@@ -190,12 +190,12 @@ export class CRMController {
     @Delete('customers/:id')
     @ApiBearerAuth()
     @Roles(Role.Consultant)
-    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiHeader({ name: 'X-LOCALE', required: false })
     async deleteCustomer(
         @Req() req: Request,
         @Res() res: Response,
         @Param('id') customerId: string,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Headers('X-LOCALE') locale: string,
     ): Promise<any> {
         const consultantId = Number((<{ id: string }>req['user']).id);
 

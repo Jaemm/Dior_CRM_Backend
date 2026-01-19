@@ -634,7 +634,7 @@ export class ConsultantsService {
             const { name, blob } = attachment;
             const { filename, key } = blob;
             const extension = filename.split('.').pop();
-            attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
+            attachmentObject[name] = `${process.env.URL}/v1/api/image/${key}`;
         });
 
         // 3. 회사 상세정보 조회
@@ -727,7 +727,7 @@ export class ConsultantsService {
                         files.forEach((attachment) => {
                             const { name, blob } = attachment;
                             const { key } = blob;
-                            attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
+                            attachmentObject[name] = `${process.env.URL}/v1/api/image/${key}`;
                         });
 
                         p.application.apk_url = attachmentObject.apk;
@@ -1762,7 +1762,7 @@ export class ConsultantsService {
         files.forEach((attachment) => {
             const { name, blob } = attachment;
             const { key } = blob;
-            attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
+            attachmentObject[name] = `${process.env.URL}/v1/api/image/${key}`;
         });
         return {
             apk_url: attachmentObject.apk,
@@ -2300,7 +2300,7 @@ export class ConsultantsService {
             const { name, blob } = attachment;
             const { filename, key } = blob;
             const extension = filename.split('.').pop();
-            attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
+            attachmentObject[name] = `${process.env.URL}/v1/api/image/${key}`;
         });
 
         if (company) {

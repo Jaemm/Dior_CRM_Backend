@@ -40,13 +40,13 @@ export class ProductRecommendationController {
 
     @Get()
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiHeader({ name: 'X-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getProductRecommendation(
         @Req() req: Request,
         @Res() res: Response,
         @Query() query: SearchProductRecommendationDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Headers('X-LOCALE') locale: string,
     ) {
         const productRecommendations = await this.productRecommendationsService.getProductRecommendation(
             req,
@@ -195,12 +195,12 @@ export class ProductRecommendationController {
 
     @Get(':id')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiHeader({ name: 'X-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getProductRecommendationById(
         @Res() res: Response,
         @Param('id') recommendandationId: string,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Headers('X-LOCALE') locale: string,
     ) {
         const recommendation = await this.productRecommendationsService.getProductRecommendationById(
             recommendandationId,

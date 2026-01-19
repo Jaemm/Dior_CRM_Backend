@@ -32,7 +32,7 @@ describe('Dior - Product Recommendations Module (e2e)', () => {
             .get(
                 '/dior/product_recommendations/get_automatic_product_by_batch_id?answers=B%2CC%2CB%2CA%2CB%2CB&batch_id=69950&market=Korea&routine_recommendation=5&skin_tone=0.5N',
             )
-            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -55,7 +55,7 @@ describe('Dior - Product Recommendations Module (e2e)', () => {
             .get(
                 '/dior/product_recommendations/get_new_automatic_product_by_batch_id?answers=B%2CC%2CB%2CA%2CB%2CB&batch_id=69950&market=Korea&routine_recommendation=5&skin_tone=0.5N',
             )
-            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -74,7 +74,7 @@ describe('Dior - Product Recommendations Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/product_recommendations/864')
-            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 

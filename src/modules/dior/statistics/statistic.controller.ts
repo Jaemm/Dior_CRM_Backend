@@ -69,13 +69,13 @@ export class StatisticsController {
 
     @Get('infograph_stat_details')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiHeader({ name: 'X-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getInfographStatDetails(
         @Req() req: Request,
         @Res() res: Response,
         @Query() query: GetInfographStatDetails,
-        @Headers('X-CHOWIS-LOCALE') locale?: string,
+        @Headers('X-LOCALE') locale?: string,
     ) {
         const result = await this.statisticsService.getInfographStatDetails(req, query, locale);
         return res.status(200).send(result);
@@ -83,13 +83,13 @@ export class StatisticsController {
 
     @Get('get_stat_details_country_wise')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiHeader({ name: 'X-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getStatDetailsCountryWise(
         @Req() req: Request,
         @Res() res: Response,
         @Query() query: GetStatDetailsCountryWiseDto,
-        @Headers('X-CHOWIS-LOCALE') locale?: string,
+        @Headers('X-LOCALE') locale?: string,
     ) {
         const result = await this.statisticsService.getStatDetailsCountryWise(req, query, locale);
         return res.status(200).send(result);

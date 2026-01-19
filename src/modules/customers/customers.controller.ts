@@ -26,8 +26,8 @@ import { ConfirmHtmlDto } from '../consultants/consultants.dto';
 @ApiExcludeController()
 @ApiTags('Customers')
 @ApiHeader({
-    name: 'X-CHOWIS-TOKEN',
-    description: 'Custom header x-chowis',
+    name: 'X-TOKEN',
+    description: 'Custom header x',
     required: true,
 })
 @Controller('customers')
@@ -40,11 +40,7 @@ export class CustomersController {
     }
 
     @Post('login')
-    async login(
-        @Res() res: Response,
-        @Body() body: CustomersDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ): Promise<any> {
+    async login(@Res() res: Response, @Body() body: CustomersDto, @Headers('X-LOCALE') locale: string): Promise<any> {
         const { app_id, password, email } = body;
         const loginResult = await this.customers.login(email, password, Number(app_id), locale);
         return res.status(200).send(loginResult);
@@ -54,7 +50,7 @@ export class CustomersController {
     async signUp(
         @Res() res: Response,
         @Body() body: CustomerSignUpDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Headers('X-LOCALE') locale: string,
     ): Promise<any> {
         const registedUser = await this.customers.customreSignUp(body, locale);
         return res.status(200).send(registedUser);
@@ -64,7 +60,7 @@ export class CustomersController {
     async register(
         @Res() res: Response,
         @Body() body: CustomersDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Headers('X-LOCALE') locale: string,
     ): Promise<any> {
         const registedUser = await this.customers.signUp(body, locale);
         return res.status(200).send(registedUser);
@@ -96,7 +92,7 @@ export class CustomersController {
         @Req() req: Request,
         @Res() res: Response,
         @Body() body: ChangePasswordCustomerDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Headers('X-LOCALE') locale: string,
     ): Promise<any> {
         const id = (<{ id: string }>req['user']).id;
         const changedPasswordResult = await this.customers.passwordChange(id, body, locale);
@@ -122,7 +118,7 @@ export class CustomersController {
     async resendConfirmation(
         @Res() res: Response,
         @Body() body: ResendConfirmationDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Headers('X-LOCALE') locale: string,
     ): Promise<any> {
         const resendResult = await this.customers.resendConfirmation(body, locale);
         return res.status(200).send(resendResult);
@@ -145,11 +141,7 @@ export class CustomersController {
     }
 
     @Post('password')
-    async password(
-        @Res() res: Response,
-        @Body() body: PasswordDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
-    ): Promise<any> {
+    async password(@Res() res: Response, @Body() body: PasswordDto, @Headers('X-LOCALE') locale: string): Promise<any> {
         const passwordResult = await this.customers.password(body, locale);
         return res.status(200).send(passwordResult);
     }
@@ -166,8 +158,7 @@ export class CustomersController {
     @ApiBearerAuth()
     @Roles(Role.Customer)
     @Get('all-licenses')
-    async allLicenses(@Req() req: Request, @Res() res: Response, @Body() body: AllLicenseDto): Promise<any> {
-    }
+    async allLicenses(@Req() req: Request, @Res() res: Response, @Body() body: AllLicenseDto): Promise<any> {}
 
     @ApiBearerAuth()
     @Roles(Role.Customer)
@@ -176,8 +167,7 @@ export class CustomersController {
         @Req() req: Request,
         @Res() res: Response,
         @Body() body: CustomerChangeLicenseDto,
-    ): Promise<any> {
-    }
+    ): Promise<any> {}
 
     @ApiBearerAuth()
     @Roles(Role.Customer)
@@ -186,24 +176,20 @@ export class CustomersController {
         @Req() req: Request,
         @Res() res: Response,
         @Body() body: NotifySalesChangeLicenseDto,
-    ): Promise<any> {
-    }
+    ): Promise<any> {}
 
     @ApiBearerAuth()
     @Roles(Role.Customer)
     @Get('calculate-price')
-    async calculatePrice(@Req() req: Request, @Res() res: Response, @Body() body: CalculatePriceDto): Promise<any> {
-    }
+    async calculatePrice(@Req() req: Request, @Res() res: Response, @Body() body: CalculatePriceDto): Promise<any> {}
 
     @ApiBearerAuth()
     @Roles(Role.Customer)
     @Put('update-license')
-    async updateLicense(@Req() req: Request, @Res() res: Response, @Body() body: UpdateLicenseDto): Promise<any> {
-    }
+    async updateLicense(@Req() req: Request, @Res() res: Response, @Body() body: UpdateLicenseDto): Promise<any> {}
 
     @ApiBearerAuth()
     @Roles(Role.Customer)
     @Post('renew-devices')
-    async renewLicense(@Req() req: Request, @Res() res: Response, @Body() body: RenewDevicesDto): Promise<any> {
-    }
+    async renewLicense(@Req() req: Request, @Res() res: Response, @Body() body: RenewDevicesDto): Promise<any> {}
 }

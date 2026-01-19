@@ -28,7 +28,7 @@ describe('Dior - Customers Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/customers?consultant_id=10842')
-            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 

@@ -43,13 +43,13 @@ export class DiorCompanyBranchesController {
 
     @Get()
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiHeader({ name: 'X-LOCALE', required: false })
     @Roles(Role.Consultant)
     async searchBranches(
         @Req() req: Request,
         @Res() res: Response,
         @Query() query: SearchBranchesDto,
-        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Headers('X-LOCALE') locale: string,
     ) {
         const branches = await this.diorCompanyBranchesService.searchBranches(req, query, locale);
         return res.status(200).send(branches);
@@ -65,10 +65,10 @@ export class DiorCompanyBranchesController {
 
     @Get('export')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiHeader({ name: 'X-LOCALE', required: false })
     @Roles(Role.Consultant)
     async exportBranches(
-        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Headers('X-LOCALE') locale: string,
         @Req() req: Request,
         @Res() res: Response,
         @Query() query: ExportBranchesDto,
@@ -107,7 +107,7 @@ export class DiorCompanyBranchesController {
             },
         },
     })
-    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    @ApiHeader({ name: 'X-LOCALE', required: false })
     @Roles(Role.Consultant)
     @UseInterceptors(FileInterceptor('file'))
     async presignUploadImportFileForBranch(
