@@ -14,10 +14,10 @@ export class DiorController {
 
     @Get('customers')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getCustomers(
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
         @Res() res: Response,
         @Query() query: CustomerByConsultantIdDto,
     ) {
@@ -38,9 +38,13 @@ export class DiorController {
 
     @Post('send-web-result')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
-    async sendWebResult(@Headers('X-LOCALE') locale: string, @Res() res: Response, @Body() body: SendWebResultDto) {
+    async sendWebResult(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Res() res: Response,
+        @Body() body: SendWebResultDto,
+    ) {
         const result = await this.diorService.sendWebResult(body, locale);
         return res.status(200).send(result);
     }

@@ -28,7 +28,7 @@ describe('Dior - Product Attributes Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/product_attributes?search=Creams')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 

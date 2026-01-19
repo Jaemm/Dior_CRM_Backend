@@ -24,7 +24,7 @@ export class ProductsController {
         @Req() req: Request,
         @Res() res: Response,
         @Body() body: ProductsEnterDto,
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
         const userId = (<{ id: string }>req['user']).id;
 

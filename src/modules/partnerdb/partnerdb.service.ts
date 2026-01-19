@@ -396,6 +396,7 @@ export class PartnerDbService {
         };
     }
 
+
     async getAnalysisHistories(req: Request, customerId: string, query: GetAnalysisHistoriesDto, locale = 'en') {
         try {
             const { filter_by: filterBy, page, limit } = query;
@@ -497,7 +498,7 @@ export class PartnerDbService {
         try {
             const { analysis_type: analysisType } = query;
 
-            const authorization: any = req.headers['X-CONSULTANT-TOKEN'];
+            const authorization: any = req.headers['x-chowis-consultant-token'];
 
             let bearerToken = authorization ? 'Bearer ' + authorization : null;
             if (!bearerToken) {
@@ -740,4 +741,3 @@ export class PartnerDbService {
         }
     }
 }
-

@@ -19,10 +19,10 @@ export class DiorCompanyConsultantsController {
 
     @Get()
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getDiorCompanyConsultants(
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
         @Res() res: Response,
         @Query() query: GetDiorCompanyConsultantsDto,
@@ -33,10 +33,10 @@ export class DiorCompanyConsultantsController {
 
     @Post()
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async createDiorCompanyConsultants(
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
         @Res() res: Response,
         @Body() body: CreateDiorCompanyConsultantsDto,
     ) {
@@ -46,12 +46,12 @@ export class DiorCompanyConsultantsController {
 
     @Get('by_consultant')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getConsultantByBranchesConsultant(
         @Req() req: Request,
         @Res() res: Response,
-        @Headers('X-LOCALE') locale?: string,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         const consultant = await this.diorCompanyConsultantsService.getConsultantByBranchesConsultant(req, locale);
         return res.status(200).send(consultant);
@@ -59,13 +59,13 @@ export class DiorCompanyConsultantsController {
 
     @Get('export')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async exportDiorCompanyConsultant(
         @Req() req: Request,
         @Res() res: Response,
         @Query() query: ExportDiorCompanyConsultantsDto,
-        @Headers('X-LOCALE') locale?: string,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         const resultFile = await this.diorCompanyConsultantsService.exportDiorCompanyConsultant(req, query, locale);
 
@@ -76,10 +76,10 @@ export class DiorCompanyConsultantsController {
 
     @Post('import')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async importDiorCompanyConsultants(
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
         @Res() res: Response,
         @Body() body: ImportDiorCompanyConsultantsDto,
@@ -90,10 +90,10 @@ export class DiorCompanyConsultantsController {
 
     @Delete(':id')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async deleteDiorCompanyConsultant(
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
         @Res() res: Response,
         @Param('id') consultantId: string,
     ) {
@@ -104,10 +104,10 @@ export class DiorCompanyConsultantsController {
 
     @Delete('delete_multiple/:ids')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async deleteMultipleCompanyConsultants(
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
         @Res() res: Response,
         @Param('ids') consultantIds: string,
     ) {

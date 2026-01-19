@@ -28,7 +28,7 @@ describe('Dior - Statistics Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/statistics/overall')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -47,7 +47,7 @@ describe('Dior - Statistics Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/statistics/overall_details')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -66,7 +66,7 @@ describe('Dior - Statistics Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/statistics/overall_per_country')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -85,7 +85,7 @@ describe('Dior - Statistics Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/statistics/overall_by_date')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -104,7 +104,7 @@ describe('Dior - Statistics Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/statistics/overall_by_date')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -123,7 +123,7 @@ describe('Dior - Statistics Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/statistics/stat_details?stat_type=consultations')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -142,7 +142,7 @@ describe('Dior - Statistics Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/statistics/infograph_stat_details?stat_type=stores')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -161,7 +161,7 @@ describe('Dior - Statistics Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/statistics/get_stat_details_country_wise?stat_type=stores&country_name=Japan')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 

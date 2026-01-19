@@ -72,10 +72,10 @@ export class DiorProductAttributesController {
 
     @Put(':id')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async updateProductAttribute(
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
         @Res() res: Response,
         @Body() body: UpdateProductAttributeDto,
         @Param('id') attributeId: string,

@@ -10,6 +10,7 @@ import { ResponseMessages } from '@/src/common/constants/response-messages';
 export class AllExceptionsFilter implements ExceptionFilter {
     private readonly validLanguages = ['en', 'kr'];
     catch(exception: any, host: ArgumentsHost) {
+
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
         const request = ctx.getRequest<Request>();
@@ -23,7 +24,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
             exception?.response?.result_code || exception?.response?.statusCode || HttpStatus.INTERNAL_SERVER_ERROR;
         let errorMessage = exception?.response?.error || ResponseMessages.InternalServerError;
 
-        let language = request.header('X-LOCALE') || 'en';
+        let language = request.header('X-CHOWIS-LOCALE') || 'en';
 
         if (!this.validLanguages.includes(language.toLowerCase())) {
             language = 'en';

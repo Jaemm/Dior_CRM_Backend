@@ -55,6 +55,7 @@ export class JwtService {
         });
     }
 
+
     private static async verifyTokenAsync<T>(token: string, secret: string, options: Jwt.VerifyOptions): Promise<T> {
         return new Promise((resolve, rejects) => {
             Jwt.verify(token, secret, options, (error, payload: T) => {
@@ -176,10 +177,10 @@ export class JwtService {
 
     getTokenFromRequest(req: Request) {
         let token;
-        if (req.headers['X-CONSULTANT-TOKEN']) {
-            token = String(req.headers['X-CONSULTANT-TOKEN']);
-        } else if (req.headers['X-TOKEN']) {
-            token = String(req.headers['X-TOKEN']);
+        if (req.headers['x-chowis-consultant-token']) {
+            token = String(req.headers['x-chowis-consultant-token']);
+        } else if (req.headers['x-chowis-token']) {
+            token = String(req.headers['x-chowis-token']);
         } else {
             if (req.headers.authorization) {
                 token = req.headers.authorization.split(' ')[1];

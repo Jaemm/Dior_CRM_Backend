@@ -63,8 +63,12 @@ export class ConsultantsController {
 
     @Post()
     @ApiOperation({ summary: 'signup consultant' })
-    @ApiHeader({ name: 'X-LOCALE', required: false })
-    async createConsultant(@Res() res: Response, @Body() body: ConsultantDto, @Headers('X-LOCALE') locale?: string) {
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    async createConsultant(
+        @Res() res: Response,
+        @Body() body: ConsultantDto,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
+    ) {
         const consultant = await this.consultants.signUpRuby(body, locale);
         return res.status(200).send(consultant);
     }
@@ -123,11 +127,11 @@ export class ConsultantsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('create-sales-connection')
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async createSalesConnection(
         @Res() res: Response,
         @Body() body: CreateSalesConnectionDto,
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
         @Req() req: Request,
     ) {
         const userId = Number((<{ id: string }>req['user']).id);
@@ -146,27 +150,27 @@ export class ConsultantsController {
     }
 
     @Get('me')
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     @ApiBearerAuth()
-    async getConsultantAboutMe(@Req() req: Request, @Res() res: Response, @Headers('X-LOCALE') locale: string) {
+    async getConsultantAboutMe(@Req() req: Request, @Res() res: Response, @Headers('X-CHOWIS-LOCALE') locale: string) {
         const consultant = await this.consultants.getConsultantAboutMe(req, locale);
         return res.status(200).send(consultant);
     }
 
     @Post('login/social')
-    @ApiHeader({ name: 'X-LOCALE', required: false })
-    async loginSocial(@Res() res: Response, @Body() body: LoginSocialDto, @Headers('X-LOCALE') locale?: string) {
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    async loginSocial(@Res() res: Response, @Body() body: LoginSocialDto, @Headers('X-CHOWIS-LOCALE') locale?: string) {
         const result = await this.consultants.loginSocial(body, locale);
         return res.status(200).send(result);
     }
 
     @Post('login')
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async login(
         @Res() res: Response,
         @Body() body: LoginConsultantDto,
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
         // body.email = body.email.toLowerCase();
         const loginResult = await this.consultants.loginRuby(body, locale);
@@ -183,7 +187,7 @@ export class ConsultantsController {
     async handleSamlResponse(
         @Body() body: { SAMLResponse: string },
         @Query('redirect') redirect = 'https://dior-backoffice.chowis.cloud/login',
-        @Headers('X-LOCALE') locale = 'en',
+        @Headers('X-CHOWIS-LOCALE') locale = 'en',
         @Res() res: Response,
     ) {
         try {
@@ -209,12 +213,12 @@ export class ConsultantsController {
     @Put('/update')
     @ApiBearerAuth()
     @ApiOperation({ summary: 'update consultant information' })
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async updateConsultant(
         @Req() req: Request,
         @Res() res: Response,
         @Body() body: UpdateConsultantRubyDto,
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
         const updateResult = await this.consultants.updateConsultantRuby(req, body, locale);
         res.status(200).send(updateResult);
@@ -223,12 +227,12 @@ export class ConsultantsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('products/enter')
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async enterProducts(
         @Req() req: Request,
         @Res() res: Response,
         @Body() body: EnterProductDto,
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
         try {
             const result = await this.consultants.enterProducts(req, body, locale);
@@ -240,8 +244,12 @@ export class ConsultantsController {
     }
 
     @Post('password')
-    @ApiHeader({ name: 'X-LOCALE', required: false })
-    async password(@Res() res: Response, @Body() body: PasswordDto, @Headers('X-LOCALE') locale: string): Promise<any> {
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    async password(
+        @Res() res: Response,
+        @Body() body: PasswordDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ): Promise<any> {
         const result = await this.consultants.password(body, locale);
         return res.status(200).send(result);
     }
@@ -258,12 +266,12 @@ export class ConsultantsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     @Post('password_change')
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async passwordChange(
         @Req() req: Request,
         @Res() res: Response,
         @Body() body: PasswrodChangeDto,
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
         const userId = Number((<{ id: string }>req['user']).id);
         const result = await this.consultants.passwordChange(userId, body, locale);
@@ -272,14 +280,14 @@ export class ConsultantsController {
 
     @Delete('delete_account')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @ApiQuery({ name: 'reason', required: false })
     @Roles(Role.Consultant)
     async deleteAccount(
         @Req() req: Request,
         @Res() res: Response,
         @Query('reason') reason?: string,
-        @Headers('X-LOCALE') locale?: string,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
     ): Promise<any> {
         const userId = Number((<{ id: string }>req['user']).id);
         const result = await this.consultants.deleteAccount(userId, reason, locale);
@@ -312,13 +320,13 @@ export class ConsultantsController {
 
     @Get('product_recommendations')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getProductRecommendations(
         @Req() req: Request,
         @Res() res: Response,
         @Query() query: ProductRecommendationsDto,
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
         const recommendations = await this.consultants.getProductRecommendations(req, query, locale);
         return res.status(200).send(recommendations);
@@ -334,13 +342,13 @@ export class ConsultantsController {
 
     @Get('health_tips')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getHelthTips(
         @Req() req: Request,
         @Res() res: Response,
         @Query() query: HealthTipsDto,
-        @Headers('X-LOCALE') locale?: string,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         const healthTips = await this.consultants.getHelthTips(req, query, locale);
         return res.status(200).send(healthTips);
@@ -348,13 +356,13 @@ export class ConsultantsController {
 
     @Post('login/phone')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async loginPhone(
         @Req() req: Request,
         @Res() res: Response,
         @Body() body: LoginPhoneDto,
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
     ) {
         const userId = Number((<{ id: string }>req['user']).id);
 
@@ -363,8 +371,12 @@ export class ConsultantsController {
     }
 
     @Post('tokens/refresh')
-    @ApiHeader({ name: 'X-LOCALE', required: false })
-    async refreshToken(@Res() res: Response, @Body() body: TokenRefreshDto, @Headers('X-LOCALE') locale: string) {
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    async refreshToken(
+        @Res() res: Response,
+        @Body() body: TokenRefreshDto,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+    ) {
         const token = await this.consultants.refreshToken(body, locale);
         return res.status(200).send(token);
     }
@@ -392,7 +404,7 @@ export class ConsultantsController {
     async registerConsultant(
         @Res() res: Response,
         @Body() body: ConsultantDto,
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
         const consultant = await this.consultants.signUp(body, locale);
         return res.status(200).send(consultant);
@@ -404,7 +416,7 @@ export class ConsultantsController {
         @Req() req: Request,
         @Res() res: Response,
         @Body() body: ResendConfirmationDto,
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
         const consultant = await this.consultants.resendConfirmation(body, locale);
         return res.status(200).send(consultant);
@@ -417,7 +429,7 @@ export class ConsultantsController {
         @Req() req: Request,
         @Res() res: Response,
         @Query() query: ChangeEmailDto,
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
         const userId = Number((<{ id: string }>req['user']).id);
         const consultant = await this.consultants.changeEmail(userId, query, locale);
@@ -438,7 +450,7 @@ export class ConsultantsController {
         @Req() req: Request,
         @Res() res: Response,
         @Body() body: PasswordDto,
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
         const consultant = await this.consultants.passwordRecovery(body, locale);
         return res.status(200).send(consultant);

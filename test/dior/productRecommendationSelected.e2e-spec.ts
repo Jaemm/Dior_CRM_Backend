@@ -28,7 +28,7 @@ describe('Dior - Product Recommendation Selecteds (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/product_recommendation_selecteds?batch_id=2768&customer_id=5047')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 

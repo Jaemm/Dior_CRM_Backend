@@ -41,7 +41,7 @@ describe('Consultants Module ( E2E )', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/consultants/me')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -60,7 +60,7 @@ describe('Consultants Module ( E2E )', () => {
 
         const rubyResponse = await request(rubyUrl)
             .put('/consultants/update')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send(consultantUpdateData)
             .expect(200);
 
@@ -86,7 +86,7 @@ describe('Consultants Module ( E2E )', () => {
 
         const rubyResponse = await request(rubyUrl)
             .post('/consultants/request_callback_url')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send({
                 batch_ids: [
                     {
@@ -120,7 +120,7 @@ describe('Consultants Module ( E2E )', () => {
 
         const rubyResponse = await request(rubyUrl)
             .post('/consultants/products/enter')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send({
                 optic_number: 'FC101490',
                 password: 'CH7950',
@@ -147,7 +147,7 @@ describe('Consultants Module ( E2E )', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/consultants/notifications')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -166,7 +166,7 @@ describe('Consultants Module ( E2E )', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/consultants/product_recommendations')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -185,7 +185,7 @@ describe('Consultants Module ( E2E )', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/consultants/health_tips')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -204,7 +204,7 @@ describe('Consultants Module ( E2E )', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/consultants/health_tips/by_company?company_id=213&app_id=88')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -228,7 +228,7 @@ describe('Consultants Module ( E2E )', () => {
 
         const rubyResponse = await request(rubyUrl)
             .post('/consultants/login/social')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send({
                 app_id: 88,
                 email: 'e2e_test@chowistest.com',
@@ -252,7 +252,7 @@ describe('Consultants Module ( E2E )', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/consultants/fetch_sales_connection')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -279,7 +279,7 @@ describe('Consultants Module ( E2E )', () => {
 
         const rubyResponse = await request(rubyUrl)
             .post('/consultants/products/enter')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send({
                 optic_number: 'FC101490',
                 password: 'CH7950',

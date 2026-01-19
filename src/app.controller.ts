@@ -83,7 +83,7 @@ export class AppController {
     async login(
         @Res() res: Response,
         @Body() body: CustomersDto,
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
     ): Promise<any> {
         const { app_id, password, email } = body;
         const loginResult = await this.customers.login(email, password, Number(app_id), locale);

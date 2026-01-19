@@ -233,7 +233,7 @@ export class ProductsService {
         files.forEach((attachment) => {
             const { name, blob } = attachment;
             const { key } = blob;
-            attachmentObject[name] = `${process.env.URL}/v1/api/image/${key}`;
+            attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
         });
         updatedProduct.application.apk_url = attachmentObject.apk;
         updatedProduct.application.old_apk_url = attachmentObject.old_apk;

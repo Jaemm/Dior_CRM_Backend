@@ -15,14 +15,14 @@ export class AuthMiddleware implements NestMiddleware {
         let token;
 
         let locale = 'en';
-        if (req.headers['X-LOCALE']) {
-            locale = String(req.headers['X-LOCALE']);
+        if (req.headers['x-chowis-locale']) {
+            locale = String(req.headers['x-chowis-locale']);
         }
 
-        if (req.headers['X-CONSULTANT-TOKEN']) {
-            token = String(req.headers['X-CONSULTANT-TOKEN']);
-        } else if (req.headers['X-TOKEN']) {
-            token = String(req.headers['X-TOKEN']);
+        if (req.headers['x-chowis-consultant-token']) {
+            token = String(req.headers['x-chowis-consultant-token']);
+        } else if (req.headers['x-chowis-token']) {
+            token = String(req.headers['x-chowis-token']);
         } else {
             if (req.headers.authorization) {
                 token = req.headers.authorization.split(' ')[1];
@@ -40,6 +40,7 @@ export class AuthMiddleware implements NestMiddleware {
             const decoded = jwt.verify(token, this.secretKey);
 
             req['user'] = decoded;
+
 
             if (!(<{ id: string }>req.user).id) {
                 (<{ id: string }>req.user).id = (<{ consultant_id: string }>req.user).consultant_id;

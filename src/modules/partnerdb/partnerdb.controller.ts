@@ -19,15 +19,15 @@ export class PartnerDbController {
     constructor(private partnerdbService: PartnerDbService) {}
 
     @Post('consultants/dior_login')
-    @ApiHeader({ name: 'X-LOCALE', required: false })
-    async loginDiorConsultant(@Body() body: LoginDiorConsultantDto, @Headers('X-LOCALE') locale?: string) {
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    async loginDiorConsultant(@Body() body: LoginDiorConsultantDto, @Headers('X-CHOWIS-LOCALE') locale?: string) {
         return await this.partnerdbService.loginDiorConsultant(body, locale);
     }
 
     @Post('consultants/password')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
-    async resetPassword(@Body() body: ResetPasswordDto, @Headers('X-LOCALE') locale?: string) {
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
+    async resetPassword(@Body() body: ResetPasswordDto, @Headers('X-CHOWIS-LOCALE') locale?: string) {
         return await this.partnerdbService.resetPassword(body, locale);
     }
 
@@ -51,49 +51,52 @@ export class PartnerDbController {
 
     @Get('customers/:id/analysis_histories')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async getAnalysisHistories(
         @Req() req: Request,
         @Param('id') customerId: string,
         @Query() query: GetAnalysisHistoriesDto,
-        @Headers('X-LOCALE') locale?: string,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         return await this.partnerdbService.getAnalysisHistories(req, customerId, query, locale);
     }
 
     @Get('customers/:id/analysis_histories/:batch_id')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async getAnalysisHistoriesByBatchId(
         @Req() req: Request,
         @Param('id') customerId: string,
         @Param('batch_id') batchId: string,
         @Query() query: GetAnalysisHistoryByBatchIdDto,
-        @Headers('X-LOCALE') locale?: string,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         return await this.partnerdbService.getAnalysisHistoriesByBatchId(req, customerId, batchId, query, locale);
     }
 
     @Get('customers/:id/analysis_histories/:batch_id/hydration_sebum')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     async getHydrationSebumByBatchId(
         @Req() req: Request,
         @Param('id') customerId: string,
         @Param('batch_id') batchId: string,
         @Query() query: GetHydrationSebumByBatchIdDto,
-        @Headers('X-LOCALE') locale?: string,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         return await this.partnerdbService.getHydrationSebumByBatchId(req, customerId, batchId, query, locale);
     }
 
     @Get('customers/:id')
     @ApiBearerAuth()
-    async getCustomerById(@Headers('X-LOCALE') locale: string, @Res() res: Response, @Param('id') customerId: string) {
+    async getCustomerById(
+        @Headers('X-CHOWIS-LOCALE') locale: string,
+        @Res() res: Response,
+        @Param('id') customerId: string,
+    ) {
         const customer = await this.partnerdbService.getCustomerById(customerId, locale);
 
         return res.status(200).send(customer);
     }
 }
-

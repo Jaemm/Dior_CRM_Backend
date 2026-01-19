@@ -28,7 +28,7 @@ describe('Dior - Company Consultants (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/company_consultants')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 

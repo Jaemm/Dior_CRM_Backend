@@ -28,7 +28,7 @@ describe('Dior - Product Recommendations Groups (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/product_recommendation_groups/list')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 

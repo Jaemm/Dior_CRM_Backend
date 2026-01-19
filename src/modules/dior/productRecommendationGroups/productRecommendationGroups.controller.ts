@@ -72,10 +72,10 @@ export class ProductRecommendationGroupsController {
 
     @Put(':id')
     @ApiBearerAuth()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @Roles(Role.Consultant)
     async updateProductRecommendationGroups(
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
         @Res() res: Response,
         @Param('id') groupId: string,
         @Body() body: UpdateProductRecommendationGroupDto,
@@ -92,7 +92,7 @@ export class ProductRecommendationGroupsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     async deleteMultipleProductRecommendtionGroup(
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
         @Res() res: Response,
         @Param('ids') groupIds: string,
     ) {
@@ -107,7 +107,7 @@ export class ProductRecommendationGroupsController {
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     async deleteProductRecommendtionGroupById(
-        @Headers('X-LOCALE') locale: string,
+        @Headers('X-CHOWIS-LOCALE') locale: string,
         @Res() res: Response,
         @Param('id') groupId: string,
     ) {

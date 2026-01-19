@@ -28,7 +28,7 @@ describe('Dior - Devices Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/dior/devices?search=FAB01920')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -49,7 +49,7 @@ describe('Dior - Devices Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .post('/dior/devices/connect-reset')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send({
                 device_id: '1580',
             })

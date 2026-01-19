@@ -13,28 +13,28 @@ export class DiorDeivcesConroller {
     constructor(private diorDevicesService: DiorDevicesService) {}
 
     @Get()
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     async getDevices(
         @Req() req: Request,
         @Res() res: Response,
         @Query() query: GetDevicesDto,
-        @Headers('X-LOCALE') locale?: string,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         const devices = await this.diorDevicesService.getDevices(req, query, locale);
         return res.status(200).send(devices);
     }
 
     @Post('connect-reset')
-    @ApiHeader({ name: 'X-LOCALE', required: false })
+    @ApiHeader({ name: 'X-CHOWIS-LOCALE', required: false })
     @ApiBearerAuth()
     @Roles(Role.Consultant)
     async resetConnect(
         @Req() req: Request,
         @Res() res: Response,
         @Body() body: ResetConnectDto,
-        @Headers('X-LOCALE') locale?: string,
+        @Headers('X-CHOWIS-LOCALE') locale?: string,
     ) {
         const result = await this.diorDevicesService.resetConnect(req, body, locale);
         return res.status(200).send(result);

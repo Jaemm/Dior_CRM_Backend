@@ -28,7 +28,7 @@ describe('CRM Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/crm/customers')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -47,7 +47,7 @@ describe('CRM Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/crm/customers/117458')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
@@ -66,7 +66,7 @@ describe('CRM Module (e2e)', () => {
 
         const rubyResponse = await request(rubyUrl)
             .get('/crm/customers/get_by_email?email=test%2B123%40chowis.com')
-            .set('X-CONSULTANT-TOKEN', rubyToken)
+            .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send()
             .expect(200);
 
