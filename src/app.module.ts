@@ -1,8 +1,8 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import * as Joi from '@hapi/joi';
 import { globalDB, cndpSkinDB, diorCndpSkinDB } from './config/typeOrm.config';
-import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { AuthModule } from './modules/auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { ConsultantsModule } from './modules/consultants/consultants.module';
@@ -15,19 +15,22 @@ import { CustomersModule } from './modules/customers/customers.module';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+
 import { AuthMiddleware } from './common/middleWare/authMiddlware/auth.middleware';
+import { HeaderAliasMiddleware } from './common/middleWare/headerAliasMiddleware';
+import { LoggingMiddleware } from './common/middleWare/logMiddleWare/logging.middleware';
 
 import { ProductsModule } from './modules/products/products.module';
 import { HealthModule } from './modules/apiHealthCheck/apiHealth.module';
 import { CRMModule } from './modules/crm/crm.module';
+
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guards/roles.guard';
-import { join } from 'path';
 import { AllExceptionsFilter } from './common/middleWare/exceptions/exceptionHandling/allException.filter';
-import { LoggingMiddleware } from './common/middleWare/logMiddleWare/logging.middleware';
 
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { DatabaseModule } from './modules/database/database.module';
+
 import {
     ConsultantShopsRepository,
     DevicesRepository,
@@ -36,6 +39,7 @@ import {
     SkinColorGroupsRepository,
 } from './common/repositories/crm';
 import { CountriesRepository } from './common/repositories/crm/countries.repository';
+
 import { UtilsModule } from './modules/utils/utils.module';
 import { PartnerDbModule } from './modules/partnerdb/partnerdb.module';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -82,7 +86,6 @@ import { ProductLogModule } from './modules/productLog/module';
         }),
 
         ScheduleModule.forRoot(),
-
         DatabaseModule,
 
         ConsultantsModule,
@@ -97,7 +100,6 @@ import { ProductLogModule } from './modules/productLog/module';
         ImageModule,
 
         DataReplicationModule,
-
         ProductsModule,
         PartnerDbModule,
         CRMModule,
@@ -108,7 +110,6 @@ import { ProductLogModule } from './modules/productLog/module';
         ConsultantShopsRepository,
         CountriesRepository,
         EthnicitiesRepository,
-
         DevicesRepository,
         GendersRepository,
         SkinColorGroupsRepository,
@@ -126,32 +127,22 @@ import { ProductLogModule } from './modules/productLog/module';
 })
 export class AppModule {
     configure(consumer: MiddlewareConsumer) {
-        consumer.apply(AuthMiddleware).forRoutes(
-            {
-                path: '/shops',
-                method: RequestMethod.GET,
-            },
-            {
-                path: '/shops-list',
-                method: RequestMethod.GET,
-            },
-            {
-                path: '/basic-details-customers',
-                method: RequestMethod.GET,
-            },
-            {
-                path: '/countries-list',
-                method: RequestMethod.GET,
-            },
-            {
-                path: '/basic-details',
-                method: RequestMethod.GET,
-            },
-            {
-                path: '/logout',
-                method: RequestMethod.POST,
-            },
-        );
+        // 1. 가장 먼저: Header alias (신규 헤더 → x-chowis-*)
+        consumer.apply(HeaderAliasMiddleware).forRoutes('*');
+
+        // 2. 인증 미들웨어
+        consumer
+            .apply(AuthMiddleware)
+            .forRoutes(
+                { path: '/shops', method: RequestMethod.GET },
+                { path: '/shops-list', method: RequestMethod.GET },
+                { path: '/basic-details-customers', method: RequestMethod.GET },
+                { path: '/countries-list', method: RequestMethod.GET },
+                { path: '/basic-details', method: RequestMethod.GET },
+                { path: '/logout', method: RequestMethod.POST },
+            );
+
+        // 3. 로깅 (마지막)
         consumer.apply(LoggingMiddleware).forRoutes('*');
     }
 }
