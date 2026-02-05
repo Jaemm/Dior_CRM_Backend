@@ -275,23 +275,18 @@ export class PartnerDbService {
             throw e;
         }
     }
-
+    
     async loginDiorConsultant(body: LoginDiorConsultantDto, locale = 'en') {
         const { email, password } = body;
-
-        console.log('🔐 Login attempt:', { email, password });
 
         let consultant;
 
         const app_id = body?.app_id ?? '88';
-        console.log('📱 App ID:', app_id);
 
         consultant = await this.consultantRepository.getConsultantEmailAndAppId(email, app_id);
         consultant = await this.consultantRepository.getConsultantEmailAndAppId(email);
-        console.log('👤 Consultant after DB query:', consultant);
 
         if (!consultant) {
-            console.warn('⚠️ Consultant not found');
             throw new UnauthorizedException({
                 result_code: ErrorStatus.LOGIN_FAILED,
                 error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
@@ -299,37 +294,30 @@ export class PartnerDbService {
         }
 
         if (!consultant.password_digest || consultant.password_digest === '') {
-            console.warn('⚠️ Password digest missing');
             throw new UnauthorizedException({
                 result_code: ErrorStatus.LOGIN_FAILED,
                 error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
             });
         }
 
-        console.log('🔑 Stored password_digest:', consultant.password_digest);
-
         consultant.app_id = Number(app_id);
         consultant = await this.consultantRepository.save(consultant);
 
-        // ✅ 비밀번호 검증 (argon2 / bcrypt 자동 처리)
+        // 비밀번호 검증 (argon2 / bcrypt 자동 처리)
         let passWordCheck = false;
         try {
             const hash = consultant.password_digest;
+
             if (hash.startsWith('$argon2')) {
                 passWordCheck = await argon2.verify(hash, password);
-                console.log('🧪 Argon2 verification result:', passWordCheck);
             } else if (hash.startsWith('$2a$') || hash.startsWith('$2b$')) {
                 passWordCheck = await bcrypt.compare(password, hash);
-                console.log('🧪 Bcrypt verification result:', passWordCheck);
-            } else {
-                console.error('❗ Unknown password hash format:', hash);
             }
         } catch (err) {
-            console.error('❌ Error comparing password:', err);
+            // 의도적으로 무시 (기존 로직 유지)
         }
 
         if (!passWordCheck) {
-            console.warn('❌ Invalid password');
             throw new UnauthorizedException({
                 result_code: ErrorStatus.LOGIN_FAILED,
                 error: this.commonService.createLocaleErrorMessage(locale, 'login_failed'),
@@ -337,7 +325,6 @@ export class PartnerDbService {
         }
 
         if (!consultant.email_confirmed) {
-            console.warn('⚠️ Email not confirmed');
             throw new UnauthorizedException({
                 result_code: ErrorStatus.EMAIL_NOT_CONFIRMED,
                 error: this.commonService.createLocaleErrorMessage(locale, 'not_confirmed'),
@@ -345,28 +332,23 @@ export class PartnerDbService {
         }
 
         if (Number(consultant.consultant_position) === PositionsIds.BRAND_MANAGER) {
-            console.warn('🚫 Unauthorized position: BRAND_MANAGER');
             throw new UnauthorizedException({
                 result_code: ErrorStatus.UNAUTHORIZED,
                 error: this.commonService.createLocaleErrorMessage(locale, 'unauthorized'),
             });
         }
 
-        const [accessToken, refreshToken] = await this.authService.generateAuthTokens(
+        const [accessToken] = await this.authService.generateAuthTokens(
             { id: consultant.id, email: consultant.email, role: Role.Consultant },
             '',
         );
-
-        console.log('🔓 AccessToken generated:', accessToken);
 
         consultant.token = accessToken;
         consultant = await this.consultantRepository.save(consultant);
 
         const consultants = await this.consultantRepository.find({ where: { email } });
-        console.log('📄 Related consultants:', consultants);
 
         const appIds = consultants.map((c) => c.app_id);
-        console.log('📦 Application IDs:', appIds);
 
         const applications = await this.applicationRepository.find({
             where: { id: In(appIds) },
@@ -376,8 +358,6 @@ export class PartnerDbService {
             id: appl.id,
             name: appl.name,
         }));
-
-        console.log('✅ Login successful for:', consultant.email);
 
         return {
             id: consultant.id,
@@ -395,7 +375,6 @@ export class PartnerDbService {
             countries: consultant?.countries || [],
         };
     }
-
 
     async getAnalysisHistories(req: Request, customerId: string, query: GetAnalysisHistoriesDto, locale = 'en') {
         try {
@@ -741,3 +720,4 @@ export class PartnerDbService {
         }
     }
 }
+

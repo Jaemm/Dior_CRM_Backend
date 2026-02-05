@@ -78,8 +78,7 @@ export class ProductsService {
         return result;
     }
 
-    async proctConnectMulti(product: Products, customer: any) {
-    }
+    async proctConnectMulti(product: Products, customer: any) {}
 
     async enterProduct(customerId: string, query: ProductsEnterDto, locale = 'en') {
         const { password, application_id, mac_address, lat, lng } = query;
@@ -233,7 +232,7 @@ export class ProductsService {
         files.forEach((attachment) => {
             const { name, blob } = attachment;
             const { key } = blob;
-            attachmentObject[name] = `${process.env.URL}/api/image/${key}`;
+            attachmentObject[name] = `${process.env.URL}/v1/api/image/${key}`;
         });
         updatedProduct.application.apk_url = attachmentObject.apk;
         updatedProduct.application.old_apk_url = attachmentObject.old_apk;
@@ -289,8 +288,7 @@ export class ProductsService {
         return result;
     }
 
-    async getCustomerMultiProduct(customer_id: number) {
-    }
+    async getCustomerMultiProduct(customer_id: number) {}
 
     async getProducts(customer_id: any) {
         const productIds: any = await this.getCustomerMultiProduct(Number(customer_id));
