@@ -1515,7 +1515,7 @@ export class ProductRecommendationService {
 
             const baseUrl = this.configService.get('URL') || 'http://localhost:3100';
 
-            const downloadUrl = `${baseUrl}/api/dior/product_recommendations/files/${hash}`;
+            const downloadUrl = `${baseUrl}/v1/api/dior/product_recommendations/files/${hash}`;
 
             await this.presignRepository.saveNewPresignEntity({
                 hash: hash,

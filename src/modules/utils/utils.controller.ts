@@ -11,7 +11,9 @@ export class UtilsController {
     @ApiBearerAuth()
     @Get('generate_qr_code')
     generateQRCodeUrl(@Query('url') url: string) {
-        const qrCodeImageUrl = `https://${process.env.DOMAIN}/api/utils/serve_qr_code?url=${encodeURIComponent(url)}`;
+        const qrCodeImageUrl = `https://${process.env.DOMAIN}/v1/api/utils/serve_qr_code?url=${encodeURIComponent(
+            url,
+        )}`;
         return { qr_code_url: qrCodeImageUrl };
     }
 
