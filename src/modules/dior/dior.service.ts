@@ -45,9 +45,9 @@ export class DiorService {
             const customerByConsultantIdQuery = this.customersRepository
                 .createQueryBuilder('customers')
                 .where('customers.consultant_id = :consultantId', { consultantId })
-                .orderBy('customers.consultant_id', 'DESC');
+                .orderBy('customers.id', 'DESC');
 
-            if (email) {
+            if (email) { 
                 customerByConsultantIdQuery.andWhere('customers.email LIKE :email', { email: `%${email}%` });
             }
 
