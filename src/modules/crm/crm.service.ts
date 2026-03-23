@@ -86,6 +86,7 @@ export class CRMService {
             }
 
             const [customers, totalCount] = await customerQuery
+                .orderBy('customers.id', 'DESC')
                 .take(perPage)
                 .skip((page - 1) * perPage)
                 .getManyAndCount();
