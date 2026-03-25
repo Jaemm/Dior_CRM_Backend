@@ -13,7 +13,7 @@ import { ErrorStatus } from '@/src/common/constants/error-status';
 
 import { CommonService } from '@/src/common/common.service';
 import { CustomersT } from '@/src/common/types/entities';
-import { fileName } from 'typeorm-model-generator/dist/src/NamingStrategy';
+// import { fileName } from 'typeorm-model-generator/dist/src/NamingStrategy';
 import { AwsS3Service } from '@/src/common/awsS3/awsS3.service';
 import { ConfigService } from '@nestjs/config';
 

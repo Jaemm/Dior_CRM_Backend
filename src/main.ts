@@ -6,8 +6,8 @@ import { AppModule } from './app.module';
 import { AppService } from './app.service';
 
 async function bootstrap() {
-    const HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
-    const port = Number(process.env.PORT) || 3000;
+    const HOSTNAME = process.env.HOSTNAME;
+    const port = Number(process.env.PORT) || 8081;
 
     const app = await NestFactory.create(AppModule, {
         rawBody: true,
@@ -17,7 +17,6 @@ async function bootstrap() {
     const appService = app.get(AppService);
     appService.handleApp(app);
 
-    // prefix
     app.setGlobalPrefix('/v1/api');
 
     // swagger
@@ -25,7 +24,7 @@ async function bootstrap() {
         const config = new DocumentBuilder()
             .setTitle('Dior User management and Login V1/API')
             .setDescription(
-                `<b>STAGING</b>: https://dior-crm-staging.choicedx.kr <br>
+                `<b>STAGING</b>: https://dior-staging.choicedx.kr <br>
                  <b>PROD</b>: https://dior-crm.choicedx.kr <br>`,
             )
             .setVersion('1.0.0')
@@ -61,9 +60,9 @@ async function bootstrap() {
 
     app.enableCors();
 
-    await app.listen(port, HOSTNAME);
-
-    Logger.log(`Server running at http://${HOSTNAME}:${port}`);
+    await app.listen(port, () => {
+        Logger.log(`Listening at http://${HOSTNAME}:${port}`);
+    });
 }
 
 bootstrap();

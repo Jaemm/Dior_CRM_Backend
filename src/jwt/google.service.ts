@@ -6,37 +6,37 @@ import { AuthGoogleLoginDto } from '../common/Dto/auth/authToken.dto';
 
 @Injectable()
 export class AuthGoogleService {
-    private google: OAuth2Client;
+    // private google: OAuth2Client;
 
-    constructor(private configService: ConfigService) {
-        this.google = new OAuth2Client(
-            configService.get('google.clientId', { infer: true }),
-            configService.get('google.clientSecret', { infer: true }),
-        );
-    }
+    // constructor(private configService: ConfigService) {
+    //     this.google = new OAuth2Client(
+    //         configService.get('google.clientId', { infer: true }),
+    //         configService.get('google.clientSecret', { infer: true }),
+    //     );
+    // }
 
-    async getProfileByToken(loginDto: AuthGoogleLoginDto): Promise<SocialInterface> {
-        const ticket = await this.google.verifyIdToken({
-            idToken: loginDto.idToken,
-            audience: [this.configService.getOrThrow('google.clientId', { infer: true })],
-        });
+    // async getProfileByToken(loginDto: AuthGoogleLoginDto): Promise<SocialInterface> {
+    //     const ticket = await this.google.verifyIdToken({
+    //         idToken: loginDto.idToken,
+    //         audience: [this.configService.getOrThrow('google.clientId', { infer: true })],
+    //     });
 
-        const data = ticket.getPayload();
+    //     const data = ticket.getPayload();
 
-        if (!data) {
-            throw new UnprocessableEntityException({
-                status: HttpStatus.UNPROCESSABLE_ENTITY,
-                errors: {
-                    user: 'wrongToken',
-                },
-            });
-        }
+    //     if (!data) {
+    //         throw new UnprocessableEntityException({
+    //             status: HttpStatus.UNPROCESSABLE_ENTITY,
+    //             errors: {
+    //                 user: 'wrongToken',
+    //             },
+    //         });
+    //     }
 
-        return {
-            id: data.sub,
-            email: data.email,
-            firstName: data.given_name,
-            lastName: data.family_name,
-        };
-    }
+    //     return {
+    //         id: data.sub,
+    //         email: data.email,
+    //         firstName: data.given_name,
+    //         lastName: data.family_name,
+    //     };
+    // }
 }
