@@ -8,9 +8,51 @@ import { createSecureContext } from 'tls';
 import { AppModule } from './app.module';
 import { AppService } from './app.service';
 
+function parseCorsOrigins(): string[] {
+    const configuredOrigins = process.env.CORS_ALLOWED_ORIGINS
+        ?.split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean);
+
+    if (configuredOrigins?.length) {
+        return configuredOrigins;
+    }
+
+    return [
+        'https://dior-crm.choicedx.kr',
+        'https://dior-crm.choicedx.kr:8097',
+        'https://dior-crm.chowis.cloud',
+        'https://dior-crm.chowis.cloud:8097',
+        'https://dior-crm.chowis.kr',
+        'https://dior-backoffice.chowis.cloud',
+        'http://localhost:3000',
+        'http://localhost:3100',
+        'http://localhost:5173',
+    ];
+}
+
+function isAllowedOrigin(origin: string, allowedOrigins: string[]): boolean {
+    try {
+        const requestUrl = new URL(origin);
+
+        return allowedOrigins.some((allowedOrigin) => {
+            try {
+                const allowedUrl = new URL(allowedOrigin);
+
+                return requestUrl.hostname === allowedUrl.hostname;
+            } catch {
+                return origin === allowedOrigin;
+            }
+        });
+    } catch {
+        return allowedOrigins.includes(origin);
+    }
+}
+
 async function bootstrap() {
     const HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
     const port = Number(process.env.PORT) || 8097;
+    const allowedOrigins = parseCorsOrigins();
 
     const defaultCert = {
         key: readFileSync('/etc/letsencrypt/live/dior-crm.choicedx.kr/privkey.pem'),
@@ -93,8 +135,25 @@ async function bootstrap() {
     );
 
     app.enableCors({
-        origin: ['https://dior-crm.choicedx.kr', 'https://dior-crm.chowis.kr'],
+        origin: (origin, callback) => {
+            if (!origin || isAllowedOrigin(origin, allowedOrigins)) {
+                return callback(null, true);
+            }
+
+            return callback(new Error(`CORS blocked for origin: ${origin}`), false);
+        },
         credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: [
+            'Content-Type',
+            'Authorization',
+            'X-Requested-With',
+            'X-CHOWIS-LOCALE',
+            'X-CHOWIS-TOKEN',
+            'X-CHOWIS-CONSULTANT-TOKEN',
+            'X-CHOWIS-APP-ID',
+        ],
+        exposedHeaders: ['Set-Cookie'],
     });
 
     await app.listen(port, '0.0.0.0', () => {
