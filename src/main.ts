@@ -25,10 +25,22 @@ function parseCorsOrigins(): string[] {
         'https://dior-crm.chowis.cloud:8097',
         'https://dior-crm.chowis.kr',
         'https://dior-backoffice.chowis.cloud',
+        'https://dior-backoffice-env-internal-choicetech.vercel.app',
+        'https://*.choicetech.vercel.app',
         'http://localhost:3000',
         'http://localhost:3100',
         'http://localhost:5173',
     ];
+}
+
+function matchesAllowedHostname(requestHostname: string, allowedHostname: string): boolean {
+    if (allowedHostname.startsWith('*.')) {
+        const baseHostname = allowedHostname.slice(2);
+
+        return requestHostname === baseHostname || requestHostname.endsWith(`.${baseHostname}`);
+    }
+
+    return requestHostname === allowedHostname;
 }
 
 function isAllowedOrigin(origin: string, allowedOrigins: string[]): boolean {
@@ -39,7 +51,7 @@ function isAllowedOrigin(origin: string, allowedOrigins: string[]): boolean {
             try {
                 const allowedUrl = new URL(allowedOrigin);
 
-                return requestUrl.hostname === allowedUrl.hostname;
+                return matchesAllowedHostname(requestUrl.hostname, allowedUrl.hostname);
             } catch {
                 return origin === allowedOrigin;
             }
