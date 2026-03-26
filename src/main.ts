@@ -2,16 +2,53 @@ import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
+import { readFileSync } from 'fs';
+import { createSecureContext } from 'tls';
+
 import { AppModule } from './app.module';
 import { AppService } from './app.service';
 
 async function bootstrap() {
-    const HOSTNAME = process.env.HOSTNAME;
-    const port = Number(process.env.PORT) || 8081;
+    const HOSTNAME = process.env.HOSTNAME || '0.0.0.0';
+    const port = Number(process.env.PORT) || 8097;
+
+    const defaultCert = {
+        key: readFileSync('/etc/letsencrypt/live/dior-crm.choicedx.kr/privkey.pem'),
+        cert: readFileSync('/etc/letsencrypt/live/dior-crm.choicedx.kr/fullchain.pem'),
+    };
+
+    const httpsOptions = {
+        ...defaultCert,
+        SNICallback: (servername: string, cb: any) => {
+            try {
+                let context;
+
+                if (servername.includes('choicedx')) {
+                    context = createSecureContext({
+                        key: readFileSync('/etc/letsencrypt/live/dior-crm.choicedx.kr/privkey.pem'),
+                        cert: readFileSync('/etc/letsencrypt/live/dior-crm.choicedx.kr/fullchain.pem'),
+                    });
+                } else if (servername.includes('chowis')) {
+                    context = createSecureContext({
+                        key: readFileSync('/etc/letsencrypt/live/dior-crm.chowis.cloud/privkey.pem'),
+                        cert: readFileSync('/etc/letsencrypt/live/dior-crm.chowis.cloud/fullchain.pem'),
+                    });
+                } else {
+                    context = createSecureContext(defaultCert);
+                }
+
+                cb(null, context);
+            } catch (err) {
+                console.error('SNI error:', err);
+                cb(err);
+            }
+        },
+    };
 
     const app = await NestFactory.create(AppModule, {
+        httpsOptions,
         rawBody: true,
-        logger: ['log', 'error', 'warn', 'debug', 'verbose'],
+        logger: ['log', 'error', 'warn'],
     });
 
     const appService = app.get(AppService);
@@ -19,13 +56,13 @@ async function bootstrap() {
 
     app.setGlobalPrefix('/v1/api');
 
-    // swagger
     if (process.env.OPEN_SWAGGER === 'true') {
         const config = new DocumentBuilder()
             .setTitle('Dior User management and Login V1/API')
             .setDescription(
-                `<b>STAGING</b>: https://dior-staging.choicedx.kr <br>
-                 <b>PROD</b>: https://dior-crm.choicedx.kr <br>`,
+                `<b>CHOICEDX</b>: https://dior-crm.choicedx.kr <br>
+                 <b>CHOWIS</b>: https://dior-crm.chowis.kr <br>
+                 <b>PORT</b>: https://도메인:8097 <br>`,
             )
             .setVersion('1.0.0')
             .addBearerAuth({
@@ -39,12 +76,9 @@ async function bootstrap() {
             .build();
 
         const document = SwaggerModule.createDocument(app, config);
-
-        // prefix 고려
         SwaggerModule.setup('/docs', app, document);
     }
 
-    // middleware
     app.use(cookieParser());
 
     app.useGlobalPipes(
@@ -58,10 +92,15 @@ async function bootstrap() {
         }),
     );
 
-    app.enableCors();
+    app.enableCors({
+        origin: ['https://dior-crm.choicedx.kr', 'https://dior-crm.chowis.kr'],
+        credentials: true,
+    });
 
-    await app.listen(port, () => {
-        Logger.log(`Listening at http://${HOSTNAME}:${port}`);
+    await app.listen(port, '0.0.0.0', () => {
+        Logger.log(`HTTPS Server running on port ${port}`);
+        Logger.log(`https://dior-crm.choicedx.kr:${port}`);
+        Logger.log(`https://dior-crm.chowis.kr:${port}`);
     });
 }
 
