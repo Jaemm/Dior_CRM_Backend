@@ -1,12 +1,16 @@
-import { Controller, Get, HttpStatus, Res } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import { Public } from '../../common/decorators/public-route.decorator';
+import { HealthService } from './apiHealth.service';
 
 @ApiTags('Health')
 @Controller()
 export class HealthController {
-    @Get('/health')
-    healthCheck(@Res() res: Response) {
-        return res.status(HttpStatus.OK).json({ message: 'Server is up and running' });
+    constructor(private readonly healthService: HealthService) {}
+
+    @Public()
+    @Get(['health', 'healthz'])
+    healthCheck() {
+        return this.healthService.getHealth();
     }
 }
