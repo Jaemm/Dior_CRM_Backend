@@ -1,16 +1,15 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
 import { Response, Request } from 'express';
-import * as fs from 'fs';
 import { CustomHttpExceptionResponse } from './interface/http-exception.interface';
 import { ErrorCode } from './eum/statusCode.enum';
 import { ErrorMessageTranslation } from './constants/errorMessageTranslation.constants';
 import { ResponseMessages } from '@/src/common/constants/response-messages';
+import { getRequestId, writePm2Log } from '@/src/common/logging/pm2-log.util';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
     private readonly validLanguages = ['en', 'kr'];
     catch(exception: any, host: ArgumentsHost) {
-
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
         const request = ctx.getRequest<Request>();
@@ -33,8 +32,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
         errorMessage = this.translateErrorMessage(errorMessage, language);
 
         const errorResponse = this.getErrorResponse(customStatus, errorMessage, request);
-        const errorLog = this.getErrorLog(errorResponse, request, exception);
-        this.writeErrorLogToFile(errorLog);
+        if (httpStatus >= HttpStatus.INTERNAL_SERVER_ERROR) {
+            const errorLog = this.getErrorLog(errorResponse, request, exception, httpStatus);
+            writePm2Log('error', 'http_exception', errorLog);
+        }
+
         response.status(httpStatus).json(errorResponse);
     }
 
@@ -67,22 +69,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
         errorResponse: CustomHttpExceptionResponse,
         request: Request,
         exception: unknown,
-    ): string => {
+        httpStatus: HttpStatus,
+    ): Record<string, unknown> => {
         const { result_code, error } = errorResponse;
         const { method, url } = request;
 
-        const kr_time = new Date().toLocaleString();
-        const errorLog = `Response Code: ${result_code} - Method: ${method} - URL: ${url}\n\n
-      ${JSON.stringify(errorResponse)}\n\n
-       ${JSON.stringify(kr_time)}\n\n
-       ${JSON.stringify(request.statusMessage ?? 'error')}\n\n
-      ${exception instanceof HttpException ? exception.stack : error}\n\n`;
-        return errorLog;
-    };
-
-    private writeErrorLogToFile = (errorLog: string): void => {
-        fs.appendFile('error.log', errorLog, 'utf8', (err) => {
-            if (err) throw err;
-        });
+        return {
+            requestId: getRequestId(request),
+            status: httpStatus,
+            resultCode: result_code,
+            method,
+            path: url,
+            error,
+            statusMessage: request.statusMessage ?? 'error',
+            stack:
+                httpStatus >= HttpStatus.INTERNAL_SERVER_ERROR && exception instanceof Error
+                    ? exception.stack
+                    : undefined,
+        };
     };
 }

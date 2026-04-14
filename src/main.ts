@@ -11,18 +11,13 @@ import { AppService } from './app.service';
 import { createHealthCheckResponse } from './modules/apiHealthCheck/apiHealth.response';
 
 function parseCorsOrigins(): string[] {
-    const configuredOrigins = process.env.CORS_ALLOWED_ORIGINS
-        ?.split(',')
+    const configuredOrigins = process.env.CORS_ALLOWED_ORIGINS?.split(',')
         .map((origin) => origin.trim())
         .filter(Boolean);
 
     if (configuredOrigins?.length) return configuredOrigins;
 
-    return [
-        'https://dior-crm.choicedx.kr',
-        'https://dior-crm.chowis.cloud',
-        'http://localhost:3000',
-    ];
+    return ['https://dior-crm.choicedx.kr', 'https://dior-crm.chowis.cloud', 'http://localhost:3000'];
 }
 
 async function bootstrap() {
@@ -46,8 +41,6 @@ async function bootstrap() {
 
         SNICallback: (servername: string, cb: any) => {
             try {
-                console.log('SNI servername:', servername);
-
                 if (servername === 'dior-crm.choicedx.kr') {
                     return cb(null, choicedxContext);
                 }
@@ -82,11 +75,7 @@ async function bootstrap() {
     });
 
     if (process.env.OPEN_SWAGGER === 'true') {
-        const config = new DocumentBuilder()
-            .setTitle('Dior API')
-            .setVersion('1.0')
-            .addBearerAuth()
-            .build();
+        const config = new DocumentBuilder().setTitle('Dior API').setVersion('1.0').addBearerAuth().build();
 
         const document = SwaggerModule.createDocument(app, config);
         SwaggerModule.setup('/docs', app, document);
@@ -115,6 +104,10 @@ async function bootstrap() {
     Logger.log(`HTTPS Server running on ${port}`);
     Logger.log(`https://dior-crm.choicedx.kr:${port}`);
     Logger.log(`https://dior-crm.chowis.cloud:${port}`);
+
+    if (process.send) {
+        process.send('ready');
+    }
 }
 
 bootstrap();

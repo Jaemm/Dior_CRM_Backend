@@ -4,6 +4,7 @@ import {
     ProductRecommendationGroupsRepository,
     ProductRecommendationRepository,
 } from '@/src/common/repositories/crm';
+import { Logger } from '@nestjs/common';
 import { when } from 'joi';
 import { In } from 'typeorm';
 
@@ -14,6 +15,8 @@ type ResultJson = {
 };
 
 export class AutomaticProductDiorGenerator {
+    private readonly logger = new Logger(AutomaticProductDiorGenerator.name);
+
     newRoutineRecommendation = 500 as const;
 
     diorConsultant: Consultants;
@@ -36,6 +39,8 @@ export class AutomaticProductDiorGenerator {
             market: string;
             answers: string;
             old: boolean;
+            debugTraceId?: string;
+            debugEnabled?: boolean;
         },
         repositories: {
             consultantCountriesRepository: ConsultantCountriesRepository;
@@ -50,15 +55,25 @@ export class AutomaticProductDiorGenerator {
         this.market = params.market;
         this.answers = params.answers;
         this.old = params.old;
+        this.debugTraceId = params.debugTraceId;
+        this.debugEnabled = Boolean(params.debugEnabled);
 
         this.consultantCountriesRepository = repositories.consultantCountriesRepository;
         this.productRecommendationsRepository = repositories.productRecommendationsRepository;
         this.prGroupsRepository = repositories.prGroupsRepository;
     }
 
+    debugTraceId?: string;
+    debugEnabled = false;
+
+    private debug(message: string, payload?: Record<string, unknown>) {
+        if (!this.debugEnabled) return;
+        this.logger.log(`[new-auto-product][${this.debugTraceId}] ${message} ${JSON.stringify(payload ?? {})}`);
+    }
+
     async questionAnswers() {
         if (!this.answers || !this.answers.trim()) {
-            console.warn('[QA-WARN] answers 비어 있음');
+            this.debug('answers missing');
             return [];
         }
 
@@ -123,9 +138,18 @@ export class AutomaticProductDiorGenerator {
             .map((a) => a.trim())
             .filter(Boolean);
 
+        this.debug('parsed answers', {
+            rawAnswers: this.answers,
+            answerArray,
+            skinTone: this.skinTone,
+            routineRecommendation: this.routineRecommendation,
+            market: this.market,
+            old: this.old,
+        });
+
         const result = answerArray.map((answer, i) => {
             if (!data[i]) {
-                console.warn(`[QA-WARN-${i}] data에 해당 index 없음`, { i, answer });
+                this.debug('answer index missing', { i, answer });
                 return { id: i + 1, question: null, answers: [] };
             }
 
@@ -155,7 +179,7 @@ export class AutomaticProductDiorGenerator {
 
         const marketValue = this.market ? this.market.toLocaleLowerCase() : '';
         if (!this.market) {
-            console.warn('[QA-WARN] market 값이 undefined, 기본값 "" 사용');
+            this.debug('market missing fallback');
         }
 
         const foundMarket = await this.consultantCountriesRepository
@@ -166,23 +190,60 @@ export class AutomaticProductDiorGenerator {
         const market = foundMarket?.name ?? '';
         const recommanded = foundMarket?.defaultRecommendation ?? '';
 
+        this.debug('market lookup result', {
+            marketInput: this.market,
+            marketValue,
+            foundMarket: market,
+            defaultRecommendation: recommanded,
+        });
+
         let product: ProductRecommendationSelecteds[];
 
         if (recommanded?.toLowerCase().includes('japan')) {
+            this.debug('market branch selected', { branch: 'japan' });
             product = await this.getProductsFromMarketAsia(result);
         } else if (recommanded?.toLowerCase().includes('western') || recommanded?.toLowerCase().includes('europe')) {
+            this.debug('market branch selected', { branch: 'western/europe' });
             product = await this.getProductsFromMarketWestern(result);
         } else if (recommanded?.toLowerCase().includes('asia')) {
+            this.debug('market branch selected', { branch: 'asia' });
             product = await this.getProductsFromMarketAsia(result);
         } else {
             if (this.routineRecommendation === '3') {
+                this.debug('fallback branch selected', {
+                    branch: 'western',
+                    routineRecommendation: this.routineRecommendation,
+                });
                 product = await this.getProductsFromMarketWestern(result);
             } else if (this.routineRecommendation === '5') {
+                this.debug('fallback branch selected', {
+                    branch: 'asia',
+                    routineRecommendation: this.routineRecommendation,
+                });
                 product = await this.getProductsFromMarketAsia(result);
             } else {
+                this.debug('fallback branch selected', {
+                    branch: 'asia-default',
+                    routineRecommendation: this.routineRecommendation,
+                });
                 product = await this.getProductsFromMarketAsia(result);
             }
         }
+
+        this.debug('selected products summary', {
+            count: product?.length ?? 0,
+            products: (product ?? []).map((selected) => ({
+                selectedId: selected.id,
+                productRecommendationId: selected.productRecommendationId,
+                orderNumber: selected.orderNumber,
+                isPrincipal: selected.isPrincipal,
+                recommendationCount: selected.recommendationCount,
+                productId: selected.productRecommendation?.id,
+                productName: selected.productRecommendation?.name,
+                productCode: selected.productRecommendation?.code,
+                productShade: selected.productRecommendation?.shades,
+            })),
+        });
 
         return product;
     }
@@ -543,6 +604,21 @@ export class AutomaticProductDiorGenerator {
             products.push(skincareProducts);
         }
 
+        this.debug('asia skincare decision', {
+            q1Answers,
+            q2Answers,
+            isPremium,
+            isNonPremium,
+            skincareCount: skincareProducts?.length ?? 0,
+            skincareProducts: (skincareProducts ?? []).map((selected) => ({
+                selectedId: selected.id,
+                productRecommendationId: selected.productRecommendationId,
+                orderNumber: selected.orderNumber,
+                productId: selected.productRecommendation?.id,
+                productName: selected.productRecommendation?.name,
+            })),
+        });
+
         // =========================
         // Makeup
         // =========================
@@ -632,6 +708,23 @@ export class AutomaticProductDiorGenerator {
 
         const group = await this.prGroupsRepository.getGroupByNameAndRoutine(routine, name);
 
+        this.debug('skincare group lookup', {
+            routine,
+            name,
+            groupId: group?.id,
+            groupName: group?.name,
+            prSelectedsCount: group?.prSelecteds?.length ?? 0,
+            prSelecteds: (group?.prSelecteds ?? []).map((selected) => ({
+                selectedId: selected.id,
+                productRecommendationId: selected.productRecommendationId,
+                orderNumber: selected.orderNumber,
+                isPrincipal: selected.isPrincipal,
+                productId: selected.productRecommendation?.id,
+                productName: selected.productRecommendation?.name,
+                productCode: selected.productRecommendation?.code,
+            })),
+        });
+
         if (group) {
             for (let i = 0; i < this.newRoutineRecommendation; i++) {
                 const prs = group.prSelecteds[i];
@@ -649,6 +742,24 @@ export class AutomaticProductDiorGenerator {
         const makeupProducts = [];
 
         const group = await this.prGroupsRepository.getGroupByNameAndRoutine(routine, name);
+
+        this.debug('makeup group lookup', {
+            routine,
+            name,
+            groupId: group?.id,
+            groupName: group?.name,
+            prSelectedsCount: group?.prSelecteds?.length ?? 0,
+            prSelecteds: (group?.prSelecteds ?? []).map((selected) => ({
+                selectedId: selected.id,
+                productRecommendationId: selected.productRecommendationId,
+                orderNumber: selected.orderNumber,
+                isPrincipal: selected.isPrincipal,
+                productId: selected.productRecommendation?.id,
+                productName: selected.productRecommendation?.name,
+                productCode: selected.productRecommendation?.code,
+                productShade: selected.productRecommendation?.shades,
+            })),
+        });
 
         if (group) {
             if (this.old) {
@@ -676,7 +787,28 @@ export class AutomaticProductDiorGenerator {
                         },
                     });
 
-                    if (variantsMatchedSkintone.length > 0 && principalRecommendation.isMarketMatch(this.market)) {
+                    const isMarketMatch = principalRecommendation.isMarketMatch(this.market);
+
+                    this.debug('makeup principal filter', {
+                        routine,
+                        name,
+                        principalSelectedId: principalProduct.id,
+                        principalProductRecommendationId: principalProduct.productRecommendationId,
+                        principalProductId: principalRecommendation?.id,
+                        principalProductName: principalRecommendation?.name,
+                        principalCountries: principalRecommendation?.countries,
+                        skinTone: this.skinTone,
+                        variantsIds,
+                        variantsMatchedSkintone: variantsMatchedSkintone.map((variant) => ({
+                            id: variant.id,
+                            name: variant.name,
+                            shades: variant.shades,
+                        })),
+                        variantsMatchedSkintoneCount: variantsMatchedSkintone.length,
+                        isMarketMatch,
+                    });
+
+                    if (variantsMatchedSkintone.length > 0 && isMarketMatch) {
                         for (let i = 0; i < this.newRoutineRecommendation; i++) {
                             const prs = group.prSelecteds[i];
 
@@ -684,7 +816,20 @@ export class AutomaticProductDiorGenerator {
                                 makeupProducts.push(prs);
                             }
                         }
+                    } else {
+                        this.debug('makeup group skipped by principal filter', {
+                            routine,
+                            name,
+                            variantsMatchedSkintoneCount: variantsMatchedSkintone.length,
+                            isMarketMatch,
+                        });
                     }
+                } else {
+                    this.debug('makeup group skipped because principal product is missing', {
+                        routine,
+                        name,
+                        groupId: group.id,
+                    });
                 }
             }
         }

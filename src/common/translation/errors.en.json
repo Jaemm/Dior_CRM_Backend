@@ -1,31 +1,33 @@
 {
-  "en": {
-      "chowis": {
-          "errors": {
-              "invalid_request": "Invalid request.\n%{message}",
-              "record_invalid": "%{message}",
-              "record_not_found": "Record not found.",
-              "unauthorized": "You do not have permission.",
-              "register_failed": "Failed to sign up for this member.\n%{message}",
-              "login_failed": "Please check your ID and password.",
-              "login_social_not_register": "Unsubscribed social account.",
-              "password_length": "Please enter your password from 8 to 20 letters.",
-              "password_change_failed": "Incorrect password. Please check the password.",
-              "new_password_err": "Password must contain at least 7 characters, including Upper/lowercase and numbers",
-              "password_change_failed2": "The account cannot change its password.",
-              "custom_error": "%{message}",
-              "not_confirmed": "Please confirm your account. Check your email to complete the confirmation process.",
-              "crm_customer_not_found": "Customer record not found for this counselor",
-              "error_msg_1": "Product credentials are required.",
-              "error_msg_2": "Check your product information or contact admin",
-              "error_msg_3": "Device with this optic number is already registered.",
-              "error_msg_5": "Licence for this application could not be found, please retry or contact admin",
-              "error_msg_6": "Error updating Licence, please contact admin",
-              "error_msg_7": "Device already registered by another user, please contact admin.",
-              "error_500": "Server Error",
-              "validation_error_400": "Request cannot be processed. Please check the input value and try again.",
-              "dataexist_400": "Email or phone already exists."
-          }
-      }
-  }
+    "en": {
+        "chowis": {
+            "errors": {
+                "invalid_request": "Invalid request.\n%{message}",
+                "record_invalid": "%{message}",
+                "record_not_found": "Record not found.",
+                "unauthorized": "You do not have permission.",
+                "token_expired": "Token has expired.",
+                "invalid_token": "Invalid token.",
+                "register_failed": "Failed to sign up for this member.\n%{message}",
+                "login_failed": "Please check your ID and password.",
+                "login_social_not_register": "Unsubscribed social account.",
+                "password_length": "Please enter your password from 8 to 20 letters.",
+                "password_change_failed": "Incorrect password. Please check the password.",
+                "new_password_err": "Password must contain at least 7 characters, including Upper/lowercase and numbers",
+                "password_change_failed2": "The account cannot change its password.",
+                "custom_error": "%{message}",
+                "not_confirmed": "Please confirm your account. Check your email to complete the confirmation process.",
+                "crm_customer_not_found": "Customer record not found for this counselor",
+                "error_msg_1": "Product credentials are required.",
+                "error_msg_2": "Check your product information or contact admin",
+                "error_msg_3": "Device with this optic number is already registered.",
+                "error_msg_5": "Licence for this application could not be found, please retry or contact admin",
+                "error_msg_6": "Error updating Licence, please contact admin",
+                "error_msg_7": "Device already registered by another user, please contact admin.",
+                "error_500": "Server Error",
+                "validation_error_400": "Request cannot be processed. Please check the input value and try again.",
+                "dataexist_400": "Email or phone already exists."
+            }
+        }
+    }
 }

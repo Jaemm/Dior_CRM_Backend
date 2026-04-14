@@ -140,8 +140,7 @@ export class CommonService {
             };
 
             await this.mailTransporter.sendMail(mailOptions);
-        } catch (error) {
-        }
+        } catch (error) {}
     }
 
     generateRandomPassword(length: number) {
@@ -204,12 +203,11 @@ export class CommonService {
 
     createLocaleErrorMessage(locale: string, messageKey: string, message = '') {
         const lowerLocale = locale.toLocaleLowerCase();
-
         const errorLocale = `errors.${lowerLocale}`;
+        const errorBundle = this.getTranslation(errorLocale);
+        const translations = errorBundle?.[lowerLocale]?.chowis?.errors ?? errorBundle?.en?.chowis?.errors ?? {};
 
-        const translations = this.getTranslation(errorLocale)?.[lowerLocale]['chowis']['errors'];
-
-        const translationsErrorMessage = translations[messageKey];
+        const translationsErrorMessage = translations?.[messageKey];
 
         let errorMessage = message;
 

@@ -40,7 +40,6 @@ export class DiorCompanyConsultantsService {
         try {
             const diorCompanyId = await this.consultantRepository.getDiorConsultantCompanyId();
 
-
             const newConsultant = this.consultantRepository.create({
                 name: body.name,
                 code: body.code,
@@ -217,14 +216,14 @@ export class DiorCompanyConsultantsService {
         });
 
         const finalData = consultants
-            .filter(
-                (consultant) =>
-                    consultant.email.toLowerCase() !== 'ann.chowis613@gmail.com' &&
-                    consultant.email.toLowerCase() !== 'ann@chowis.com',
-            )
+            .filter((consultant) => {
+                const email = consultant.email?.toLowerCase() ?? '';
+
+                return email !== 'ann.chowis613@gmail.com' && email !== 'ann@chowis.com';
+            })
             .map((consultant) => ({
                 id: consultant.id,
-                email: consultant.email,
+                email: consultant.email ?? '',
                 code: consultant.code,
                 name: consultant.name,
                 surname: consultant.surname,

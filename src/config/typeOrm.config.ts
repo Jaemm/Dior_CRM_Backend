@@ -6,7 +6,6 @@ config();
 
 const configService = new ConfigService();
 
-
 const globalConfig = {
     type: 'postgres',
     host: configService.get('POSTGRES_HOST'),
@@ -31,7 +30,7 @@ const cndpSkinDBConfig = {
     migrations: ['dist/migrations/*{.ts,.js}'],
     autoLoadEntities: true,
     synchronize: false,
-    logging: true,
+    logging: process.env.TYPEORM_QUERY_LOGGING === 'true',
 };
 
 const diorCndpSkinDBConfig = {
@@ -45,7 +44,7 @@ const diorCndpSkinDBConfig = {
     migrations: ['dist/migrations/*{.ts,.js}'],
     autoLoadEntities: true,
     synchronize: false,
-    logging: true,
+    logging: process.env.TYPEORM_QUERY_LOGGING === 'true',
 };
 
 export const globalDB = registerAs('globalDB', () => globalConfig);

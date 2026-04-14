@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as csv from 'csv';
 import { v4 as uuid } from 'uuid';
 import { Request } from 'express';
-import { Injectable, NotFoundException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, UnauthorizedException, BadRequestException } from '@nestjs/common';
 
 import { ErrorStatus } from '@/src/common/constants/error-status';
 import {
@@ -41,6 +41,8 @@ import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class ProductRecommendationService {
+    private readonly logger = new Logger(ProductRecommendationService.name);
+
     constructor(
         private readonly commonService: CommonService,
         private readonly configService: ConfigService,
@@ -797,12 +799,14 @@ export class ProductRecommendationService {
                     const promiseTranslations = translations.map(async (t) => {
                         const attribute = await this.productAttributesRepository.findOne({
                             where: {
+                                typ: 'Category',
                                 value: translationRecomm.category,
                             },
                         });
 
                         const collection = await this.productAttributesRepository.findOne({
                             where: {
+                                typ: 'Collection',
                                 value: translationRecomm.collection,
                             },
                         });
@@ -861,6 +865,8 @@ export class ProductRecommendationService {
 
     async getNewAutomaticProductByBatchId(query: AutomaticProductByBatchIdDto) {
         try {
+            const debugEnabled = process.env.NEW_AUTO_PRODUCT_DEBUG === 'true';
+            const debugTraceId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
             const diorConsultant = await this.consultantRepository.getDiorConsultant();
 
             if (!diorConsultant) {
@@ -880,13 +886,26 @@ export class ProductRecommendationService {
                 return answers;
             };
 
+            const normalizedAnswers = normalizeAnswersToString(query.answers);
+
+            this.logNewAutoProductDebug(debugTraceId, 'request', {
+                batchId: query.batch_id,
+                market: query.market,
+                routineRecommendation: query.routine_recommendation,
+                skinTone: query.skin_tone,
+                answers: normalizedAnswers,
+                diorConsultantId: diorConsultant.id,
+            });
+
             const generatorCreateParameter = {
                 diorConsultant,
                 skinTone: query.skin_tone,
                 routineRecommendation: query.routine_recommendation,
                 market: query.market,
-                answers: normalizeAnswersToString(query.answers),
+                answers: normalizedAnswers,
                 old: false,
+                debugTraceId,
+                debugEnabled,
             };
 
             const repositories = {
@@ -902,13 +921,32 @@ export class ProductRecommendationService {
 
             const psSelecteds = await automaticProductDiorGenerator.questionAnswers();
 
+            this.logNewAutoProductDebug(debugTraceId, 'generator returned selections', {
+                count: psSelecteds?.length ?? 0,
+                selections: (psSelecteds ?? []).map((selected) => ({
+                    selectedId: selected.id,
+                    productRecommendationId: selected.productRecommendationId,
+                    orderNumber: selected.orderNumber,
+                    isPrincipal: selected.isPrincipal,
+                    productId: selected.productRecommendation?.id,
+                    productName: selected.productRecommendation?.name,
+                    productCode: selected.productRecommendation?.code,
+                    productShade: selected.productRecommendation?.shades,
+                })),
+            });
+
             const data = psSelecteds
                 .sort((a, b) => a.orderNumber - b.orderNumber)
                 .map(async (productRecommendationSelected, idx) => {
-                    let recommendation = productRecommendationSelected?.productRecommendation;
+                    const originalRecommendation = productRecommendationSelected?.productRecommendation;
+                    let recommendation = originalRecommendation;
 
                     if (!recommendation) {
-                        console.warn(`[WARN-${idx}] recommendation 없음 → 스킵`);
+                        this.logNewAutoProductDebug(debugTraceId, 'recommendation missing skipped', {
+                            idx,
+                            selectedId: productRecommendationSelected?.id,
+                            productRecommendationId: productRecommendationSelected?.productRecommendationId,
+                        });
                         return null;
                     }
 
@@ -946,6 +984,31 @@ export class ProductRecommendationService {
                         recommendation = recommendation.getNewSkinToneFromProduct(query.skin_tone);
                     }
 
+                    this.logNewAutoProductDebug(debugTraceId, 'response item mapping', {
+                        idx,
+                        selectedId: productRecommendationSelected.id,
+                        selectedProductRecommendationId: productRecommendationSelected.productRecommendationId,
+                        orderNumber: productRecommendationSelected.orderNumber,
+                        isPrincipal,
+                        requestedSkinTone: query.skin_tone,
+                        originalProduct: {
+                            id: originalRecommendation?.id,
+                            name: originalRecommendation?.name,
+                            code: originalRecommendation?.code,
+                            shade: originalRecommendation?.shades,
+                            routine: originalRecommendation?.routine,
+                            productRecommendationId: originalRecommendation?.productRecommendationId,
+                        },
+                        returnedProduct: {
+                            id: recommendation?.id,
+                            name: recommendation?.name,
+                            code: recommendation?.code,
+                            shade: recommendation?.shades,
+                            routine: recommendation?.routine,
+                            productRecommendationId: recommendation?.productRecommendationId,
+                        },
+                    });
+
                     name = recommendation.name;
 
                     if (recommendation.productRecommendationId) {
@@ -966,11 +1029,17 @@ export class ProductRecommendationService {
 
                     const promiseTranslations = translations.map(async (t) => {
                         const attribute = await this.productAttributesRepository.findOne({
-                            where: { value: translationRecomm.category },
+                            where: {
+                                typ: 'Category',
+                                value: translationRecomm.category,
+                            },
                         });
 
                         const collection = await this.productAttributesRepository.findOne({
-                            where: { value: translationRecomm.collection },
+                            where: {
+                                typ: 'Collection',
+                                value: translationRecomm.collection,
+                            },
                         });
 
                         const attributeName = attribute
@@ -1017,13 +1086,38 @@ export class ProductRecommendationService {
                     };
                 });
 
+            const resolvedData = (await Promise.all(data)).filter(Boolean);
+
+            this.logNewAutoProductDebug(debugTraceId, 'response summary', {
+                count: resolvedData.length,
+                products: resolvedData.map((recommendation) => ({
+                    id: recommendation.id,
+                    name: recommendation.name,
+                    code: recommendation.code,
+                    routine: recommendation.routine,
+                    category: recommendation.category,
+                    collection: recommendation.collection,
+                    shades: recommendation.shades,
+                    isPrincipal: recommendation.is_principal,
+                    productRecommendationId: recommendation.product_recommendation_id,
+                })),
+            });
+
             return {
-                data: (await Promise.all(data)).filter(Boolean),
+                data: resolvedData,
             };
         } catch (e) {
             console.error('[오류 발생]', e);
             throw e;
         }
+    }
+
+    private logNewAutoProductDebug(traceId: string, message: string, payload?: Record<string, unknown>) {
+        if (process.env.NEW_AUTO_PRODUCT_DEBUG !== 'true') {
+            return;
+        }
+
+        this.logger.log(`[new-auto-product][${traceId}] ${message} ${JSON.stringify(payload ?? {})}`);
     }
 
     async getRecommendationsCategories(routine: AttributeRoutine) {
