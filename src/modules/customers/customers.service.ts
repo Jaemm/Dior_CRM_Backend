@@ -473,7 +473,7 @@ export class CustomersService {
             });
         }
 
-        if (newCustomer.email.includes('@chowistest.com')) {
+        if (newCustomer.email.includes('@example.test')) {
             newCustomer.email_confirmed = true;
         }
 
@@ -557,7 +557,7 @@ export class CustomersService {
             });
         }
 
-        if (newCustomer.email.includes('@chowistest.com')) {
+        if (newCustomer.email.includes('@example.test')) {
             newCustomer.email_confirmed = true;
         }
 

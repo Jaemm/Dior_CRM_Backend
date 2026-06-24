@@ -126,7 +126,7 @@ export class DiorCompanyConsultantsService {
             consultantsQuery.andWhere('consultants.hide_for_bc = false');
 
             consultantsQuery.andWhere('LOWER(consultants.email) NOT IN (:...excludedEmails)', {
-                excludedEmails: ['ann.chowis613@gmail.com', 'ann@chowis.com'],
+                excludedEmails: ['internal-user-1@example.com', 'internal-user-2@example.com'],
             });
 
             if (filter_by) {
@@ -219,7 +219,7 @@ export class DiorCompanyConsultantsService {
             .filter((consultant) => {
                 const email = consultant.email?.toLowerCase() ?? '';
 
-                return email !== 'ann.chowis613@gmail.com' && email !== 'ann@chowis.com';
+                return email !== 'internal-user-1@example.com' && email !== 'internal-user-2@example.com';
             })
             .map((consultant) => ({
                 id: consultant.id,

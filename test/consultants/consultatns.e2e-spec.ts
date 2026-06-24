@@ -2,8 +2,8 @@ import * as request from 'supertest';
 import { consultantLoginData, consultantUpdateData } from '../utils/data';
 import { findMissingFields } from '../utils/helper';
 
-const localUrl = 'localhost:3100/v1/api';
-const rubyUrl = 'https://stg-dior.chowis.cloud/api';
+const localUrl = process.env.LOCAL_TEST_API_URL ?? 'http://localhost:3100/v1/api';
+const rubyUrl = process.env.REMOTE_TEST_API_URL ?? 'https://example.com/api';
 
 if (!localUrl || !rubyUrl) {
     throw new Error();
@@ -220,7 +220,7 @@ describe('Consultants Module ( E2E )', () => {
             })
             .send({
                 app_id: 88,
-                email: 'e2e_test@chowistest.com',
+                email: 'e2e_test@example.com',
                 social_provider: 'twitter',
                 social_id: 'abc1234',
             })
@@ -231,7 +231,7 @@ describe('Consultants Module ( E2E )', () => {
             .set('X-CHOWIS-CONSULTANT-TOKEN', rubyToken)
             .send({
                 app_id: 88,
-                email: 'e2e_test@chowistest.com',
+                email: 'e2e_test@example.com',
                 social_provider: 'twitter',
                 social_id: 'abc1234',
             })

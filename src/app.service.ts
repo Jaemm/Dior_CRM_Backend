@@ -173,7 +173,7 @@ export class AppService {
 
         if (products) {
             for (const product of products) {
-                if (customer.email.includes('chowistest')) {
+                if (customer.email.includes('exampletest')) {
                     await new Promise<void>(async (resolve) => {
                         await this.productsService.updateProduct(product.id, {
                             consultant_id: null,
@@ -190,7 +190,7 @@ export class AppService {
                     });
                 }
 
-                if (customer.email.includes('@chowisas.com')) {
+                if (customer.email.includes('@example.com')) {
                     await new Promise<void>(async (resolve, _) => {
                         await this.productsService.updateProduct(product.id, {
                             use_date: null,

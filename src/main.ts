@@ -1,4 +1,4 @@
-import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
+﻿import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
@@ -17,65 +17,74 @@ function parseCorsOrigins(): string[] {
 
     if (configuredOrigins?.length) return configuredOrigins;
 
-    return ['https://dior-crm.choicedx.kr', 'https://dior-crm.chowis.cloud', 'http://localhost:3000'];
+    return ['http://localhost:3000'];
 }
 
 async function bootstrap() {
-    const port = Number(process.env.PORT) || 8097;
+    const enableSwagger = process.env.OPEN_SWAGGER === 'true';
+    const primaryHostname = process.env.PRIMARY_HOSTNAME;
+    const secondaryHostname = process.env.SECONDARY_HOSTNAME;
 
-    const choicedxCert = {
-        key: readFileSync('/etc/letsencrypt/live/dior-crm.choicedx.kr/privkey.pem'),
-        cert: readFileSync('/etc/letsencrypt/live/dior-crm.choicedx.kr/fullchain.pem'),
-    };
+    /* ================= HTTP ================= */
+    const httpApp = await NestFactory.create(AppModule);
+    await httpApp.listen(process.env.HTTP);
 
-    const chowisCert = {
-        key: readFileSync('/etc/letsencrypt/live/dior-crm.chowis.cloud/privkey.pem'),
-        cert: readFileSync('/etc/letsencrypt/live/dior-crm.chowis.cloud/fullchain.pem'),
-    };
+    /* ================= HTTPS ================= */
+    const ssl = process.env.SSL === 'true';
+    let httpsOptions: Record<string, unknown> | null = null;
 
-    const choicedxContext = createSecureContext(choicedxCert);
-    const chowisContext = createSecureContext(chowisCert);
+    if (ssl) {
+        const primaryKey = readFileSync(process.env.PRIMARY_SSL_KEY_PATH || '');
+        const primaryCert = readFileSync(process.env.PRIMARY_SSL_CERT_PATH || '');
+        const secondaryKey = readFileSync(process.env.SECONDARY_SSL_KEY_PATH || '');
+        const secondaryCert = readFileSync(process.env.SECONDARY_SSL_CERT_PATH || '');
 
-    const httpsOptions = {
-        ...chowisCert,
+        const primaryContext = createSecureContext({
+            key: primaryKey,
+            cert: primaryCert,
+        });
 
-        SNICallback: (servername: string, cb: any) => {
-            try {
-                if (servername === 'dior-crm.choicedx.kr') {
-                    return cb(null, choicedxContext);
+        const secondaryContext = createSecureContext({
+            key: secondaryKey,
+            cert: secondaryCert,
+        });
+
+        httpsOptions = {
+            key: secondaryKey,
+            cert: secondaryCert,
+            SNICallback: (servername: string, cb: Function) => {
+                if (servername === primaryHostname && primaryHostname) {
+                    cb(null, primaryContext);
+                    return;
                 }
 
-                if (servername === 'dior-crm.chowis.cloud') {
-                    return cb(null, chowisContext);
+                if (servername === secondaryHostname && secondaryHostname) {
+                    cb(null, secondaryContext);
+                    return;
                 }
 
-                console.warn('Unknown SNI, fallback → chowis:', servername);
-                return cb(null, chowisContext);
-            } catch (err) {
-                console.error('SNI error:', err);
-                return cb(err);
-            }
-        },
-    };
+                cb(null, secondaryContext);
+            },
+        };
+    }
 
+    /* ================= HTTPS APP ================= */
     const app = await NestFactory.create(AppModule, {
         httpsOptions,
         rawBody: true,
-        logger: ['log', 'error', 'warn'],
+        logger: ['log', 'error', 'warn', 'debug', 'verbose'],
     });
 
-    const appService = app.get(AppService);
-    appService.handleApp(app);
+    const port = Number(process.env.PORT) || 8097;
+    const hostname = process.env.HOSTNAME || 'localhost';
 
-    app.setGlobalPrefix('/v1/api');
-
-    const expressApp = app.getHttpAdapter().getInstance();
-    expressApp.get(['/health', '/healthz'], (_req: Request, res: Response) => {
-        return res.status(200).json(createHealthCheckResponse());
-    });
-
-    if (process.env.OPEN_SWAGGER === 'true') {
-        const config = new DocumentBuilder().setTitle('Dior API').setVersion('1.0').addBearerAuth().build();
+    /* ================= Swagger ================= */
+    if (enableSwagger) {
+        const config = new DocumentBuilder()
+            .setTitle('Dior API')
+            .setVersion('1.0')
+            .addBearerAuth()
+            .build();
 
         const document = SwaggerModule.createDocument(app, config);
         SwaggerModule.setup('/docs', app, document);
@@ -99,11 +108,14 @@ async function bootstrap() {
         credentials: true,
     });
 
-    await app.listen(port, '0.0.0.0');
+    const corsOrigins = parseCorsOrigins();
+    Logger.log(`Configured CORS origins: ${corsOrigins.join(', ')}`);
+
+    await app.listen(port, hostname);
 
     Logger.log(`HTTPS Server running on ${port}`);
-    Logger.log(`https://dior-crm.choicedx.kr:${port}`);
-    Logger.log(`https://dior-crm.chowis.cloud:${port}`);
+    Logger.log(`Primary host: ${primaryHostname ?? 'unset'}`);
+    Logger.log(`Secondary host: ${secondaryHostname ?? 'unset'}`);
 
     if (process.send) {
         process.send('ready');

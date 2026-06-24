@@ -72,7 +72,10 @@ export class AuthService {
     }
 
     async loginWithUsernameAndPassword(username: string, password: string) {
-        if (username === 'test@example.com' && password === 'password123') {
+        const demoUsername = process.env.DEMO_LOGIN_USERNAME;
+        const demoPassword = process.env.DEMO_LOGIN_PASSWORD;
+
+        if (demoUsername && demoPassword && username === demoUsername && password === demoPassword) {
             return { id: 1, username, token: 'mock-jwt-token' };
         }
         throw new Error('Invalid username or password');

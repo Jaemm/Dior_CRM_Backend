@@ -186,7 +186,7 @@ export class ConsultantsController {
     @Post('login/saml')
     async handleSamlResponse(
         @Body() body: { SAMLResponse: string },
-        @Query('redirect') redirect = 'https://dior-backoffice.chowis.cloud/login',
+        @Query('redirect') redirect = `${process.env.BACKOFFICE_REDIRECT_BASE_URL ?? ''}/login`,
         @Headers('X-CHOWIS-LOCALE') locale = 'en',
         @Res() res: Response,
     ) {

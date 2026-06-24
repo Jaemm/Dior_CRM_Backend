@@ -257,7 +257,7 @@ export class ConsultantsService {
             });
         }
 
-        if (newUser.email.includes('@chowistest.com')) {
+        if (newUser.email.includes('@example.test')) {
             newUser.email_confirmed = true;
         }
         const consultant = await this.consultantsRepository.createConsultant(newUser);
@@ -341,7 +341,7 @@ export class ConsultantsService {
 
         const consultantData: any = newUser;
 
-        if (newUser.email.includes('@chowistest.com')) {
+        if (newUser.email.includes('@example.test')) {
             consultantData['email_confirmed'] = true;
         }
 
@@ -981,7 +981,7 @@ export class ConsultantsService {
             currentConsultant.token = null;
             const logoutConsultant = await this.consultantsRepository.save(currentConsultant);
 
-            if (currentConsultant.email.includes('chowistest') || currentConsultant.email.includes('@chowisas.com')) {
+            if (currentConsultant.email.includes('exampletest') || currentConsultant.email.includes('@example.com')) {
                 const product = await this.productsRepository.find({
                     where: {
                         consultant_id: currentConsultant.id,
@@ -989,7 +989,7 @@ export class ConsultantsService {
                 });
 
                 let chowisTestResetList: object[];
-                if (currentConsultant.email.includes('chowistest')) {
+                if (currentConsultant.email.includes('exampletest')) {
                     chowisTestResetList = product.map((p) => {
                         const prod = p;
                         Object.assign(prod, {
@@ -1006,7 +1006,7 @@ export class ConsultantsService {
                     });
                 }
 
-                if (currentConsultant.email.includes('@chowisas.com')) {
+                if (currentConsultant.email.includes('@example.com')) {
                     chowisTestResetList = product.map((p) => {
                         const prod = p;
                         Object.assign(prod, {

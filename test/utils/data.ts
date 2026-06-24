@@ -1,21 +1,21 @@
-export const localURL = 'https://staging.chowis.cloud:8083/v1/api';
-export const rubyURL = 'https://stg-dior.chowis.cloud/api';
+export const localURL = process.env.LOCAL_TEST_API_URL ?? 'http://localhost:3100/v1/api';
+export const rubyURL = process.env.REMOTE_TEST_API_URL ?? 'https://example.com/api';
 
 export const consultantRegisterData = {
-    email: 'paul@chowistest.com',
-    password: 'Production2024@',
+    email: 'test.user@example.com',
+    password: 'example-password',
     app_id: 88,
 };
 
 export const consultantRubyRegisterData = {
-    email: 'test+1234@chowis.com',
+    email: 'test.user2@example.com',
     app_id: 88,
-    password: 'Test@123',
+    password: 'example-password',
 };
 
 export const consultantLoginData = {
-    email: 'paul@chowistest.com',
-    password: 'Production2024@',
+    email: 'test.user@example.com',
+    password: 'example-password',
     app_id: 88,
 };
 
