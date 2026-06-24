@@ -86,10 +86,9 @@ npm run start:dev
 
 ## Environment Variables
 
-`.env` 또는 `env/.env`에서 주로 사용하는 항목:
+`.env` 또는 `env/.env`에서 사용하는 대표 항목:
 
 ```bash
-PORT=8097
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_USER=postgres
@@ -103,8 +102,7 @@ JWT_CONFIRMATION_TIME=*****
 JWT_RESET_PASSWORD_SECRET=*****
 JWT_RESET_PASSWORD_TIME=*****
 DOMAIN=*****
-DIOR_CNDP_SKIN=*****
-CNDP_SKIN_ANALYSIS_URL=*****
+EXTERNAL_API_BASE_URL=*****
 ```
 
 ## Scripts
