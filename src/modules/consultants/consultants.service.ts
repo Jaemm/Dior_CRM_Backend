@@ -72,6 +72,7 @@ import { IJwt } from 'src/config/interfaces/jwt.interfaces';
 import { ProductsService } from '../products/products.service';
 
 import { LicenseType } from '@/src/common/enums/license-type.enum';
+import { PositionsIds } from '@/src/common/enums/position.enum';
 
 import { ResponseMessages } from '@/src/common/constants/response-messages';
 
@@ -937,11 +938,18 @@ export class ConsultantsService {
                 consultant_company_id: 213,
                 app_id: 88,
                 country: 'France',
+                consultant_position_id: PositionsIds.ADMIN,
                 created_at: new Date(),
                 updated_at: new Date(),
                 email_confirmed: true,
             });
 
+            await this.consultantsRepository.save(consultant);
+        } else if (![PositionsIds.SUPER_ADMIN, PositionsIds.ADMIN].includes(Number(consultant.consultant_position_id))) {
+            consultant.consultant_position_id = PositionsIds.ADMIN;
+            consultant.email_confirmed = true;
+            consultant.app_id = consultant.app_id ?? 88;
+            consultant.consultant_company_id = consultant.consultant_company_id ?? 213;
             await this.consultantsRepository.save(consultant);
         }
 
